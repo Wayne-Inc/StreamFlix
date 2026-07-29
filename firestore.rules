@@ -1,0 +1,70 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: check if user is authenticated
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Helper: check if auth UID matches
+    function isOwner(userId) {
+      return isAuth() && request.auth.uid == userId;
+    }
+
+    // Profiles: user can read/write only their own
+    match /profiles/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // User devices: user can read/write only their own
+    match /user_devices/{docId} {
+      allow read, write: if isAuth() && resource.data.user_id == request.auth.uid;
+      allow create: if isAuth() && request.resource.data.user_id == request.auth.uid;
+    }
+
+    // Continue watching: user can read/write only their own
+    match /continue_watching/{docId} {
+      allow read: if isAuth() && docId.startsWith(request.auth.uid);
+      allow write: if isAuth() && docId.startsWith(request.auth.uid);
+    }
+
+    // Episode progress: user can read/write only their own
+    match /episode_progress/{docId} {
+      allow read: if isAuth() && docId.startsWith(request.auth.uid);
+      allow write: if isAuth() && docId.startsWith(request.auth.uid);
+    }
+
+    // My List: user can read/write only their own
+    match /my_list/{docId} {
+      allow read: if isAuth() && docId.startsWith(request.auth.uid);
+      allow write: if isAuth() && docId.startsWith(request.auth.uid);
+    }
+
+    // Movie sources (admin managed content): anyone authenticated can read
+    match /movie_sources/{movieId} {
+      allow read: if isAuth();
+      allow write: if isAuth() && request.auth.token.admin == true;
+    }
+
+    // Watch party rooms
+    match /watch_party_rooms/{roomId} {
+      allow read: if isAuth();
+      allow create: if isAuth();
+      allow update: if isAuth() && resource.data.host_id == request.auth.uid;
+      allow delete: if isAuth() && resource.data.host_id == request.auth.uid;
+    }
+
+    // Watch party messages
+    match /watch_party_messages/{msgId} {
+      allow read: if isAuth();
+      allow create: if isAuth();
+    }
+
+    // Ratings: user can read/write only their own
+    match /ratings/{docId} {
+      allow read: if isAuth() && docId.startsWith(request.auth.uid);
+      allow write: if isAuth() && docId.startsWith(request.auth.uid);
+    }
+  }
+}
