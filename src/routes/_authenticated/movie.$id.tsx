@@ -7,7 +7,7 @@ import { Footer } from "@/components/streamflix/Footer";
 import { Row } from "@/components/streamflix/Row";
 import { Skeleton } from "@/components/ui/skeleton";
 import { movieById, loadSimilar } from "@/lib/streamflix-data";
-import { fetchTraktSummary, rateMovie, markAsWatched } from "@/lib/api/trakt";
+import { fetchTraktSummary, rateMovie, markAsWatched, addToWatchlist, removeFromWatchlist } from "@/lib/api/trakt";
 import { discoverByGenre } from "@/lib/api/tmdb";
 import { getVideoSource } from "@/lib/video-sources";
 import { auth, db } from "@/lib/firebase";
@@ -132,17 +132,36 @@ function MoviePage() {
   }, [movie.id]);
 
   const handleWatchlist = async () => {
+    const conn = getTrakt();
     try {
       if (inWatchlist) {
         await removeFromMyList(movie.id);
         setInWatchlist(false);
         toast.success("Removed from My List");
+        if (conn) {
+          try {
+            await removeFromWatchlist({ data: { token: conn.accessToken, tmdbId: movie.id } });
+            toast.success("Removed from Trakt watchlist");
+          } catch (e: any) {
+            toast.error(e.message || "Failed to remove from Trakt watchlist");
+          }
+        }
       } else {
         await addToMyList({ id: movie.id, title: movie.title, year: movie.year, poster: movie.poster });
         setInWatchlist(true);
         toast.success("Added to My List");
+        if (conn) {
+          try {
+            await addToWatchlist({ data: { token: conn.accessToken, tmdbId: movie.id } });
+            toast.success("Added to Trakt watchlist");
+          } catch (e: any) {
+            toast.error(e.message || "Failed to add to Trakt watchlist");
+          }
+        }
       }
-    } catch (e: any) { toast.error(e.message); }
+    } catch (e: any) {
+      toast.error(e.message);
+    }
   };
 
   const getTrakt = () => {

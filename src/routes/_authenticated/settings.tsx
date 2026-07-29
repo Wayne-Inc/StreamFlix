@@ -499,7 +499,9 @@ function TraktSection() {
   }, []);
 
   const connect = () => {
-    const clientId = import.meta.env.VITE_TRAKT_CLIENT_ID as string | undefined;
+    const clientId =
+      (import.meta.env.VITE_TRAKT_CLIENT_ID as string | undefined) ||
+      (import.meta.env.TRAKT_CLIENT_ID as string | undefined);
     if (!clientId) {
       toast.error("Trakt is not configured.");
       return;

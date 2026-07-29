@@ -43,10 +43,10 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
             <span className="text-muted-foreground">{s.runtime}</span>
             <span className="text-muted-foreground">{s.genres.join(" · ")}</span>
           </div>
-          <p className="hidden md:block mx-auto max-w-xl text-sm text-foreground/90 sm:text-base md:text-lg md:leading-7">
+          <p className="hidden md:block mx-auto md:mx-0 max-w-xl text-sm text-foreground/90 sm:text-base md:text-lg md:leading-7">
             {description}
           </p>
-          <div className="mx-auto flex flex-wrap items-center justify-center gap-3 md:justify-start">
+          <div className="mx-auto md:mx-0 flex flex-wrap items-center justify-center gap-3 md:justify-start">
             <Link
               to="/watch/$id"
               params={{ id: s.id }}
