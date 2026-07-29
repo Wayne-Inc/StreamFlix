@@ -557,11 +557,13 @@ function TraktSection() {
     return () => window.removeEventListener("storage", load);
   }, []);
 
-  const connect = () => {
-    const clientId =
-      (import.meta.env.VITE_TRAKT_CLIENT_ID as string | undefined) ||
-      (import.meta.env.TRAKT_CLIENT_ID as string | undefined);
-    if (!clientId) {
+  const connect = async () => {
+    let clientId: string;
+    try {
+      const res = await import("@/lib/api/trakt").then((m) => m.getTraktClientId());
+      if (!res.clientId) throw new Error("Missing client ID");
+      clientId = res.clientId;
+    } catch {
       toast.error("Trakt is not configured.");
       return;
     }

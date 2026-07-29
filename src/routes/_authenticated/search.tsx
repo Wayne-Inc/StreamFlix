@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Search as SearchIcon, X, User, Film, ExternalLink } from "lucide-react";
+import { Search as SearchIcon, X, User, Film, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { MovieCard } from "@/components/streamflix/MovieCard";
@@ -39,6 +39,7 @@ function SearchPage() {
   const [people, setPeople] = useState<PersonResult[]>([]);
   const [genres, setGenres] = useState<{ id: number; name: string }[]>([]);
   const [genreResults, setGenreResults] = useState<Movie[]>([]);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<Movie[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -71,9 +72,10 @@ function SearchPage() {
   }, [debouncedQ, tab]);
 
   useEffect(() => {
-    if (tab !== "titles" || debouncedQ.length < 2) { setResults([]); return; }
+    if (tab !== "titles" || debouncedQ.length < 2) { setResults([]); setPage(1); return; }
     let cancelled = false;
     setLoading(true);
+    setPage(1);
     search(debouncedQ).then((res) => {
       if (!cancelled) { setResults(res); setLoading(false); }
     }).catch(() => { if (!cancelled) { setResults([]); setLoading(false); } });
@@ -96,6 +98,7 @@ function SearchPage() {
   const handleGenreClick = async (genreId: number) => {
     setTab("genres");
     setQ("");
+    setPage(1);
     setLoading(true);
     try {
       const res = await searchByGenre(String(genreId));
@@ -173,7 +176,7 @@ function SearchPage() {
             {(["titles", "genres", "people"] as Tab[]).map((t) => (
               <button
                 key={t}
-                onClick={() => { setTab(t); setQ(""); setResults([]); setPeople([]); setGenreResults([]); }}
+                  onClick={() => { setTab(t); setQ(""); setResults([]); setPeople([]); setGenreResults([]); setPage(1); }}
                 className={`flex items-center gap-1.5 px-4 py-2.5 sm:py-2 text-sm font-medium transition border-b-2 -mb-px ${tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
               >
                 {t === "titles" && <Film className="size-4" />}
@@ -183,6 +186,9 @@ function SearchPage() {
               </button>
             ))}
           </div>
+        </div>
+
+        <section className="mx-auto w-full max-w-[1800px]">
 
           {tab === "genres" && (
             <div className="mt-6">
@@ -200,13 +206,40 @@ function SearchPage() {
               {genreResults.length > 0 && (
                 <div className="mt-10">
                   <p className="text-sm text-muted-foreground">{genreResults.length} results</p>
-                  <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                    {genreResults.map((m) => (
+                  <div className="mt-4 grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5">
+                    {genreResults.slice((page - 1) * 15, page * 15).map((m) => (
                       <button key={m.id} onClick={() => navigate({ to: "/movie/$id", params: { id: m.id } })} className="text-left">
                         <MovieCard movie={m} />
                       </button>
                     ))}
                   </div>
+                  {genreResults.length > 15 && (
+                    <div className="mt-8 hidden items-center justify-center gap-2 md:flex">
+                      <button
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                        className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-default"
+                      >
+                        <ChevronLeft className="size-4" /> Previous
+                      </button>
+                      {Array.from({ length: Math.ceil(genreResults.length / 15) }, (_, i) => i + 1).map((p) => (
+                        <button
+                          key={p}
+                          onClick={() => setPage(p)}
+                          className={`rounded-md px-3 py-2 text-sm ${p === page ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground hover:text-foreground"}`}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => setPage((p) => Math.min(Math.ceil(genreResults.length / 15), p + 1))}
+                        disabled={page === Math.ceil(genreResults.length / 15)}
+                        className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-default"
+                      >
+                        Next <ChevronRight className="size-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -228,13 +261,40 @@ function SearchPage() {
               <p className="text-sm text-muted-foreground">
                 {loading ? "Searching..." : `${results.length} result${results.length === 1 ? "" : "s"} for "${q}"`}
               </p>
-              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                {results.map((m) => (
+              <div className="mt-6 grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5">
+                {results.slice((page - 1) * 15, page * 15).map((m) => (
                   <button key={m.id} onClick={() => navigate({ to: "/movie/$id", params: { id: m.id } })} className="text-left">
                     <MovieCard movie={m} />
                   </button>
                 ))}
               </div>
+              {results.length > 15 && (
+                <div className="mt-8 hidden items-center justify-center gap-2 md:flex">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-default"
+                  >
+                    <ChevronLeft className="size-4" /> Previous
+                  </button>
+                  {Array.from({ length: Math.ceil(results.length / 15) }, (_, i) => i + 1).map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className={`rounded-md px-3 py-2 text-sm ${p === page ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground hover:text-foreground"}`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setPage((p) => Math.min(Math.ceil(results.length / 15), p + 1))}
+                    disabled={page === Math.ceil(results.length / 15)}
+                    className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-default"
+                  >
+                    Next <ChevronRight className="size-4" />
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -270,7 +330,7 @@ function SearchPage() {
               )}
             </div>
           )}
-        </div>
+        </section>
       </main>
       <Footer />
     </div>
