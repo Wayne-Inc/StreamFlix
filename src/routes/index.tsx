@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { ChevronRight, Play, Download, Globe, Tv, Smartphone, ChevronDown, Phone, Camera, Code2 } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
@@ -7,7 +7,21 @@ import type { Movie } from "@/lib/types";
 import heroImg from "@/assets/landing.jpg";
 
 export const Route = createFileRoute("/")({
-    loader: async () => {
+  ssr: false,
+  beforeLoad: async () => {
+    const { auth } = await import("@/lib/firebase");
+    const { onAuthStateChanged } = await import("firebase/auth");
+    const user = await new Promise<any>((resolve) => {
+      const unsub = onAuthStateChanged(auth, (user) => {
+        unsub();
+        resolve(user);
+      });
+    });
+    if (user) {
+      throw redirect({ to: "/browse" });
+    }
+  },
+  loader: async () => {
     const data = await tmdbFetch("/trending/movie/week");
     return (data.results || []).slice(0, 10).map(toMovie);
   },

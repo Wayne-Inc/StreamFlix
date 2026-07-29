@@ -2,9 +2,9 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Monitor, Smartphone, Tablet, Trash2, LogOut, Mail, User as UserIcon, ShieldCheck, CheckCircle2, Camera, Check } from "lucide-react";
+import { Loader2, Monitor, Smartphone, Tablet, Trash2, LogOut, Mail, User as UserIcon, ShieldCheck, CheckCircle2, Camera, Check, AlertTriangle } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
-import { signOut as firebaseSignOut, sendEmailVerification } from "firebase/auth";
+import { signOut as firebaseSignOut, sendEmailVerification, sendSignInLinkToEmail } from "firebase/auth";
 import {
   collection,
   query,
@@ -61,6 +61,7 @@ function SettingsPage() {
   const [avatarInput, setAvatarInput] = useState("");
   const [savingName, setSavingName] = useState(false);
   const currentDeviceId = typeof window !== "undefined" ? getDeviceId() : "";
+  const [deleteConfirming, setDeleteConfirming] = useState(false);
 
   useEffect(() => {
     recordCurrentDevice();
@@ -223,6 +224,26 @@ function SettingsPage() {
     router.navigate({ to: "/auth", replace: true });
   };
 
+  const isEmailPassword =
+    user?.providerData.some((p) => p?.providerId === "password") ?? false;
+
+  const requestDelete = async () => {
+    if (!user?.email) return;
+    const email = user.email;
+    const actionCodeSettings = {
+      url: `${window.location.origin}/delete-account?email=${encodeURIComponent(email)}`,
+      handleCodeInApp: true,
+    };
+    try {
+      window.localStorage.setItem("emailForDelete", email);
+      await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+      setDeleteConfirming(true);
+    } catch (err: any) {
+      setDeleteConfirming(false);
+      toast.error(err?.message ?? "Failed to send confirmation email.");
+    }
+  };
+
   const createdAt = user?.metadata?.creationTime ?? null;
 
   return (
@@ -287,31 +308,32 @@ function SettingsPage() {
             </div>
             <div className="flex-1 grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="text-xs uppercase tracking-wider text-muted-foreground">Email</label>
-                <div className="mt-1 flex items-center gap-2 rounded-md border border-border bg-background/60 px-3 py-2 text-sm">
-                  <Mail className="size-4 text-muted-foreground shrink-0" />
-                  <span className="min-w-0 break-all">{user?.email ?? "—"}</span>
-                  {user?.emailVerified ? (
-                    <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400 shrink-0 whitespace-nowrap">
-                      <CheckCircle2 className="size-3" /> Verified
-                    </span>
-                  ) : (
-                    <button
-                      onClick={async () => {
-                        if (!user) return;
-                        try {
-                          await sendEmailVerification(user);
-                          toast.success("Verification email sent.");
-                        } catch (e: any) {
-                          toast.error(e.message);
-                        }
-                      }}
-                      className="ml-auto shrink-0 rounded-md border border-border px-2 py-0.5 text-[10px] hover:bg-accent whitespace-nowrap"
-                    >
-                      Verify email
-                    </button>
-                  )}
-                </div>
+                  <label className="text-xs uppercase tracking-wider text-muted-foreground">Email</label>
+                  <div className="mt-1 flex items-center gap-2 rounded-md border border-border bg-background/60 px-3 py-2 text-sm">
+                    <Mail className="size-4 text-muted-foreground shrink-0" />
+                    <span
+                      className="min-w-0 truncate"
+                      style={{ fontSize: (user?.email?.length ?? 0) > 30 ? `${Math.max(11, 14 - ((user.email.length - 30) * 0.12))}px` : undefined }}
+                    >{user?.email ?? "—"}</span>
+                    {user?.emailVerified ? (
+                      <CheckCircle2 className="ml-auto size-4 shrink-0 text-emerald-400" />
+                    ) : (
+                      <button
+                        onClick={async () => {
+                          if (!user) return;
+                          try {
+                            await sendEmailVerification(user);
+                            toast.success("Verification email sent.");
+                          } catch (e: any) {
+                            toast.error(e.message);
+                          }
+                        }}
+                        className="ml-auto shrink-0 rounded-md border border-border px-2 py-0.5 text-[10px] hover:bg-accent whitespace-nowrap"
+                      >
+                        Verify email
+                      </button>
+                    )}
+                  </div>
               </div>
               <div>
                 <label htmlFor="dn" className="text-xs uppercase tracking-wider text-muted-foreground">Display name</label>
@@ -460,6 +482,43 @@ function SettingsPage() {
             </button>
           </div>
         </section>
+
+        {isEmailPassword && (
+          <section className="mt-6 rounded-lg border border-red-500/20 bg-card/40 p-4 sm:p-6">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-red-400">Delete account</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Permanently remove your account and all data. This cannot be undone.
+                </p>
+              </div>
+              {deleteConfirming ? (
+                <p className="text-xs text-muted-foreground">Check your email for the confirmation link.</p>
+              ) : (
+                <button
+                  onClick={requestDelete}
+                  className="inline-flex items-center gap-2 rounded-md bg-destructive px-3 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90"
+                >
+                  <Trash2 className="size-4" /> Delete account
+                </button>
+              )}
+            </div>
+            {deleteConfirming && (
+              <div className="mt-4 rounded-lg bg-background/80 p-3 text-sm text-muted-foreground">
+                <p>
+                  A confirmation email has been sent to <strong>{user?.email}</strong>.
+                  Click the link in the email to permanently delete your account.
+                </p>
+                <button
+                  onClick={() => setDeleteConfirming(false)}
+                  className="mt-2 text-xs text-muted-foreground hover:text-foreground hover:underline"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </section>
+        )}
 
         <div className="mt-8 text-center">
           <Link to="/browse" className="text-xs text-muted-foreground hover:text-foreground">

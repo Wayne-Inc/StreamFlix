@@ -224,7 +224,7 @@ function SearchPage() {
           )}
 
           {tab === "titles" && q && (
-            <div className="mx-auto mt-10 max-w-7xl">
+            <div className="mx-auto mt-10 w-full">
               <p className="text-sm text-muted-foreground">
                 {loading ? "Searching..." : `${results.length} result${results.length === 1 ? "" : "s"} for "${q}"`}
               </p>

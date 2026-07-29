@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { Play, Plus, ThumbsUp, Share2, Star, Eye, ExternalLink, Settings2, Upload, WandSparkles, EyeOff, Clapperboard, CheckCheck } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Play, Plus, ThumbsUp, Share2, Star, Eye, ExternalLink, EyeOff, Clapperboard, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
@@ -9,10 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { movieById, loadSimilar } from "@/lib/streamflix-data";
 import { fetchTraktSummary, rateMovie, markAsWatched, addToWatchlist, removeFromWatchlist } from "@/lib/api/trakt";
 import { discoverByGenre } from "@/lib/api/tmdb";
-import { getVideoSource } from "@/lib/video-sources";
-import { auth, db } from "@/lib/firebase";
-import { doc, setDoc } from "firebase/firestore";
-import { supabase } from "@/lib/supabase";
+import { auth } from "@/lib/firebase";
 import { isInMyList, addToMyList, removeFromMyList } from "@/lib/my-list";
 import { getUserRating, rateMovie as saveRating } from "@/lib/ratings";
 import { StarRating } from "@/components/streamflix/StarRating";
@@ -23,10 +20,14 @@ function MovieSkeleton() {
   return (
     <div className="min-h-dvh bg-background">
       <Navbar />
+      {/* Hero skeleton */}
       <section className="relative h-[70vh] min-h-[460px] overflow-hidden bg-surface/50">
-        <div className="flex h-full items-end md:items-center px-4 sm:px-8 md:px-16 pb-16 md:pb-0">
-          <div className="max-w-2xl space-y-4 w-full">
-            <Skeleton className="h-14 w-full max-w-md rounded" />
+        <div className="flex h-full flex-col items-end md:items-center px-4 sm:px-8 md:px-16 pb-16 md:pb-0">
+          {/* On mobile: spacer first pushes title+buttons to bottom; on desktop: at bottom */}
+          <div className="flex-1 min-h-4 order-1 md:order-2" />
+
+          <div className="max-w-2xl space-y-4 w-full order-2 md:order-1 mb-4 sm:mb-6 md:mb-0">
+            <Skeleton className="h-12 sm:h-14 w-full max-w-md rounded" />
             <div className="flex gap-2">
               <Skeleton className="h-4 w-16 rounded" />
               <Skeleton className="h-4 w-12 rounded" />
@@ -34,8 +35,11 @@ function MovieSkeleton() {
               <Skeleton className="h-4 w-14 rounded" />
             </div>
             <Skeleton className="h-16 w-full max-w-xl rounded" />
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3 pt-2">
               <Skeleton className="h-12 w-24 rounded-md" />
+              <Skeleton className="h-12 w-24 rounded-md" />
+              <Skeleton className="size-12 rounded-full" />
+              <Skeleton className="size-12 rounded-full" />
               <Skeleton className="size-12 rounded-full" />
               <Skeleton className="size-12 rounded-full" />
               <Skeleton className="size-12 rounded-full" />
@@ -43,15 +47,68 @@ function MovieSkeleton() {
           </div>
         </div>
       </section>
-      <section className="mx-auto max-w-6xl px-4 py-12 sm:px-8">
-        <div className="grid gap-8 md:grid-cols-3">
-          <div className="md:col-span-2 space-y-3">
+
+      {/* Below-hero skeleton */}
+      <section className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-8 md:grid-cols-3 overflow-hidden">
+        <div className="md:col-span-2 flex flex-col gap-5 text-sm min-w-0">
+          {/* Cast */}
+          <div className="min-w-0">
+            <Skeleton className="h-5 w-10 rounded mb-3" />
+            <div className="flex flex-nowrap gap-3 sm:gap-4 overflow-x-auto pb-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="flex flex-col items-center gap-1.5 w-[72px] sm:w-20 flex-shrink-0">
+                  <Skeleton className="size-12 sm:size-16 rounded-full" />
+                  <Skeleton className="h-3 w-14 rounded" />
+                  <Skeleton className="h-2 w-10 rounded" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex-1 min-h-4" />
+
+          {/* Director */}
+          <Skeleton className="h-4 w-48 rounded" />
+
+          {/* Genres */}
+          <div className="flex flex-wrap gap-2">
+            <Skeleton className="h-8 w-20 rounded-full" />
+            <Skeleton className="h-8 w-28 rounded-full" />
+            <Skeleton className="h-8 w-24 rounded-full" />
+          </div>
+
+          {/* Rate this */}
+          <div>
+            <Skeleton className="h-5 w-20 rounded mb-2" />
+            <div className="flex gap-1">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="size-8 rounded" />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-4 rounded-lg border border-border bg-surface p-3 sm:p-4 h-auto sm:h-[340px]">
+          <Skeleton className="h-5 w-32 rounded" />
+          <div className="space-y-2">
             <Skeleton className="h-4 w-full rounded" />
             <Skeleton className="h-4 w-3/4 rounded" />
             <Skeleton className="h-4 w-1/2 rounded" />
+            <Skeleton className="h-4 w-2/3 rounded" />
+            <Skeleton className="h-4 w-3/5 rounded" />
+            <Skeleton className="h-4 w-1/3 rounded" />
           </div>
-          <div>
-            <Skeleton className="h-40 rounded-lg" />
+          <div className="border-t border-border pt-4">
+            <Skeleton className="h-5 w-16 rounded mb-3" />
+            <div className="grid grid-cols-3 gap-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="rounded bg-surface p-3">
+                  <Skeleton className="h-4 w-8 rounded mx-auto mb-1" />
+                  <Skeleton className="h-3 w-12 rounded mx-auto" />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -100,9 +157,10 @@ function MoviePage() {
   const [inWatchlist, setInWatchlist] = useState(false);
   const [liked, setLiked] = useState(false);
   const [watched, setWatched] = useState(false);
-  const [showAdmin, setShowAdmin] = useState(false);
-  const [adminUrl, setAdminUrl] = useState("");
   const [descExpanded, setDescExpanded] = useState(false);
+
+  const [userRating, setUserRating] = useState<number | null>(null);
+  const [trailerOpen, setTrailerOpen] = useState(false);
 
   const handleRating = async (rating: number) => {
     const user = auth.currentUser;
@@ -113,20 +171,8 @@ function MoviePage() {
       toast.success(`Rated ${rating}/10`);
     } catch (e: any) { toast.error(e.message); }
   };
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [userRating, setUserRating] = useState<number | null>(null);
-  const [trailerOpen, setTrailerOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [subtitles, setSubtitles] = useState<{ lang: string; label: string; url: string }[]>([]);
-  const [subtitleLang, setSubtitleLang] = useState("en");
-  const [subtitleUrl, setSubtitleUrl] = useState("");
 
   useEffect(() => {
-    getVideoSource(movie.id).then((src) => {
-      if (src?.video_url) { setAdminUrl(src.video_url); }
-      if (src?.subtitles) { setSubtitles(src.subtitles); }
-    });
     isInMyList(movie.id).then(setInWatchlist);
     getUserRating(movie.id).then(setUserRating);
   }, [movie.id]);
@@ -195,103 +241,6 @@ function MoviePage() {
     } catch (e: any) { toast.error(e.message); }
   };
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    setUploadProgress(0);
-    const path = `${movie.id}_${Date.now()}_${file.name}`;
-    const contentType = file.type || "application/octet-stream";
-    try {
-      const { error } = await supabase.storage.from("movie_videos").upload(path, file, {
-        upsert: true,
-        contentType,
-      });
-      if (error) {
-        if (error.message?.includes("bucket") || error.message?.includes("not found")) {
-          toast.error("Supabase bucket 'movie_videos' not found. Create it in Supabase Storage dashboard.");
-        } else {
-          toast.error(error.message);
-        }
-        return;
-      }
-      const { data: urlData } = supabase.storage.from("movie_videos").getPublicUrl(path);
-      setAdminUrl(urlData.publicUrl);
-      toast.success("Upload complete");
-    } catch (err: any) {
-      const msg = err?.message || "";
-      if (msg.includes("fetch") || msg.includes("network") || msg.includes("NetworkError")) {
-        toast.error("Video upload failed: network error or Supabase is not reachable.");
-      } else {
-        toast.error(msg || "Failed to upload video");
-      }
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleSubtitleUrlSubmit = async () => {
-    if (!subtitleUrl.trim() || !subtitleLang.trim()) {
-      toast.error("Enter a subtitle URL and language.");
-      return;
-    }
-    if (!/^https?:\/\//i.test(subtitleUrl.trim())) {
-      toast.error("Enter a valid http or https subtitle URL.");
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const lang = subtitleLang.trim().toLowerCase();
-      const labels: Record<string, string> = { en: "English", es: "Spanish", fr: "French", de: "German", it: "Italian", pt: "Portuguese", ja: "Japanese", ko: "Korean", zh: "Chinese", ar: "Arabic", ru: "Russian", nl: "Dutch", pl: "Polish", sv: "Swedish", da: "Danish", fi: "Finnish", no: "Norwegian", cs: "Czech", hu: "Hungarian", ro: "Romanian", el: "Greek", tr: "Turkish", th: "Thai", vi: "Vietnamese", hi: "Hindi" };
-      const label = labels[lang] || lang.toUpperCase();
-      const entry = { lang, label, url: subtitleUrl.trim() };
-      const updated = [...subtitles.filter((s) => s.lang !== lang), entry];
-      await setDoc(doc(db, "movie_sources", movie.id), { subtitles: updated }, { merge: true });
-      setSubtitles(updated);
-      setSubtitleUrl("");
-      toast.success("Subtitle URL saved");
-    } catch (err: any) {
-      const msg = err?.message || "";
-      if (msg.includes("fetch") || msg.includes("network") || msg.includes("NetworkError")) {
-        toast.error("Subtitle URL save failed: network error or Supabase is not reachable.");
-      } else {
-        toast.error(msg || "Failed to save subtitle URL");
-      }
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleRemoveSubtitle = async (lang: string) => {
-    try {
-      const path = `subtitles/${movie.id}_${lang}.vtt`;
-      await supabase.storage.from("movie_videos").remove([path]);
-      const updated = subtitles.filter((s) => s.lang !== lang);
-      await setDoc(doc(db, "movie_sources", movie.id), { subtitles: updated }, { merge: true });
-      setSubtitles(updated);
-      toast.success("Subtitle removed");
-    } catch (err: any) {
-      toast.error(err.message);
-    }
-  };
-
-  const handleSaveVideoSource = async () => {
-    if (!adminUrl.trim()) return;
-    try {
-      await setDoc(doc(db, "movie_sources", movie.id), {
-        tmdb_id: movie.id,
-        title: movie.title,
-        video_url: adminUrl.trim(),
-        type: "movie",
-      }, { merge: true });
-      toast.success("Video source saved");
-      setShowAdmin(false);
-    } catch (e: any) {
-      toast.error(e.message);
-    }
-  };
-
   return (
     <div className="min-h-dvh bg-background">
       <Navbar />
@@ -301,8 +250,11 @@ function MoviePage() {
         <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
 
         <div className="relative z-10 flex h-full flex-col pb-8 md:pb-16 px-4 sm:px-8 md:px-16">
-          {/* Title, metadata, description at top */}
-          <div className="max-w-2xl space-y-4">
+          {/* On mobile: spacer first (order-1), then title+buttons at bottom */}
+          <div className="flex-1 min-h-4 order-1 md:order-2" />
+
+          {/* Title, metadata, description */}
+          <div className="max-w-2xl space-y-4 order-2 md:order-1 mb-4 sm:mb-6 md:mb-0">
             <h1 className="text-4xl font-black tracking-tight sm:text-6xl">{movie.title}</h1>
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span className="font-semibold text-emerald-400">{movie.match}% Match</span>
@@ -316,11 +268,8 @@ function MoviePage() {
             </div>
           </div>
 
-          {/* Spacer pushes buttons to bottom */}
-          <div className="flex-1 min-h-4" />
-
-          {/* Play, Trailer, action buttons at bottom */}
-          <div className="max-w-2xl">
+          {/* Play, Trailer, action buttons */}
+          <div className="max-w-2xl order-3">
             <div className="flex flex-wrap items-center gap-3">
               <Link to="/watch/$id" params={{ id: movie.id }} search={{ autoplay: true }} className="inline-flex items-center gap-2 rounded-md bg-foreground px-6 py-3 font-semibold text-background hover:bg-foreground/85">
                 <Play className="size-5 fill-current" /> Play
@@ -342,107 +291,10 @@ function MoviePage() {
               <button onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success("Link copied"); }} className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground" aria-label="Share">
                 <Share2 className="size-4 sm:size-5" />
               </button>
-              <button onClick={() => setShowAdmin((v) => !v)} className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground" aria-label="Settings">
-                <Settings2 className="size-5" />
-              </button>
             </div>
           </div>
         </div>
       </section>
-
-      {showAdmin && (
-        <div className="mx-auto max-w-6xl px-4 sm:px-8 pt-4">
-          <div className="rounded-lg border border-border bg-surface p-4">
-            <p className="mb-2 text-sm font-semibold text-foreground">Video Source ({movie.id})</p>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <input
-                value={adminUrl}
-                onChange={(e) => setAdminUrl(e.target.value)}
-                placeholder="https://firebasestorage.googleapis.com/..."
-                className="flex-1 rounded border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
-              />
-              <button onClick={handleSaveVideoSource} className="rounded bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
-                <WandSparkles className="mr-1.5 inline size-4" /> Save
-              </button>
-            </div>
-            <div className="mt-3 flex items-center gap-3">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="video/*"
-                onChange={handleUpload}
-                className="hidden"
-              />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="inline-flex items-center gap-1.5 rounded border border-border bg-background px-3 py-2 text-sm text-foreground hover:bg-card disabled:opacity-50"
-              >
-                <Upload className="size-4" /> {uploading ? "Uploading…" : "Upload video"}
-              </button>
-            </div>
-
-            <hr className="my-4 border-border" />
-            <p className="mb-2 text-sm font-semibold text-foreground">Subtitles</p>
-            <div className="space-y-3">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <select
-                  value={subtitleLang}
-                  onChange={(e) => setSubtitleLang(e.target.value)}
-                  className="rounded border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
-                >
-                  <option value="en">English</option>
-                  <option value="es">Spanish</option>
-                  <option value="fr">French</option>
-                  <option value="de">German</option>
-                  <option value="it">Italian</option>
-                  <option value="pt">Portuguese</option>
-                  <option value="ja">Japanese</option>
-                  <option value="ko">Korean</option>
-                  <option value="zh">Chinese</option>
-                  <option value="ar">Arabic</option>
-                  <option value="ru">Russian</option>
-                  <option value="hi">Hindi</option>
-                  <option value="nl">Dutch</option>
-                  <option value="pl">Polish</option>
-                  <option value="tr">Turkish</option>
-                  <option value="th">Thai</option>
-                  <option value="vi">Vietnamese</option>
-                </select>
-                <input
-                  value={subtitleUrl}
-                  onChange={(e) => setSubtitleUrl(e.target.value)}
-                  placeholder="https://example.com/subtitles.vtt"
-                  className="flex-1 rounded border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
-                />
-                <button
-                  onClick={handleSubtitleUrlSubmit}
-                  disabled={uploading}
-                  className="inline-flex items-center gap-1.5 rounded border border-border bg-background px-3 py-2 text-sm text-foreground hover:bg-card disabled:opacity-50"
-                >
-                  <ExternalLink className="size-4" /> {uploading ? "Saving…" : "Save URL"}
-                </button>
-              </div>
-              {subtitles.length > 0 && (
-                <div className="mt-2 space-y-1">
-                  {subtitles.map((sub) => (
-                    <div key={sub.lang} className="flex items-center gap-2 text-sm text-foreground">
-                      <span className="rounded bg-card px-2 py-0.5 text-xs uppercase">{sub.lang}</span>
-                      <span className="flex-1">{sub.label}</span>
-                      <button
-                        onClick={() => handleRemoveSubtitle(sub.lang)}
-                        className="text-xs text-red-400 hover:text-red-300"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       <section className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-8 md:grid-cols-3 overflow-hidden">
         <div className="md:col-span-2 flex flex-col gap-5 text-sm min-w-0">

@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
 import { auth } from "@/lib/firebase";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, updateProfile as updateFirebaseProfile, sendEmailVerification } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, updateProfile as updateFirebaseProfile, sendEmailVerification, sendPasswordResetEmail } from "firebase/auth";
 import heroImg from "@/assets/hero-1.jpg";
 
 export const Route = createFileRoute("/auth")({
@@ -32,6 +32,8 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [verifyMsg, setVerifyMsg] = useState("");
   const [popupBlocked, setPopupBlocked] = useState(false);
+  const [forgotPw, setForgotPw] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   // Redirect away if already signed in (use profile chooser).
   useEffect(() => {
@@ -87,6 +89,24 @@ function AuthPage() {
     setBusy(false);
   };
 
+  const onForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setBusy(true);
+    try {
+      await sendPasswordResetEmail(auth, email.trim());
+      setResetSent(true);
+      toast.success("Password reset email sent.");
+    } catch (err: any) {
+      const msg = err?.code
+        ? err.code.replace("auth/", "").replace(/-/g, " ")
+        : err?.message ?? "Failed to send reset email.";
+      toast.error(msg);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const onGoogle = async () => {
     setBusy(true);
     setPopupBlocked(false);
@@ -120,80 +140,124 @@ function AuthPage() {
 
         <div className="mx-auto mt-4 max-w-md rounded-md bg-black/75 p-8 sm:p-12">
           <h1 className="text-3xl font-bold">
-            {mode === "signin" ? "Sign In" : "Create Account"}
+            {forgotPw ? "Reset Password" : mode === "signin" ? "Sign In" : "Create Account"}
           </h1>
+          {forgotPw ? (
+              <form className="mt-6 space-y-4" onSubmit={onForgotPassword}>
+                <p className="text-sm text-muted-foreground">
+                  Enter your email address and we'll send you a link to reset your password.
+                </p>
+                <input
+                  required
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  className="w-full rounded bg-neutral-800 px-4 py-4 focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                {resetSent && (
+                  <div className="rounded border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
+                    Check your inbox. If an account with that email exists, a reset link has been sent.
+                  </div>
+                )}
+                <button
+                  disabled={busy}
+                  className="w-full rounded bg-primary py-3 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                >
+                  {busy ? "Please wait…" : "Send Reset Link"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setForgotPw(false); setResetSent(false); }}
+                  className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  <ArrowLeft className="size-3" /> Back to sign in
+                </button>
+              </form>
+            ) : (
+              <form className="mt-6 space-y-4" onSubmit={onSubmit}>
+                {verifyMsg && (
+                  <div className="rounded border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
+                    {verifyMsg}
+                    {mode === "signin" && (
+                      <button type="button" onClick={resendVerification} disabled={busy} className="ml-2 underline hover:no-underline">
+                        Resend
+                      </button>
+                    )}
+                  </div>
+                )}
+                {mode === "signup" && (
+                  <input
+                    required
+                    placeholder="Full name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full rounded bg-neutral-800 px-4 py-4 focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                )}
+                <input
+                  required
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  className="w-full rounded bg-neutral-800 px-4 py-4 focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <div className="relative">
+                  <input
+                    required
+                    minLength={6}
+                    type={showPw ? "text" : "password"}
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                    className="w-full rounded bg-neutral-800 px-4 py-4 pr-12 focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPw((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label="Toggle password"
+                  >
+                    {showPw ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+                  </button>
+                </div>
 
-          <form className="mt-6 space-y-4" onSubmit={onSubmit}>
-            {verifyMsg && (
-              <div className="rounded border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
-                {verifyMsg}
-                {mode === "signin" && (
-                  <button type="button" onClick={resendVerification} disabled={busy} className="ml-2 underline hover:no-underline">
-                    Resend
+                {mode === "signin" && !forgotPw && (
+                  <button
+                    type="button"
+                    onClick={() => { setForgotPw(true); setResetSent(false); }}
+                    className="text-sm text-muted-foreground hover:text-foreground hover:underline"
+                  >
+                    Forgot password?
                   </button>
                 )}
-              </div>
-            )}
-            {mode === "signup" && (
-              <input
-                required
-                placeholder="Full name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full rounded bg-neutral-800 px-4 py-4 focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            )}
-            <input
-              required
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
-              className="w-full rounded bg-neutral-800 px-4 py-4 focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            <div className="relative">
-              <input
-                required
-                minLength={6}
-                type={showPw ? "text" : "password"}
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete={mode === "signin" ? "current-password" : "new-password"}
-                className="w-full rounded bg-neutral-800 px-4 py-4 pr-12 focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPw((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                aria-label="Toggle password"
-              >
-                {showPw ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
-              </button>
-            </div>
 
-            {mode === "signup" && password && (
-              <div className="space-y-1">
-                <div className="flex gap-1">
-                  {[0, 1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className={`h-1 flex-1 rounded ${i < s ? colors[s - 1] : "bg-border"}`}
-                    />
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground">{labels[Math.max(0, s - 1)]}</p>
-              </div>
-            )}
+                {mode === "signup" && password && (
+                  <div className="space-y-1">
+                    <div className="flex gap-1">
+                      {[0, 1, 2, 3].map((i) => (
+                        <div
+                          key={i}
+                          className={`h-1 flex-1 rounded ${i < s ? colors[s - 1] : "bg-border"}`}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground">{labels[Math.max(0, s - 1)]}</p>
+                  </div>
+                )}
 
-            <button
-              disabled={busy}
-              className="w-full rounded bg-primary py-3 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
-            >
-              {busy ? "Please wait…" : mode === "signin" ? "Sign In" : "Create Account"}
-            </button>
-          </form>
+                <button
+                  disabled={busy}
+                  className="w-full rounded bg-primary py-3 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                >
+                  {busy ? "Please wait…" : mode === "signin" ? "Sign In" : "Create Account"}
+                </button>
+              </form>
+            )}
 
           {popupBlocked && (
             <div className="mt-4 rounded border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
@@ -203,30 +267,34 @@ function AuthPage() {
             </div>
           )}
 
-          <div className="mt-6 flex items-center gap-3 text-sm text-muted-foreground">
-            <div className="h-px flex-1 bg-border" /> OR <div className="h-px flex-1 bg-border" />
-          </div>
-          <button
-            onClick={onGoogle}
-            disabled={busy}
-            className="mt-4 w-full rounded bg-foreground/10 py-3 font-semibold text-foreground hover:bg-foreground/20 disabled:opacity-60"
-          >
-            Continue with Google
-          </button>
-
-          <p className="mt-8 text-muted-foreground">
-            {mode === "signin" ? "New to StreamFlix?" : "Already have an account?"}{" "}
+          {!forgotPw && (<>
+            <div className="mt-6 flex items-center gap-3 text-sm text-muted-foreground">
+              <div className="h-px flex-1 bg-border" /> OR <div className="h-px flex-1 bg-border" />
+            </div>
             <button
-              type="button"
-              onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-              className="text-foreground hover:underline"
+              onClick={onGoogle}
+              disabled={busy}
+              className="mt-4 w-full rounded bg-foreground/10 py-3 font-semibold text-foreground hover:bg-foreground/20 disabled:opacity-60"
             >
-              {mode === "signin" ? "Sign up now." : "Sign in."}
+              Continue with Google
             </button>
-          </p>
-          <p className="mt-3 text-xs text-muted-foreground">
-            <Link to="/" className="hover:underline">← Back to home</Link>
-          </p>
+
+            <p className="mt-8 text-muted-foreground">
+              {mode === "signin" ? "New to StreamFlix?" : "Already have an account?"}{" "}
+              <button
+                type="button"
+                onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+                className="text-foreground hover:underline"
+              >
+                {mode === "signin" ? "Sign up now." : "Sign in."}
+              </button>
+            </p>
+          </>)}
+          {!forgotPw && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              <Link to="/" className="hover:underline">← Back to home</Link>
+            </p>
+          )}
         </div>
       </div>
     </main>
