@@ -25,6 +25,7 @@ import {
 } from "@/lib/continue-watching";
 import { getContinueWatchingFromFirestore, toMovie as fsToMovie } from "@/lib/continue-watching-firestore";
 import { getMyList } from "@/lib/my-list";
+import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
 
 const searchSchema = z.object({
   kind: z.enum(["home", "movies", "tv", "new", "my-list"]).catch("home").default("home"),
@@ -92,9 +93,11 @@ export const Route = createFileRoute("/_authenticated/browse")({
             rating: "",
             runtime: "",
             genres: [],
+            genreIds: [],
             cast: [],
             castPfp: [],
             director: "",
+            directorId: "",
             match: 0,
           }));
       } catch {}
@@ -139,7 +142,7 @@ function BrowsePage() {
 
         const items = await fetchTraktWatchlist({ data: { token: conn.accessToken } });
         setTraktWatchlist(
-          items.map((item) => ({
+          items.map((item: any) => ({
             id: item.tmdbId,
             title: item.title,
             year: item.year,
@@ -149,9 +152,11 @@ function BrowsePage() {
             rating: "",
             runtime: "",
             genres: [],
+            genreIds: [],
             cast: [],
             castPfp: [],
             director: "",
+            directorId: "",
             match: 0,
           })),
         );
@@ -197,7 +202,7 @@ function BrowsePage() {
 
   const isMyList = kind === "my-list";
 
-  const sortedRows = useMemo(() => {
+  const sortedRows: { title: string; items: Movie[] }[] = useMemo(() => {
     if (!isMyList) return rows;
     return rows.map((r) => {
       const sorted = [...r.items].sort((a, b) => {
@@ -217,18 +222,33 @@ function BrowsePage() {
     return [{ title: "My List", items: Array.from(merged.values()) }];
   }, [isMyList, sortedRows, traktWatchlist]);
 
+  const kidsMode = useMemo(() => isKidsProfile(), []);
+
+  const filteredHeroSlides = useMemo(() => {
+    if (!kidsMode) return heroSlides;
+    return filterKidsContent(heroSlides);
+  }, [kidsMode, heroSlides]);
+
+  const filteredRows = useMemo(() => {
+    if (!kidsMode) return displayedRows;
+    return displayedRows.map((r) => ({
+      ...r,
+      items: filterKidsContent(r.items),
+    }));
+  }, [kidsMode, displayedRows]);
+
   const showEmptyMyList = isMyList && traktWatchlistLoaded && displayedRows[0]?.items.length === 0;
 
   return (
     <div className="min-h-dvh bg-background">
       <Navbar />
-      {!isMyList && <HeroBanner slides={heroSlides} />}
+      {!isMyList && <HeroBanner slides={filteredHeroSlides} />}
       <div className={`relative z-10 ${isMyList ? "pt-24" : "mt-0 md:mt-12"} space-y-4 md:space-y-8`}>
         {!isMyList && continueRow && kind === "home" && (
           <section className="space-y-3 py-4">
             <h2 className="px-4 sm:px-8 text-lg sm:text-xl font-semibold tracking-tight">Continue Watching</h2>
             <div className="scrollbar-hide flex gap-2 overflow-x-auto px-4 sm:px-8">
-              {continueRow.items.map((item) => (
+              {continueRow.items.filter((item) => !kidsMode || filterKidsContent([item.movie]).length > 0).map((item) => (
                 <MovieCard key={item.movie.id} movie={item.movie} progress={item.progress} />
               ))}
             </div>
@@ -258,7 +278,7 @@ function BrowsePage() {
             </Select>
           </div>
         )}
-        {sortedRows.map((r: { title: string; items: Movie[] }) => (
+        {filteredRows.map((r: { title: string; items: Movie[] }) => (
           <Row key={r.title} title={r.title} items={r.items} />
         ))}
       </div>

@@ -124,3 +124,15 @@ export async function verifyProfilePin(userId: string, profileId: string, pin: s
   if (!data.pinHash) return true;
   return data.pinHash === btoa(pin);
 }
+
+export async function profileHasPin(userId: string, profileId: string): Promise<boolean> {
+  const snap = await getDoc(doc(db, "users", userId, "profiles", profileId));
+  if (!snap.exists()) return false;
+  return !!snap.data().pinHash;
+}
+
+export async function isKidsProfile(userId: string, profileId: string): Promise<boolean> {
+  const snap = await getDoc(doc(db, "users", userId, "profiles", profileId));
+  if (!snap.exists()) return false;
+  return !!snap.data().kids;
+}

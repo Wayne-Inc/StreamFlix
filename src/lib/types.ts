@@ -6,6 +6,7 @@ export type Movie = {
   rating: string;
   runtime: string;
   genres: string[];
+  genreIds: number[];
   poster: string;
   backdrop: string;
   trailer?: string;
@@ -14,6 +15,7 @@ export type Movie = {
   castRoles?: string[];
   castIds?: string[];
   director: string;
+  directorId: string;
   match: number;
   numberOfSeasons?: number;
   numberOfEpisodes?: number;

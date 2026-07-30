@@ -32,8 +32,9 @@ export function toMovie(m: any): Movie {
   );
   const castRoles = castRaw.map((c: any) => c.character || "");
   const castIds = castRaw.map((c: any) => String(c.id));
-  const director =
-    (credits?.crew || []).find((c: any) => c.job === "Director")?.name || "Unknown";
+  const dirCredit = (credits?.crew || []).find((c: any) => c.job === "Director");
+  const director = dirCredit?.name || "Unknown";
+  const directorId = dirCredit ? String(dirCredit.id) : "";
   const trailer = (m.videos?.results || []).find(
     (v: any) => v.type === "Trailer" && v.site === "YouTube",
   );
@@ -46,6 +47,7 @@ export function toMovie(m: any): Movie {
     rating: "TV-MA",
     runtime: m.runtime ? `${Math.floor(m.runtime / 60)}h ${m.runtime % 60}m` : "2h",
     genres: (m.genres || []).map((g: any) => g.name),
+    genreIds: m.genre_ids || (m.genres || []).map((g: any) => g.id),
     poster: m.poster_path ? `${IMG_BASE}w500${m.poster_path}` : "",
     backdrop: m.backdrop_path ? `${IMG_BASE}original${m.backdrop_path}` : "",
     trailer: trailer
@@ -56,6 +58,7 @@ export function toMovie(m: any): Movie {
     castRoles: castRoles,
     castIds: castIds,
     director,
+    directorId,
     match: m.vote_average ? Math.round(m.vote_average * 10) : 85,
   };
 }
@@ -69,8 +72,9 @@ export function toTv(m: any): Movie {
   );
   const castRoles = castRaw.map((c: any) => c.character || "");
   const castIds = castRaw.map((c: any) => String(c.id));
-  const creator = (m.created_by?.[0]?.name) ||
-    (credits?.crew || []).find((c: any) => c.job === "Director")?.name || "Unknown";
+  const tvDir = (m.created_by?.[0]) || (credits?.crew || []).find((c: any) => c.job === "Director");
+  const creator = tvDir?.name || "Unknown";
+  const directorId = tvDir ? String(tvDir.id) : "";
   const trailer = (m.videos?.results || []).find(
     (v: any) => v.type === "Trailer" && v.site === "YouTube",
   );
@@ -83,6 +87,7 @@ export function toTv(m: any): Movie {
     rating: "TV-MA",
     runtime: epRuntime ? `${epRuntime}m / ep` : (m.number_of_seasons ? `${m.number_of_seasons} season${m.number_of_seasons > 1 ? "s" : ""}` : "Series"),
     genres: (m.genres || []).map((g: any) => g.name),
+    genreIds: m.genre_ids || (m.genres || []).map((g: any) => g.id),
     poster: m.poster_path ? `${IMG_BASE}w500${m.poster_path}` : "",
     backdrop: m.backdrop_path ? `${IMG_BASE}original${m.backdrop_path}` : "",
     trailer: trailer
@@ -93,6 +98,7 @@ export function toTv(m: any): Movie {
     castRoles: castRoles,
     castIds: castIds,
     director: creator,
+    directorId,
     match: m.vote_average ? Math.round(m.vote_average * 10) : 85,
     numberOfSeasons: m.number_of_seasons ?? undefined,
     numberOfEpisodes: m.number_of_episodes ?? undefined,

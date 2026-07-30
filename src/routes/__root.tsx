@@ -127,6 +127,7 @@ function RootComponent() {
   const router = useRouter();
   const initial = useRef(true);
   const photoSaved = useRef<string | null>(null);
+  const offlineRoute = "/offline";
 
   useEffect(() => {
     registerSW();
@@ -146,7 +147,30 @@ function RootComponent() {
         updated_at: serverTimestamp(),
       }, { merge: true }).catch(() => {});
     }
-    return () => unsub();
+
+    const handleOffline = () => {
+      if (window.location.pathname !== offlineRoute) {
+        sessionStorage.setItem("sf:returnUrl", window.location.pathname + window.location.search);
+        router.navigate({ to: offlineRoute, replace: true });
+      }
+    };
+    const handleOnline = () => {
+      if (window.location.pathname === offlineRoute) {
+        const returnUrl = sessionStorage.getItem("sf:returnUrl");
+        sessionStorage.removeItem("sf:returnUrl");
+        window.location.href = returnUrl || "/browse";
+      }
+    };
+
+    if (!navigator.onLine) handleOffline();
+
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleOnline);
+    return () => {
+      unsub();
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleOnline);
+    };
   }, [router, queryClient]);
 
   return (

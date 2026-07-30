@@ -11,6 +11,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { getDeviceId } from "@/lib/device-tracking";
+import { hasConsent } from "@/lib/consent";
 
 function getSelectedProfileId(): string | null {
   if (typeof window === "undefined") return null;
@@ -24,6 +25,7 @@ function getSelectedProfileId(): string | null {
 }
 
 export async function startSession(movieId: string): Promise<string | null> {
+  if (!hasConsent()) return null;
   const user = auth.currentUser;
   if (!user) return null;
   const profileId = getSelectedProfileId();

@@ -1,6 +1,6 @@
 import { Link, useRouter, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Bell, Search, ChevronDown, LogOut, User, Settings, Menu, X, ArrowRight, Users } from "lucide-react";
+import { Search, ChevronDown, LogOut, User, Settings, Menu, X, ArrowRight, Users, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Logo } from "./Logo";
 import { auth, db } from "@/lib/firebase";
@@ -182,9 +182,6 @@ export function Navbar() {
           <Link to="/search" className="text-muted-foreground hover:text-foreground" aria-label="Search">
             <Search className="size-5" />
           </Link>
-          <button className="text-muted-foreground hover:text-foreground hidden sm:block" aria-label="Notifications">
-            <Bell className="size-5" />
-          </button>
           <div className="relative pr-1 sm:pr-0">
             <button
               onClick={() => setMenuOpen((v) => !v)}
@@ -209,11 +206,11 @@ export function Navbar() {
                 <Link to="/profiles" className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-accent">
                   <ArrowRight className="size-4" /> Switch Profile
                 </Link>
-                <Link to="/profiles" className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-accent">
-                  <User className="size-4" /> Manage Profiles
-                </Link>
                 <Link to="/settings" className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-accent">
                   <Settings className="size-4" /> Account & Devices
+                </Link>
+                <Link to="/history" className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-accent">
+                  <Clock className="size-4" /> Watch History
                 </Link>
                 <button
                   onClick={signOut}
@@ -244,6 +241,13 @@ export function Navbar() {
               </Link>
             );
           })}
+          <Link
+            to="/history"
+            onClick={() => setMobileNavOpen(false)}
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Clock className="size-4" /> History
+          </Link>
         </div>
       )}
     </header>

@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Search as SearchIcon, X, User, Film, ChevronLeft, ChevronRight } from "lucide-react";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import { search, searchByGenre, searchByPerson, getGenres } from "@/lib/streamflix-data";
 import type { Movie } from "@/lib/types";
+import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
 import { z } from "zod";
 
 const searchSchema = z.object({
@@ -41,35 +42,8 @@ function SearchPage() {
   const [genreResults, setGenreResults] = useState<Movie[]>([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [suggestions, setSuggestions] = useState<Movie[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const debouncedQ = useDebounce(q, 300);
   const navigate = useNavigate();
-
-  const handleSelectSuggestion = useCallback((movie: Movie) => {
-    setShowSuggestions(false);
-    setSuggestions([]);
-    navigate({ to: "/movie/$id", params: { id: movie.id } });
-  }, [navigate]);
-
-  useEffect(() => {
-    if (tab !== "titles" || debouncedQ.length < 2) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-    let cancelled = false;
-    setSuggestionsLoading(true);
-    search(debouncedQ).then((res) => {
-      if (!cancelled) {
-        setSuggestions(res.slice(0, 5));
-        setShowSuggestions(true);
-        setSuggestionsLoading(false);
-      }
-    });
-    return () => { cancelled = true; };
-  }, [debouncedQ, tab]);
 
   useEffect(() => {
     if (tab !== "titles" || debouncedQ.length < 2) { setResults([]); setPage(1); return; }
@@ -77,7 +51,7 @@ function SearchPage() {
     setLoading(true);
     setPage(1);
     search(debouncedQ).then((res) => {
-      if (!cancelled) { setResults(res); setLoading(false); }
+      if (!cancelled) { setResults(isKidsProfile() ? filterKidsContent(res) : res); setLoading(false); }
     }).catch(() => { if (!cancelled) { setResults([]); setLoading(false); } });
     return () => { cancelled = true; };
   }, [debouncedQ, tab]);
@@ -102,7 +76,7 @@ function SearchPage() {
     setLoading(true);
     try {
       const res = await searchByGenre(String(genreId));
-      setGenreResults(res);
+      setGenreResults(isKidsProfile() ? filterKidsContent(res) : res);
     } catch { setGenreResults([]); }
     setLoading(false);
   };
@@ -129,46 +103,17 @@ function SearchPage() {
               autoFocus
               value={tab === "genres" ? "" : q}
               onChange={(e) => { setQ(e.target.value); }}
-              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-              onKeyDown={(e) => { if (e.key === "Escape") setShowSuggestions(false); }}
               placeholder={tab === "genres" ? "Click a genre below" : "Titles, genres, people\u2026"}
               className="w-full rounded-full border border-border bg-surface pl-12 pr-12 py-3.5 sm:py-4 text-base sm:text-lg focus:border-primary focus:outline-none"
             />
             {q && (
               <button
-                onClick={() => { setQ(""); setSuggestions([]); setShowSuggestions(false); }}
+                onClick={() => { setQ(""); }}
                 className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground"
                 aria-label="Clear"
               >
                 <X className="size-5" />
               </button>
-            )}
-
-            {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-border bg-surface shadow-xl">
-                {suggestionsLoading && (
-                  <div className="px-4 py-3 text-sm text-muted-foreground">Searching…</div>
-                )}
-                {suggestions.map((movie) => (
-                  <button
-                    key={movie.id}
-                    onMouseDown={() => handleSelectSuggestion(movie)}
-                    className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-muted"
-                  >
-                    {movie.poster ? (
-                      <img src={movie.poster} alt={movie.title} className="size-10 shrink-0 rounded object-cover" />
-                    ) : (
-                      <div className="grid size-10 shrink-0 place-items-center rounded bg-muted text-muted-foreground">
-                        <Film className="size-4" />
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">{movie.title}</p>
-                      <p className="text-xs text-muted-foreground">{movie.year}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
             )}
           </div>
 
@@ -206,7 +151,7 @@ function SearchPage() {
               {genreResults.length > 0 && (
                 <div className="mt-10">
                   <p className="text-sm text-muted-foreground">{genreResults.length} results</p>
-                  <div className="mt-4 grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5">
+                  <div className="mt-4 flex flex-wrap gap-3 justify-center">
                     {genreResults.slice((page - 1) * 15, page * 15).map((m) => (
                       <button key={m.id} onClick={() => navigate({ to: "/movie/$id", params: { id: m.id } })} className="text-left">
                         <MovieCard movie={m} />
@@ -261,7 +206,7 @@ function SearchPage() {
               <p className="text-sm text-muted-foreground">
                 {loading ? "Searching..." : `${results.length} result${results.length === 1 ? "" : "s"} for "${q}"`}
               </p>
-              <div className="mt-6 grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5">
+              <div className="mt-6 flex flex-wrap gap-3 justify-center">
                 {results.slice((page - 1) * 15, page * 15).map((m) => (
                   <button key={m.id} onClick={() => navigate({ to: "/movie/$id", params: { id: m.id } })} className="text-left">
                     <MovieCard movie={m} />

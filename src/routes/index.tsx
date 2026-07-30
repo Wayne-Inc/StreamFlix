@@ -74,8 +74,8 @@ function Landing() {
               Completely free. No subscriptions, no catches.
             </p>
             <div className="mt-10 flex items-center justify-center gap-6">
-              <Link to="/auth" className="inline-flex items-center gap-3 rounded-md bg-primary px-8 py-4 text-lg font-semibold text-primary-foreground hover:bg-primary/90">
-                <Play className="size-6 fill-current" /> Start Watching
+              <Link to="/auth" className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90">
+                <Play className="size-5 fill-current" /> Start Watching
               </Link>
             </div>
           </div>
@@ -96,7 +96,7 @@ function Landing() {
                 <img
                   src={m.poster || "/placeholder.svg"}
                   alt={m.title}
-                  className="h-60 w-40 object-cover sm:h-72 sm:w-48"
+                  className="h-72 w-48 object-cover sm:h-80 sm:w-56"
                   loading="lazy"
                 />
               </Link>
@@ -123,9 +123,9 @@ function Landing() {
             <p className="text-lg sm:text-xl">Ready to watch? It's free — dive right in.</p>
             <Link
               to="/auth"
-              className="mt-8 inline-flex items-center gap-2 rounded-md bg-primary px-10 py-5 text-xl font-semibold text-primary-foreground hover:bg-primary/90"
+              className="mt-8 inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90"
             >
-              <Play className="size-6 fill-current" /> Start Watching
+              <Play className="size-5 fill-current" /> Start Watching
             </Link>
           </div>
         </div>

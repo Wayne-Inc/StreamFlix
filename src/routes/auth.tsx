@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
@@ -34,6 +34,28 @@ function AuthPage() {
   const [popupBlocked, setPopupBlocked] = useState(false);
   const [forgotPw, setForgotPw] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const captchaRef = useRef<HTMLDivElement>(null);
+  const [captchaRendered, setCaptchaRendered] = useState(false);
+
+  // Rate limiting
+  const checkRateLimit = (): boolean => {
+    try {
+      const key = "sf:auth_attempts";
+      const raw = localStorage.getItem(key);
+      const now = Date.now();
+      const attempts: number[] = raw ? JSON.parse(raw) : [];
+      const recent = attempts.filter((t) => now - t < 60000);
+      if (recent.length >= 5) {
+        const oldest = recent[0];
+        const wait = Math.ceil((60000 - (now - oldest)) / 1000);
+        toast.error(`Too many attempts. Try again in ${wait}s`);
+        return false;
+      }
+      recent.push(now);
+      localStorage.setItem(key, JSON.stringify(recent));
+      return true;
+    } catch { return true; }
+  };
 
   // Redirect away if already signed in (use profile chooser).
   useEffect(() => {
@@ -43,17 +65,39 @@ function AuthPage() {
     return () => unsub();
   }, [navigate]);
 
+  useEffect(() => {
+    setCaptchaRendered(false);
+    if (mode === "signup") {
+      import("@/lib/captcha").then(({ renderCaptcha }) => {
+        setTimeout(() => {
+          if (captchaRef.current) {
+            renderCaptcha("signup-captcha").then(() => setCaptchaRendered(true));
+          }
+        }, 100);
+      });
+    }
+  }, [mode]);
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!checkRateLimit()) return;
     setBusy(true);
     setVerifyMsg("");
     try {
       if (mode === "signup") {
+        const { getCaptchaToken, resetCaptcha } = await import("@/lib/captcha");
+        const token = await getCaptchaToken();
+        if (!token) {
+          toast.error("Please complete the CAPTCHA");
+          setBusy(false);
+          return;
+        }
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         if (name.trim()) {
           await updateFirebaseProfile(cred.user, { displayName: name.trim() });
         }
         await sendEmailVerification(cred.user);
+        resetCaptcha();
         setVerifyMsg(`Verification email sent to ${email}. Please check your inbox and then sign in.`);
         setMode("signin");
       } else {
@@ -134,8 +178,14 @@ function AuthPage() {
       <img src={heroImg} alt="" className="absolute inset-0 size-full object-cover" />
       <div className="absolute inset-0 bg-black/70" />
       <div className="relative z-10">
-        <header className="px-4 sm:px-12 py-5">
+        <header className="flex items-center justify-between px-4 sm:px-12 py-5">
           <Logo />
+          <Link
+            to="/"
+            className="rounded-md border border-border px-4 py-2 text-sm text-muted-foreground hover:border-foreground hover:text-foreground"
+          >
+            Back to Home
+          </Link>
         </header>
 
         <div className="mx-auto mt-4 max-w-md rounded-md bg-black/75 p-8 sm:p-12">
@@ -236,6 +286,10 @@ function AuthPage() {
                   </button>
                 )}
 
+                {mode === "signup" && (
+                  <div id="signup-captcha" ref={captchaRef} className="flex justify-center" />
+                )}
+
                 {mode === "signup" && password && (
                   <div className="space-y-1">
                     <div className="flex gap-1">
@@ -290,11 +344,7 @@ function AuthPage() {
               </button>
             </p>
           </>)}
-          {!forgotPw && (
-            <p className="mt-3 text-xs text-muted-foreground">
-              <Link to="/" className="hover:underline">← Back to home</Link>
-            </p>
-          )}
+          
         </div>
       </div>
     </main>

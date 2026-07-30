@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Pencil, Plus, Trash2, X } from "lucide-react";
+import { Pencil, Plus, Trash2, X, Lock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Logo } from "@/components/streamflix/Logo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { auth } from "@/lib/firebase";
+import { getWatchHistory } from "@/lib/continue-watching";
 import {
   createProfile,
   deleteProfile,
@@ -12,6 +13,8 @@ import {
   getUserProfiles,
   updateProfile,
   setProfilePin,
+  verifyProfilePin,
+  profileHasPin,
   type Profile,
 } from "@/lib/profiles";
 
@@ -41,6 +44,27 @@ function ProfilesPage() {
   const [editing, setEditing] = useState(false);
   const [profiles, setProfiles] = useState<Profile[] | null>(null);
   const [editTarget, setEditTarget] = useState<Profile | "new" | null>(null);
+  const [pinTarget, setPinTarget] = useState<Profile | null>(null);
+  const [pinValue, setPinValue] = useState("");
+  const [pinBusy, setPinBusy] = useState(false);
+  const [bgSlides, setBgSlides] = useState<string[]>([]);
+  const [bgIdx, setBgIdx] = useState(0);
+
+  useEffect(() => {
+    const history = getWatchHistory().slice(0, 8);
+    const backdrops = history.map((h) => h.backdrop).filter(Boolean);
+    if (backdrops.length === 0) {
+      setBgSlides(["https://image.tmdb.org/t/p/original/wwemzKWzjKYJFfCeiB57q3r4Bcm.svg"]);
+      return;
+    }
+    setBgSlides(backdrops);
+  }, []);
+
+  useEffect(() => {
+    if (bgSlides.length < 2) return;
+    const t = setInterval(() => setBgIdx((v) => (v + 1) % bgSlides.length), 6000);
+    return () => clearInterval(t);
+  }, [bgSlides.length]);
 
   const load = async () => {
     const u = auth.currentUser;
@@ -59,18 +83,62 @@ function ProfilesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const choose = (p: Profile) => {
+  const choose = async (p: Profile) => {
+    if (!editing) {
+      const u = auth.currentUser;
+      if (u && (await profileHasPin(u.uid, p.id))) {
+        setPinTarget(p);
+        setPinValue("");
+        return;
+      }
+    }
+    selectProfile(p);
+  };
+
+  const selectProfile = (p: Profile) => {
     try {
-      localStorage.setItem("sf:selectedProfile", JSON.stringify({ id: p.id, name: p.name, color: p.color, avatarUrl: p.avatarUrl }));
+      localStorage.setItem("sf:selectedProfile", JSON.stringify({ id: p.id, name: p.name, color: p.color, avatarUrl: p.avatarUrl, kids: p.kids }));
       window.dispatchEvent(new Event("profileChanged"));
     } catch {}
     navigate({ to: "/browse" });
   };
 
+  const verifyPinAndSelect = async () => {
+    const u = auth.currentUser;
+    if (!u || !pinTarget) return;
+    setPinBusy(true);
+    try {
+      const ok = await verifyProfilePin(u.uid, pinTarget.id, pinValue);
+      if (ok) {
+        selectProfile(pinTarget);
+        setPinTarget(null);
+        setPinValue("");
+      } else {
+        toast.error("Incorrect PIN");
+      }
+    } catch {
+      toast.error("Failed to verify PIN");
+    }
+    setPinBusy(false);
+  };
+
   return (
-    <main className="grid min-h-dvh place-items-center bg-background">
-      <header className="absolute inset-x-0 top-0 px-4 sm:px-12 py-5"><Logo /></header>
-      <div className="w-full max-w-4xl px-4 text-center">
+    <main className="relative grid min-h-dvh place-items-center overflow-hidden bg-background">
+      {bgSlides.length > 0 && (
+        <div className="absolute inset-0">
+          {bgSlides.map((src, idx) => (
+            <img
+              key={idx}
+              src={src}
+              alt=""
+              className={`absolute inset-0 size-full object-cover transition-opacity duration-1000 ${idx === bgIdx ? "opacity-40" : "opacity-0"}`}
+            />
+          ))}
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/60 to-background" />
+        </div>
+      )}
+      <header className="absolute inset-x-0 top-0 px-4 sm:px-12 py-5 z-10"><Logo /></header>
+      <div className="relative z-20 w-full max-w-4xl px-4 text-center">
         <h1 className="text-3xl font-medium sm:text-5xl">
           {editing ? "Manage Profiles:" : "Who's watching?"}
         </h1>
@@ -107,7 +175,7 @@ function ProfilesPage() {
                     )}
                   </div>
                   <span className="text-muted-foreground transition-colors group-hover:text-foreground">
-                    {p.name} {p.kids && <span className="text-xs">(Kids)</span>}
+                    {p.name} {p.kids && <span className="ml-1 rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-medium text-emerald-400">Kids</span>}
                   </span>
                 </button>
               </li>
@@ -146,6 +214,43 @@ function ProfilesPage() {
             await load();
           }}
         />
+      )}
+
+      {pinTarget && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4">
+          <div className="w-full max-w-sm rounded-md bg-card p-6 shadow-2xl text-center">
+            <Lock className="mx-auto size-10 text-muted-foreground mb-4" />
+            <h2 className="text-xl font-semibold mb-1">Parental Lock</h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              Enter PIN for &quot;{pinTarget.name}&quot;
+            </p>
+            <input
+              type="password"
+              value={pinValue}
+              onChange={(e) => setPinValue(e.target.value)}
+              maxLength={6}
+              autoFocus
+              placeholder="Enter PIN"
+              className="w-full rounded bg-neutral-800 px-4 py-3 text-center text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-primary mb-4"
+              onKeyDown={(e) => { if (e.key === "Enter") verifyPinAndSelect(); }}
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setPinTarget(null); setPinValue(""); }}
+                className="flex-1 rounded border border-border px-4 py-2 text-sm hover:bg-accent"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={verifyPinAndSelect}
+                disabled={pinBusy || !pinValue.trim()}
+                className="flex-1 rounded bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+              >
+                {pinBusy ? "Verifying…" : "Unlock"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </main>
   );

@@ -11,6 +11,7 @@ import {
   fetchAiringTv,
   fetchMovie,
   fetchSimilar,
+  fetchRecommendations,
   searchMovies,
   discoverByGenre,
   fetchMoviesByIds,
@@ -31,7 +32,7 @@ export const defaultProfiles = [
 ];
 
 async function loadHome() {
-  const [trending, popular, nowPlaying, topRated, sciFi, dramas, thrillers, traktData] =
+  const [trending, popular, nowPlaying, topRated, sciFi, dramas, traktData] =
     await Promise.all([
       fetchTrending(),
       fetchPopular(),
@@ -39,9 +40,15 @@ async function loadHome() {
       fetchTopRated(),
       discoverByGenre({ data: { genreId: "878" } }),
       discoverByGenre({ data: { genreId: "18" } }),
-      discoverByGenre({ data: { genreId: "53" } }),
       fetchTraktTrending(),
     ]);
+
+  let recommendations: Movie[] = [];
+  try {
+    if (trending.length > 0) {
+      recommendations = await fetchRecommendations({ data: { id: trending[0].id } });
+    }
+  } catch {}
 
   const traktIds = traktData.map((t: { tmdbId: string }) => t.tmdbId).slice(0, 8);
   let traktMovies: Movie[] = [];
@@ -53,12 +60,12 @@ async function loadHome() {
     heroSlides: trending.slice(0, 5),
     rows: [
       { title: "Trending Now", items: trending.slice(0, 10) },
+      ...(recommendations.length ? [{ title: "Recommended for You", items: recommendations }] : []),
       { title: "Top Rated", items: topRated.slice(0, 10) },
       { title: "Popular on StreamFlix", items: popular.slice(0, 10) },
       ...(traktMovies.length ? [{ title: "Trending on Trakt", items: traktMovies }] : []),
       { title: "Sci-Fi & Beyond", items: sciFi },
       { title: "Award-Winning Dramas", items: dramas.slice(0, 10) },
-      { title: "Thrillers to Keep You Up", items: thrillers },
       { title: "New Releases", items: nowPlaying },
     ],
   };
@@ -144,6 +151,14 @@ export async function movieById(id: string): Promise<Movie | null> {
 export async function loadSimilar(id: string): Promise<Movie[]> {
   try {
     return await fetchSimilar({ data: { id } });
+  } catch {
+    return [];
+  }
+}
+
+export async function loadRecommendations(id: string): Promise<Movie[]> {
+  try {
+    return await fetchRecommendations({ data: { id } });
   } catch {
     return [];
   }

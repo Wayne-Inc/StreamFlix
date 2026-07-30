@@ -1,12 +1,12 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Play, Plus, ThumbsUp, Share2, Star, Eye, ExternalLink, EyeOff, Clapperboard, CheckCheck } from "lucide-react";
+import { Play, Plus, ThumbsUp, Share2, Star, Eye, ExternalLink, EyeOff, Clapperboard, CheckCheck, Download } from "lucide-react";
 import { toast } from "sonner";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { Row } from "@/components/streamflix/Row";
 import { Skeleton } from "@/components/ui/skeleton";
-import { movieById, loadSimilar } from "@/lib/streamflix-data";
+import { movieById, loadSimilar, loadRecommendations } from "@/lib/streamflix-data";
 import { fetchTraktSummary, rateMovie, markAsWatched, addToWatchlist, removeFromWatchlist } from "@/lib/api/trakt";
 import { discoverByGenre } from "@/lib/api/tmdb";
 import { auth } from "@/lib/firebase";
@@ -120,15 +120,16 @@ export const Route = createFileRoute("/_authenticated/movie/$id")({
   ssr: false,
   loader: async ({ params }) => {
     const extraGenres = ["27", "878", "35", "53"];
-    const [movie, similar, trakt, ...genreResults] = await Promise.all([
+    const [movie, similar, recommendations, trakt, ...genreResults] = await Promise.all([
       movieById(params.id),
       loadSimilar(params.id),
+      loadRecommendations(params.id),
       fetchTraktSummary({ data: { id: params.id } }),
       ...extraGenres.map((g) => discoverByGenre({ data: { genreId: g } })),
     ]);
     if (!movie) throw notFound();
     const genreRows = extraGenres.map((g, i) => ({ genreId: g, items: (genreResults[i] || []).filter((m: any) => m.id !== params.id).slice(0, 12) }));
-    return { movie, similar, trakt, genreRows };
+    return { movie, similar, trakt, genreRows, recommendations };
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -151,7 +152,7 @@ export const Route = createFileRoute("/_authenticated/movie/$id")({
 });
 
 function MoviePage() {
-  const { movie, similar, trakt, genreRows } = Route.useLoaderData();
+  const { movie, similar, trakt, genreRows, recommendations } = Route.useLoaderData();
   const genreLabels: Record<string, string> = { "27": "Horror", "878": "Sci-Fi", "35": "Comedy", "53": "Thriller", "28": "Action", "12": "Adventure", "18": "Drama", "10749": "Romance", "9648": "Mystery" };
   const fmtNum = (n: number | null) => (n == null ? "—" : n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
   const [inWatchlist, setInWatchlist] = useState(false);
@@ -161,6 +162,31 @@ function MoviePage() {
 
   const [userRating, setUserRating] = useState<number | null>(null);
   const [trailerOpen, setTrailerOpen] = useState(false);
+  const [downloaded, setDownloaded] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return !!localStorage.getItem(`sf:downloaded:${movie.id}`);
+    } catch { return false; }
+  });
+
+  const handleDownload = async () => {
+    if (downloaded) {
+      localStorage.removeItem(`sf:downloaded:${movie.id}`);
+      setDownloaded(false);
+      toast.success("Download removed");
+      return;
+    }
+    toast.loading("Finding source…", { id: "dl" });
+    const ok = await import("@/lib/offline").then((m) => m.tryDownloadFromServers(movie.id));
+    toast.dismiss("dl");
+    if (ok) {
+      localStorage.setItem(`sf:downloaded:${movie.id}`, "1");
+      setDownloaded(true);
+      toast.success("Downloading…");
+    } else {
+      toast.error("No source available");
+    }
+  };
 
   const handleRating = async (rating: number) => {
     const user = auth.currentUser;
@@ -244,7 +270,7 @@ function MoviePage() {
   return (
     <div className="min-h-dvh bg-background">
       <Navbar />
-      <section className="relative h-[70vh] min-h-[460px] overflow-hidden pt-16 md:pt-20">
+      <section className="relative h-[85vh] min-h-[560px] overflow-hidden pt-16 md:pt-20">
         <img src={movie.backdrop} alt="" className="absolute inset-0 size-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
@@ -285,6 +311,9 @@ function MoviePage() {
               <button onClick={handleMarkWatched} className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground" aria-label={watched ? "Watched" : "Mark watched"}>
                 {watched ? <EyeOff className="size-4 sm:size-5" /> : <Eye className="size-4 sm:size-5" />}
               </button>
+              <button onClick={handleDownload} className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground" aria-label={downloaded ? "Downloaded" : "Download"}>
+                <Download className={`size-4 sm:size-5 ${downloaded ? "text-emerald-500" : ""}`} />
+              </button>
               <button onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success("Link copied"); }} className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground" aria-label="Share">
                 <Share2 className="size-4 sm:size-5" />
               </button>
@@ -299,7 +328,7 @@ function MoviePage() {
           <div className="min-w-0">
             <p className="mb-3 text-base font-semibold text-foreground">Cast</p>
             <div
-              className="flex flex-nowrap gap-3 overflow-x-auto pb-3 pr-3 scrollbar-hide sm:gap-4 w-full min-w-0"
+              className="flex flex-nowrap gap-4 overflow-x-auto pb-3 scrollbar-hide w-full min-w-0"
               style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x", overscrollBehaviorX: "contain" }}
             >
               {movie.cast.map((name: string, i: number) => {
@@ -314,9 +343,9 @@ function MoviePage() {
                     {...(link.to === "/search"
                       ? { search: (link as any).search }
                       : { params: (link as any).params })}
-                    className="flex min-w-[72px] flex-shrink-0 flex-col items-center gap-1.5 hover:opacity-80 transition w-[72px] sm:min-w-[80px] sm:w-20"
+                    className="flex min-w-[90px] flex-shrink-0 flex-col items-center gap-1.5 hover:opacity-80 transition w-[90px] sm:min-w-[100px] sm:w-[100px]"
                   >
-                    <div className="size-12 sm:size-16 overflow-hidden rounded-full bg-surface ring-1 ring-border">
+                    <div className="size-16 sm:size-20 overflow-hidden rounded-xl bg-surface ring-1 ring-border">
                       {movie.castPfp[i] ? (
                         <img src={movie.castPfp[i]} alt={name} className="size-full object-cover" />
                       ) : (
@@ -325,9 +354,9 @@ function MoviePage() {
                         </div>
                       )}
                     </div>
-                    <span className="text-[10px] sm:text-xs text-center text-muted-foreground leading-tight line-clamp-2">{name}</span>
+                    <span className="text-[11px] sm:text-xs text-center text-muted-foreground leading-tight line-clamp-2">{name}</span>
                     {movie.castRoles?.[i] && (
-                      <span className="text-[9px] sm:text-[10px] text-center text-muted-foreground leading-tight line-clamp-2">
+                      <span className="text-[10px] sm:text-[11px] text-center text-muted-foreground leading-tight line-clamp-2">
                         {movie.castRoles[i]}
                       </span>
                     )}
@@ -337,13 +366,14 @@ function MoviePage() {
             </div>
           </div>
 
-          {/* Spacer pushes Director + Genres to bottom */}
-          <div className="flex-1 min-h-4" />
-
           {/* Director */}
           <p>
             <span className="text-muted-foreground">Director: </span>
-            <Link to="/search" search={{ q: movie.director, tab: "people" }} className="font-medium text-foreground hover:text-primary hover:underline cursor-pointer">{movie.director}</Link>
+            {movie.directorId ? (
+              <Link to="/person/$id" params={{ id: movie.directorId }} className="font-medium text-foreground hover:text-primary hover:underline cursor-pointer">{movie.director}</Link>
+            ) : (
+              <span className="font-medium text-foreground">{movie.director}</span>
+            )}
           </p>
 
           {/* Genres as pills */}
@@ -430,6 +460,12 @@ function MoviePage() {
               <Row key={genre} title={`More ${genre}`} items={items} />
             ));
           })()}
+        </div>
+      )}
+
+      {recommendations.length > 0 && (
+        <div className="space-y-2 pb-4">
+          <Row title="Recommended" items={recommendations} />
         </div>
       )}
 

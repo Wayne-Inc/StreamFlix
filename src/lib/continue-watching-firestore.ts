@@ -16,12 +16,14 @@ export type FirestoreContinueItem = {
   rating: string;
   runtime: string;
   genres: string[];
+  genreIds: number[];
   match: number;
   description: string;
   year: number;
   cast: string[];
   castPfp: string[];
   director: string;
+  directorId: string;
   progress: number;
   duration: number;
   updatedAt: number;
@@ -68,12 +70,14 @@ export async function saveProgressToFirestore(movie: Movie, progress: number, du
     rating: movie.rating,
     runtime: movie.runtime,
     genres: movie.genres,
+    genreIds: movie.genreIds,
     match: movie.match,
     description: movie.description,
     year: movie.year,
     cast: movie.cast,
     castPfp: movie.castPfp,
     director: movie.director,
+    directorId: movie.directorId,
     progress,
     duration,
     updatedAt: Date.now(),
@@ -109,11 +113,13 @@ export function toMovie(item: FirestoreContinueItem): Movie {
     rating: item.rating,
     runtime: item.runtime,
     genres: item.genres,
+    genreIds: item.genreIds,
     poster: item.poster,
     backdrop: item.backdrop,
     cast: item.cast,
     castPfp: item.castPfp,
     director: item.director,
+    directorId: item.directorId,
     match: item.match,
   };
 }

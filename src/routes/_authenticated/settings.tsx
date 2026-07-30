@@ -2,7 +2,7 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Monitor, Smartphone, Tablet, Trash2, LogOut, Mail, User as UserIcon, ShieldCheck, CheckCircle2, Camera, Check, AlertTriangle } from "lucide-react";
+import { Loader2, Monitor, Smartphone, Tablet, Trash2, LogOut, Mail, User as UserIcon, ShieldCheck, CheckCircle2, Camera, Check } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
 import { signOut as firebaseSignOut, sendEmailVerification, sendSignInLinkToEmail } from "firebase/auth";
 import {
@@ -313,7 +313,7 @@ function SettingsPage() {
                     <Mail className="size-4 text-muted-foreground shrink-0" />
                     <span
                       className="min-w-0 truncate"
-                      style={{ fontSize: (user?.email?.length ?? 0) > 30 ? `${Math.max(11, 14 - ((user.email.length - 30) * 0.12))}px` : undefined }}
+                      style={{ fontSize: (user?.email?.length ?? 0) > 30 ? `${Math.max(11, 14 - (((user?.email?.length ?? 0) - 30) * 0.12))}px` : undefined }}
                     >{user?.email ?? "—"}</span>
                     {user?.emailVerified ? (
                       <CheckCircle2 className="ml-auto size-4 shrink-0 text-emerald-400" />

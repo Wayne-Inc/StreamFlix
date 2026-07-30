@@ -3,7 +3,7 @@ import type { Movie } from "@/lib/types";
 
 export function MovieCard({ movie, progress }: { movie: Movie; progress?: number }) {
   return (
-    <div className="group relative w-[160px] sm:w-[200px] md:w-[240px] shrink-0">
+    <div className="group relative w-[200px] sm:w-[260px] shrink-0">
       <Link
         to={progress != null ? "/watch/$id" : "/movie/$id"}
         params={{ id: movie.id }}

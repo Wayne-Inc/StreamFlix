@@ -117,6 +117,19 @@ export const fetchMoviesByIds = createServerFn({ method: "POST" })
       .map((r: PromiseFulfilledResult<any>) => toMovie(r.value));
   });
 
+export const fetchRecommendations = createServerFn({ method: "POST" })
+  .validator(z.object({ id: z.string() }))
+  .handler(async ({ data }) => {
+    const { tmdbFetch, toMovie, toTv } = await import("./tmdb.server");
+    if (data.id.startsWith("tv-")) {
+      const realId = data.id.slice(3);
+      const res = await tmdbFetch(`/tv/${realId}/recommendations`);
+      return (res.results || []).slice(0, 10).map((m: any) => toTv(m));
+    }
+    const res = await tmdbFetch(`/movie/${data.id}/recommendations`);
+    return (res.results || []).slice(0, 10).map((m: any) => toMovie(m));
+  });
+
 export const searchPeople = createServerFn({ method: "POST" })
   .validator(z.object({ query: z.string().min(1) }))
   .handler(async ({ data }) => {

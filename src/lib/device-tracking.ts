@@ -1,5 +1,6 @@
 import { auth, db } from "@/lib/firebase";
 import { doc, setDoc, collection, serverTimestamp } from "firebase/firestore";
+import { hasConsent } from "@/lib/consent";
 
 const DEVICE_ID_KEY = "streamflix_device_id";
 
@@ -39,6 +40,7 @@ export function parseUserAgent(ua: string): { browser: string; os: string; label
 }
 
 export async function recordCurrentDevice(): Promise<void> {
+  if (!hasConsent()) return;
   if (typeof window === "undefined") return;
   const user = auth.currentUser;
   if (!user) return;

@@ -4,7 +4,7 @@ export async function registerSW() {
   const regs = await navigator.serviceWorker.getRegistrations();
   await Promise.all(regs.map((r) => r.unregister()));
   await Promise.all((await caches.keys()).map((k) => caches.delete(k)));
-  // Register fresh with a new filename to bypass stale SW
+  // Register the main caching SW
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw-new.js", { updateViaCache: "none" }).catch(() => {});
   });
