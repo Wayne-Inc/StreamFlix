@@ -12,6 +12,7 @@ export type Movie = {
   cast: string[];
   castPfp: string[];
   castRoles?: string[];
+  castIds?: string[];
   director: string;
   match: number;
   numberOfSeasons?: number;

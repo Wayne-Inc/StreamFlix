@@ -22,6 +22,7 @@ import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedProfilesRouteImport } from './routes/_authenticated/profiles'
 import { Route as AuthenticatedBrowseRouteImport } from './routes/_authenticated/browse'
 import { Route as AuthenticatedWatchIdRouteImport } from './routes/_authenticated/watch.$id'
+import { Route as AuthenticatedPersonIdRouteImport } from './routes/_authenticated/person.$id'
 import { Route as AuthenticatedMovieIdRouteImport } from './routes/_authenticated/movie.$id'
 
 const TraktCallbackRoute = TraktCallbackRouteImport.update({
@@ -88,6 +89,11 @@ const AuthenticatedWatchIdRoute = AuthenticatedWatchIdRouteImport.update({
   path: '/watch/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPersonIdRoute = AuthenticatedPersonIdRouteImport.update({
+  id: '/person/$id',
+  path: '/person/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedMovieIdRoute = AuthenticatedMovieIdRouteImport.update({
   id: '/movie/$id',
   path: '/movie/$id',
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/auth/action': typeof AuthActionRoute
   '/movie/$id': typeof AuthenticatedMovieIdRoute
+  '/person/$id': typeof AuthenticatedPersonIdRoute
   '/watch/$id': typeof AuthenticatedWatchIdRoute
 }
 export interface FileRoutesByTo {
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/auth/action': typeof AuthActionRoute
   '/movie/$id': typeof AuthenticatedMovieIdRoute
+  '/person/$id': typeof AuthenticatedPersonIdRoute
   '/watch/$id': typeof AuthenticatedWatchIdRoute
 }
 export interface FileRoutesById {
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/auth/action': typeof AuthActionRoute
   '/_authenticated/movie/$id': typeof AuthenticatedMovieIdRoute
+  '/_authenticated/person/$id': typeof AuthenticatedPersonIdRoute
   '/_authenticated/watch/$id': typeof AuthenticatedWatchIdRoute
 }
 export interface FileRouteTypes {
@@ -156,6 +165,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/auth/action'
     | '/movie/$id'
+    | '/person/$id'
     | '/watch/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -171,6 +181,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/auth/action'
     | '/movie/$id'
+    | '/person/$id'
     | '/watch/$id'
   id:
     | '__root__'
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/auth/action'
     | '/_authenticated/movie/$id'
+    | '/_authenticated/person/$id'
     | '/_authenticated/watch/$id'
   fileRoutesById: FileRoutesById
 }
@@ -293,6 +305,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWatchIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/person/$id': {
+      id: '/_authenticated/person/$id'
+      path: '/person/$id'
+      fullPath: '/person/$id'
+      preLoaderRoute: typeof AuthenticatedPersonIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/movie/$id': {
       id: '/_authenticated/movie/$id'
       path: '/movie/$id'
@@ -309,6 +328,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedMovieIdRoute: typeof AuthenticatedMovieIdRoute
+  AuthenticatedPersonIdRoute: typeof AuthenticatedPersonIdRoute
   AuthenticatedWatchIdRoute: typeof AuthenticatedWatchIdRoute
 }
 
@@ -318,6 +338,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedMovieIdRoute: AuthenticatedMovieIdRoute,
+  AuthenticatedPersonIdRoute: AuthenticatedPersonIdRoute,
   AuthenticatedWatchIdRoute: AuthenticatedWatchIdRoute,
 }
 

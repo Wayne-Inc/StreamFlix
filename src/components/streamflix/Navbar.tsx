@@ -8,7 +8,6 @@ import { signOut as firebaseSignOut } from "firebase/auth";
 import { doc, onSnapshot, collection, query, where, limit, getDocs } from "firebase/firestore";
 
 const links = [
-  { kind: "home", label: "Home" },
   { kind: "tv", label: "TV Shows" },
   { kind: "movies", label: "Movies" },
   { kind: "new", label: "New & Popular" },
@@ -82,16 +81,16 @@ export function Navbar() {
 
   const profileAvatar = selectedProfile ? (
     selectedProfile.avatarUrl ? (
-      <img src={selectedProfile.avatarUrl} alt="" className="size-9 sm:size-8 rounded object-cover" />
+      <img src={selectedProfile.avatarUrl} alt="" className="size-9 sm:size-8 shrink-0 aspect-square rounded-lg object-cover" />
     ) : (
-      <div className={`grid size-9 sm:size-8 place-items-center rounded bg-gradient-to-br ${selectedProfile.color} text-xs font-bold text-white`}>
+      <div className={`grid size-9 sm:size-8 place-items-center rounded-lg bg-gradient-to-br ${selectedProfile.color} text-xs font-bold text-white`}>
         {selectedProfile.name[0]?.toUpperCase()}
       </div>
     )
   ) : userData.photoURL ? (
-    <img src={userData.photoURL} alt="" className="size-9 sm:size-8 rounded object-cover" />
+    <img src={userData.photoURL} alt="" className="size-9 sm:size-8 shrink-0 aspect-square rounded-lg object-cover" />
   ) : (
-    <div className="grid size-9 sm:size-8 place-items-center rounded bg-gradient-to-br from-rose-500 to-red-700 text-xs font-bold text-white">
+    <div className="grid size-9 sm:size-8 place-items-center rounded-lg bg-gradient-to-br from-rose-500 to-red-700 text-xs font-bold text-white">
       {(userData.email || "?")[0]?.toUpperCase()}
     </div>
   );
@@ -139,7 +138,7 @@ export function Navbar() {
             </button>
             {joinOpen && (
               <div
-                className="fixed sm:absolute right-4 left-4 sm:left-auto sm:right-0 top-16 sm:top-12 z-50 sm:w-64 rounded-lg border border-border bg-card/95 p-4 shadow-xl backdrop-blur"
+                className="fixed sm:absolute right-4 left-4 sm:left-auto sm:right-0 top-16 sm:top-12 z-50 sm:w-80 rounded-lg border border-border bg-card/95 p-4 shadow-xl backdrop-blur"
                 onMouseLeave={() => setJoinOpen(false)}
               >
                 <p className="mb-2 text-xs font-medium text-muted-foreground">Enter Watch Party code</p>
@@ -186,7 +185,7 @@ export function Navbar() {
           <button className="text-muted-foreground hover:text-foreground hidden sm:block" aria-label="Notifications">
             <Bell className="size-5" />
           </button>
-          <div className="relative">
+          <div className="relative pr-1 sm:pr-0">
             <button
               onClick={() => setMenuOpen((v) => !v)}
               className="flex items-center gap-1.5 group p-1 sm:p-0"

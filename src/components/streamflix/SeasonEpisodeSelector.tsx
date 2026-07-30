@@ -50,22 +50,23 @@ export function SeasonEpisodeSelector({
 
   return (
     <section className="mx-auto max-w-6xl px-4 sm:px-8 py-8">
-      <div className="flex items-center gap-3 mb-6">
-        <label htmlFor="season-select" className="text-sm font-semibold text-foreground">
-          Season
-        </label>
-        <select
-          id="season-select"
-          value={selectedSeason}
-          onChange={(e) => setSelectedSeason(Number(e.target.value))}
-          className="rounded border border-border bg-surface px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
-        >
+      <div className="mb-6">
+        <p className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Season</p>
+        <div className="flex flex-wrap gap-2">
           {seasonNumbers.map((s) => (
-            <option key={s} value={s}>
+            <button
+              key={s}
+              onClick={() => setSelectedSeason(s)}
+              className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+                s === selectedSeason
+                  ? "bg-primary text-primary-foreground"
+                  : "border border-border text-muted-foreground hover:text-foreground hover:border-foreground"
+              }`}
+            >
               {s}
-            </option>
+            </button>
           ))}
-        </select>
+        </div>
       </div>
 
       {loading ? (

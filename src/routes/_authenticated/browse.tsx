@@ -36,21 +36,22 @@ function BrowseSkeleton() {
   return (
     <div className="min-h-dvh bg-background">
       <Navbar />
-      <div className="h-[92vh] min-h-[560px] w-full bg-surface/50">
-        <div className="flex h-full items-end md:items-center px-4 sm:px-8 md:px-16 pb-24 md:pb-0">
-          <div className="max-w-2xl space-y-5 w-full">
-            <Skeleton className="h-4 w-32 rounded" />
-            <Skeleton className="h-16 w-full max-w-lg rounded" />
-            <Skeleton className="h-4 w-72 rounded" />
-            <Skeleton className="h-20 w-full max-w-xl rounded" />
-            <div className="flex gap-3 pt-2">
-              <Skeleton className="h-12 w-28 rounded-md" />
-              <Skeleton className="h-12 w-32 rounded-md" />
+      <div className="min-h-[45vh] h-[55vh] w-full bg-surface/50 sm:min-h-[420px] sm:h-[75vh] lg:min-h-[560px] lg:h-[88vh]">
+        <div className="flex h-full items-end justify-center px-4 pb-8 pt-10 text-center md:items-end md:justify-start md:px-16 lg:px-24">
+          <div className="max-w-2xl space-y-3 w-full text-center md:text-left">
+            <div className="hidden sm:block">
+              <Skeleton className="h-4 w-32 rounded mx-auto sm:mx-0" />
+            </div>
+            <Skeleton className="h-8 w-full max-w-lg rounded sm:h-14" />
+            <Skeleton className="h-4 w-72 rounded mx-auto sm:mx-0" />
+            <div className="flex gap-2 pt-1 justify-center md:justify-start">
+              <Skeleton className="h-9 w-20 rounded-md sm:h-12 sm:w-28" />
+              <Skeleton className="h-9 w-20 rounded-md sm:h-12 sm:w-32" />
             </div>
           </div>
         </div>
       </div>
-      <div className="relative z-10 -mt-24 space-y-6 px-4 sm:px-8">
+      <div className="relative z-10 space-y-6 px-4 sm:px-8 md:mt-12">
         {isHome && <RowSkeleton />}
         {[1, 2, 3, 4, 5].map((i) => <RowSkeleton key={i} />)}
       </div>

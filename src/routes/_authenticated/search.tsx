@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Search as SearchIcon, X, User, Film, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search as SearchIcon, X, User, Film, ChevronLeft, ChevronRight } from "lucide-react";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { MovieCard } from "@/components/streamflix/MovieCard";
@@ -306,7 +306,12 @@ function SearchPage() {
                 <div className="space-y-3">
                   {people.length === 0 && <p className="text-sm text-muted-foreground">No people found</p>}
                   {people.map((p) => (
-                    <div key={p.id} className="flex items-center gap-4 rounded-lg border border-border bg-surface p-3">
+                    <Link
+                      key={p.id}
+                      to="/person/$id"
+                      params={{ id: p.id }}
+                      className="flex items-center gap-4 rounded-lg border border-border bg-surface p-3 hover:ring-1 hover:ring-primary transition"
+                    >
                       {p.photo ? (
                         <img src={p.photo} alt={p.name} className="size-14 rounded-full object-cover" />
                       ) : (
@@ -316,15 +321,7 @@ function SearchPage() {
                         <p className="font-medium text-foreground">{p.name}</p>
                         {p.known_for && <p className="truncate text-xs text-muted-foreground">{p.known_for}</p>}
                       </div>
-                      <a
-                        href={`https://www.themoviedb.org/person/${p.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="shrink-0 text-muted-foreground hover:text-foreground"
-                      >
-                        <ExternalLink className="size-4" />
-                      </a>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               )}

@@ -31,6 +31,7 @@ export function toMovie(m: any): Movie {
     c.profile_path ? `https://image.tmdb.org/t/p/w185${c.profile_path}` : "",
   );
   const castRoles = castRaw.map((c: any) => c.character || "");
+  const castIds = castRaw.map((c: any) => String(c.id));
   const director =
     (credits?.crew || []).find((c: any) => c.job === "Director")?.name || "Unknown";
   const trailer = (m.videos?.results || []).find(
@@ -53,6 +54,7 @@ export function toMovie(m: any): Movie {
     cast: cast.length ? cast : ["Unknown"],
     castPfp: castPfp,
     castRoles: castRoles,
+    castIds: castIds,
     director,
     match: m.vote_average ? Math.round(m.vote_average * 10) : 85,
   };
@@ -66,6 +68,7 @@ export function toTv(m: any): Movie {
     c.profile_path ? `https://image.tmdb.org/t/p/w185${c.profile_path}` : "",
   );
   const castRoles = castRaw.map((c: any) => c.character || "");
+  const castIds = castRaw.map((c: any) => String(c.id));
   const creator = (m.created_by?.[0]?.name) ||
     (credits?.crew || []).find((c: any) => c.job === "Director")?.name || "Unknown";
   const trailer = (m.videos?.results || []).find(
@@ -88,6 +91,7 @@ export function toTv(m: any): Movie {
     cast: cast.length ? cast : ["Unknown"],
     castPfp: castPfp,
     castRoles: castRoles,
+    castIds: castIds,
     director: creator,
     match: m.vote_average ? Math.round(m.vote_average * 10) : 85,
     numberOfSeasons: m.number_of_seasons ?? undefined,

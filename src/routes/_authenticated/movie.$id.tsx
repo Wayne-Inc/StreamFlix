@@ -249,12 +249,10 @@ function MoviePage() {
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
 
-        <div className="relative z-10 flex h-full flex-col pb-8 md:pb-16 px-4 sm:px-8 md:px-16">
-          {/* On mobile: spacer first (order-1), then title+buttons at bottom */}
-          <div className="flex-1 min-h-4 order-1 md:order-2" />
+        <div className="relative z-10 flex h-full flex-col justify-end pb-6 md:pb-16 px-4 sm:px-8 md:px-16 gap-4">
+          <div className="flex-1 min-h-0" />
 
-          {/* Title, metadata, description */}
-          <div className="max-w-2xl space-y-4 order-2 md:order-1 mb-4 sm:mb-6 md:mb-0">
+          <div className="max-w-2xl space-y-3">
             <h1 className="text-4xl font-black tracking-tight sm:text-6xl">{movie.title}</h1>
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span className="font-semibold text-emerald-400">{movie.match}% Match</span>
@@ -268,8 +266,7 @@ function MoviePage() {
             </div>
           </div>
 
-          {/* Play, Trailer, action buttons */}
-          <div className="max-w-2xl order-3">
+          <div className="max-w-2xl">
             <div className="flex flex-wrap items-center gap-3">
               <Link to="/watch/$id" params={{ id: movie.id }} search={{ autoplay: true }} className="inline-flex items-center gap-2 rounded-md bg-foreground px-6 py-3 font-semibold text-background hover:bg-foreground/85">
                 <Play className="size-5 fill-current" /> Play
@@ -305,30 +302,38 @@ function MoviePage() {
               className="flex flex-nowrap gap-3 overflow-x-auto pb-3 pr-3 scrollbar-hide sm:gap-4 w-full min-w-0"
               style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x", overscrollBehaviorX: "contain" }}
             >
-              {movie.cast.map((name: string, i: number) => (
-                <Link
-                  key={name}
-                  to="/search"
-                  search={{ q: name, tab: "people" }}
-                  className="flex min-w-[72px] flex-shrink-0 flex-col items-center gap-1.5 hover:opacity-80 transition w-[72px] sm:min-w-[80px] sm:w-20"
-                >
-                  <div className="size-12 sm:size-16 overflow-hidden rounded-full bg-surface ring-1 ring-border">
-                    {movie.castPfp[i] ? (
-                      <img src={movie.castPfp[i]} alt={name} className="size-full object-cover" />
-                    ) : (
-                      <div className="flex size-full items-center justify-center text-lg font-bold text-muted-foreground">
-                        {name.charAt(0)}
-                      </div>
+              {movie.cast.map((name: string, i: number) => {
+                const personId = movie.castIds?.[i];
+                const link = personId
+                  ? { to: "/person/$id" as const, params: { id: personId } }
+                  : { to: "/search" as const, search: { q: name, tab: "people" as const }, params: {} };
+                return (
+                  <Link
+                    key={`${name}-${i}`}
+                    to={link.to}
+                    {...(link.to === "/search"
+                      ? { search: (link as any).search }
+                      : { params: (link as any).params })}
+                    className="flex min-w-[72px] flex-shrink-0 flex-col items-center gap-1.5 hover:opacity-80 transition w-[72px] sm:min-w-[80px] sm:w-20"
+                  >
+                    <div className="size-12 sm:size-16 overflow-hidden rounded-full bg-surface ring-1 ring-border">
+                      {movie.castPfp[i] ? (
+                        <img src={movie.castPfp[i]} alt={name} className="size-full object-cover" />
+                      ) : (
+                        <div className="flex size-full items-center justify-center text-lg font-bold text-muted-foreground">
+                          {name.charAt(0)}
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-[10px] sm:text-xs text-center text-muted-foreground leading-tight line-clamp-2">{name}</span>
+                    {movie.castRoles?.[i] && (
+                      <span className="text-[9px] sm:text-[10px] text-center text-muted-foreground leading-tight line-clamp-2">
+                        {movie.castRoles[i]}
+                      </span>
                     )}
-                  </div>
-                  <span className="text-[10px] sm:text-xs text-center text-muted-foreground leading-tight line-clamp-2">{name}</span>
-                  {movie.castRoles?.[i] && (
-                    <span className="text-[9px] sm:text-[10px] text-center text-muted-foreground leading-tight line-clamp-2">
-                      {movie.castRoles[i]}
-                    </span>
-                  )}
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           </div>
 

@@ -149,3 +149,35 @@ export const fetchMovieVideos = createServerFn({ method: "POST" })
     const { fetchMovieVideosData } = await import("./tmdb.server");
     return fetchMovieVideosData(data.id);
   });
+
+export const fetchPersonDetails = createServerFn({ method: "POST" })
+  .validator(z.object({ id: z.string() }))
+  .handler(async ({ data }) => {
+    const { tmdbFetch } = await import("./tmdb.server");
+    const person = await tmdbFetch(`/person/${data.id}`);
+    const credits = await tmdbFetch(`/person/${data.id}/combined_credits`);
+    const mapCredit = (c: any) => ({
+      id: c.media_type === "tv" ? `tv-${c.id}` : String(c.id),
+      title: c.title || c.name || "Untitled",
+      character: c.character || "",
+      year: c.release_date
+        ? new Date(c.release_date).getFullYear()
+        : c.first_air_date
+          ? new Date(c.first_air_date).getFullYear()
+          : null,
+      backdrop: c.backdrop_path ? `https://image.tmdb.org/t/p/w780${c.backdrop_path}` : "",
+      poster: c.poster_path ? `https://image.tmdb.org/t/p/w342${c.poster_path}` : "",
+    });
+    return {
+      id: String(person.id),
+      name: person.name,
+      photo: person.profile_path ? `https://image.tmdb.org/t/p/w500${person.profile_path}` : "",
+      bio: person.biography || "No biography available.",
+      birthday: person.birthday || "",
+      deathday: person.deathday || "",
+      birthplace: person.place_of_birth || "",
+      department: person.known_for_department || "Actor",
+      movies: ((credits.cast || []).filter((c: any) => c.media_type === "movie")).map(mapCredit),
+      tvShows: ((credits.cast || []).filter((c: any) => c.media_type === "tv")).map(mapCredit),
+    };
+  });

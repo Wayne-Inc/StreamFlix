@@ -13,7 +13,7 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
   const description = s.description.length > 220 ? `${s.description.slice(0, 217).trimEnd()}...` : s.description;
 
   return (
-    <section className="relative min-h-[60vh] h-[88vh] w-full overflow-hidden sm:min-h-[420px] lg:min-h-[560px]">
+    <section className="relative min-h-[45vh] h-[55vh] w-full overflow-hidden sm:min-h-[420px] sm:h-[75vh] lg:min-h-[560px] lg:h-[88vh]">
       {slides.map((slide, idx) => (
         <img
           key={slide.id}
@@ -29,11 +29,11 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
 
       <div className="relative z-10 flex h-full items-end justify-center px-4 pb-8 pt-10 text-center md:items-end md:justify-start md:px-16 lg:px-24">
         <div key={s.id} className="animate-fade-in w-full max-w-none space-y-3 text-center md:max-w-3xl md:text-left">
-          <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-primary/30 bg-background/40 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary sm:mx-0">
+          <div className="mx-auto hidden sm:inline-flex items-center gap-2 rounded-full border border-primary/30 bg-background/40 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary sm:mx-0">
             <span className="inline-block h-px w-6 bg-primary" />
             StreamFlix Original
           </div>
-          <h1 className="text-shadow-hero text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl">
+          <h1 className="text-shadow-hero text-3xl font-black leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl">
             {s.title}
           </h1>
           <div className="mx-auto flex max-w-full flex-wrap items-center justify-center gap-2 text-xs sm:text-sm md:justify-start md:text-sm">
@@ -46,31 +46,31 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
           <p className="hidden md:block mx-auto md:mx-0 max-w-xl text-sm text-foreground/90 sm:text-base md:text-lg md:leading-7">
             {description}
           </p>
-          <div className="mx-auto md:mx-0 flex flex-wrap items-center justify-center gap-3 md:justify-start">
+          <div className="mx-auto md:mx-0 flex flex-wrap items-center justify-center gap-2 md:justify-start">
             <Link
               to="/watch/$id"
               params={{ id: s.id }}
-              className="inline-flex items-center gap-2 rounded-md bg-foreground px-5 py-3 text-sm font-semibold text-background transition hover:bg-foreground/85"
+              className="inline-flex items-center gap-2 rounded-md bg-foreground px-3 py-2 text-xs font-semibold text-background transition hover:bg-foreground/85 sm:px-5 sm:py-3 sm:text-sm"
             >
-              <Play className="size-5 fill-current" /> Play
+              <Play className="size-4 fill-current sm:size-5" /> Play
             </Link>
             <Link
               to="/movie/$id"
               params={{ id: s.id }}
-              className="inline-flex items-center gap-2 rounded-md bg-foreground/20 px-5 py-3 text-sm font-semibold text-foreground backdrop-blur transition hover:bg-foreground/30"
+              className="inline-flex items-center gap-2 rounded-md bg-foreground/20 px-3 py-2 text-xs font-semibold text-foreground backdrop-blur transition hover:bg-foreground/30 sm:px-5 sm:py-3 sm:text-sm"
             >
-              <Info className="size-5" /> More Info
+              <Info className="size-4 sm:size-5" /> More Info
             </Link>
           </div>
         </div>
       </div>
 
-      <div className="absolute bottom-6 right-4 z-10 flex gap-2 sm:right-8">
+      <div className="absolute bottom-6 inset-x-0 z-10 flex items-center justify-center gap-2 sm:justify-end sm:right-8 sm:inset-x-auto">
         {slides.map((_, idx) => (
           <button
             key={idx}
             onClick={() => setI(idx)}
-            className={`h-1 rounded-full transition-all ${idx === i ? "w-8 bg-foreground" : "w-4 bg-foreground/40"}`}
+            className={`h-[4px] rounded-full transition-all ${idx === i ? "w-6 bg-primary" : "w-2 bg-foreground/40"}`}
             aria-label={`Slide ${idx + 1}`}
             type="button"
           />
