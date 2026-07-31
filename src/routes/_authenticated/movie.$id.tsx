@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Play, Plus, Share2, Clapperboard, CheckCheck, Download } from "lucide-react";
+import { Play, Plus, Share2, Clapperboard, CheckCheck } from "lucide-react";
 import { isKidsProfile, filterKidsContent, isBlockedKidsGenre } from "@/lib/kids-mode";
 import { toast } from "sonner";
 import { Navbar } from "@/components/streamflix/Navbar";
@@ -11,11 +11,8 @@ import { movieById, loadSimilar, loadRecommendations } from "@/lib/streamflix-da
 import { discoverByGenre } from "@/lib/api/tmdb";
 import { auth } from "@/lib/firebase";
 import { isInMyList, addToMyList, removeFromMyList } from "@/lib/my-list";
-import { getUserRating, rateMovie as saveRating } from "@/lib/ratings";
-import { StarRating } from "@/components/streamflix/StarRating";
 import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
 import { TrailerModal } from "@/components/streamflix/TrailerModal";
-import { tryDownloadFromServers, openDownloadSource } from "@/lib/offline";
 
 function MovieSkeleton() {
   return (
@@ -52,12 +49,6 @@ function MovieSkeleton() {
                 <Skeleton className="h-4 w-2/3 rounded" />
                 <Skeleton className="h-4 w-1/2 rounded" />
                 <Skeleton className="h-4 w-3/5 rounded" />
-              </div>
-              <Skeleton className="h-5 w-24 rounded" />
-              <div className="flex gap-1">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="size-7 rounded" />
-                ))}
               </div>
               <Skeleton className="h-5 w-16 rounded" />
               <div className="space-y-2">
@@ -127,16 +118,7 @@ function MoviePage() {
   const [inWatchlist, setInWatchlist] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
 
-  const [userRating, setUserRating] = useState<number | null>(null);
   const [trailerOpen, setTrailerOpen] = useState(false);
-  const [downloaded, setDownloaded] = useState(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      return !!localStorage.getItem(`sf:downloaded:${movie.id}`);
-    } catch {
-      return false;
-    }
-  });
 
   const kidsMode = useMemo(() => isKidsProfile(), []);
   const filteredSimilar = kidsMode ? filterKidsContent(similar) : similar;
@@ -152,46 +134,8 @@ function MoviePage() {
         .map((gr) => ({ ...gr, items: filterKidsContent(gr.items) }))
     : genreRows;
 
-  const handleDownload = async () => {
-    if (downloaded) {
-      localStorage.removeItem(`sf:downloaded:${movie.id}`);
-      setDownloaded(false);
-      toast.success("Download removed");
-      return;
-    }
-    toast.loading("Finding source…", { id: "dl" });
-    const result = await tryDownloadFromServers(movie.id);
-    toast.dismiss("dl");
-    if (result.ok) {
-      openDownloadSource(result);
-      localStorage.setItem(`sf:downloaded:${movie.id}`, "1");
-      setDownloaded(true);
-      toast.success(
-        result.direct ? `Downloading from ${result.name}…` : `Opening ${result.name}…`,
-      );
-    } else {
-      toast.error("No source available");
-    }
-  };
-
-  const handleRating = async (rating: number) => {
-    const user = auth.currentUser;
-    if (!user) {
-      toast.error("Sign in to rate");
-      return;
-    }
-    try {
-      await saveRating(user.uid, movie.id, rating);
-      setUserRating(rating);
-      toast.success(`Rated ${rating}/10`);
-    } catch (e: any) {
-      toast.error(e.message);
-    }
-  };
-
   useEffect(() => {
     isInMyList(movie.id).then(setInWatchlist);
-    getUserRating(movie.id).then(setUserRating);
   }, [movie.id]);
 
   const handleWatchlist = async () => {
@@ -279,17 +223,6 @@ function MoviePage() {
                     <Plus className="size-4 sm:size-5" />
                   )}
                 </button>
-                {!isTv && (
-                  <button
-                    onClick={handleDownload}
-                    className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground"
-                    aria-label={downloaded ? "Downloaded" : "Download"}
-                  >
-                    <Download
-                      className={`size-4 sm:size-5 ${downloaded ? "text-emerald-500" : ""}`}
-                    />
-                  </button>
-                )}
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(window.location.href);
@@ -315,7 +248,17 @@ function MoviePage() {
                   </p>
                   <p>
                     <span className="font-medium text-foreground">Director:</span>{" "}
-                    {movie.director}
+                    {movie.directorId ? (
+                      <Link
+                        to="/person/$id"
+                        params={{ id: movie.directorId }}
+                        className="font-medium text-foreground hover:text-primary hover:underline"
+                      >
+                        {movie.director}
+                      </Link>
+                    ) : (
+                      movie.director
+                    )}
                   </p>
                   <p>
                     <span className="font-medium text-foreground">Cast:</span>{" "}
@@ -331,13 +274,6 @@ function MoviePage() {
                     <span className="font-medium text-foreground">Rating:</span> {movie.rating}
                   </p>
                 </div>
-              </div>
-
-              <div>
-                <p className="mb-1 text-sm font-semibold text-foreground sm:text-base">
-                  Rate this
-                </p>
-                <StarRating rating={userRating} onRate={handleRating} />
               </div>
 
               <div>
@@ -361,7 +297,7 @@ function MoviePage() {
                           : { params: (link as any).params })}
                         className="flex items-center gap-2 transition hover:opacity-80"
                       >
-                        <div className="size-8 shrink-0 overflow-hidden rounded-full bg-surface ring-1 ring-border">
+                        <div className="size-8 shrink-0 overflow-hidden rounded-lg bg-surface ring-1 ring-border">
                           {movie.castPfp[i] ? (
                             <img
                               src={movie.castPfp[i]}
@@ -388,23 +324,6 @@ function MoviePage() {
                     );
                   })}
                 </div>
-              </div>
-
-              <div>
-                <p className="mb-1 text-sm font-semibold text-foreground sm:text-base">
-                  Director
-                </p>
-                {movie.directorId ? (
-                  <Link
-                    to="/person/$id"
-                    params={{ id: movie.directorId }}
-                    className="text-sm font-medium text-foreground hover:text-primary hover:underline"
-                  >
-                    {movie.director}
-                  </Link>
-                ) : (
-                  <p className="text-sm font-medium text-foreground">{movie.director}</p>
-                )}
               </div>
 
               <div className="flex flex-wrap gap-1.5">

@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Download } from "lucide-react";
-import { toast } from "sonner";
 import { fetchTvSeason } from "@/lib/api/tmdb";
-import { tryDownloadFromServers, openDownloadSource } from "@/lib/offline";
 
 type Episode = {
   episode_number: number;
@@ -28,7 +25,6 @@ export function SeasonEpisodePicker({
   const [selectedSeason, setSelectedSeason] = useState(currentSeason ?? 1);
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [loading, setLoading] = useState(false);
-  const [downloading, setDownloading] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,22 +45,6 @@ export function SeasonEpisodePicker({
   }, [movieId, selectedSeason]);
 
   const seasonNumbers = Array.from({ length: numberOfSeasons }, (_, i) => i + 1);
-
-  const handleDownload = async (episodeNumber: number) => {
-    setDownloading(episodeNumber);
-    toast.loading("Finding source…", { id: "dl-ep" });
-    const result = await tryDownloadFromServers(movieId, selectedSeason, episodeNumber);
-    toast.dismiss("dl-ep");
-    setDownloading(null);
-    if (result.ok) {
-      openDownloadSource(result);
-      toast.success(
-        result.direct ? `Downloading from ${result.name}…` : `Opening ${result.name}…`,
-      );
-    } else {
-      toast.error("No source available");
-    }
-  };
 
   return (
     <div>
@@ -127,14 +107,6 @@ export function SeasonEpisodePicker({
                   )}
                 </span>
               </Link>
-              <button
-                onClick={() => handleDownload(ep.episode_number)}
-                disabled={downloading === ep.episode_number}
-                className="grid size-7 shrink-0 place-items-center rounded-md border border-border text-muted-foreground transition hover:border-foreground hover:text-foreground disabled:opacity-50"
-                aria-label={`Download episode ${ep.episode_number}`}
-              >
-                <Download className="size-3.5" />
-              </button>
             </div>
           ))}
         </div>

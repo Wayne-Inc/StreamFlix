@@ -261,10 +261,12 @@ function BrowsePage() {
 
   const filteredRows = useMemo(() => {
     if (!kidsMode) return displayedRows;
-    return displayedRows.map((r) => ({
-      ...r,
-      items: filterKidsContent(r.items),
-    }));
+    return displayedRows
+      .filter((r) => r.title !== "Award-Winning Dramas")
+      .map((r) => ({
+        ...r,
+        items: filterKidsContent(r.items),
+      }));
   }, [kidsMode, displayedRows]);
 
   const showEmptyMyList = isMyList && displayedRows[0]?.items.length === 0;
