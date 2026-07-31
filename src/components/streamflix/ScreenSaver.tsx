@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { fetchTrending } from "@/lib/api/tmdb";
 import type { Movie } from "@/lib/types";
+import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
 
 const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
@@ -18,7 +19,8 @@ export function ScreenSaver() {
     fetchTrending()
       .then((data) => {
         if (data && data.length > 0) {
-          setSlides(data);
+          const filtered = isKidsProfile() ? filterKidsContent(data) : data;
+          setSlides(filtered);
         }
       })
       .catch(() => {});
@@ -94,13 +96,13 @@ export function ScreenSaver() {
         StreamFlix
       </div>
 
-      {/* Title at bottom right, genres below with dots */}
-      <div className="absolute bottom-12 right-12 z-10 text-right max-w-2xl space-y-2">
-        <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tight drop-shadow-lg">
+      {/* Title at bottom left, genres below with dots */}
+      <div className="absolute bottom-12 left-12 z-10 text-left max-w-2xl space-y-2">
+        <h1 className="text-3xl sm:text-5xl font-semibold text-white tracking-tight drop-shadow-lg">
           {currentMovie.title}
         </h1>
         {currentMovie.genres && currentMovie.genres.length > 0 && (
-          <p className="text-sm sm:text-lg font-medium text-white/80 tracking-wide">
+          <p className="text-sm sm:text-base font-normal text-white/80 tracking-wide">
             {currentMovie.genres.join(" · ")}
           </p>
         )}
