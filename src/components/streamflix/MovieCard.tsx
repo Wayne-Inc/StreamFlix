@@ -4,7 +4,7 @@ import type { Movie } from "@/lib/types";
 
 export function MovieCard({ movie, progress }: { movie: Movie; progress?: number }) {
   return (
-    <div className="group relative w-[200px] sm:w-[260px] shrink-0 transition-all duration-300 hover:z-30 hover:scale-105">
+    <div className="group relative w-[200px] sm:w-[260px] shrink-0 transition-all duration-300 hover:z-30 hover:scale-[1.02]">
       <div className="relative aspect-[2/3] overflow-hidden rounded-md bg-surface shadow-md transition-shadow duration-300 group-hover:shadow-2xl">
         <Link
           to={progress != null ? "/watch/$id" : "/movie/$id"}
@@ -19,7 +19,7 @@ export function MovieCard({ movie, progress }: { movie: Movie; progress?: number
               loading="lazy"
               width={400}
               height={600}
-              className="size-full object-cover transition-transform duration-500 group-hover:scale-110"
+              className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
             />
           ) : (
             <div className="grid size-full place-items-center bg-card p-2 text-center text-xs text-muted-foreground">
