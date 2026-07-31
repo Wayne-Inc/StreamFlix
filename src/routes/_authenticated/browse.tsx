@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/select";
 import { loadBrowseData, type BrowseKind } from "@/lib/streamflix-data";
 import { fetchTraktWatchlist } from "@/lib/api/trakt";
-import { discoverByGenre } from "@/lib/api/tmdb";
 import type { Movie } from "@/lib/types";
 import {
   getContinueWatching,
@@ -31,6 +30,10 @@ import {
 } from "@/lib/continue-watching-firestore";
 import { getMyList } from "@/lib/my-list";
 import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
+import {
+  getPersonalizedRecommendations,
+  type RecommendSeed,
+} from "@/lib/recommendations";
 
 const searchSchema = z.object({
   kind: z.enum(["home", "movies", "tv", "new", "my-list"]).catch("home").default("home"),
@@ -226,43 +229,30 @@ function BrowsePage() {
 
     const loadWatchedRow = async () => {
       const history = getWatchHistory();
-      if (history.length === 0) {
-        if (!cancelled) setWatchedRow(null);
-        return;
-      }
-
-      const counts = new Map<number, number>();
+      const seeds = new Map<string, RecommendSeed>();
       for (const item of history) {
-        for (const gid of item.genreIds ?? []) {
-          counts.set(gid, (counts.get(gid) ?? 0) + 1);
-        }
+        seeds.set(item.id, { id: item.id, watchedAt: item.watchedAt, genreIds: item.genreIds });
       }
-      const topGenres = Array.from(counts.entries())
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 2)
-        .map(([gid]) => String(gid));
-      if (topGenres.length === 0) {
+      try {
+        const fsItems = await getContinueWatchingFromFirestore();
+        for (const fs of fsItems) {
+          const existing = seeds.get(fs.movieId);
+          seeds.set(fs.movieId, {
+            id: fs.movieId,
+            watchedAt: Math.max(existing?.watchedAt ?? 0, fs.updatedAt),
+            genreIds: fs.genreIds,
+          });
+        }
+      } catch {}
+      if (seeds.size === 0) {
         if (!cancelled) setWatchedRow(null);
         return;
       }
 
-      const seen = new Set(history.map((h) => h.id));
       try {
-        const batches = await Promise.all(
-          topGenres.map((gid) => discoverByGenre({ data: { genreId: gid } })),
-        );
-        const merged: Movie[] = [];
-        for (const batch of batches) {
-          for (const movie of batch) {
-            if (seen.has(movie.id)) continue;
-            if (!merged.some((m) => m.id === movie.id)) merged.push(movie);
-          }
-          if (merged.length >= 12) break;
-        }
+        const items = await getPersonalizedRecommendations(Array.from(seeds.values()));
         if (!cancelled) {
-          setWatchedRow(
-            merged.length ? { title: "Because You Watched", items: merged.slice(0, 12) } : null,
-          );
+          setWatchedRow(items.length ? { title: "Because You Watched", items } : null);
         }
       } catch {
         if (!cancelled) setWatchedRow(null);
