@@ -16,7 +16,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { loadBrowseData, type BrowseKind } from "@/lib/streamflix-data";
-import { fetchTraktWatchlist } from "@/lib/api/trakt";
 import type { Movie } from "@/lib/types";
 import {
   getContinueWatching,
@@ -30,10 +29,7 @@ import {
 } from "@/lib/continue-watching-firestore";
 import { getMyList } from "@/lib/my-list";
 import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
-import {
-  getPersonalizedRecommendations,
-  type RecommendSeed,
-} from "@/lib/recommendations";
+import { getPersonalizedRecommendations, type RecommendSeed } from "@/lib/recommendations";
 
 const searchSchema = z.object({
   kind: z.enum(["home", "movies", "tv", "new", "my-list"]).catch("home").default("home"),
@@ -136,58 +132,9 @@ function BrowsePage() {
     items: { movie: Movie; progress: number }[];
   } | null>(null);
   const [sortBy, setSortBy] = useState<SortMode>("recent");
-  const [traktWatchlist, setTraktWatchlist] = useState<Movie[] | null>(null);
-  const [traktWatchlistLoaded, setTraktWatchlistLoaded] = useState(false);
   const [watchedRow, setWatchedRow] = useState<{ title: string; items: Movie[] } | null>(null);
 
   useEffect(() => {
-    const loadTraktWatchlist = async () => {
-      if (!isMyList || typeof window === "undefined") {
-        setTraktWatchlistLoaded(true);
-        return;
-      }
-
-      const raw = window.localStorage.getItem("streamflix:trakt");
-      if (!raw) {
-        setTraktWatchlistLoaded(true);
-        return;
-      }
-
-      try {
-        const conn = JSON.parse(raw);
-        if (conn?.expiresAt && Date.now() > conn.expiresAt) {
-          setTraktWatchlistLoaded(true);
-          return;
-        }
-
-        const items = await fetchTraktWatchlist({ data: { token: conn.accessToken } });
-        setTraktWatchlist(
-          items.map((item: any) => ({
-            id: item.tmdbId,
-            title: item.title,
-            year: item.year,
-            poster: item.poster ?? "",
-            backdrop: "",
-            description: "",
-            rating: "",
-            runtime: "",
-            genres: [],
-            genreIds: [],
-            cast: [],
-            castPfp: [],
-            director: "",
-            directorId: "",
-            match: 0,
-          })),
-        );
-      } catch {
-      } finally {
-        setTraktWatchlistLoaded(true);
-      }
-    };
-
-    loadTraktWatchlist();
-
     const update = async () => {
       const localItems = getContinueWatching();
       let items = localItems.map((c) => ({
@@ -287,9 +234,8 @@ function BrowsePage() {
     if (!isMyList) return sortedRows;
     const merged = new Map<string, Movie>();
     sortedRows.forEach((row) => row.items.forEach((movie) => merged.set(movie.id, movie)));
-    traktWatchlist?.forEach((movie) => merged.set(movie.id, movie));
     return [{ title: "My List", items: Array.from(merged.values()) }];
-  }, [isMyList, sortedRows, traktWatchlist]);
+  }, [isMyList, sortedRows]);
 
   const kidsMode = useMemo(() => isKidsProfile(), []);
 
@@ -306,7 +252,7 @@ function BrowsePage() {
     }));
   }, [kidsMode, displayedRows]);
 
-  const showEmptyMyList = isMyList && traktWatchlistLoaded && displayedRows[0]?.items.length === 0;
+  const showEmptyMyList = isMyList && displayedRows[0]?.items.length === 0;
 
   return (
     <div className="min-h-dvh bg-background">

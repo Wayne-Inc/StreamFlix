@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TraktCallbackRouteImport } from './routes/trakt-callback'
 import { Route as TosRouteImport } from './routes/tos'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as OfflineRouteImport } from './routes/offline'
@@ -28,11 +27,6 @@ import { Route as AuthenticatedWatchIdRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedPersonIdRouteImport } from './routes/_authenticated/person.$id'
 import { Route as AuthenticatedMovieIdRouteImport } from './routes/_authenticated/movie.$id'
 
-const TraktCallbackRoute = TraktCallbackRouteImport.update({
-  id: '/trakt-callback',
-  path: '/trakt-callback',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TosRoute = TosRouteImport.update({
   id: '/tos',
   path: '/tos',
@@ -126,7 +120,6 @@ export interface FileRoutesByFullPath {
   '/offline': typeof OfflineRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/tos': typeof TosRoute
-  '/trakt-callback': typeof TraktCallbackRoute
   '/browse': typeof AuthenticatedBrowseRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/profiles': typeof AuthenticatedProfilesRoute
@@ -145,7 +138,6 @@ export interface FileRoutesByTo {
   '/offline': typeof OfflineRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/tos': typeof TosRoute
-  '/trakt-callback': typeof TraktCallbackRoute
   '/browse': typeof AuthenticatedBrowseRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/profiles': typeof AuthenticatedProfilesRoute
@@ -166,7 +158,6 @@ export interface FileRoutesById {
   '/offline': typeof OfflineRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/tos': typeof TosRoute
-  '/trakt-callback': typeof TraktCallbackRoute
   '/_authenticated/browse': typeof AuthenticatedBrowseRoute
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/profiles': typeof AuthenticatedProfilesRoute
@@ -187,7 +178,6 @@ export interface FileRouteTypes {
     | '/offline'
     | '/privacy-policy'
     | '/tos'
-    | '/trakt-callback'
     | '/browse'
     | '/history'
     | '/profiles'
@@ -206,7 +196,6 @@ export interface FileRouteTypes {
     | '/offline'
     | '/privacy-policy'
     | '/tos'
-    | '/trakt-callback'
     | '/browse'
     | '/history'
     | '/profiles'
@@ -226,7 +215,6 @@ export interface FileRouteTypes {
     | '/offline'
     | '/privacy-policy'
     | '/tos'
-    | '/trakt-callback'
     | '/_authenticated/browse'
     | '/_authenticated/history'
     | '/_authenticated/profiles'
@@ -247,18 +235,10 @@ export interface RootRouteChildren {
   OfflineRoute: typeof OfflineRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   TosRoute: typeof TosRoute
-  TraktCallbackRoute: typeof TraktCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/trakt-callback': {
-      id: '/trakt-callback'
-      path: '/trakt-callback'
-      fullPath: '/trakt-callback'
-      preLoaderRoute: typeof TraktCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/tos': {
       id: '/tos'
       path: '/tos'
@@ -425,7 +405,6 @@ const rootRouteChildren: RootRouteChildren = {
   OfflineRoute: OfflineRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   TosRoute: TosRoute,
-  TraktCallbackRoute: TraktCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

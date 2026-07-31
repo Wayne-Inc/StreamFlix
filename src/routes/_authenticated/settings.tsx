@@ -536,8 +536,6 @@ function SettingsPage() {
           </div>
         </section>
 
-        <TraktSection />
-
         {/* Danger */}
         <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
           <div className="flex items-center justify-between gap-3">
@@ -601,112 +599,5 @@ function SettingsPage() {
       </main>
       <Footer />
     </div>
-  );
-}
-
-type TraktConnection = {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: number;
-  username: string | null;
-  name: string | null;
-  avatar: string | null;
-};
-
-function TraktSection() {
-  const [conn, setConn] = useState<TraktConnection | null>(null);
-
-  useEffect(() => {
-    const load = () => {
-      try {
-        const raw = window.localStorage.getItem("streamflix:trakt");
-        setConn(raw ? (JSON.parse(raw) as TraktConnection) : null);
-      } catch {
-        setConn(null);
-      }
-    };
-    load();
-    window.addEventListener("storage", load);
-    return () => window.removeEventListener("storage", load);
-  }, []);
-
-  const connect = async () => {
-    let clientId: string;
-    try {
-      const res = await import("@/lib/api/trakt").then((m) => m.getTraktClientId());
-      if (!res.clientId) throw new Error("Missing client ID");
-      clientId = res.clientId;
-    } catch {
-      toast.error("Trakt is not configured.");
-      return;
-    }
-    const redirect = `${window.location.origin}/trakt-callback`;
-    const url = `https://trakt.tv/oauth/authorize?response_type=code&client_id=${encodeURIComponent(
-      clientId,
-    )}&redirect_uri=${encodeURIComponent(redirect)}`;
-    window.location.href = url;
-  };
-
-  const disconnect = () => {
-    window.localStorage.removeItem("streamflix:trakt");
-    setConn(null);
-    toast.success("Trakt disconnected");
-  };
-
-  return (
-    <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          {conn?.avatar ? (
-            <img src={conn.avatar} alt="" className="size-10 rounded-full object-cover" />
-          ) : (
-            <div className="grid size-10 place-items-center rounded-full bg-red-600 font-bold text-white">
-              T
-            </div>
-          )}
-          <div>
-            <p className="text-sm font-semibold">Trakt</p>
-            {conn ? (
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Connected as <span className="text-foreground">@{conn.username ?? "trakt"}</span>
-                {conn.name ? ` (${conn.name})` : ""}
-              </p>
-            ) : (
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Sign in with Trakt to sync ratings, history, and watchlists.
-              </p>
-            )}
-          </div>
-        </div>
-        {conn ? (
-          <button
-            onClick={disconnect}
-            className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm hover:bg-accent"
-          >
-            Disconnect
-          </button>
-        ) : (
-          <button
-            onClick={connect}
-            className="inline-flex items-center gap-2 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-500"
-          >
-            Connect Trakt
-          </button>
-        )}
-      </div>
-      <div className="mt-4 rounded-lg bg-background/80 p-3 text-sm text-muted-foreground">
-        {!conn ? (
-          <p>
-            Trakt connection is stored locally in this browser. If you change devices, reconnect
-            Trakt to keep syncing your ratings and watch history.
-          </p>
-        ) : (
-          <p>
-            Your Trakt session is active in this browser. Disconnect to remove local Trakt access
-            and stop syncing watch data for this device.
-          </p>
-        )}
-      </div>
-    </section>
   );
 }

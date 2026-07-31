@@ -1,31 +1,12 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import {
-  Play,
-  Plus,
-  ThumbsUp,
-  Share2,
-  Star,
-  Eye,
-  ExternalLink,
-  EyeOff,
-  Clapperboard,
-  CheckCheck,
-  Download,
-} from "lucide-react";
+import { Play, Plus, Share2, Clapperboard, CheckCheck, Download } from "lucide-react";
 import { toast } from "sonner";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { Row } from "@/components/streamflix/Row";
 import { Skeleton } from "@/components/ui/skeleton";
 import { movieById, loadSimilar, loadRecommendations } from "@/lib/streamflix-data";
-import {
-  fetchTraktSummary,
-  rateMovie,
-  markAsWatched,
-  addToWatchlist,
-  removeFromWatchlist,
-} from "@/lib/api/trakt";
 import { discoverByGenre } from "@/lib/api/tmdb";
 import { auth } from "@/lib/firebase";
 import { isInMyList, addToMyList, removeFromMyList } from "@/lib/my-list";
@@ -141,11 +122,10 @@ export const Route = createFileRoute("/_authenticated/movie/$id")({
   ssr: false,
   loader: async ({ params }) => {
     const extraGenres = ["27", "878", "35", "53"];
-    const [movie, similar, recommendations, trakt, ...genreResults] = await Promise.all([
+    const [movie, similar, recommendations, ...genreResults] = await Promise.all([
       movieById(params.id),
       loadSimilar(params.id),
       loadRecommendations(params.id),
-      fetchTraktSummary({ data: { id: params.id } }),
       ...extraGenres.map((g) => discoverByGenre({ data: { genreId: g } })),
     ]);
     if (!movie) throw notFound();
@@ -153,7 +133,7 @@ export const Route = createFileRoute("/_authenticated/movie/$id")({
       genreId: g,
       items: (genreResults[i] || []).filter((m: any) => m.id !== params.id).slice(0, 12),
     }));
-    return { movie, similar, trakt, genreRows, recommendations };
+    return { movie, similar, genreRows, recommendations };
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -176,7 +156,7 @@ export const Route = createFileRoute("/_authenticated/movie/$id")({
 });
 
 function MoviePage() {
-  const { movie, similar, trakt, genreRows, recommendations } = Route.useLoaderData();
+  const { movie, similar, genreRows, recommendations } = Route.useLoaderData();
   const genreLabels: Record<string, string> = {
     "27": "Horror",
     "878": "Sci-Fi",
@@ -188,11 +168,7 @@ function MoviePage() {
     "10749": "Romance",
     "9648": "Mystery",
   };
-  const fmtNum = (n: number | null) =>
-    n == null ? "—" : n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
   const [inWatchlist, setInWatchlist] = useState(false);
-  const [liked, setLiked] = useState(false);
-  const [watched, setWatched] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
 
   const [userRating, setUserRating] = useState<number | null>(null);
@@ -246,20 +222,11 @@ function MoviePage() {
   }, [movie.id]);
 
   const handleWatchlist = async () => {
-    const conn = getTrakt();
     try {
       if (inWatchlist) {
         await removeFromMyList(movie.id);
         setInWatchlist(false);
         toast.success("Removed from My List");
-        if (conn) {
-          try {
-            await removeFromWatchlist({ data: { token: conn.accessToken, tmdbId: movie.id } });
-            toast.success("Removed from Trakt watchlist");
-          } catch (e: any) {
-            toast.error(e.message || "Failed to remove from Trakt watchlist");
-          }
-        }
       } else {
         await addToMyList({
           id: movie.id,
@@ -269,55 +236,7 @@ function MoviePage() {
         });
         setInWatchlist(true);
         toast.success("Added to My List");
-        if (conn) {
-          try {
-            await addToWatchlist({ data: { token: conn.accessToken, tmdbId: movie.id } });
-            toast.success("Added to Trakt watchlist");
-          } catch (e: any) {
-            toast.error(e.message || "Failed to add to Trakt watchlist");
-          }
-        }
       }
-    } catch (e: any) {
-      toast.error(e.message);
-    }
-  };
-
-  const getTrakt = () => {
-    const raw = localStorage.getItem("streamflix:trakt");
-    if (!raw) {
-      toast.error("Connect Trakt in Settings first");
-      return null;
-    }
-    const conn = JSON.parse(raw);
-    if (conn.expiresAt && Date.now() > conn.expiresAt) {
-      toast.error("Trakt token expired. Disconnect and reconnect in Settings.");
-      return null;
-    }
-    return conn;
-  };
-
-  const handleLike = async () => {
-    const conn = getTrakt();
-    if (!conn) return;
-    try {
-      await rateMovie({
-        data: { token: conn.accessToken, tmdbId: movie.id, rating: liked ? 1 : 10 },
-      });
-      setLiked(!liked);
-      toast.success(liked ? "Unliked" : "Liked!");
-    } catch (e: any) {
-      toast.error(e.message);
-    }
-  };
-
-  const handleMarkWatched = async () => {
-    const conn = getTrakt();
-    if (!conn) return;
-    try {
-      await markAsWatched({ data: { token: conn.accessToken, tmdbId: movie.id } });
-      setWatched(true);
-      toast.success("Marked as watched");
     } catch (e: any) {
       toast.error(e.message);
     }
@@ -386,24 +305,6 @@ function MoviePage() {
                   <CheckCheck className="size-4 sm:size-5" />
                 ) : (
                   <Plus className="size-4 sm:size-5" />
-                )}
-              </button>
-              <button
-                onClick={handleLike}
-                className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground"
-                aria-label={liked ? "Unlike" : "Like"}
-              >
-                <ThumbsUp className={`size-4 sm:size-5 ${liked ? "fill-foreground" : ""}`} />
-              </button>
-              <button
-                onClick={handleMarkWatched}
-                className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground"
-                aria-label={watched ? "Watched" : "Mark watched"}
-              >
-                {watched ? (
-                  <EyeOff className="size-4 sm:size-5" />
-                ) : (
-                  <Eye className="size-4 sm:size-5" />
                 )}
               </button>
               <button
@@ -541,40 +442,6 @@ function MoviePage() {
               <p className="text-[11px] sm:text-sm">
                 <span className="text-foreground">Rating:</span> {movie.rating}
               </p>
-            </div>
-          </div>
-          <div className="border-t border-border pt-4">
-            <div className="flex items-center justify-between">
-              <p className="font-semibold text-foreground">Trakt</p>
-              {trakt.url && (
-                <a
-                  href={trakt.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                >
-                  View <ExternalLink className="size-3" />
-                </a>
-              )}
-            </div>
-            <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-              <div className="rounded bg-card/60 py-2">
-                <Star className="mx-auto size-4 text-amber-400" />
-                <div className="mt-1 font-semibold text-foreground">
-                  {trakt.rating != null ? trakt.rating.toFixed(1) : "—"}
-                </div>
-                <div className="text-[11px] text-muted-foreground">{fmtNum(trakt.votes)} votes</div>
-              </div>
-              <div className="rounded bg-card/60 py-2">
-                <Eye className="mx-auto size-4 text-sky-400" />
-                <div className="mt-1 font-semibold text-foreground">{fmtNum(trakt.watchers)}</div>
-                <div className="text-[11px] text-muted-foreground">watching</div>
-              </div>
-              <div className="rounded bg-card/60 py-2">
-                <Play className="mx-auto size-4 text-emerald-400" />
-                <div className="mt-1 font-semibold text-foreground">{fmtNum(trakt.plays)}</div>
-                <div className="text-[11px] text-muted-foreground">plays</div>
-              </div>
             </div>
           </div>
         </div>

@@ -14,11 +14,9 @@ import {
   fetchRecommendations,
   searchMovies,
   discoverByGenre,
-  fetchMoviesByIds,
   searchPeople,
   fetchGenres,
 } from "./api/tmdb";
-import { fetchTraktTrending } from "./api/trakt";
 
 export type { Movie };
 
@@ -32,14 +30,13 @@ export const defaultProfiles = [
 ];
 
 async function loadHome() {
-  const [trending, popular, nowPlaying, topRated, sciFi, dramas, traktData] = await Promise.all([
+  const [trending, popular, nowPlaying, topRated, sciFi, dramas] = await Promise.all([
     fetchTrending(),
     fetchPopular(),
     fetchNowPlaying(),
     fetchTopRated(),
     discoverByGenre({ data: { genreId: "878" } }),
     discoverByGenre({ data: { genreId: "18" } }),
-    fetchTraktTrending(),
   ]);
 
   let recommendations: Movie[] = [];
@@ -49,12 +46,6 @@ async function loadHome() {
     }
   } catch {}
 
-  const traktIds = traktData.map((t: { tmdbId: string }) => t.tmdbId).slice(0, 8);
-  let traktMovies: Movie[] = [];
-  try {
-    traktMovies = await fetchMoviesByIds({ data: { ids: traktIds } });
-  } catch {}
-
   return {
     heroSlides: trending.slice(0, 5),
     rows: [
@@ -62,7 +53,6 @@ async function loadHome() {
       ...(recommendations.length ? [{ title: "Recommended for You", items: recommendations }] : []),
       { title: "Top Rated", items: topRated.slice(0, 10) },
       { title: "Popular on StreamFlix", items: popular.slice(0, 10) },
-      ...(traktMovies.length ? [{ title: "Trending on Trakt", items: traktMovies }] : []),
       { title: "Sci-Fi & Beyond", items: sciFi },
       { title: "Award-Winning Dramas", items: dramas.slice(0, 10) },
       { title: "New Releases", items: nowPlaying },

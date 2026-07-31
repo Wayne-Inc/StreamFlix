@@ -27,9 +27,7 @@ export async function getPersonalizedRecommendations(seeds: RecommendSeed[]): Pr
   >();
 
   const results = await Promise.all(
-    top.map((seed) =>
-      fetchRecommendations({ data: { id: seed.id } }).catch(() => [] as Movie[]),
-    ),
+    top.map((seed) => fetchRecommendations({ data: { id: seed.id } }).catch(() => [] as Movie[])),
   );
 
   let firstPos = 0;
