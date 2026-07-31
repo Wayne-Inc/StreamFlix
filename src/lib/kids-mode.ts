@@ -1,6 +1,7 @@
 import type { Movie } from "./types";
 
 const ADULT_GENRE_IDS = new Set([
+  18, // Drama
   27, // Horror
   53, // Thriller
   80, // Crime
@@ -26,6 +27,10 @@ export function filterKidsContent(items: Movie[]): Movie[] {
     const hasAdult = ids.some((gid) => ADULT_GENRE_IDS.has(gid));
     return !hasAdult;
   });
+}
+
+export function isBlockedKidsGenre(genreId: number): boolean {
+  return ADULT_GENRE_IDS.has(genreId);
 }
 
 export function filterKidsGenres(

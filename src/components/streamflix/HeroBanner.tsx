@@ -19,7 +19,7 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
       : s.description;
 
   return (
-    <section className="relative min-h-[45vh] h-[55vh] w-full overflow-hidden sm:min-h-[420px] sm:h-[75vh] lg:min-h-[560px] lg:h-[88vh]">
+    <section className="relative min-h-[60vh] h-[70vh] w-full overflow-hidden sm:min-h-[520px] sm:h-[85vh] lg:min-h-[620px] lg:h-[92vh]">
       {slides.map((slide, idx) => (
         <img
           key={slide.id}

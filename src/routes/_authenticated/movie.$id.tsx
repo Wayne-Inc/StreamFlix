@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Play, Plus, Share2, Clapperboard, CheckCheck, Download } from "lucide-react";
+import { isKidsProfile, filterKidsContent, isBlockedKidsGenre } from "@/lib/kids-mode";
 import { toast } from "sonner";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
@@ -12,105 +13,59 @@ import { auth } from "@/lib/firebase";
 import { isInMyList, addToMyList, removeFromMyList } from "@/lib/my-list";
 import { getUserRating, rateMovie as saveRating } from "@/lib/ratings";
 import { StarRating } from "@/components/streamflix/StarRating";
-import { SeasonEpisodeSelector } from "@/components/streamflix/SeasonEpisodeSelector";
+import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
 import { TrailerModal } from "@/components/streamflix/TrailerModal";
+import { tryDownloadFromServers, openDownloadSource } from "@/lib/offline";
 
 function MovieSkeleton() {
   return (
     <div className="min-h-dvh bg-background">
       <Navbar />
       {/* Hero skeleton */}
-      <section className="relative h-[70vh] min-h-[460px] overflow-hidden bg-surface/50">
-        <div className="flex h-full flex-col items-end md:items-center px-4 sm:px-8 md:px-16 pb-16 md:pb-0">
-          {/* On mobile: spacer first pushes title+buttons to bottom; on desktop: at bottom */}
-          <div className="flex-1 min-h-4 order-1 md:order-2" />
-
-          <div className="max-w-2xl space-y-4 w-full order-2 md:order-1 mb-4 sm:mb-6 md:mb-0">
-            <Skeleton className="h-12 sm:h-14 w-full max-w-md rounded" />
-            <div className="flex gap-2">
-              <Skeleton className="h-4 w-16 rounded" />
-              <Skeleton className="h-4 w-12 rounded" />
-              <Skeleton className="h-4 w-10 rounded" />
-              <Skeleton className="h-4 w-14 rounded" />
+      <section className="relative min-h-[70vh] overflow-hidden bg-surface/50 pt-16 md:pt-20">
+        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-8 md:px-16 md:py-16">
+          <div className="grid w-full gap-10 md:grid-cols-3 md:gap-8">
+            <div className="space-y-4 md:col-span-2">
+              <Skeleton className="h-12 sm:h-14 w-full max-w-md rounded" />
+              <div className="flex gap-2">
+                <Skeleton className="h-4 w-16 rounded" />
+                <Skeleton className="h-4 w-12 rounded" />
+                <Skeleton className="h-4 w-10 rounded" />
+                <Skeleton className="h-4 w-14 rounded" />
+              </div>
+              <Skeleton className="h-16 w-full max-w-xl rounded" />
+              <div className="flex flex-wrap gap-3 pt-2">
+                <Skeleton className="h-12 w-24 rounded-md" />
+                <Skeleton className="h-12 w-24 rounded-md" />
+                <Skeleton className="size-12 rounded-full" />
+                <Skeleton className="size-12 rounded-full" />
+                <Skeleton className="size-12 rounded-full" />
+              </div>
             </div>
-            <Skeleton className="h-16 w-full max-w-xl rounded" />
-            <div className="flex flex-wrap gap-3 pt-2">
-              <Skeleton className="h-12 w-24 rounded-md" />
-              <Skeleton className="h-12 w-24 rounded-md" />
-              <Skeleton className="size-12 rounded-full" />
-              <Skeleton className="size-12 rounded-full" />
-              <Skeleton className="size-12 rounded-full" />
-              <Skeleton className="size-12 rounded-full" />
-              <Skeleton className="size-12 rounded-full" />
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Below-hero skeleton */}
-      <section className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-8 md:grid-cols-3 overflow-hidden">
-        <div className="md:col-span-2 flex flex-col gap-5 text-sm min-w-0">
-          {/* Cast */}
-          <div className="min-w-0">
-            <Skeleton className="h-5 w-10 rounded mb-3" />
-            <div className="flex flex-nowrap gap-3 sm:gap-4 overflow-x-auto pb-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="flex flex-col items-center gap-1.5 w-[72px] sm:w-20 flex-shrink-0"
-                >
-                  <Skeleton className="size-12 sm:size-16 rounded-full" />
-                  <Skeleton className="h-3 w-14 rounded" />
-                  <Skeleton className="h-2 w-10 rounded" />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex-1 min-h-4" />
-
-          {/* Director */}
-          <Skeleton className="h-4 w-48 rounded" />
-
-          {/* Genres */}
-          <div className="flex flex-wrap gap-2">
-            <Skeleton className="h-8 w-20 rounded-full" />
-            <Skeleton className="h-8 w-28 rounded-full" />
-            <Skeleton className="h-8 w-24 rounded-full" />
-          </div>
-
-          {/* Rate this */}
-          <div>
-            <Skeleton className="h-5 w-20 rounded mb-2" />
-            <div className="flex gap-1">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="size-8 rounded" />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-4 rounded-lg border border-border bg-surface p-3 sm:p-4 h-auto sm:h-[340px]">
-          <Skeleton className="h-5 w-32 rounded" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-full rounded" />
-            <Skeleton className="h-4 w-3/4 rounded" />
-            <Skeleton className="h-4 w-1/2 rounded" />
-            <Skeleton className="h-4 w-2/3 rounded" />
-            <Skeleton className="h-4 w-3/5 rounded" />
-            <Skeleton className="h-4 w-1/3 rounded" />
-          </div>
-          <div className="border-t border-border pt-4">
-            <Skeleton className="h-5 w-16 rounded mb-3" />
-            <div className="grid grid-cols-3 gap-2">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="rounded bg-surface p-3">
-                  <Skeleton className="h-4 w-8 rounded mx-auto mb-1" />
-                  <Skeleton className="h-3 w-12 rounded mx-auto" />
-                </div>
-              ))}
-            </div>
+            <aside className="space-y-5 rounded-lg border border-border bg-surface p-4 sm:p-5">
+              <Skeleton className="h-5 w-32 rounded" />
+              <div className="grid grid-cols-2 gap-3">
+                <Skeleton className="h-4 w-full rounded" />
+                <Skeleton className="h-4 w-full rounded" />
+                <Skeleton className="h-4 w-3/4 rounded" />
+                <Skeleton className="h-4 w-2/3 rounded" />
+                <Skeleton className="h-4 w-1/2 rounded" />
+                <Skeleton className="h-4 w-3/5 rounded" />
+              </div>
+              <Skeleton className="h-5 w-24 rounded" />
+              <div className="flex gap-1">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="size-7 rounded" />
+                ))}
+              </div>
+              <Skeleton className="h-5 w-16 rounded" />
+              <div className="space-y-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-8 w-full rounded" />
+                ))}
+              </div>
+            </aside>
           </div>
         </div>
       </section>
@@ -168,6 +123,7 @@ function MoviePage() {
     "10749": "Romance",
     "9648": "Mystery",
   };
+  const isTv = movie.id.startsWith("tv-");
   const [inWatchlist, setInWatchlist] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
 
@@ -182,6 +138,20 @@ function MoviePage() {
     }
   });
 
+  const kidsMode = useMemo(() => isKidsProfile(), []);
+  const filteredSimilar = kidsMode ? filterKidsContent(similar) : similar;
+  const filteredRecommendations = kidsMode
+    ? filterKidsContent(recommendations)
+    : recommendations;
+  const filteredGenreRows = kidsMode
+    ? genreRows
+        .filter(
+          (gr) =>
+            !isBlockedKidsGenre(Number(gr.genreId)) && filterKidsContent(gr.items).length > 0,
+        )
+        .map((gr) => ({ ...gr, items: filterKidsContent(gr.items) }))
+    : genreRows;
+
   const handleDownload = async () => {
     if (downloaded) {
       localStorage.removeItem(`sf:downloaded:${movie.id}`);
@@ -190,12 +160,15 @@ function MoviePage() {
       return;
     }
     toast.loading("Finding source…", { id: "dl" });
-    const ok = await import("@/lib/offline").then((m) => m.tryDownloadFromServers(movie.id));
+    const result = await tryDownloadFromServers(movie.id);
     toast.dismiss("dl");
-    if (ok) {
+    if (result.ok) {
+      openDownloadSource(result);
       localStorage.setItem(`sf:downloaded:${movie.id}`, "1");
       setDownloaded(true);
-      toast.success("Downloading…");
+      toast.success(
+        result.direct ? `Downloading from ${result.name}…` : `Opening ${result.name}…`,
+      );
     } else {
       toast.error("No source available");
     }
@@ -245,217 +218,224 @@ function MoviePage() {
   return (
     <div className="min-h-dvh bg-background">
       <Navbar />
-      <section className="relative h-[85vh] min-h-[560px] overflow-hidden pt-16 md:pt-20">
+      <section className="relative flex min-h-[75vh] items-center overflow-hidden pt-16 md:min-h-[85vh] md:pt-20">
         <img src={movie.backdrop} alt="" className="absolute inset-0 size-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
 
-        <div className="relative z-10 flex h-full flex-col justify-end pb-6 md:pb-16 px-4 sm:px-8 md:px-16 gap-4">
-          <div className="flex-1 min-h-0" />
-
-          <div className="max-w-2xl space-y-3">
-            <h1 className="text-4xl font-black tracking-tight sm:text-6xl">{movie.title}</h1>
-            <div className="flex flex-wrap items-center gap-2 text-sm">
-              <span className="font-semibold text-emerald-400">{movie.match}% Match</span>
-              <span className="text-muted-foreground">{movie.year}</span>
-              <span className="rounded border border-border px-1.5 text-muted-foreground">
-                {movie.rating}
-              </span>
-              <span className="text-muted-foreground">{movie.runtime}</span>
-            </div>
-            <div className={descExpanded ? "max-h-32 overflow-y-auto" : ""}>
-              <p
-                className={`max-w-xl text-sm text-foreground/90 sm:text-base ${descExpanded ? "" : "line-clamp-3"}`}
-              >
-                {movie.description}
-              </p>
-              <button
-                onClick={() => setDescExpanded((v) => !v)}
-                className="mt-1 text-xs font-medium text-primary"
-              >
-                {descExpanded ? "Show less" : "Show more"}
-              </button>
-            </div>
-          </div>
-
-          <div className="max-w-2xl">
-            <div className="flex flex-wrap items-center gap-3">
-              <Link
-                to="/watch/$id"
-                params={{ id: movie.id }}
-                search={{ autoplay: true }}
-                className="inline-flex items-center gap-2 rounded-md bg-foreground px-6 py-3 font-semibold text-background hover:bg-foreground/85"
-              >
-                <Play className="size-5 fill-current" /> Play
-              </Link>
-              {movie.trailer && (
-                <button
-                  onClick={() => setTrailerOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-md border border-border px-6 py-3 font-semibold text-foreground hover:bg-white/10"
+        <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-10 sm:px-8 md:px-16 md:py-16">
+          <div className="grid w-full gap-10 md:grid-cols-3 md:items-center md:gap-8">
+            <div className="space-y-4 md:col-span-2">
+              <h1 className="text-4xl font-black tracking-tight sm:text-6xl">{movie.title}</h1>
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="font-semibold text-emerald-400">{movie.match}% Match</span>
+                <span className="text-muted-foreground">{movie.year}</span>
+                <span className="rounded border border-border px-1.5 text-muted-foreground">
+                  {movie.rating}
+                </span>
+                <span className="text-muted-foreground">{movie.runtime}</span>
+              </div>
+              <div>
+                <p
+                  className={`max-w-xl text-sm text-foreground/90 sm:text-base ${
+                    descExpanded ? "" : "line-clamp-3"
+                  }`}
                 >
-                  <Clapperboard className="size-5" /> Trailer
+                  {movie.description}
+                </p>
+                <button
+                  onClick={() => setDescExpanded((v) => !v)}
+                  className="mt-1 text-xs font-medium text-primary"
+                >
+                  {descExpanded ? "Show less" : "Show more"}
                 </button>
-              )}
-              <button
-                onClick={handleWatchlist}
-                className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground"
-                aria-label={inWatchlist ? "Remove from list" : "Add to list"}
-              >
-                {inWatchlist ? (
-                  <CheckCheck className="size-4 sm:size-5" />
-                ) : (
-                  <Plus className="size-4 sm:size-5" />
-                )}
-              </button>
-              <button
-                onClick={handleDownload}
-                className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground"
-                aria-label={downloaded ? "Downloaded" : "Download"}
-              >
-                <Download className={`size-4 sm:size-5 ${downloaded ? "text-emerald-500" : ""}`} />
-              </button>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
-                  toast.success("Link copied");
-                }}
-                className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground"
-                aria-label="Share"
-              >
-                <Share2 className="size-4 sm:size-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
+              </div>
 
-      <section className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-8 md:grid-cols-3 overflow-hidden">
-        <div className="md:col-span-2 flex flex-col gap-5 text-sm min-w-0">
-          {/* Cast with profile pics */}
-          <div className="min-w-0">
-            <p className="mb-3 text-base font-semibold text-foreground">Cast</p>
-            <div
-              className="flex flex-nowrap gap-4 overflow-x-auto pb-3 scrollbar-hide w-full min-w-0"
-              style={{
-                WebkitOverflowScrolling: "touch",
-                touchAction: "pan-x",
-                overscrollBehaviorX: "contain",
-              }}
-            >
-              {movie.cast.map((name: string, i: number) => {
-                const personId = movie.castIds?.[i];
-                const link = personId
-                  ? { to: "/person/$id" as const, params: { id: personId } }
-                  : {
-                      to: "/search" as const,
-                      search: { q: name, tab: "people" as const },
-                      params: {},
-                    };
-                return (
-                  <Link
-                    key={`${name}-${i}`}
-                    to={link.to}
-                    {...(link.to === "/search"
-                      ? { search: (link as any).search }
-                      : { params: (link as any).params })}
-                    className="flex min-w-[90px] flex-shrink-0 flex-col items-center gap-1.5 hover:opacity-80 transition w-[90px] sm:min-w-[100px] sm:w-[100px]"
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <Link
+                  to="/watch/$id"
+                  params={{ id: movie.id }}
+                  search={{ autoplay: true }}
+                  className="inline-flex items-center gap-2 rounded-md bg-foreground px-6 py-3 font-semibold text-background hover:bg-foreground/85"
+                >
+                  <Play className="size-5 fill-current" /> Play
+                </Link>
+                {movie.trailer && (
+                  <button
+                    onClick={() => setTrailerOpen(true)}
+                    className="inline-flex items-center gap-2 rounded-md border border-border px-6 py-3 font-semibold text-foreground hover:bg-white/10"
                   >
-                    <div className="size-16 sm:size-20 overflow-hidden rounded-xl bg-surface ring-1 ring-border">
-                      {movie.castPfp[i] ? (
-                        <img src={movie.castPfp[i]} alt={name} className="size-full object-cover" />
-                      ) : (
-                        <div className="flex size-full items-center justify-center text-lg font-bold text-muted-foreground">
-                          {name.charAt(0)}
+                    <Clapperboard className="size-5" /> Trailer
+                  </button>
+                )}
+                <button
+                  onClick={handleWatchlist}
+                  className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground"
+                  aria-label={inWatchlist ? "Remove from list" : "Add to list"}
+                >
+                  {inWatchlist ? (
+                    <CheckCheck className="size-4 sm:size-5" />
+                  ) : (
+                    <Plus className="size-4 sm:size-5" />
+                  )}
+                </button>
+                {!isTv && (
+                  <button
+                    onClick={handleDownload}
+                    className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground"
+                    aria-label={downloaded ? "Downloaded" : "Download"}
+                  >
+                    <Download
+                      className={`size-4 sm:size-5 ${downloaded ? "text-emerald-500" : ""}`}
+                    />
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    toast.success("Link copied");
+                  }}
+                  className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground"
+                  aria-label="Share"
+                >
+                  <Share2 className="size-4 sm:size-5" />
+                </button>
+              </div>
+            </div>
+
+            <aside className="space-y-5 rounded-lg border border-border bg-background/70 p-4 backdrop-blur-md sm:p-5 md:col-span-1">
+              <div>
+                <p className="text-sm font-semibold text-foreground sm:text-base">
+                  About this title
+                </p>
+                <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-muted-foreground sm:text-sm">
+                  <p>
+                    <span className="font-medium text-foreground">Genres:</span>{" "}
+                    {movie.genres.join(", ")}
+                  </p>
+                  <p>
+                    <span className="font-medium text-foreground">Director:</span>{" "}
+                    {movie.director}
+                  </p>
+                  <p>
+                    <span className="font-medium text-foreground">Cast:</span>{" "}
+                    {movie.cast.length} actors
+                  </p>
+                  <p>
+                    <span className="font-medium text-foreground">Released:</span> {movie.year}
+                  </p>
+                  <p>
+                    <span className="font-medium text-foreground">Runtime:</span> {movie.runtime}
+                  </p>
+                  <p>
+                    <span className="font-medium text-foreground">Rating:</span> {movie.rating}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-1 text-sm font-semibold text-foreground sm:text-base">
+                  Rate this
+                </p>
+                <StarRating rating={userRating} onRate={handleRating} />
+              </div>
+
+              <div>
+                <p className="mb-2 text-sm font-semibold text-foreground sm:text-base">Cast</p>
+                <div className="max-h-44 space-y-1.5 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                  {movie.cast.slice(0, 15).map((name: string, i: number) => {
+                    const personId = movie.castIds?.[i];
+                    const link = personId
+                      ? { to: "/person/$id" as const, params: { id: personId } }
+                      : {
+                          to: "/search" as const,
+                          search: { q: name, tab: "people" as const },
+                          params: {},
+                        };
+                    return (
+                      <Link
+                        key={`${name}-${i}`}
+                        to={link.to}
+                        {...(link.to === "/search"
+                          ? { search: (link as any).search }
+                          : { params: (link as any).params })}
+                        className="flex items-center gap-2 transition hover:opacity-80"
+                      >
+                        <div className="size-8 shrink-0 overflow-hidden rounded-full bg-surface ring-1 ring-border">
+                          {movie.castPfp[i] ? (
+                            <img
+                              src={movie.castPfp[i]}
+                              alt={name}
+                              className="size-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex size-full items-center justify-center text-xs font-bold text-muted-foreground">
+                              {name.charAt(0)}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    <span className="text-[11px] sm:text-xs text-center text-muted-foreground leading-tight line-clamp-2">
-                      {name}
-                    </span>
-                    {movie.castRoles?.[i] && (
-                      <span className="text-[10px] sm:text-[11px] text-center text-muted-foreground leading-tight line-clamp-2">
-                        {movie.castRoles[i]}
-                      </span>
-                    )}
+                        <span className="min-w-0">
+                          <span className="block truncate text-xs font-medium text-foreground">
+                            {name}
+                          </span>
+                          {movie.castRoles?.[i] && (
+                            <span className="block truncate text-[11px] text-muted-foreground">
+                              {movie.castRoles[i]}
+                            </span>
+                          )}
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-1 text-sm font-semibold text-foreground sm:text-base">
+                  Director
+                </p>
+                {movie.directorId ? (
+                  <Link
+                    to="/person/$id"
+                    params={{ id: movie.directorId }}
+                    className="text-sm font-medium text-foreground hover:text-primary hover:underline"
+                  >
+                    {movie.director}
                   </Link>
-                );
-              })}
-            </div>
-          </div>
+                ) : (
+                  <p className="text-sm font-medium text-foreground">{movie.director}</p>
+                )}
+              </div>
 
-          {/* Director */}
-          <p>
-            <span className="text-muted-foreground">Director: </span>
-            {movie.directorId ? (
-              <Link
-                to="/person/$id"
-                params={{ id: movie.directorId }}
-                className="font-medium text-foreground hover:text-primary hover:underline cursor-pointer"
-              >
-                {movie.director}
-              </Link>
-            ) : (
-              <span className="font-medium text-foreground">{movie.director}</span>
-            )}
-          </p>
+              <div className="flex flex-wrap gap-1.5">
+                {movie.genres.map((name: string) => (
+                  <Link
+                    key={name}
+                    to="/search"
+                    search={{ q: name, tab: "genres" }}
+                    className="rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-foreground transition hover:bg-card hover:border-primary/50"
+                  >
+                    {name}
+                  </Link>
+                ))}
+              </div>
 
-          {/* Genres as pills */}
-          <div className="flex flex-wrap gap-2">
-            {movie.genres.map((name: string) => (
-              <Link
-                key={name}
-                to="/search"
-                search={{ q: name, tab: "genres" }}
-                className="rounded-full border border-border bg-surface px-4 py-1.5 text-sm font-medium text-foreground hover:bg-card hover:border-primary/50 transition cursor-pointer"
-              >
-                {name}
-              </Link>
-            ))}
-          </div>
-
-          {/* Rate this */}
-          <div>
-            <p className="mb-2 text-base font-semibold text-foreground">Rate this</p>
-            <StarRating rating={userRating} onRate={handleRating} />
-          </div>
-        </div>
-        <div className="space-y-4 rounded-lg border border-border bg-surface p-3 text-xs sm:p-4 sm:text-sm h-auto sm:h-[340px]">
-          <div>
-            <p className="font-semibold text-foreground text-sm sm:text-base">About this title</p>
-            <p className="mt-2 text-muted-foreground"></p>
-            <div className="mt-2 space-y-1 text-muted-foreground">
-              <p className="text-[11px] sm:text-sm">
-                <span className="text-foreground">Genres:</span> {movie.genres.join(", ")}
-              </p>
-              <p className="text-[11px] sm:text-sm">
-                <span className="text-foreground">Director:</span> {movie.director}
-              </p>
-              <p className="text-[11px] sm:text-sm">
-                <span className="text-foreground">Cast:</span> {movie.cast.length} actors
-              </p>
-              <p className="text-[11px] sm:text-sm">
-                <span className="text-foreground">Released:</span> {movie.year}
-              </p>
-              <p className="text-[11px] sm:text-sm">
-                <span className="text-foreground">Runtime:</span> {movie.runtime}
-              </p>
-              <p className="text-[11px] sm:text-sm">
-                <span className="text-foreground">Rating:</span> {movie.rating}
-              </p>
-            </div>
+              {isTv && movie.numberOfSeasons && movie.numberOfSeasons > 0 && (
+                <SeasonEpisodePicker
+                  movieId={movie.id}
+                  numberOfSeasons={movie.numberOfSeasons}
+                />
+              )}
+            </aside>
           </div>
         </div>
       </section>
 
-      {movie.numberOfSeasons && movie.numberOfSeasons > 0 && (
-        <SeasonEpisodeSelector movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} />
-      )}
-
-      {similar.length > 0 && (
+      {filteredSimilar.length > 0 && (
         <div className="space-y-2">
           {(() => {
-            const groups = new Map<string, typeof similar>();
-            for (const m of similar) {
+            const groups = new Map<string, typeof filteredSimilar>();
+            for (const m of filteredSimilar) {
               const g = m.genres[0] || "Other";
               if (!groups.has(g)) groups.set(g, []);
               groups.get(g)!.push(m);
@@ -467,14 +447,14 @@ function MoviePage() {
         </div>
       )}
 
-      {recommendations.length > 0 && (
+      {filteredRecommendations.length > 0 && (
         <div className="space-y-2 pb-4">
-          <Row title="Recommended" items={recommendations} />
+          <Row title="Recommended" items={filteredRecommendations} />
         </div>
       )}
 
       <div className="space-y-2 pb-10">
-        {genreRows.map((gr) => {
+        {filteredGenreRows.map((gr) => {
           const label = genreLabels[gr.genreId] || "Others You May Like";
           return <Row key={gr.genreId} title={`${label} Movies`} items={gr.items} />;
         })}
