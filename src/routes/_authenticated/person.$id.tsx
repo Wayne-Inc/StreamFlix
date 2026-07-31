@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Calendar, MapPin, Film, ChevronLeft, ChevronDown } from "lucide-react";
 import { Navbar } from "@/components/streamflix/Navbar";
@@ -106,9 +106,19 @@ function CreditSection({
 
 function PersonPage() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
+  const router = useRouter();
   const [data, setData] = useState<PersonData | null>(null);
   const [loading, setLoading] = useState(true);
   const [bioExpanded, setBioExpanded] = useState(false);
+
+  const goBack = () => {
+    if (window.history.length > 1) {
+      router.history.back();
+    } else {
+      navigate({ to: "/search" });
+    }
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -148,12 +158,13 @@ function PersonPage() {
         <Navbar />
         <main className="px-4 pt-28 pb-16 sm:px-8 text-center text-muted-foreground">
           <p>Person not found.</p>
-          <Link
-            to="/search"
+          <button
+            type="button"
+            onClick={goBack}
             className="inline-block rounded-lg border border-white/60 px-3 py-1.5 text-xs text-white hover:bg-white/10 transition"
           >
-            ← Back to search
-          </Link>
+            ← Back
+          </button>
         </main>
         <Footer />
       </div>
@@ -165,12 +176,13 @@ function PersonPage() {
       <Navbar />
       <main className="px-4 pt-28 pb-16 sm:px-8">
         <div className="mx-auto max-w-6xl">
-          <Link
-            to="/search"
+          <button
+            type="button"
+            onClick={goBack}
             className="mb-4 inline-flex items-center gap-1.5 rounded-lg border border-white/60 px-3 py-1.5 text-xs text-white hover:bg-white/10 transition"
           >
-            <ChevronLeft className="size-3.5" /> Back to search
-          </Link>
+            <ChevronLeft className="size-3.5" /> Back
+          </button>
 
           <div className="flex flex-col sm:flex-row gap-6 sm:gap-10 mb-12">
             {data.photo ? (

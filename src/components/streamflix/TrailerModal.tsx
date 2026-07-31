@@ -1,20 +1,9 @@
-import { useRef } from "react";
-import { X, Maximize2 } from "lucide-react";
+import { X } from "lucide-react";
 
 export function TrailerModal({ url, onClose }: { url: string; onClose: () => void }) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
   const videoId = url.match(
     /(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]+)/,
   )?.[1];
-
-  const enterFullscreen = async () => {
-    if (!containerRef.current) return;
-    try {
-      await containerRef.current.requestFullscreen?.();
-    } catch {
-      // ignore fullscreen failures
-    }
-  };
 
   if (!videoId) return null;
   return (
@@ -23,18 +12,10 @@ export function TrailerModal({ url, onClose }: { url: string; onClose: () => voi
       onClick={onClose}
     >
       <div
-        ref={containerRef}
         className="relative w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-3xl shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="absolute right-3 top-3 z-20 flex items-center gap-2">
-          <button
-            type="button"
-            onClick={enterFullscreen}
-            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-sm text-white transition hover:bg-white/20"
-          >
-            <Maximize2 className="size-4" /> Fullscreen
-          </button>
+        <div className="absolute right-3 top-3 z-20">
           <button
             type="button"
             onClick={onClose}

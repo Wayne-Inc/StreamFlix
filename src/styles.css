@@ -186,3 +186,20 @@ input[type="range"]::-moz-range-progress {
   border-radius: 2px;
   background: rgba(255, 255, 255, 0.3);
 }
+
+body.electron-app {
+  padding-top: 40px;
+}
+body.electron-app header.fixed {
+  top: 40px !important;
+}
+body.electron-app .h-dvh,
+body.electron-app .h-screen {
+  height: calc(100dvh - 40px) !important;
+}
+body.electron-app .min-h-dvh {
+  min-height: calc(100dvh - 40px) !important;
+}
+body.electron-app .min-h-screen {
+  min-height: calc(100vh - 40px) !important;
+}

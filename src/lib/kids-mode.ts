@@ -27,3 +27,9 @@ export function filterKidsContent(items: Movie[]): Movie[] {
     return !hasAdult;
   });
 }
+
+export function filterKidsGenres(
+  genres: { id: number; name: string }[],
+): { id: number; name: string }[] {
+  return genres.filter((g) => !ADULT_GENRE_IDS.has(g.id));
+}

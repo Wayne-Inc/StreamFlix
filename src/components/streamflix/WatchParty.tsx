@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Send, Copy, X, Users, Smile, MessageCircle } from "lucide-react";
+import { Send, Copy, Link2, X, Users, Smile, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { auth, db } from "@/lib/firebase";
 import {
@@ -485,6 +485,24 @@ export function WatchPartyPanel(props: Props) {
                   aria-label="Copy code"
                 >
                   <Copy className="size-4" />
+                </button>
+                <button
+                  onClick={() => {
+                    const isElectron = typeof window !== "undefined" && "electronAPI" in window;
+                    const base = isElectron
+                      ? "streamflix://watch/"
+                      : `${window.location.origin}/watch/`;
+                    const params = new URLSearchParams({ party: room.code });
+                    if (season) params.set("season", String(season));
+                    if (episode) params.set("episode", String(episode));
+                    navigator.clipboard.writeText(`${base}${movieId}?${params.toString()}`);
+                    toast.success("Invite link copied");
+                  }}
+                  className="text-muted-foreground hover:text-foreground"
+                  aria-label="Copy invite link"
+                  title="Copy invite link"
+                >
+                  <Link2 className="size-4" />
                 </button>
               </div>
               <button

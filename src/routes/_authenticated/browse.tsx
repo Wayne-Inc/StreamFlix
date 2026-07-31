@@ -17,9 +17,11 @@ import {
 } from "@/components/ui/select";
 import { loadBrowseData, type BrowseKind } from "@/lib/streamflix-data";
 import { fetchTraktWatchlist } from "@/lib/api/trakt";
+import { discoverByGenre } from "@/lib/api/tmdb";
 import type { Movie } from "@/lib/types";
 import {
   getContinueWatching,
+  getWatchHistory,
   toMovie as continueToMovie,
   type ContinueItem,
 } from "@/lib/continue-watching";
@@ -72,12 +74,9 @@ function RowSkeleton() {
   return (
     <div className="space-y-3 py-4">
       <Skeleton className="h-5 w-48 rounded" />
-      <div className="flex gap-2 overflow-hidden">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <Skeleton
-            key={i}
-            className="w-[160px] sm:w-[200px] md:w-[240px] aspect-[2/3] rounded-md shrink-0"
-          />
+      <div className="flex gap-2 sm:gap-3 overflow-hidden px-4 sm:px-8">
+        {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+          <Skeleton key={i} className="w-[200px] sm:w-[260px] aspect-[2/3] rounded-md shrink-0" />
         ))}
       </div>
     </div>
@@ -136,6 +135,7 @@ function BrowsePage() {
   const [sortBy, setSortBy] = useState<SortMode>("recent");
   const [traktWatchlist, setTraktWatchlist] = useState<Movie[] | null>(null);
   const [traktWatchlistLoaded, setTraktWatchlistLoaded] = useState(false);
+  const [watchedRow, setWatchedRow] = useState<{ title: string; items: Movie[] } | null>(null);
 
   useEffect(() => {
     const loadTraktWatchlist = async () => {
@@ -220,6 +220,65 @@ function BrowsePage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (kind !== "home" || typeof window === "undefined") return;
+    let cancelled = false;
+
+    const loadWatchedRow = async () => {
+      const history = getWatchHistory();
+      if (history.length === 0) {
+        if (!cancelled) setWatchedRow(null);
+        return;
+      }
+
+      const counts = new Map<number, number>();
+      for (const item of history) {
+        for (const gid of item.genreIds ?? []) {
+          counts.set(gid, (counts.get(gid) ?? 0) + 1);
+        }
+      }
+      const topGenres = Array.from(counts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 2)
+        .map(([gid]) => String(gid));
+      if (topGenres.length === 0) {
+        if (!cancelled) setWatchedRow(null);
+        return;
+      }
+
+      const seen = new Set(history.map((h) => h.id));
+      try {
+        const batches = await Promise.all(
+          topGenres.map((gid) => discoverByGenre({ data: { genreId: gid } })),
+        );
+        const merged: Movie[] = [];
+        for (const batch of batches) {
+          for (const movie of batch) {
+            if (seen.has(movie.id)) continue;
+            if (!merged.some((m) => m.id === movie.id)) merged.push(movie);
+          }
+          if (merged.length >= 12) break;
+        }
+        if (!cancelled) {
+          setWatchedRow(
+            merged.length ? { title: "Because You Watched", items: merged.slice(0, 12) } : null,
+          );
+        }
+      } catch {
+        if (!cancelled) setWatchedRow(null);
+      }
+    };
+
+    loadWatchedRow();
+    window.addEventListener("storage", loadWatchedRow);
+    window.addEventListener("focus", loadWatchedRow);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("storage", loadWatchedRow);
+      window.removeEventListener("focus", loadWatchedRow);
+    };
+  }, [kind]);
+
   const isMyList = kind === "my-list";
 
   const sortedRows: { title: string; items: Movie[] }[] = useMemo(() => {
@@ -279,6 +338,12 @@ function BrowsePage() {
                 ))}
             </div>
           </section>
+        )}
+        {!isMyList && watchedRow && kind === "home" && (
+          <Row
+            title={watchedRow.title}
+            items={kidsMode ? filterKidsContent(watchedRow.items) : watchedRow.items}
+          />
         )}
         {rows.length === 0 && isMyList && (
           <div className="flex flex-col items-center justify-center px-4 pt-16 text-center">

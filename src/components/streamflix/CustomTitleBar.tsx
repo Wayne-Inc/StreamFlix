@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Minus, Square, X, Play, Sparkles } from "lucide-react";
+import { Minus, Square, X, Sparkles } from "lucide-react";
 
 declare global {
   interface Window {
@@ -37,13 +37,15 @@ export function CustomTitleBar() {
 
   return (
     <div
-      className="h-10 bg-black/95 border-b border-zinc-800/90 flex items-center justify-between select-none px-4 fixed top-0 left-0 right-0 z-50 backdrop-blur-xl shadow-lg shadow-black/50"
+      className="h-10 bg-black/95 border-b border-zinc-800/90 flex items-center justify-between select-none px-4 fixed top-0 left-0 right-0 z-[60] backdrop-blur-xl shadow-lg shadow-black/50"
       style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
     >
       <div className="flex items-center gap-2.5">
-        <div className="size-5 rounded-md bg-gradient-to-br from-primary to-rose-700 flex items-center justify-center shadow-md shadow-primary/40 ring-1 ring-white/20">
-          <Play className="size-2.5 fill-white text-white ml-0.5" />
-        </div>
+        <img
+          src="/icon.png"
+          alt="StreamFlix"
+          className="size-5 rounded object-cover shadow-sm pointer-events-none"
+        />
         <span className="text-xs font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-400">
           STREAMFLIX
         </span>

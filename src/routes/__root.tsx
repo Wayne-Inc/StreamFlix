@@ -133,6 +133,9 @@ function RootComponent() {
   const offlineRoute = "/offline";
 
   useEffect(() => {
+    if (typeof window !== "undefined" && window.electronAPI) {
+      document.body.classList.add("electron-app");
+    }
     registerSW();
     const unsub = onAuthStateChanged(auth, (user) => {
       if (initial.current) {
@@ -186,7 +189,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <CustomTitleBar />
-      <div className={typeof window !== "undefined" && window.electronAPI ? "pt-10" : ""}>
+      <div>
         <Toaster richColors theme="dark" position="top-center" />
         <Outlet />
         <CookieConsent />

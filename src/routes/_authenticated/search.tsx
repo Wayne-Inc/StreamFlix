@@ -6,7 +6,7 @@ import { Footer } from "@/components/streamflix/Footer";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import { search, searchByGenre, searchByPerson, getGenres } from "@/lib/streamflix-data";
 import type { Movie } from "@/lib/types";
-import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
+import { isKidsProfile, filterKidsContent, filterKidsGenres } from "@/lib/kids-mode";
 import { z } from "zod";
 
 const searchSchema = z.object({
@@ -91,7 +91,7 @@ function SearchPage() {
   }, [debouncedQ, tab]);
 
   useEffect(() => {
-    getGenres().then(setGenres);
+    getGenres().then((list) => setGenres(isKidsProfile() ? filterKidsGenres(list) : list));
   }, []);
 
   const handleGenreClick = async (genreId: number) => {
