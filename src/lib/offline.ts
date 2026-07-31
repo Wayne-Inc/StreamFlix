@@ -1,5 +1,10 @@
 const DOWNLOAD_SERVERS: { name: string; movie: string; tv: string }[] = [
   {
+    name: "VidKing",
+    movie: "https://www.vidking.net/embed/movie/{id}?color=e50914&autoPlay=true",
+    tv: "https://www.vidking.net/embed/tv/{id}/{season}/{episode}?color=e50914&autoPlay=true&nextEpisode=true",
+  },
+  {
     name: "VSEmbed",
     movie: "https://vsembed.su/embed/movie/{id}",
     tv: "https://vsembed.su/embed/tv/{id}/{season}/{episode}",

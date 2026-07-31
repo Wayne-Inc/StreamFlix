@@ -76,6 +76,15 @@ interface EmbedServer {
 
 const availableEmbedServers: EmbedServer[] = [
   {
+    id: "vidking",
+    name: "VidKing",
+    isFrench: false,
+    urls: {
+      movie: "https://www.vidking.net/embed/movie/{id}?color=e50914&autoPlay=true",
+      tv: "https://www.vidking.net/embed/tv/{id}/{season}/{episode}?color=e50914&autoPlay=true&nextEpisode=true",
+    },
+  },
+  {
     id: "vsembed",
     name: "VSEmbed",
     isFrench: false,
@@ -306,7 +315,7 @@ function PlayerPage() {
   const [videoUrl, setVideoUrl] = useState<string>("");
   const mainVideoUrlRef = useRef<string>("");
   const [mainVideoUrl, setMainVideoUrl] = useState("");
-  const [selectedServerId, setSelectedServerId] = useState<string>("vsembed");
+  const [selectedServerId, setSelectedServerId] = useState<string>("vidking");
   const selectedServer =
     availableEmbedServers.find((server) => server.id === selectedServerId) ??
     availableEmbedServers[0];
