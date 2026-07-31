@@ -178,7 +178,12 @@ function BrowsePage() {
       const history = getWatchHistory();
       const seeds = new Map<string, RecommendSeed>();
       for (const item of history) {
-        seeds.set(item.id, { id: item.id, watchedAt: item.watchedAt, genreIds: item.genreIds });
+        seeds.set(item.id, {
+          id: item.id,
+          title: item.title,
+          watchedAt: item.watchedAt,
+          genreIds: item.genreIds,
+        });
       }
       try {
         const fsItems = await getContinueWatchingFromFirestore();
@@ -186,6 +191,7 @@ function BrowsePage() {
           const existing = seeds.get(fs.movieId);
           seeds.set(fs.movieId, {
             id: fs.movieId,
+            title: fs.title,
             watchedAt: Math.max(existing?.watchedAt ?? 0, fs.updatedAt),
             genreIds: fs.genreIds,
           });
@@ -197,9 +203,18 @@ function BrowsePage() {
       }
 
       try {
-        const items = await getPersonalizedRecommendations(Array.from(seeds.values()));
+        const result = await getPersonalizedRecommendations(Array.from(seeds.values()));
         if (!cancelled) {
-          setWatchedRow(items.length ? { title: "Because You Watched", items } : null);
+          setWatchedRow(
+            result.items.length
+              ? {
+                  title: result.basedOnTitle
+                    ? `Because You Watched ${result.basedOnTitle}`
+                    : "Because You Watched",
+                  items: result.items,
+                }
+              : null,
+          );
         }
       } catch {
         if (!cancelled) setWatchedRow(null);

@@ -3,6 +3,7 @@ import { fetchRecommendations, discoverByGenre } from "./api/tmdb";
 
 export type RecommendSeed = {
   id: string;
+  title?: string;
   watchedAt: number;
   genreIds?: number[];
 };
@@ -15,8 +16,11 @@ function recencyWeight(index: number, total: number) {
   return 1 - (index / total) * 0.6;
 }
 
-export async function getPersonalizedRecommendations(seeds: RecommendSeed[]): Promise<Movie[]> {
-  if (seeds.length === 0) return [];
+export async function getPersonalizedRecommendations(seeds: RecommendSeed[]): Promise<{
+  items: Movie[];
+  basedOnTitle: string | null;
+}> {
+  if (seeds.length === 0) return { items: [], basedOnTitle: null };
 
   const sorted = [...seeds].sort((a, b) => b.watchedAt - a.watchedAt);
   const top = sorted.slice(0, MAX_SEEDS);
@@ -30,8 +34,12 @@ export async function getPersonalizedRecommendations(seeds: RecommendSeed[]): Pr
     top.map((seed) => fetchRecommendations({ data: { id: seed.id } }).catch(() => [] as Movie[])),
   );
 
+  let basedOnTitle: string | null = null;
   let firstPos = 0;
   top.forEach((seed, i) => {
+    if (results[i].length > 0 && basedOnTitle == null) {
+      basedOnTitle = seed.title ?? null;
+    }
     const rw = recencyWeight(i, top.length);
     results[i].forEach((movie: Movie, j: number) => {
       if (seen.has(movie.id)) return;
@@ -73,5 +81,5 @@ export async function getPersonalizedRecommendations(seeds: RecommendSeed[]): Pr
     }
   }
 
-  return ranked;
+  return { items: ranked, basedOnTitle };
 }
