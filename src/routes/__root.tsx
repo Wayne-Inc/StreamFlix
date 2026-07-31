@@ -17,6 +17,7 @@ import { registerSW } from "../lib/pwa";
 import { Toaster } from "@/components/ui/sonner";
 import { CookieConsent } from "@/components/streamflix/CookieConsent";
 import { CustomTitleBar } from "@/components/streamflix/CustomTitleBar";
+import { ScreenSaver } from "@/components/streamflix/ScreenSaver";
 import { auth, db } from "@/lib/firebase";
 
 function NotFoundComponent() {
@@ -193,6 +194,7 @@ function RootComponent() {
         <Toaster richColors theme="dark" position="top-center" />
         <Outlet />
         <CookieConsent />
+        <ScreenSaver />
       </div>
     </QueryClientProvider>
   );

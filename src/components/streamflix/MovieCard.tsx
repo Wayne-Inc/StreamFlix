@@ -1,29 +1,62 @@
 import { Link } from "@tanstack/react-router";
+import { Play, Info } from "lucide-react";
 import type { Movie } from "@/lib/types";
 
 export function MovieCard({ movie, progress }: { movie: Movie; progress?: number }) {
   return (
-    <div className="group relative w-[200px] sm:w-[260px] shrink-0">
-      <Link
-        to={progress != null ? "/watch/$id" : "/movie/$id"}
-        params={{ id: movie.id }}
-        className="block relative aspect-[2/3] overflow-hidden rounded-md bg-surface focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none transition-transform duration-200 ease-out hover:scale-[1.04]"
-        aria-label={progress != null ? `Continue ${movie.title}` : `Details for ${movie.title}`}
-      >
-        {movie.poster ? (
-          <img
-            src={movie.poster}
-            alt={movie.title}
-            loading="lazy"
-            width={400}
-            height={600}
-            className="size-full object-cover transition-all duration-500"
-          />
-        ) : (
-          <div className="grid size-full place-items-center bg-card text-xs text-muted-foreground p-2 text-center">
-            {movie.title}
+    <div className="group relative w-[200px] sm:w-[260px] shrink-0 transition-all duration-300 hover:z-30 hover:scale-105">
+      <div className="relative aspect-[2/3] overflow-hidden rounded-md bg-surface shadow-md transition-shadow duration-300 group-hover:shadow-2xl">
+        <Link
+          to={progress != null ? "/watch/$id" : "/movie/$id"}
+          params={{ id: movie.id }}
+          className="block size-full focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+          aria-label={progress != null ? `Continue ${movie.title}` : `Details for ${movie.title}`}
+        >
+          {movie.poster ? (
+            <img
+              src={movie.poster}
+              alt={movie.title}
+              loading="lazy"
+              width={400}
+              height={600}
+              className="size-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+          ) : (
+            <div className="grid size-full place-items-center bg-card text-xs text-muted-foreground p-2 text-center">
+              {movie.title}
+            </div>
+          )}
+        </Link>
+
+        {/* Quick action overlay on hover */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 flex flex-col justify-end p-3 pointer-events-none group-hover:pointer-events-auto">
+          <p className="text-xs sm:text-sm font-bold text-white line-clamp-1 mb-1">{movie.title}</p>
+          <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-emerald-400 mb-2">
+            <span>{movie.match}% Match</span>
+            <span>·</span>
+            <span className="text-muted-foreground">{movie.year}</span>
           </div>
-        )}
+          <div className="flex items-center gap-2">
+            <Link
+              to="/watch/$id"
+              params={{ id: movie.id }}
+              search={{ autoplay: true }}
+              className="flex items-center justify-center gap-1 rounded bg-white text-black px-3 py-1.5 text-xs font-semibold hover:bg-white/85 transition"
+              title="Play"
+            >
+              <Play className="size-3.5 fill-current" /> Play
+            </Link>
+            <Link
+              to="/movie/$id"
+              params={{ id: movie.id }}
+              className="flex items-center justify-center gap-1 rounded bg-white/20 text-white backdrop-blur px-3 py-1.5 text-xs font-semibold hover:bg-white/30 transition"
+              title="More Info"
+            >
+              <Info className="size-3.5" /> Info
+            </Link>
+          </div>
+        </div>
+
         {progress != null && (
           <>
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-foreground/20">
@@ -37,7 +70,7 @@ export function MovieCard({ movie, progress }: { movie: Movie; progress?: number
             </div>
           </>
         )}
-      </Link>
+      </div>
     </div>
   );
 }
