@@ -9,6 +9,8 @@ import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   onAuthStateChanged,
   updateProfile as updateFirebaseProfile,
   sendEmailVerification,
@@ -74,6 +76,22 @@ function AuthPage() {
       if (user && user.emailVerified) navigate({ to: "/profiles" });
     });
     return () => unsub();
+  }, [navigate]);
+
+  // Finish a Google redirect sign-in that was started in the desktop app.
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) {
+          toast.success("Signed in with Google.");
+          navigate({ to: "/profiles" });
+        }
+      })
+      .catch((err: any) => {
+        if (err?.code && err.code !== "auth/popup-closed-by-user") {
+          toast.error(err?.message ?? "Google sign-in failed");
+        }
+      });
   }, [navigate]);
 
   useEffect(() => {
@@ -185,7 +203,15 @@ function AuthPage() {
     setBusy(true);
     setPopupBlocked(false);
     const provider = new GoogleAuthProvider();
+    const inElectron = typeof window !== "undefined" && "electronAPI" in window;
     try {
+      if (inElectron) {
+        // Google refuses the embedded popup window as an insecure browser, so in the
+        // desktop app we navigate the main window to Google's sign-in page instead and
+        // finish the login with getRedirectResult when the user returns.
+        await signInWithRedirect(auth, provider);
+        return;
+      }
       await signInWithPopup(auth, provider);
       toast.success("Signed in with Google.");
       navigate({ to: "/profiles" });

@@ -41,11 +41,6 @@ export function CustomTitleBar() {
       style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
     >
       <div className="flex items-center gap-2.5">
-        <img
-          src="/icon.png"
-          alt="StreamFlix"
-          className="size-5 rounded object-cover shadow-sm pointer-events-none"
-        />
         <span className="text-xs font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-400">
           STREAMFLIX
         </span>
