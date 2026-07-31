@@ -1,9 +1,9 @@
 import type { Movie } from "./types";
 
 const ADULT_GENRE_IDS = new Set([
-  27,   // Horror
-  53,   // Thriller
-  80,   // Crime
+  27, // Horror
+  53, // Thriller
+  80, // Crime
   9648, // Mystery
   10752, // War
   10749, // Romance

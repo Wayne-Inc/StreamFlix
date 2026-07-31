@@ -20,7 +20,9 @@ function DeleteAccountPage() {
     const link = window.location.href;
 
     if (!isSignInWithEmailLink(auth, link)) {
-      setMsg("Invalid or expired confirmation link. Please request a new one from your account settings.");
+      setMsg(
+        "Invalid or expired confirmation link. Please request a new one from your account settings.",
+      );
       setStatus("error");
       return;
     }
@@ -74,12 +76,15 @@ function DeleteAccountPage() {
           <p className="mt-4 text-sm text-muted-foreground">
             {status === "checking" && "Verifying your confirmation link…"}
             {status === "deleting" && "Your account is being deleted. Please wait…"}
-            {status === "done" && "Your StreamFlix account has been permanently deleted. We're sorry to see you go."}
+            {status === "done" &&
+              "Your StreamFlix account has been permanently deleted. We're sorry to see you go."}
             {status === "error" && msg}
           </p>
           {(status === "done" || status === "error") && (
             <p className="mt-6">
-              <Link to="/" className="text-sm text-foreground hover:underline">← Back to home</Link>
+              <Link to="/" className="text-sm text-foreground hover:underline">
+                ← Back to home
+              </Link>
             </p>
           )}
         </div>

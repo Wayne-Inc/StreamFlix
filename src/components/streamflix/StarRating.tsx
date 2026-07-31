@@ -42,7 +42,10 @@ export function StarRating({ rating, onRate, readonly = false }: StarRatingProps
                 const s = getState(idx, isHalf && current === el ? idx * 2 - 1 : idx * 2);
                 const icon = current.querySelector("svg");
                 if (icon) {
-                  icon.setAttribute("fill", s === "full" ? "currentColor" : s === "half" ? "currentColor" : "none");
+                  icon.setAttribute(
+                    "fill",
+                    s === "full" ? "currentColor" : s === "half" ? "currentColor" : "none",
+                  );
                   icon.style.opacity = s === "empty" ? "0.2" : "1";
                   if (s === "half") icon.style.clipPath = "inset(0 50% 0 0)";
                   else icon.style.clipPath = "";
@@ -78,9 +81,7 @@ export function StarRating({ rating, onRate, readonly = false }: StarRatingProps
         );
       })}
       {rating != null && (
-        <span className="ml-1.5 text-xs font-medium text-muted-foreground">
-          {rating}/10
-        </span>
+        <span className="ml-1.5 text-xs font-medium text-muted-foreground">{rating}/10</span>
       )}
     </div>
   );

@@ -113,7 +113,10 @@ export const fetchMoviesByIds = createServerFn({ method: "POST" })
       ),
     );
     return results
-      .filter((r: PromiseSettledResult<any>): r is PromiseFulfilledResult<any> => r.status === "fulfilled")
+      .filter(
+        (r: PromiseSettledResult<any>): r is PromiseFulfilledResult<any> =>
+          r.status === "fulfilled",
+      )
       .map((r: PromiseFulfilledResult<any>) => toMovie(r.value));
   });
 
@@ -138,7 +141,10 @@ export const searchPeople = createServerFn({ method: "POST" })
     return (res.results || []).slice(0, 10).map((p: any) => ({
       id: String(p.id),
       name: p.name,
-      known_for: (p.known_for || []).map((k: any) => k.title || k.name || "").filter(Boolean).join(", "),
+      known_for: (p.known_for || [])
+        .map((k: any) => k.title || k.name || "")
+        .filter(Boolean)
+        .join(", "),
       photo: p.profile_path ? `https://image.tmdb.org/t/p/w185${p.profile_path}` : "",
     }));
   });
@@ -190,7 +196,7 @@ export const fetchPersonDetails = createServerFn({ method: "POST" })
       deathday: person.deathday || "",
       birthplace: person.place_of_birth || "",
       department: person.known_for_department || "Actor",
-      movies: ((credits.cast || []).filter((c: any) => c.media_type === "movie")).map(mapCredit),
-      tvShows: ((credits.cast || []).filter((c: any) => c.media_type === "tv")).map(mapCredit),
+      movies: (credits.cast || []).filter((c: any) => c.media_type === "movie").map(mapCredit),
+      tvShows: (credits.cast || []).filter((c: any) => c.media_type === "tv").map(mapCredit),
     };
   });

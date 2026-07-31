@@ -16,7 +16,11 @@ export const lovable = {
           return { user: null, redirected: false, error: null };
         }
         if (error.code === "auth/popup-blocked") {
-          return { user: null, redirected: false, error: new Error("Popup was blocked. Please allow popups for this site and try again.") };
+          return {
+            user: null,
+            redirected: false,
+            error: new Error("Popup was blocked. Please allow popups for this site and try again."),
+          };
         }
         return { user: null, redirected: false, error };
       }

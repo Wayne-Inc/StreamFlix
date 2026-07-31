@@ -1,5 +1,17 @@
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc, setDoc, deleteDoc, updateDoc, collection, query, where, getDocs, serverTimestamp, Timestamp } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  deleteDoc,
+  updateDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  serverTimestamp,
+  Timestamp,
+} from "firebase/firestore";
 
 export type MyListItem = {
   id: string;
@@ -15,16 +27,18 @@ function docId(userId: string, tmdbId: string) {
   return `${userId}_${tmdbId}`;
 }
 
-export async function addToMyList(movie: { id: string; title: string; year: number; poster: string }): Promise<void> {
+export async function addToMyList(movie: {
+  id: string;
+  title: string;
+  year: number;
+  poster: string;
+}): Promise<void> {
   const user = auth.currentUser;
   if (!user) throw new Error("Not authenticated");
   const ref = doc(db, "my_list", docId(user.uid, movie.id));
   const existing = await getDoc(ref);
   if (existing.exists()) return;
-  const q = query(
-    collection(db, "my_list"),
-    where("userId", "==", user.uid),
-  );
+  const q = query(collection(db, "my_list"), where("userId", "==", user.uid));
   const snap = await getDocs(q);
   const maxOrder = snap.docs.reduce((max, d) => {
     const data = d.data();
@@ -59,13 +73,10 @@ export async function isInMyList(tmdbId: string): Promise<boolean> {
 export async function getMyList(): Promise<MyListItem[]> {
   const user = auth.currentUser;
   if (!user) return [];
-  const q = query(
-    collection(db, "my_list"),
-    where("userId", "==", user.uid),
-  );
+  const q = query(collection(db, "my_list"), where("userId", "==", user.uid));
   const snap = await getDocs(q);
   return snap.docs
-    .map((d) => ({ id: d.id, ...d.data() } as MyListItem))
+    .map((d) => ({ id: d.id, ...d.data() }) as MyListItem)
     .sort((a, b) => {
       const oa = a.order ?? 0;
       const ob = b.order ?? 0;
@@ -89,8 +100,5 @@ export async function swapMyListOrder(tmdbId1: string, tmdbId2: string): Promise
   if (!snap1.exists() || !snap2.exists()) throw new Error("Item not found");
   const order1 = snap1.data().order ?? 0;
   const order2 = snap2.data().order ?? 0;
-  await Promise.all([
-    updateDoc(ref1, { order: order2 }),
-    updateDoc(ref2, { order: order1 }),
-  ]);
+  await Promise.all([updateDoc(ref1, { order: order2 }), updateDoc(ref2, { order: order1 })]);
 }

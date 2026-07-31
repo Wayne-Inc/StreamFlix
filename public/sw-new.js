@@ -1,26 +1,29 @@
 const CACHE_NAME = "streamflix-cache-v2";
 const ASSET_CACHE = "streamflix-assets-v2";
 
-const PRECACHE_URLS = [
-  "/",
-  "/offline",
-  "/browse",
-];
+const PRECACHE_URLS = ["/", "/offline", "/browse"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS)).then(() => self.skipWaiting())
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => cache.addAll(PRECACHE_URLS))
+      .then(() => self.skipWaiting()),
   );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     Promise.all([
-      caches.keys().then((keys) =>
-        Promise.all(keys.filter((k) => k !== CACHE_NAME && k !== ASSET_CACHE).map((k) => caches.delete(k)))
-      ),
+      caches
+        .keys()
+        .then((keys) =>
+          Promise.all(
+            keys.filter((k) => k !== CACHE_NAME && k !== ASSET_CACHE).map((k) => caches.delete(k)),
+          ),
+        ),
       self.clients.claim(),
-    ])
+    ]),
   );
 });
 
@@ -40,7 +43,11 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (request.destination === "style" || request.destination === "script" || request.destination === "font") {
+  if (
+    request.destination === "style" ||
+    request.destination === "script" ||
+    request.destination === "font"
+  ) {
     event.respondWith(cacheFirst(request));
     return;
   }

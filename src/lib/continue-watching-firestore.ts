@@ -1,4 +1,13 @@
-import { doc, setDoc, getDocs, collection, query, where, deleteDoc, limit as fLimit } from "firebase/firestore";
+import {
+  doc,
+  setDoc,
+  getDocs,
+  collection,
+  query,
+  where,
+  deleteDoc,
+  limit as fLimit,
+} from "firebase/firestore";
 import { db, auth } from "./firebase";
 import type { Movie } from "./types";
 
@@ -46,7 +55,13 @@ function makeDocId(movieId: string, season?: number, episode?: number) {
   return season != null && episode != null ? `${movieId}:S${season}E${episode}` : movieId;
 }
 
-export async function saveProgressToFirestore(movie: Movie, progress: number, duration: number, season?: number, episode?: number) {
+export async function saveProgressToFirestore(
+  movie: Movie,
+  progress: number,
+  duration: number,
+  season?: number,
+  episode?: number,
+) {
   const user = auth.currentUser;
   if (!user) return;
   const profileId = getSelectedProfileId();
@@ -100,7 +115,7 @@ export async function getContinueWatchingFromFirestore(): Promise<FirestoreConti
   );
   const snap = await getDocs(q);
   return snap.docs
-    .map((d) => ({ id: d.id, ...d.data() } as FirestoreContinueItem))
+    .map((d) => ({ id: d.id, ...d.data() }) as FirestoreContinueItem)
     .sort((a, b) => b.updatedAt - a.updatedAt);
 }
 

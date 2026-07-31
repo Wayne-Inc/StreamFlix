@@ -30,7 +30,7 @@ export async function listVideoSources(): Promise<VideoSource[]> {
   try {
     const { collection, getDocs } = await import("firebase/firestore");
     const snap = await getDocs(collection(db, "movie_sources"));
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() } as VideoSource));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as VideoSource);
   } catch {
     return [];
   }

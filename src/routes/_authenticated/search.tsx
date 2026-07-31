@@ -46,23 +46,48 @@ function SearchPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (tab !== "titles" || debouncedQ.length < 2) { setResults([]); setPage(1); return; }
+    if (tab !== "titles" || debouncedQ.length < 2) {
+      setResults([]);
+      setPage(1);
+      return;
+    }
     let cancelled = false;
     setLoading(true);
     setPage(1);
-    search(debouncedQ).then((res) => {
-      if (!cancelled) { setResults(isKidsProfile() ? filterKidsContent(res) : res); setLoading(false); }
-    }).catch(() => { if (!cancelled) { setResults([]); setLoading(false); } });
-    return () => { cancelled = true; };
+    search(debouncedQ)
+      .then((res) => {
+        if (!cancelled) {
+          setResults(isKidsProfile() ? filterKidsContent(res) : res);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setResults([]);
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [debouncedQ, tab]);
 
   useEffect(() => {
-    if (tab !== "people" || debouncedQ.length < 2) { setPeople([]); return; }
+    if (tab !== "people" || debouncedQ.length < 2) {
+      setPeople([]);
+      return;
+    }
     let cancelled = false;
-    searchByPerson(debouncedQ).then((res) => {
-      if (!cancelled) setPeople(res);
-    }).catch(() => { if (!cancelled) setPeople([]); });
-    return () => { cancelled = true; };
+    searchByPerson(debouncedQ)
+      .then((res) => {
+        if (!cancelled) setPeople(res);
+      })
+      .catch(() => {
+        if (!cancelled) setPeople([]);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [debouncedQ, tab]);
 
   useEffect(() => {
@@ -77,7 +102,9 @@ function SearchPage() {
     try {
       const res = await searchByGenre(String(genreId));
       setGenreResults(isKidsProfile() ? filterKidsContent(res) : res);
-    } catch { setGenreResults([]); }
+    } catch {
+      setGenreResults([]);
+    }
     setLoading(false);
   };
 
@@ -102,13 +129,19 @@ function SearchPage() {
             <input
               autoFocus
               value={tab === "genres" ? "" : q}
-              onChange={(e) => { setQ(e.target.value); }}
-              placeholder={tab === "genres" ? "Click a genre below" : "Titles, genres, people\u2026"}
+              onChange={(e) => {
+                setQ(e.target.value);
+              }}
+              placeholder={
+                tab === "genres" ? "Click a genre below" : "Titles, genres, people\u2026"
+              }
               className="w-full rounded-full border border-border bg-surface pl-12 pr-12 py-3.5 sm:py-4 text-base sm:text-lg focus:border-primary focus:outline-none"
             />
             {q && (
               <button
-                onClick={() => { setQ(""); }}
+                onClick={() => {
+                  setQ("");
+                }}
                 className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground"
                 aria-label="Clear"
               >
@@ -121,7 +154,14 @@ function SearchPage() {
             {(["titles", "genres", "people"] as Tab[]).map((t) => (
               <button
                 key={t}
-                  onClick={() => { setTab(t); setQ(""); setResults([]); setPeople([]); setGenreResults([]); setPage(1); }}
+                onClick={() => {
+                  setTab(t);
+                  setQ("");
+                  setResults([]);
+                  setPeople([]);
+                  setGenreResults([]);
+                  setPage(1);
+                }}
                 className={`flex items-center gap-1.5 px-4 py-2.5 sm:py-2 text-sm font-medium transition border-b-2 -mb-px ${tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
               >
                 {t === "titles" && <Film className="size-4" />}
@@ -134,7 +174,6 @@ function SearchPage() {
         </div>
 
         <section className="mx-auto w-full max-w-[1800px]">
-
           {tab === "genres" && (
             <div className="mt-6">
               <div className="flex flex-wrap gap-2">
@@ -153,7 +192,11 @@ function SearchPage() {
                   <p className="text-sm text-muted-foreground">{genreResults.length} results</p>
                   <div className="mt-4 flex flex-wrap gap-3 justify-center">
                     {genreResults.slice((page - 1) * 15, page * 15).map((m) => (
-                      <button key={m.id} onClick={() => navigate({ to: "/movie/$id", params: { id: m.id } })} className="text-left">
+                      <button
+                        key={m.id}
+                        onClick={() => navigate({ to: "/movie/$id", params: { id: m.id } })}
+                        className="text-left"
+                      >
                         <MovieCard movie={m} />
                       </button>
                     ))}
@@ -167,7 +210,10 @@ function SearchPage() {
                       >
                         <ChevronLeft className="size-4" /> Previous
                       </button>
-                      {Array.from({ length: Math.ceil(genreResults.length / 15) }, (_, i) => i + 1).map((p) => (
+                      {Array.from(
+                        { length: Math.ceil(genreResults.length / 15) },
+                        (_, i) => i + 1,
+                      ).map((p) => (
                         <button
                           key={p}
                           onClick={() => setPage(p)}
@@ -177,7 +223,9 @@ function SearchPage() {
                         </button>
                       ))}
                       <button
-                        onClick={() => setPage((p) => Math.min(Math.ceil(genreResults.length / 15), p + 1))}
+                        onClick={() =>
+                          setPage((p) => Math.min(Math.ceil(genreResults.length / 15), p + 1))
+                        }
                         disabled={page === Math.ceil(genreResults.length / 15)}
                         className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-default"
                       >
@@ -195,7 +243,13 @@ function SearchPage() {
               <p className="text-sm text-muted-foreground">Trending searches</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {["Action", "Sci-Fi", "Thriller", "Comedy"].map((t) => (
-                  <button key={t} onClick={() => setQ(t)} className="rounded-full border border-border px-3 py-1.5 text-sm hover:border-foreground">{t}</button>
+                  <button
+                    key={t}
+                    onClick={() => setQ(t)}
+                    className="rounded-full border border-border px-3 py-1.5 text-sm hover:border-foreground"
+                  >
+                    {t}
+                  </button>
                 ))}
               </div>
             </div>
@@ -204,11 +258,17 @@ function SearchPage() {
           {tab === "titles" && q && (
             <div className="mx-auto mt-10 w-full">
               <p className="text-sm text-muted-foreground">
-                {loading ? "Searching..." : `${results.length} result${results.length === 1 ? "" : "s"} for "${q}"`}
+                {loading
+                  ? "Searching..."
+                  : `${results.length} result${results.length === 1 ? "" : "s"} for "${q}"`}
               </p>
               <div className="mt-6 flex flex-wrap gap-3 justify-center">
                 {results.slice((page - 1) * 15, page * 15).map((m) => (
-                  <button key={m.id} onClick={() => navigate({ to: "/movie/$id", params: { id: m.id } })} className="text-left">
+                  <button
+                    key={m.id}
+                    onClick={() => navigate({ to: "/movie/$id", params: { id: m.id } })}
+                    className="text-left"
+                  >
                     <MovieCard movie={m} />
                   </button>
                 ))}
@@ -222,15 +282,17 @@ function SearchPage() {
                   >
                     <ChevronLeft className="size-4" /> Previous
                   </button>
-                  {Array.from({ length: Math.ceil(results.length / 15) }, (_, i) => i + 1).map((p) => (
-                    <button
-                      key={p}
-                      onClick={() => setPage(p)}
-                      className={`rounded-md px-3 py-2 text-sm ${p === page ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground hover:text-foreground"}`}
-                    >
-                      {p}
-                    </button>
-                  ))}
+                  {Array.from({ length: Math.ceil(results.length / 15) }, (_, i) => i + 1).map(
+                    (p) => (
+                      <button
+                        key={p}
+                        onClick={() => setPage(p)}
+                        className={`rounded-md px-3 py-2 text-sm ${p === page ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground hover:text-foreground"}`}
+                      >
+                        {p}
+                      </button>
+                    ),
+                  )}
                   <button
                     onClick={() => setPage((p) => Math.min(Math.ceil(results.length / 15), p + 1))}
                     disabled={page === Math.ceil(results.length / 15)}
@@ -246,10 +308,14 @@ function SearchPage() {
           {tab === "people" && (
             <div className="mt-6">
               {!q ? (
-                <p className="text-sm text-muted-foreground">Type an actor or director name above</p>
+                <p className="text-sm text-muted-foreground">
+                  Type an actor or director name above
+                </p>
               ) : (
                 <div className="space-y-3">
-                  {people.length === 0 && <p className="text-sm text-muted-foreground">No people found</p>}
+                  {people.length === 0 && (
+                    <p className="text-sm text-muted-foreground">No people found</p>
+                  )}
                   {people.map((p) => (
                     <Link
                       key={p.id}
@@ -258,13 +324,21 @@ function SearchPage() {
                       className="flex items-center gap-4 rounded-lg border border-border bg-surface p-3 hover:ring-1 hover:ring-primary transition"
                     >
                       {p.photo ? (
-                        <img src={p.photo} alt={p.name} className="size-14 rounded-full object-cover" />
+                        <img
+                          src={p.photo}
+                          alt={p.name}
+                          className="size-14 rounded-full object-cover"
+                        />
                       ) : (
-                        <div className="grid size-14 place-items-center rounded-full bg-muted text-muted-foreground"><User className="size-6" /></div>
+                        <div className="grid size-14 place-items-center rounded-full bg-muted text-muted-foreground">
+                          <User className="size-6" />
+                        </div>
                       )}
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-foreground">{p.name}</p>
-                        {p.known_for && <p className="truncate text-xs text-muted-foreground">{p.known_for}</p>}
+                        {p.known_for && (
+                          <p className="truncate text-xs text-muted-foreground">{p.known_for}</p>
+                        )}
                       </div>
                     </Link>
                   ))}

@@ -1,6 +1,17 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronRight, Play, Download, Globe, Tv, Smartphone, ChevronDown, Phone, Camera, Code2 } from "lucide-react";
+import {
+  ChevronRight,
+  Play,
+  Download,
+  Globe,
+  Tv,
+  Smartphone,
+  ChevronDown,
+  Phone,
+  Camera,
+  Code2,
+} from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
 import { tmdbFetch, toMovie } from "@/lib/api/tmdb.server";
 import type { Movie } from "@/lib/types";
@@ -28,20 +39,41 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "StreamFlix — Unlimited movies, TV shows, and more" },
-      { name: "description", content: "StreamFlix — Free streaming service. Unlimited movies, TV shows, and more." },
+      {
+        name: "description",
+        content: "StreamFlix — Free streaming service. Unlimited movies, TV shows, and more.",
+      },
       { property: "og:title", content: "StreamFlix" },
-      { property: "og:description", content: "Unlimited movies, TV shows, and more — anywhere, anytime." },
+      {
+        property: "og:description",
+        content: "Unlimited movies, TV shows, and more — anywhere, anytime.",
+      },
     ],
   }),
   component: Landing,
 });
 
 const faqs = [
-  ["Is StreamFlix really free?", "Yes, 100% free. No subscriptions, no hidden fees, no credit card needed. Just sign up and start watching instantly."],
-  ["Can I watch on my phone or TV?", "Absolutely. StreamFlix works on any device with an internet connection — phones, tablets, laptops, smart TVs, gaming consoles, and more."],
-  ["Do I need to create an account?", "Yes, you'll need a free account to personalize your experience, pick up where you left off, and create watchlists. It takes seconds to sign up."],
-  ["How is StreamFlix free?", "StreamFlix is supported by our community and partners. We believe entertainment should be accessible to everyone, so we keep it free with no strings attached."],
-  ["What kind of content is available?", "From blockbuster movies and binge-worthy TV shows to anime, documentaries, and original content — there's something for everyone."],
+  [
+    "Is StreamFlix really free?",
+    "Yes, 100% free. No subscriptions, no hidden fees, no credit card needed. Just sign up and start watching instantly.",
+  ],
+  [
+    "Can I watch on my phone or TV?",
+    "Absolutely. StreamFlix works on any device with an internet connection — phones, tablets, laptops, smart TVs, gaming consoles, and more.",
+  ],
+  [
+    "Do I need to create an account?",
+    "Yes, you'll need a free account to personalize your experience, pick up where you left off, and create watchlists. It takes seconds to sign up.",
+  ],
+  [
+    "How is StreamFlix free?",
+    "StreamFlix is supported by our community and partners. We believe entertainment should be accessible to everyone, so we keep it free with no strings attached.",
+  ],
+  [
+    "What kind of content is available?",
+    "From blockbuster movies and binge-worthy TV shows to anime, documentaries, and original content — there's something for everyone.",
+  ],
 ];
 
 function Landing() {
@@ -74,7 +106,10 @@ function Landing() {
               Completely free. No subscriptions, no catches.
             </p>
             <div className="mt-10 flex items-center justify-center gap-6">
-              <Link to="/auth" className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90">
+              <Link
+                to="/auth"
+                className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90"
+              >
                 <Play className="size-5 fill-current" /> Start Watching
               </Link>
             </div>
@@ -103,7 +138,10 @@ function Landing() {
             ))}
           </div>
           <div className="mt-6 text-center">
-            <Link to="/browse" className="inline-flex items-center gap-2 text-primary hover:underline">
+            <Link
+              to="/browse"
+              className="inline-flex items-center gap-2 text-primary hover:underline"
+            >
               Browse the full catalog <ChevronRight className="size-4" />
             </Link>
           </div>
@@ -113,10 +151,18 @@ function Landing() {
       {/* FAQ */}
       <section className="border-y-8 border-black bg-background py-24">
         <div className="mx-auto max-w-4xl px-4">
-          <h2 className="text-center text-4xl font-black sm:text-5xl">Frequently Asked Questions</h2>
+          <h2 className="text-center text-4xl font-black sm:text-5xl">
+            Frequently Asked Questions
+          </h2>
           <div className="mt-12 space-y-3">
             {faqs.map(([q, a], i) => (
-              <FaqItem key={i} q={q} a={a} isOpen={openIndex === i} onToggle={() => setOpenIndex(openIndex === i ? null : i)} />
+              <FaqItem
+                key={i}
+                q={q}
+                a={a}
+                isOpen={openIndex === i}
+                onToggle={() => setOpenIndex(openIndex === i ? null : i)}
+              />
             ))}
           </div>
           <div className="mt-14 text-center">
@@ -135,9 +181,28 @@ function Landing() {
         <div className="mx-auto max-w-6xl text-center">
           <p className="font-medium text-foreground">StreamFlix — Free for everyone.</p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-            <a href="tel:+254718429870" className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"><Phone className="size-4" /> +254 718 429 870</a>
-            <a href="https://instagram.com/itiswayneee" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"><Camera className="size-4" /> @itiswayneee</a>
-            <a href="https://github.com/itiswayneee" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"><Code2 className="size-4" /> @itiswayneee</a>
+            <a
+              href="tel:+254718429870"
+              className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+            >
+              <Phone className="size-4" /> +254 718 429 870
+            </a>
+            <a
+              href="https://instagram.com/itiswayneee"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+            >
+              <Camera className="size-4" /> @itiswayneee
+            </a>
+            <a
+              href="https://github.com/itiswayneee"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+            >
+              <Code2 className="size-4" /> @itiswayneee
+            </a>
           </div>
           <p className="mt-6 text-xs">© {new Date().getFullYear()} StreamFlix</p>
         </div>
@@ -146,7 +211,17 @@ function Landing() {
   );
 }
 
-function FaqItem({ q, a, isOpen, onToggle }: { q: string; a: string; isOpen: boolean; onToggle: () => void }) {
+function FaqItem({
+  q,
+  a,
+  isOpen,
+  onToggle,
+}: {
+  q: string;
+  a: string;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
   return (
     <div className="overflow-hidden rounded-xl bg-surface">
       <button
@@ -155,9 +230,13 @@ function FaqItem({ q, a, isOpen, onToggle }: { q: string; a: string; isOpen: boo
         aria-expanded={isOpen}
       >
         <span>{q}</span>
-        <ChevronDown className={`size-6 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        <ChevronDown
+          className={`size-6 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}
+        />
       </button>
-      <div className={`grid transition-all duration-300 ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+      <div
+        className={`grid transition-all duration-300 ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+      >
         <div className="overflow-hidden">
           <p className="px-8 pb-8 pt-2 text-lg text-muted-foreground leading-relaxed">{a}</p>
         </div>

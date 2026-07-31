@@ -1,6 +1,7 @@
 {
-  "name": "tanstack_start_ts",
+  "name": "streamflix",
   "private": true,
+  "main": "electron/main.cjs",
   "sideEffects": false,
   "type": "module",
   "scripts": {
@@ -9,7 +10,10 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:8080 && electron .\"",
+    "desktop": "concurrently \"npm run dev\" \"wait-on http://localhost:8080 && start msedge --app=http://localhost:8080\"",
+    "electron:build": "vite build && electron-builder"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -76,6 +80,8 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.0.4",
+    "concurrently": "^10.0.4",
+    "electron": "^43.2.0",
     "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.6",
@@ -86,6 +92,19 @@
     "prettier": "^3.7.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "wait-on": "^9.1.0"
+  },
+  "build": {
+    "appId": "com.itiswayneee.streamflix",
+    "productName": "Streamflix",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ]
   }
 }

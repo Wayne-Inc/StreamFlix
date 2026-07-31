@@ -14,7 +14,10 @@ import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { registerSW } from "../lib/pwa";
-import { Toaster } from "@/components/ui/sonner";import { CookieConsent } from "@/components/streamflix/CookieConsent";import { auth, db } from "@/lib/firebase";
+import { Toaster } from "@/components/ui/sonner";
+import { CookieConsent } from "@/components/streamflix/CookieConsent";
+import { CustomTitleBar } from "@/components/streamflix/CustomTitleBar";
+import { auth, db } from "@/lib/firebase";
 
 function NotFoundComponent() {
   return (
@@ -132,7 +135,10 @@ function RootComponent() {
   useEffect(() => {
     registerSW();
     const unsub = onAuthStateChanged(auth, (user) => {
-      if (initial.current) { initial.current = false; return; }
+      if (initial.current) {
+        initial.current = false;
+        return;
+      }
       router.invalidate();
       if (user) queryClient.invalidateQueries();
     });
@@ -142,10 +148,14 @@ function RootComponent() {
     const u = auth.currentUser;
     if (u?.photoURL && u.photoURL !== photoSaved.current) {
       photoSaved.current = u.photoURL;
-      setDoc(doc(db, "profiles", u.uid), {
-        avatar_url: u.photoURL,
-        updated_at: serverTimestamp(),
-      }, { merge: true }).catch(() => {});
+      setDoc(
+        doc(db, "profiles", u.uid),
+        {
+          avatar_url: u.photoURL,
+          updated_at: serverTimestamp(),
+        },
+        { merge: true },
+      ).catch(() => {});
     }
 
     const handleOffline = () => {
@@ -175,9 +185,12 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Toaster richColors theme="dark" position="top-center" />
-      <Outlet />
-      <CookieConsent />
+      <CustomTitleBar />
+      <div className={typeof window !== "undefined" && window.electronAPI ? "pt-10" : ""}>
+        <Toaster richColors theme="dark" position="top-center" />
+        <Outlet />
+        <CookieConsent />
+      </div>
     </QueryClientProvider>
   );
 }

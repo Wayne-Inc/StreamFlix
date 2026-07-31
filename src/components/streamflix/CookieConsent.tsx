@@ -30,18 +30,29 @@ export function CookieConsent() {
         <div className="flex-1 space-y-1">
           <p className="text-sm font-semibold tracking-tight text-white">Cookie Consent</p>
           <p className="leading-relaxed text-white/80">
-            We use cookies and tracking to personalize content and analyze traffic. By accepting, you agree to our <Link to="/privacy-policy" className="text-primary hover:underline">Privacy Policy</Link>.
+            We use cookies and tracking to personalize content and analyze traffic. By accepting,
+            you agree to our{" "}
+            <Link to="/privacy-policy" className="text-primary hover:underline">
+              Privacy Policy
+            </Link>
+            .
           </p>
         </div>
         <div className="flex flex-col gap-2 shrink-0">
           <button
-            onClick={() => { setConsent("declined"); setDecided(true); }}
+            onClick={() => {
+              setConsent("declined");
+              setDecided(true);
+            }}
             className="rounded-2xl border border-white/15 bg-white/10 px-3 py-1.5 text-xs text-white hover:bg-white/15"
           >
             Decline
           </button>
           <button
-            onClick={() => { setConsent("accepted"); setDecided(true); }}
+            onClick={() => {
+              setConsent("accepted");
+              setDecided(true);
+            }}
             className="rounded-2xl bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
           >
             Accept

@@ -41,12 +41,14 @@ function ActionPage() {
           setMsg(
             mode === "verifyEmail"
               ? "Email verified successfully! You can now sign in."
-              : "Email recovered successfully."
+              : "Email recovered successfully.",
           );
           setStatus("done");
         })
         .catch((err: any) => {
-          setMsg(err?.message ?? `Failed to ${mode === "verifyEmail" ? "verify" : "recover"} email.`);
+          setMsg(
+            err?.message ?? `Failed to ${mode === "verifyEmail" ? "verify" : "recover"} email.`,
+          );
           setStatus("error");
         });
     } else if (mode === "resetPassword") {
@@ -85,9 +87,7 @@ function ActionPage() {
             status === "input" ? (
               <>
                 <h1 className="text-3xl font-bold">Reset Password</h1>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Enter your new password below.
-                </p>
+                <p className="mt-2 text-sm text-muted-foreground">Enter your new password below.</p>
                 <form className="mt-6 space-y-4" onSubmit={handleReset}>
                   <input
                     required
@@ -111,7 +111,9 @@ function ActionPage() {
                 <h1 className="text-3xl font-bold">{status === "done" ? "Success" : "Error"}</h1>
                 <p className="mt-4 text-sm text-muted-foreground">{msg}</p>
                 <p className="mt-6">
-                  <Link to="/auth" className="text-sm text-foreground hover:underline">← Back to sign in</Link>
+                  <Link to="/auth" className="text-sm text-foreground hover:underline">
+                    ← Back to sign in
+                  </Link>
                 </p>
               </>
             )
@@ -126,7 +128,9 @@ function ActionPage() {
                 <>
                   <p className="mt-4 text-sm text-muted-foreground">{msg}</p>
                   <p className="mt-6">
-                    <Link to="/auth" className="text-sm text-foreground hover:underline">← Back to sign in</Link>
+                    <Link to="/auth" className="text-sm text-foreground hover:underline">
+                      ← Back to sign in
+                    </Link>
                   </p>
                 </>
               )}

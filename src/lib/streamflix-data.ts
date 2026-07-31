@@ -32,16 +32,15 @@ export const defaultProfiles = [
 ];
 
 async function loadHome() {
-  const [trending, popular, nowPlaying, topRated, sciFi, dramas, traktData] =
-    await Promise.all([
-      fetchTrending(),
-      fetchPopular(),
-      fetchNowPlaying(),
-      fetchTopRated(),
-      discoverByGenre({ data: { genreId: "878" } }),
-      discoverByGenre({ data: { genreId: "18" } }),
-      fetchTraktTrending(),
-    ]);
+  const [trending, popular, nowPlaying, topRated, sciFi, dramas, traktData] = await Promise.all([
+    fetchTrending(),
+    fetchPopular(),
+    fetchNowPlaying(),
+    fetchTopRated(),
+    discoverByGenre({ data: { genreId: "878" } }),
+    discoverByGenre({ data: { genreId: "18" } }),
+    fetchTraktTrending(),
+  ]);
 
   let recommendations: Movie[] = [];
   try {
@@ -133,10 +132,14 @@ async function loadNew() {
 
 export async function loadBrowseData(kind: BrowseKind = "home") {
   switch (kind) {
-    case "movies": return loadMovies();
-    case "tv": return loadTv();
-    case "new": return loadNew();
-    default: return loadHome();
+    case "movies":
+      return loadMovies();
+    case "tv":
+      return loadTv();
+    case "new":
+      return loadNew();
+    default:
+      return loadHome();
   }
 }
 

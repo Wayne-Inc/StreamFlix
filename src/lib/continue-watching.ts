@@ -89,7 +89,13 @@ function saveHistoryItem(item: WatchHistoryItem) {
   window.localStorage.setItem(getHistoryKey(), JSON.stringify(list.slice(0, HISTORY_MAX)));
 }
 
-export function recordWatchHistory(movie: Movie, progress: number, duration: number, season?: number, episode?: number) {
+export function recordWatchHistory(
+  movie: Movie,
+  progress: number,
+  duration: number,
+  season?: number,
+  episode?: number,
+) {
   if (typeof window === "undefined") return;
   if (!duration || !isFinite(duration)) return;
   const ratio = progress / duration;
@@ -121,7 +127,13 @@ export function recordWatchHistory(movie: Movie, progress: number, duration: num
   });
 }
 
-export function recordProgress(movie: Movie, progress: number, duration: number, season?: number, episode?: number) {
+export function recordProgress(
+  movie: Movie,
+  progress: number,
+  duration: number,
+  season?: number,
+  episode?: number,
+) {
   if (typeof window === "undefined") return;
   if (!duration || !isFinite(duration)) return;
   const ratio = progress / duration;

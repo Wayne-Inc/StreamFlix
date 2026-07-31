@@ -49,14 +49,18 @@ export async function recordCurrentDevice(): Promise<void> {
   const device_id = getDeviceId();
 
   const deviceRef = doc(db, "user_devices", device_id);
-  await setDoc(deviceRef, {
-    user_id: user.uid,
-    device_id,
-    device_label: label,
-    browser,
-    os,
-    user_agent: ua,
-    last_seen_at: serverTimestamp(),
-    created_at: serverTimestamp(),
-  }, { merge: true });
+  await setDoc(
+    deviceRef,
+    {
+      user_id: user.uid,
+      device_id,
+      device_label: label,
+      browser,
+      os,
+      user_agent: ua,
+      last_seen_at: serverTimestamp(),
+      created_at: serverTimestamp(),
+    },
+    { merge: true },
+  );
 }

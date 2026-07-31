@@ -41,7 +41,9 @@ export function SeasonEpisodeSelector({
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [movieId, selectedSeason]);
 
   const seasonNumbers = Array.from({ length: numberOfSeasons }, (_, i) => i + 1);
@@ -80,7 +82,13 @@ export function SeasonEpisodeSelector({
               key={ep.episode_number}
               to="/watch/$id"
               params={{ id: movieId }}
-              search={{ season: ep.episode_number === currentEpisode && selectedSeason === currentSeason ? undefined : selectedSeason, episode: ep.episode_number }}
+              search={{
+                season:
+                  ep.episode_number === currentEpisode && selectedSeason === currentSeason
+                    ? undefined
+                    : selectedSeason,
+                episode: ep.episode_number,
+              }}
               className={`flex gap-3 rounded-lg border p-3 transition hover:bg-card/80 ${
                 currentEpisode === ep.episode_number && currentSeason === selectedSeason
                   ? "border-primary bg-card"

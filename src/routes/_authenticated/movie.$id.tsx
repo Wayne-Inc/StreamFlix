@@ -1,13 +1,31 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Play, Plus, ThumbsUp, Share2, Star, Eye, ExternalLink, EyeOff, Clapperboard, CheckCheck, Download } from "lucide-react";
+import {
+  Play,
+  Plus,
+  ThumbsUp,
+  Share2,
+  Star,
+  Eye,
+  ExternalLink,
+  EyeOff,
+  Clapperboard,
+  CheckCheck,
+  Download,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { Row } from "@/components/streamflix/Row";
 import { Skeleton } from "@/components/ui/skeleton";
 import { movieById, loadSimilar, loadRecommendations } from "@/lib/streamflix-data";
-import { fetchTraktSummary, rateMovie, markAsWatched, addToWatchlist, removeFromWatchlist } from "@/lib/api/trakt";
+import {
+  fetchTraktSummary,
+  rateMovie,
+  markAsWatched,
+  addToWatchlist,
+  removeFromWatchlist,
+} from "@/lib/api/trakt";
 import { discoverByGenre } from "@/lib/api/tmdb";
 import { auth } from "@/lib/firebase";
 import { isInMyList, addToMyList, removeFromMyList } from "@/lib/my-list";
@@ -56,7 +74,10 @@ function MovieSkeleton() {
             <Skeleton className="h-5 w-10 rounded mb-3" />
             <div className="flex flex-nowrap gap-3 sm:gap-4 overflow-x-auto pb-3">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="flex flex-col items-center gap-1.5 w-[72px] sm:w-20 flex-shrink-0">
+                <div
+                  key={i}
+                  className="flex flex-col items-center gap-1.5 w-[72px] sm:w-20 flex-shrink-0"
+                >
                   <Skeleton className="size-12 sm:size-16 rounded-full" />
                   <Skeleton className="h-3 w-14 rounded" />
                   <Skeleton className="h-2 w-10 rounded" />
@@ -128,7 +149,10 @@ export const Route = createFileRoute("/_authenticated/movie/$id")({
       ...extraGenres.map((g) => discoverByGenre({ data: { genreId: g } })),
     ]);
     if (!movie) throw notFound();
-    const genreRows = extraGenres.map((g, i) => ({ genreId: g, items: (genreResults[i] || []).filter((m: any) => m.id !== params.id).slice(0, 12) }));
+    const genreRows = extraGenres.map((g, i) => ({
+      genreId: g,
+      items: (genreResults[i] || []).filter((m: any) => m.id !== params.id).slice(0, 12),
+    }));
     return { movie, similar, trakt, genreRows, recommendations };
   },
   head: ({ loaderData }) => ({
@@ -153,8 +177,19 @@ export const Route = createFileRoute("/_authenticated/movie/$id")({
 
 function MoviePage() {
   const { movie, similar, trakt, genreRows, recommendations } = Route.useLoaderData();
-  const genreLabels: Record<string, string> = { "27": "Horror", "878": "Sci-Fi", "35": "Comedy", "53": "Thriller", "28": "Action", "12": "Adventure", "18": "Drama", "10749": "Romance", "9648": "Mystery" };
-  const fmtNum = (n: number | null) => (n == null ? "—" : n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
+  const genreLabels: Record<string, string> = {
+    "27": "Horror",
+    "878": "Sci-Fi",
+    "35": "Comedy",
+    "53": "Thriller",
+    "28": "Action",
+    "12": "Adventure",
+    "18": "Drama",
+    "10749": "Romance",
+    "9648": "Mystery",
+  };
+  const fmtNum = (n: number | null) =>
+    n == null ? "—" : n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
   const [inWatchlist, setInWatchlist] = useState(false);
   const [liked, setLiked] = useState(false);
   const [watched, setWatched] = useState(false);
@@ -166,7 +201,9 @@ function MoviePage() {
     if (typeof window === "undefined") return false;
     try {
       return !!localStorage.getItem(`sf:downloaded:${movie.id}`);
-    } catch { return false; }
+    } catch {
+      return false;
+    }
   });
 
   const handleDownload = async () => {
@@ -190,12 +227,17 @@ function MoviePage() {
 
   const handleRating = async (rating: number) => {
     const user = auth.currentUser;
-    if (!user) { toast.error("Sign in to rate"); return; }
+    if (!user) {
+      toast.error("Sign in to rate");
+      return;
+    }
     try {
       await saveRating(user.uid, movie.id, rating);
       setUserRating(rating);
       toast.success(`Rated ${rating}/10`);
-    } catch (e: any) { toast.error(e.message); }
+    } catch (e: any) {
+      toast.error(e.message);
+    }
   };
 
   useEffect(() => {
@@ -219,7 +261,12 @@ function MoviePage() {
           }
         }
       } else {
-        await addToMyList({ id: movie.id, title: movie.title, year: movie.year, poster: movie.poster });
+        await addToMyList({
+          id: movie.id,
+          title: movie.title,
+          year: movie.year,
+          poster: movie.poster,
+        });
         setInWatchlist(true);
         toast.success("Added to My List");
         if (conn) {
@@ -238,7 +285,10 @@ function MoviePage() {
 
   const getTrakt = () => {
     const raw = localStorage.getItem("streamflix:trakt");
-    if (!raw) { toast.error("Connect Trakt in Settings first"); return null; }
+    if (!raw) {
+      toast.error("Connect Trakt in Settings first");
+      return null;
+    }
     const conn = JSON.parse(raw);
     if (conn.expiresAt && Date.now() > conn.expiresAt) {
       toast.error("Trakt token expired. Disconnect and reconnect in Settings.");
@@ -251,10 +301,14 @@ function MoviePage() {
     const conn = getTrakt();
     if (!conn) return;
     try {
-      await rateMovie({ data: { token: conn.accessToken, tmdbId: movie.id, rating: liked ? 1 : 10 } });
+      await rateMovie({
+        data: { token: conn.accessToken, tmdbId: movie.id, rating: liked ? 1 : 10 },
+      });
       setLiked(!liked);
       toast.success(liked ? "Unliked" : "Liked!");
-    } catch (e: any) { toast.error(e.message); }
+    } catch (e: any) {
+      toast.error(e.message);
+    }
   };
 
   const handleMarkWatched = async () => {
@@ -264,7 +318,9 @@ function MoviePage() {
       await markAsWatched({ data: { token: conn.accessToken, tmdbId: movie.id } });
       setWatched(true);
       toast.success("Marked as watched");
-    } catch (e: any) { toast.error(e.message); }
+    } catch (e: any) {
+      toast.error(e.message);
+    }
   };
 
   return (
@@ -283,38 +339,88 @@ function MoviePage() {
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span className="font-semibold text-emerald-400">{movie.match}% Match</span>
               <span className="text-muted-foreground">{movie.year}</span>
-              <span className="rounded border border-border px-1.5 text-muted-foreground">{movie.rating}</span>
+              <span className="rounded border border-border px-1.5 text-muted-foreground">
+                {movie.rating}
+              </span>
               <span className="text-muted-foreground">{movie.runtime}</span>
             </div>
             <div className={descExpanded ? "max-h-32 overflow-y-auto" : ""}>
-              <p className={`max-w-xl text-sm text-foreground/90 sm:text-base ${descExpanded ? "" : "line-clamp-3"}`}>{movie.description}</p>
-              <button onClick={() => setDescExpanded((v) => !v)} className="mt-1 text-xs font-medium text-primary">{descExpanded ? "Show less" : "Show more"}</button>
+              <p
+                className={`max-w-xl text-sm text-foreground/90 sm:text-base ${descExpanded ? "" : "line-clamp-3"}`}
+              >
+                {movie.description}
+              </p>
+              <button
+                onClick={() => setDescExpanded((v) => !v)}
+                className="mt-1 text-xs font-medium text-primary"
+              >
+                {descExpanded ? "Show less" : "Show more"}
+              </button>
             </div>
           </div>
 
           <div className="max-w-2xl">
             <div className="flex flex-wrap items-center gap-3">
-              <Link to="/watch/$id" params={{ id: movie.id }} search={{ autoplay: true }} className="inline-flex items-center gap-2 rounded-md bg-foreground px-6 py-3 font-semibold text-background hover:bg-foreground/85">
+              <Link
+                to="/watch/$id"
+                params={{ id: movie.id }}
+                search={{ autoplay: true }}
+                className="inline-flex items-center gap-2 rounded-md bg-foreground px-6 py-3 font-semibold text-background hover:bg-foreground/85"
+              >
                 <Play className="size-5 fill-current" /> Play
               </Link>
               {movie.trailer && (
-                <button onClick={() => setTrailerOpen(true)} className="inline-flex items-center gap-2 rounded-md border border-border px-6 py-3 font-semibold text-foreground hover:bg-white/10">
+                <button
+                  onClick={() => setTrailerOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-md border border-border px-6 py-3 font-semibold text-foreground hover:bg-white/10"
+                >
                   <Clapperboard className="size-5" /> Trailer
                 </button>
               )}
-              <button onClick={handleWatchlist} className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground" aria-label={inWatchlist ? "Remove from list" : "Add to list"}>
-                {inWatchlist ? <CheckCheck className="size-4 sm:size-5" /> : <Plus className="size-4 sm:size-5" />}
+              <button
+                onClick={handleWatchlist}
+                className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground"
+                aria-label={inWatchlist ? "Remove from list" : "Add to list"}
+              >
+                {inWatchlist ? (
+                  <CheckCheck className="size-4 sm:size-5" />
+                ) : (
+                  <Plus className="size-4 sm:size-5" />
+                )}
               </button>
-              <button onClick={handleLike} className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground" aria-label={liked ? "Unlike" : "Like"}>
+              <button
+                onClick={handleLike}
+                className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground"
+                aria-label={liked ? "Unlike" : "Like"}
+              >
                 <ThumbsUp className={`size-4 sm:size-5 ${liked ? "fill-foreground" : ""}`} />
               </button>
-              <button onClick={handleMarkWatched} className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground" aria-label={watched ? "Watched" : "Mark watched"}>
-                {watched ? <EyeOff className="size-4 sm:size-5" /> : <Eye className="size-4 sm:size-5" />}
+              <button
+                onClick={handleMarkWatched}
+                className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground"
+                aria-label={watched ? "Watched" : "Mark watched"}
+              >
+                {watched ? (
+                  <EyeOff className="size-4 sm:size-5" />
+                ) : (
+                  <Eye className="size-4 sm:size-5" />
+                )}
               </button>
-              <button onClick={handleDownload} className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground" aria-label={downloaded ? "Downloaded" : "Download"}>
+              <button
+                onClick={handleDownload}
+                className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground"
+                aria-label={downloaded ? "Downloaded" : "Download"}
+              >
                 <Download className={`size-4 sm:size-5 ${downloaded ? "text-emerald-500" : ""}`} />
               </button>
-              <button onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success("Link copied"); }} className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground" aria-label="Share">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast.success("Link copied");
+                }}
+                className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground"
+                aria-label="Share"
+              >
                 <Share2 className="size-4 sm:size-5" />
               </button>
             </div>
@@ -329,13 +435,21 @@ function MoviePage() {
             <p className="mb-3 text-base font-semibold text-foreground">Cast</p>
             <div
               className="flex flex-nowrap gap-4 overflow-x-auto pb-3 scrollbar-hide w-full min-w-0"
-              style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x", overscrollBehaviorX: "contain" }}
+              style={{
+                WebkitOverflowScrolling: "touch",
+                touchAction: "pan-x",
+                overscrollBehaviorX: "contain",
+              }}
             >
               {movie.cast.map((name: string, i: number) => {
                 const personId = movie.castIds?.[i];
                 const link = personId
                   ? { to: "/person/$id" as const, params: { id: personId } }
-                  : { to: "/search" as const, search: { q: name, tab: "people" as const }, params: {} };
+                  : {
+                      to: "/search" as const,
+                      search: { q: name, tab: "people" as const },
+                      params: {},
+                    };
                 return (
                   <Link
                     key={`${name}-${i}`}
@@ -354,7 +468,9 @@ function MoviePage() {
                         </div>
                       )}
                     </div>
-                    <span className="text-[11px] sm:text-xs text-center text-muted-foreground leading-tight line-clamp-2">{name}</span>
+                    <span className="text-[11px] sm:text-xs text-center text-muted-foreground leading-tight line-clamp-2">
+                      {name}
+                    </span>
                     {movie.castRoles?.[i] && (
                       <span className="text-[10px] sm:text-[11px] text-center text-muted-foreground leading-tight line-clamp-2">
                         {movie.castRoles[i]}
@@ -370,7 +486,13 @@ function MoviePage() {
           <p>
             <span className="text-muted-foreground">Director: </span>
             {movie.directorId ? (
-              <Link to="/person/$id" params={{ id: movie.directorId }} className="font-medium text-foreground hover:text-primary hover:underline cursor-pointer">{movie.director}</Link>
+              <Link
+                to="/person/$id"
+                params={{ id: movie.directorId }}
+                className="font-medium text-foreground hover:text-primary hover:underline cursor-pointer"
+              >
+                {movie.director}
+              </Link>
             ) : (
               <span className="font-medium text-foreground">{movie.director}</span>
             )}
@@ -395,26 +517,42 @@ function MoviePage() {
             <p className="mb-2 text-base font-semibold text-foreground">Rate this</p>
             <StarRating rating={userRating} onRate={handleRating} />
           </div>
-
         </div>
         <div className="space-y-4 rounded-lg border border-border bg-surface p-3 text-xs sm:p-4 sm:text-sm h-auto sm:h-[340px]">
           <div>
             <p className="font-semibold text-foreground text-sm sm:text-base">About this title</p>
             <p className="mt-2 text-muted-foreground"></p>
             <div className="mt-2 space-y-1 text-muted-foreground">
-              <p className="text-[11px] sm:text-sm"><span className="text-foreground">Genres:</span> {movie.genres.join(", ")}</p>
-              <p className="text-[11px] sm:text-sm"><span className="text-foreground">Director:</span> {movie.director}</p>
-              <p className="text-[11px] sm:text-sm"><span className="text-foreground">Cast:</span> {movie.cast.length} actors</p>
-              <p className="text-[11px] sm:text-sm"><span className="text-foreground">Released:</span> {movie.year}</p>
-              <p className="text-[11px] sm:text-sm"><span className="text-foreground">Runtime:</span> {movie.runtime}</p>
-              <p className="text-[11px] sm:text-sm"><span className="text-foreground">Rating:</span> {movie.rating}</p>
+              <p className="text-[11px] sm:text-sm">
+                <span className="text-foreground">Genres:</span> {movie.genres.join(", ")}
+              </p>
+              <p className="text-[11px] sm:text-sm">
+                <span className="text-foreground">Director:</span> {movie.director}
+              </p>
+              <p className="text-[11px] sm:text-sm">
+                <span className="text-foreground">Cast:</span> {movie.cast.length} actors
+              </p>
+              <p className="text-[11px] sm:text-sm">
+                <span className="text-foreground">Released:</span> {movie.year}
+              </p>
+              <p className="text-[11px] sm:text-sm">
+                <span className="text-foreground">Runtime:</span> {movie.runtime}
+              </p>
+              <p className="text-[11px] sm:text-sm">
+                <span className="text-foreground">Rating:</span> {movie.rating}
+              </p>
             </div>
           </div>
           <div className="border-t border-border pt-4">
             <div className="flex items-center justify-between">
               <p className="font-semibold text-foreground">Trakt</p>
               {trakt.url && (
-                <a href={trakt.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+                <a
+                  href={trakt.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                >
                   View <ExternalLink className="size-3" />
                 </a>
               )}
@@ -422,7 +560,9 @@ function MoviePage() {
             <div className="mt-3 grid grid-cols-3 gap-2 text-center">
               <div className="rounded bg-card/60 py-2">
                 <Star className="mx-auto size-4 text-amber-400" />
-                <div className="mt-1 font-semibold text-foreground">{trakt.rating != null ? trakt.rating.toFixed(1) : "—"}</div>
+                <div className="mt-1 font-semibold text-foreground">
+                  {trakt.rating != null ? trakt.rating.toFixed(1) : "—"}
+                </div>
                 <div className="text-[11px] text-muted-foreground">{fmtNum(trakt.votes)} votes</div>
               </div>
               <div className="rounded bg-card/60 py-2">
@@ -441,10 +581,7 @@ function MoviePage() {
       </section>
 
       {movie.numberOfSeasons && movie.numberOfSeasons > 0 && (
-        <SeasonEpisodeSelector
-          movieId={movie.id}
-          numberOfSeasons={movie.numberOfSeasons}
-        />
+        <SeasonEpisodeSelector movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} />
       )}
 
       {similar.length > 0 && (

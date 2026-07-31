@@ -23,7 +23,10 @@ import {
   toMovie as continueToMovie,
   type ContinueItem,
 } from "@/lib/continue-watching";
-import { getContinueWatchingFromFirestore, toMovie as fsToMovie } from "@/lib/continue-watching-firestore";
+import {
+  getContinueWatchingFromFirestore,
+  toMovie as fsToMovie,
+} from "@/lib/continue-watching-firestore";
 import { getMyList } from "@/lib/my-list";
 import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
 
@@ -32,7 +35,10 @@ const searchSchema = z.object({
 });
 
 function BrowseSkeleton() {
-  const kind = (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("kind") : "home") || "home";
+  const kind =
+    (typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("kind")
+      : "home") || "home";
   const isHome = kind === "home";
   return (
     <div className="min-h-dvh bg-background">
@@ -54,7 +60,9 @@ function BrowseSkeleton() {
       </div>
       <div className="relative z-10 space-y-6 px-4 sm:px-8 md:mt-12">
         {isHome && <RowSkeleton />}
-        {[1, 2, 3, 4, 5].map((i) => <RowSkeleton key={i} />)}
+        {[1, 2, 3, 4, 5].map((i) => (
+          <RowSkeleton key={i} />
+        ))}
       </div>
     </div>
   );
@@ -66,7 +74,10 @@ function RowSkeleton() {
       <Skeleton className="h-5 w-48 rounded" />
       <div className="flex gap-2 overflow-hidden">
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <Skeleton key={i} className="w-[160px] sm:w-[200px] md:w-[240px] aspect-[2/3] rounded-md shrink-0" />
+          <Skeleton
+            key={i}
+            className="w-[160px] sm:w-[200px] md:w-[240px] aspect-[2/3] rounded-md shrink-0"
+          />
         ))}
       </div>
     </div>
@@ -101,7 +112,10 @@ export const Route = createFileRoute("/_authenticated/browse")({
             match: 0,
           }));
       } catch {}
-      return { heroSlides: [], rows: watchlist.length ? [{ title: "My List", items: watchlist }] : [] };
+      return {
+        heroSlides: [],
+        rows: watchlist.length ? [{ title: "My List", items: watchlist }] : [],
+      };
     }
     return await loadBrowseData(deps.kind as BrowseKind);
   },
@@ -115,7 +129,10 @@ type SortMode = "recent" | "title-asc" | "title-desc";
 function BrowsePage() {
   const { heroSlides, rows } = Route.useLoaderData();
   const { kind } = Route.useSearch();
-  const [continueRow, setContinueRow] = useState<{ title: string; items: { movie: Movie; progress: number }[] } | null>(null);
+  const [continueRow, setContinueRow] = useState<{
+    title: string;
+    items: { movie: Movie; progress: number }[];
+  } | null>(null);
   const [sortBy, setSortBy] = useState<SortMode>("recent");
   const [traktWatchlist, setTraktWatchlist] = useState<Movie[] | null>(null);
   const [traktWatchlistLoaded, setTraktWatchlistLoaded] = useState(false);
@@ -170,7 +187,10 @@ function BrowsePage() {
 
     const update = async () => {
       const localItems = getContinueWatching();
-      let items = localItems.map((c) => ({ movie: continueToMovie(c), progress: (c.progress / Math.max(c.duration, 1)) * 100 }));
+      let items = localItems.map((c) => ({
+        movie: continueToMovie(c),
+        progress: (c.progress / Math.max(c.duration, 1)) * 100,
+      }));
       try {
         const fsItems = await getContinueWatchingFromFirestore();
         if (fsItems.length > 0) {
@@ -243,26 +263,32 @@ function BrowsePage() {
     <div className="min-h-dvh bg-background">
       <Navbar />
       {!isMyList && <HeroBanner slides={filteredHeroSlides} />}
-      <div className={`relative z-10 ${isMyList ? "pt-24" : "mt-0 md:mt-12"} space-y-4 md:space-y-8`}>
+      <div
+        className={`relative z-10 ${isMyList ? "pt-24" : "mt-0 md:mt-12"} space-y-4 md:space-y-8`}
+      >
         {!isMyList && continueRow && kind === "home" && (
           <section className="space-y-3 py-4">
-            <h2 className="px-4 sm:px-8 text-lg sm:text-xl font-semibold tracking-tight">Continue Watching</h2>
+            <h2 className="px-4 sm:px-8 text-lg sm:text-xl font-semibold tracking-tight">
+              Continue Watching
+            </h2>
             <div className="scrollbar-hide flex gap-2 overflow-x-auto px-4 sm:px-8">
-              {continueRow.items.filter((item) => !kidsMode || filterKidsContent([item.movie]).length > 0).map((item) => (
-                <MovieCard key={item.movie.id} movie={item.movie} progress={item.progress} />
-              ))}
+              {continueRow.items
+                .filter((item) => !kidsMode || filterKidsContent([item.movie]).length > 0)
+                .map((item) => (
+                  <MovieCard key={item.movie.id} movie={item.movie} progress={item.progress} />
+                ))}
             </div>
           </section>
         )}
-{rows.length === 0 && isMyList && (
-  <div className="flex flex-col items-center justify-center px-4 pt-16 text-center">
-    <List className="size-12 text-muted-foreground/40" />
-    <p className="mt-4 text-lg font-medium">Your list is empty</p>
-    <p className="mt-1 text-sm text-muted-foreground">
-      Browse movies and add them to your list to see them here.
-    </p>
-  </div>
-)}
+        {rows.length === 0 && isMyList && (
+          <div className="flex flex-col items-center justify-center px-4 pt-16 text-center">
+            <List className="size-12 text-muted-foreground/40" />
+            <p className="mt-4 text-lg font-medium">Your list is empty</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Browse movies and add them to your list to see them here.
+            </p>
+          </div>
+        )}
         {isMyList && rows.length > 0 && (
           <div className="flex items-center gap-2 px-4 sm:px-8 pt-4 pb-2">
             <ArrowUpDown className="size-4 text-muted-foreground" />

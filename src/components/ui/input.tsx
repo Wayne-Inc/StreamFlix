@@ -12,7 +12,9 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
         onInvalid && (onInvalid as any)(e);
       } catch {}
       const target = e.target as HTMLInputElement | null;
-      const msg = (target && (target.placeholder || target.getAttribute("aria-label"))) || "Please fill this field";
+      const msg =
+        (target && (target.placeholder || target.getAttribute("aria-label"))) ||
+        "Please fill this field";
       toast.error(msg);
     };
 

@@ -97,7 +97,16 @@ function ProfilesPage() {
 
   const selectProfile = (p: Profile) => {
     try {
-      localStorage.setItem("sf:selectedProfile", JSON.stringify({ id: p.id, name: p.name, color: p.color, avatarUrl: p.avatarUrl, kids: p.kids }));
+      localStorage.setItem(
+        "sf:selectedProfile",
+        JSON.stringify({
+          id: p.id,
+          name: p.name,
+          color: p.color,
+          avatarUrl: p.avatarUrl,
+          kids: p.kids,
+        }),
+      );
       window.dispatchEvent(new Event("profileChanged"));
     } catch {}
     navigate({ to: "/browse" });
@@ -137,7 +146,9 @@ function ProfilesPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-background via-background/60 to-background" />
         </div>
       )}
-      <header className="absolute inset-x-0 top-0 px-4 sm:px-12 py-5 z-10"><Logo /></header>
+      <header className="absolute inset-x-0 top-0 px-4 sm:px-12 py-5 z-10">
+        <Logo />
+      </header>
       <div className="relative z-20 w-full max-w-4xl px-4 text-center">
         <h1 className="text-3xl font-medium sm:text-5xl">
           {editing ? "Manage Profiles:" : "Who's watching?"}
@@ -160,7 +171,9 @@ function ProfilesPage() {
                   onClick={() => (editing ? setEditTarget(p) : choose(p))}
                   className="group flex flex-col items-center gap-3"
                 >
-                  <div className={`relative size-24 overflow-hidden rounded-lg transition-all group-hover:ring-4 group-hover:ring-foreground sm:size-32 ${p.avatarUrl ? "" : `bg-gradient-to-br ${p.color}`}`}>
+                  <div
+                    className={`relative size-24 overflow-hidden rounded-lg transition-all group-hover:ring-4 group-hover:ring-foreground sm:size-32 ${p.avatarUrl ? "" : `bg-gradient-to-br ${p.color}`}`}
+                  >
                     {p.avatarUrl ? (
                       <img src={p.avatarUrl} alt="" className="size-full object-cover" />
                     ) : (
@@ -175,7 +188,12 @@ function ProfilesPage() {
                     )}
                   </div>
                   <span className="text-muted-foreground transition-colors group-hover:text-foreground">
-                    {p.name} {p.kids && <span className="ml-1 rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-medium text-emerald-400">Kids</span>}
+                    {p.name}{" "}
+                    {p.kids && (
+                      <span className="ml-1 rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-medium text-emerald-400">
+                        Kids
+                      </span>
+                    )}
                   </span>
                 </button>
               </li>
@@ -232,11 +250,16 @@ function ProfilesPage() {
               autoFocus
               placeholder="Enter PIN"
               className="w-full rounded bg-neutral-800 px-4 py-3 text-center text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-primary mb-4"
-              onKeyDown={(e) => { if (e.key === "Enter") verifyPinAndSelect(); }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") verifyPinAndSelect();
+              }}
             />
             <div className="flex gap-2">
               <button
-                onClick={() => { setPinTarget(null); setPinValue(""); }}
+                onClick={() => {
+                  setPinTarget(null);
+                  setPinValue("");
+                }}
                 className="flex-1 rounded border border-border px-4 py-2 text-sm hover:bg-accent"
               >
                 Cancel
@@ -271,9 +294,7 @@ function ProfileEditor({
   const existing = isNew ? null : (target as Profile);
   const [name, setName] = useState(existing?.name ?? "");
   const [kids, setKids] = useState(existing?.kids ?? false);
-  const [color, setColor] = useState(
-    existing?.color ?? COLORS[existingCount % COLORS.length]
-  );
+  const [color, setColor] = useState(existing?.color ?? COLORS[existingCount % COLORS.length]);
   const [avatarUrl, setAvatarUrl] = useState(existing?.avatarUrl ?? "");
   const [pin, setPin] = useState("");
   const [busy, setBusy] = useState(false);
@@ -288,7 +309,11 @@ function ProfileEditor({
     setBusy(true);
     try {
       if (isNew) {
-        await createProfile(u.uid, { name: name.trim(), kids, avatarUrl: avatarUrl.trim() || undefined });
+        await createProfile(u.uid, {
+          name: name.trim(),
+          kids,
+          avatarUrl: avatarUrl.trim() || undefined,
+        });
         const list = await getUserProfiles(u.uid);
         const created = list.find((p) => p.name === name.trim());
         if (created) {
@@ -299,7 +324,12 @@ function ProfileEditor({
         }
         toast.success("Profile added");
       } else if (existing) {
-        await updateProfile(u.uid, existing.id, { name: name.trim(), kids, color, avatarUrl: avatarUrl.trim() || "" });
+        await updateProfile(u.uid, existing.id, {
+          name: name.trim(),
+          kids,
+          color,
+          avatarUrl: avatarUrl.trim() || "",
+        });
         if (pin.trim()) {
           await setProfilePin(u.uid, existing.id, pin.trim());
         }
@@ -338,19 +368,27 @@ function ProfileEditor({
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4">
       <div className="w-full max-w-md rounded-md bg-card p-6 shadow-2xl">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold">
-            {isNew ? "Add Profile" : "Edit Profile"}
-          </h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground" aria-label="Close">
+          <h2 className="text-2xl font-semibold">{isNew ? "Add Profile" : "Edit Profile"}</h2>
+          <button
+            onClick={onClose}
+            className="text-muted-foreground hover:text-foreground"
+            aria-label="Close"
+          >
             <X className="size-5" />
           </button>
         </div>
 
         <div className="mt-6 flex items-center gap-4">
           {avatarUrl ? (
-            <img src={avatarUrl} alt="" className="size-20 rounded-lg object-cover ring-2 ring-border" />
+            <img
+              src={avatarUrl}
+              alt=""
+              className="size-20 rounded-lg object-cover ring-2 ring-border"
+            />
           ) : (
-            <div className={`grid size-20 place-items-center rounded-lg bg-gradient-to-br ${color} text-3xl font-black text-white/90`}>
+            <div
+              className={`grid size-20 place-items-center rounded-lg bg-gradient-to-br ${color} text-3xl font-black text-white/90`}
+            >
               {(name || "?")[0]?.toUpperCase()}
             </div>
           )}
@@ -416,7 +454,9 @@ function ProfileEditor({
             >
               <Trash2 className="size-4" /> Delete
             </button>
-          ) : <span />}
+          ) : (
+            <span />
+          )}
           <div className="flex gap-2">
             <button
               onClick={onClose}

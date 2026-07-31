@@ -2,9 +2,26 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Monitor, Smartphone, Tablet, Trash2, LogOut, Mail, User as UserIcon, ShieldCheck, CheckCircle2, Camera, Check } from "lucide-react";
+import {
+  Loader2,
+  Monitor,
+  Smartphone,
+  Tablet,
+  Trash2,
+  LogOut,
+  Mail,
+  User as UserIcon,
+  ShieldCheck,
+  CheckCircle2,
+  Camera,
+  Check,
+} from "lucide-react";
 import { auth, db } from "@/lib/firebase";
-import { signOut as firebaseSignOut, sendEmailVerification, sendSignInLinkToEmail } from "firebase/auth";
+import {
+  signOut as firebaseSignOut,
+  sendEmailVerification,
+  sendSignInLinkToEmail,
+} from "firebase/auth";
 import {
   collection,
   query,
@@ -76,7 +93,12 @@ function SettingsPage() {
       const snap = await getDoc(doc(db, "profiles", user.uid));
       if (!snap.exists()) return null;
       const d = snap.data();
-      return { id: snap.id, display_name: d.display_name ?? "", avatar_url: d.avatar_url ?? null, show_google_pfp: d.show_google_pfp ?? true };
+      return {
+        id: snap.id,
+        display_name: d.display_name ?? "",
+        avatar_url: d.avatar_url ?? null,
+        show_google_pfp: d.show_google_pfp ?? true,
+      };
     },
   });
 
@@ -91,11 +113,15 @@ function SettingsPage() {
     if (!googlePhotoURL || !user) return;
     setSavingName(true);
     try {
-      await setDoc(doc(db, "profiles", user.uid), {
-        avatar_url: googlePhotoURL,
-        show_google_pfp: true,
-        updated_at: serverTimestamp(),
-      }, { merge: true });
+      await setDoc(
+        doc(db, "profiles", user.uid),
+        {
+          avatar_url: googlePhotoURL,
+          show_google_pfp: true,
+          updated_at: serverTimestamp(),
+        },
+        { merge: true },
+      );
       setAvatarUrl(googlePhotoURL);
       setAvatarInput("");
       toast.success("Avatar updated to Google profile picture");
@@ -110,10 +136,14 @@ function SettingsPage() {
     if (!user || !avatarInput.trim()) return;
     setSavingName(true);
     try {
-      await setDoc(doc(db, "profiles", user.uid), {
-        avatar_url: avatarInput.trim(),
-        updated_at: serverTimestamp(),
-      }, { merge: true });
+      await setDoc(
+        doc(db, "profiles", user.uid),
+        {
+          avatar_url: avatarInput.trim(),
+          updated_at: serverTimestamp(),
+        },
+        { merge: true },
+      );
       setAvatarUrl(avatarInput.trim());
       toast.success("Avatar updated");
       qc.invalidateQueries({ queryKey: ["profile"] });
@@ -127,11 +157,15 @@ function SettingsPage() {
     if (!user) return;
     setSavingName(true);
     try {
-      await setDoc(doc(db, "profiles", user.uid), {
-        avatar_url: "",
-        show_google_pfp: false,
-        updated_at: serverTimestamp(),
-      }, { merge: true });
+      await setDoc(
+        doc(db, "profiles", user.uid),
+        {
+          avatar_url: "",
+          show_google_pfp: false,
+          updated_at: serverTimestamp(),
+        },
+        { merge: true },
+      );
       setAvatarUrl("");
       setAvatarInput("");
       toast.success("Avatar removed");
@@ -148,13 +182,10 @@ function SettingsPage() {
     refetchInterval: 30_000,
     queryFn: async (): Promise<Device[]> => {
       if (!user) return [];
-      const q = query(
-        collection(db, "user_devices"),
-        where("user_id", "==", user.uid),
-      );
+      const q = query(collection(db, "user_devices"), where("user_id", "==", user.uid));
       const snap = await getDocs(q);
       return snap.docs
-        .map((d) => ({ id: d.id, ...d.data() } as Device))
+        .map((d) => ({ id: d.id, ...d.data() }) as Device)
         .sort((a, b) => {
           const ta = a.last_seen_at?.toDate().getTime() ?? 0;
           const tb = b.last_seen_at?.toDate().getTime() ?? 0;
@@ -177,10 +208,7 @@ function SettingsPage() {
   const removeAllOthers = useMutation({
     mutationFn: async () => {
       if (!user) return;
-      const q = query(
-        collection(db, "user_devices"),
-        where("user_id", "==", user.uid),
-      );
+      const q = query(collection(db, "user_devices"), where("user_id", "==", user.uid));
       const snap = await getDocs(q);
       const deletes = snap.docs
         .filter((d) => d.data().device_id !== currentDeviceId)
@@ -198,10 +226,14 @@ function SettingsPage() {
     if (!user || !displayName.trim()) return;
     setSavingName(true);
     try {
-      await setDoc(doc(db, "profiles", user.uid), {
-        display_name: displayName.trim(),
-        updated_at: serverTimestamp(),
-      }, { merge: true });
+      await setDoc(
+        doc(db, "profiles", user.uid),
+        {
+          display_name: displayName.trim(),
+          updated_at: serverTimestamp(),
+        },
+        { merge: true },
+      );
       toast.success("Profile updated");
       qc.invalidateQueries({ queryKey: ["profile"] });
     } catch (err: any) {
@@ -224,8 +256,7 @@ function SettingsPage() {
     router.navigate({ to: "/auth", replace: true });
   };
 
-  const isEmailPassword =
-    user?.providerData.some((p) => p?.providerId === "password") ?? false;
+  const isEmailPassword = user?.providerData.some((p) => p?.providerId === "password") ?? false;
 
   const requestDelete = async () => {
     if (!user?.email) return;
@@ -251,7 +282,9 @@ function SettingsPage() {
       <Navbar />
       <main className="mx-auto max-w-4xl px-4 pt-28 pb-20 sm:px-8">
         <h1 className="text-3xl font-bold tracking-tight">Account</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Manage your profile, security, and signed-in devices.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Manage your profile, security, and signed-in devices.
+        </p>
 
         {/* Profile */}
         <section className="mt-8 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
@@ -274,47 +307,64 @@ function SettingsPage() {
               </div>
             </div>
           ) : (
-          <div className="mt-5 flex flex-col sm:flex-row gap-6">
-            <div className="flex flex-col items-center gap-3">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="" className="size-24 rounded-full object-cover ring-2 ring-border" />
-              ) : googlePhotoURL && (profile?.show_google_pfp ?? true) ? (
-                <img src={googlePhotoURL} alt="" className="size-24 rounded-full object-cover ring-2 ring-border" />
-              ) : (
-                <div className="grid size-24 place-items-center rounded-full bg-gradient-to-br from-rose-500 to-red-700 text-4xl font-black text-white/90">
-                  {(displayName || user?.email || "?")[0]?.toUpperCase()}
+            <div className="mt-5 flex flex-col sm:flex-row gap-6">
+              <div className="flex flex-col items-center gap-3">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt=""
+                    className="size-24 rounded-full object-cover ring-2 ring-border"
+                  />
+                ) : googlePhotoURL && (profile?.show_google_pfp ?? true) ? (
+                  <img
+                    src={googlePhotoURL}
+                    alt=""
+                    className="size-24 rounded-full object-cover ring-2 ring-border"
+                  />
+                ) : (
+                  <div className="grid size-24 place-items-center rounded-full bg-gradient-to-br from-rose-500 to-red-700 text-4xl font-black text-white/90">
+                    {(displayName || user?.email || "?")[0]?.toUpperCase()}
+                  </div>
+                )}
+                <div className="flex flex-wrap justify-center gap-2">
+                  {googlePhotoURL && (profile?.show_google_pfp ?? true) && (
+                    <button
+                      onClick={useGooglePfp}
+                      disabled={savingName}
+                      className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1 text-xs hover:bg-accent disabled:opacity-50"
+                    >
+                      <Check className="size-3" /> Use Google photo
+                    </button>
+                  )}
+                  {(avatarUrl || (googlePhotoURL && (profile?.show_google_pfp ?? true))) && (
+                    <button
+                      onClick={removeAvatar}
+                      disabled={savingName}
+                      className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1 text-xs hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+                    >
+                      Remove
+                    </button>
+                  )}
                 </div>
-              )}
-              <div className="flex flex-wrap justify-center gap-2">
-                {googlePhotoURL && (profile?.show_google_pfp ?? true) && (
-                  <button
-                    onClick={useGooglePfp}
-                    disabled={savingName}
-                    className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1 text-xs hover:bg-accent disabled:opacity-50"
-                  >
-                    <Check className="size-3" /> Use Google photo
-                  </button>
-                )}
-                {(avatarUrl || (googlePhotoURL && (profile?.show_google_pfp ?? true))) && (
-                  <button
-                    onClick={removeAvatar}
-                    disabled={savingName}
-                    className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1 text-xs hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
-                  >
-                    Remove
-                  </button>
-                )}
               </div>
-            </div>
-            <div className="flex-1 grid gap-4 sm:grid-cols-2">
-              <div>
-                  <label className="text-xs uppercase tracking-wider text-muted-foreground">Email</label>
+              <div className="flex-1 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="text-xs uppercase tracking-wider text-muted-foreground">
+                    Email
+                  </label>
                   <div className="mt-1 flex items-center gap-2 rounded-md border border-border bg-background/60 px-3 py-2 text-sm">
                     <Mail className="size-4 text-muted-foreground shrink-0" />
                     <span
                       className="min-w-0 truncate"
-                      style={{ fontSize: (user?.email?.length ?? 0) > 30 ? `${Math.max(11, 14 - (((user?.email?.length ?? 0) - 30) * 0.12))}px` : undefined }}
-                    >{user?.email ?? "—"}</span>
+                      style={{
+                        fontSize:
+                          (user?.email?.length ?? 0) > 30
+                            ? `${Math.max(11, 14 - ((user?.email?.length ?? 0) - 30) * 0.12)}px`
+                            : undefined,
+                      }}
+                    >
+                      {user?.email ?? "—"}
+                    </span>
                     {user?.emailVerified ? (
                       <CheckCircle2 className="ml-auto size-4 shrink-0 text-emerald-400" />
                     ) : (
@@ -334,58 +384,74 @@ function SettingsPage() {
                       </button>
                     )}
                   </div>
-              </div>
-              <div>
-                <label htmlFor="dn" className="text-xs uppercase tracking-wider text-muted-foreground">Display name</label>
-                <div className="mt-1 flex gap-2">
-                  <input
-                    id="dn"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    className="flex-1 rounded-md border border-border bg-background/60 px-3 py-2 text-sm outline-none focus:border-primary"
-                  />
-                  <button
-                    onClick={saveName}
-                    disabled={savingName || !displayName.trim() || displayName === profile?.display_name}
-                    className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+                </div>
+                <div>
+                  <label
+                    htmlFor="dn"
+                    className="text-xs uppercase tracking-wider text-muted-foreground"
                   >
-                    {savingName ? <Loader2 className="size-4 animate-spin" /> : "Save"}
-                  </button>
+                    Display name
+                  </label>
+                  <div className="mt-1 flex gap-2">
+                    <input
+                      id="dn"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      className="flex-1 rounded-md border border-border bg-background/60 px-3 py-2 text-sm outline-none focus:border-primary"
+                    />
+                    <button
+                      onClick={saveName}
+                      disabled={
+                        savingName || !displayName.trim() || displayName === profile?.display_name
+                      }
+                      className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+                    >
+                      {savingName ? <Loader2 className="size-4 animate-spin" /> : "Save"}
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <label className="text-xs uppercase tracking-wider text-muted-foreground">Member since</label>
-                <div className="mt-1 rounded-md border border-border bg-background/60 px-3 py-2 text-sm">
-                  {createdAt ? new Date(createdAt).toLocaleDateString() : "—"}
+                <div>
+                  <label className="text-xs uppercase tracking-wider text-muted-foreground">
+                    Member since
+                  </label>
+                  <div className="mt-1 rounded-md border border-border bg-background/60 px-3 py-2 text-sm">
+                    {createdAt ? new Date(createdAt).toLocaleDateString() : "—"}
+                  </div>
                 </div>
-              </div>
-              <div>
-                <label className="text-xs uppercase tracking-wider text-muted-foreground">User ID</label>
-                <div className="mt-1 truncate sm:truncate sm:rounded-md border border-border bg-background/60 px-3 py-2 text-xs font-mono text-muted-foreground break-all">
-                  {user?.uid ?? "—"}
+                <div>
+                  <label className="text-xs uppercase tracking-wider text-muted-foreground">
+                    User ID
+                  </label>
+                  <div className="mt-1 truncate sm:truncate sm:rounded-md border border-border bg-background/60 px-3 py-2 text-xs font-mono text-muted-foreground break-all">
+                    {user?.uid ?? "—"}
+                  </div>
                 </div>
-              </div>
-              <div className="sm:col-span-2">
-                <label htmlFor="avatarUrl" className="text-xs uppercase tracking-wider text-muted-foreground">Custom avatar URL</label>
-                <div className="mt-1 flex gap-2">
-                  <input
-                    id="avatarUrl"
-                    value={avatarInput}
-                    onChange={(e) => setAvatarInput(e.target.value)}
-                    placeholder="https://example.com/avatar.jpg"
-                    className="flex-1 rounded-md border border-border bg-background/60 px-3 py-2 text-sm outline-none focus:border-primary"
-                  />
-                  <button
-                    onClick={saveAvatarUrl}
-                    disabled={savingName || !avatarInput.trim()}
-                    className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm hover:bg-accent disabled:opacity-50"
+                <div className="sm:col-span-2">
+                  <label
+                    htmlFor="avatarUrl"
+                    className="text-xs uppercase tracking-wider text-muted-foreground"
                   >
-                    <Camera className="size-4" /> Set
-                  </button>
+                    Custom avatar URL
+                  </label>
+                  <div className="mt-1 flex gap-2">
+                    <input
+                      id="avatarUrl"
+                      value={avatarInput}
+                      onChange={(e) => setAvatarInput(e.target.value)}
+                      placeholder="https://example.com/avatar.jpg"
+                      className="flex-1 rounded-md border border-border bg-background/60 px-3 py-2 text-sm outline-none focus:border-primary"
+                    />
+                    <button
+                      onClick={saveAvatarUrl}
+                      disabled={savingName || !avatarInput.trim()}
+                      className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm hover:bg-accent disabled:opacity-50"
+                    >
+                      <Camera className="size-4" /> Set
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
           )}
         </section>
 
@@ -424,14 +490,19 @@ function SettingsPage() {
               </div>
             )}
             {!devicesQ.isLoading && (devicesQ.data?.length ?? 0) === 0 && (
-              <div className="px-4 py-10 text-center text-sm text-muted-foreground">No devices recorded yet.</div>
+              <div className="px-4 py-10 text-center text-sm text-muted-foreground">
+                No devices recorded yet.
+              </div>
             )}
             {devicesQ.data?.map((d) => {
               const Icon = deviceIcon(d.device_label);
               const isCurrent = d.device_id === currentDeviceId;
               const lastSeen = d.last_seen_at?.toDate();
               return (
-                <div key={d.id} className="flex items-center gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4">
+                <div
+                  key={d.id}
+                  className="flex items-center gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4"
+                >
                   <div className="grid size-10 shrink-0 place-items-center rounded-md bg-accent">
                     <Icon className="size-5" />
                   </div>
@@ -493,7 +564,9 @@ function SettingsPage() {
                 </p>
               </div>
               {deleteConfirming ? (
-                <p className="text-xs text-muted-foreground">Check your email for the confirmation link.</p>
+                <p className="text-xs text-muted-foreground">
+                  Check your email for the confirmation link.
+                </p>
               ) : (
                 <button
                   onClick={requestDelete}
@@ -506,8 +579,8 @@ function SettingsPage() {
             {deleteConfirming && (
               <div className="mt-4 rounded-lg bg-background/80 p-3 text-sm text-muted-foreground">
                 <p>
-                  A confirmation email has been sent to <strong>{user?.email}</strong>.
-                  Click the link in the email to permanently delete your account.
+                  A confirmation email has been sent to <strong>{user?.email}</strong>. Click the
+                  link in the email to permanently delete your account.
                 </p>
                 <button
                   onClick={() => setDeleteConfirming(false)}
@@ -587,7 +660,9 @@ function TraktSection() {
           {conn?.avatar ? (
             <img src={conn.avatar} alt="" className="size-10 rounded-full object-cover" />
           ) : (
-            <div className="grid size-10 place-items-center rounded-full bg-red-600 font-bold text-white">T</div>
+            <div className="grid size-10 place-items-center rounded-full bg-red-600 font-bold text-white">
+              T
+            </div>
           )}
           <div>
             <p className="text-sm font-semibold">Trakt</p>
@@ -622,11 +697,13 @@ function TraktSection() {
       <div className="mt-4 rounded-lg bg-background/80 p-3 text-sm text-muted-foreground">
         {!conn ? (
           <p>
-            Trakt connection is stored locally in this browser. If you change devices, reconnect Trakt to keep syncing your ratings and watch history.
+            Trakt connection is stored locally in this browser. If you change devices, reconnect
+            Trakt to keep syncing your ratings and watch history.
           </p>
         ) : (
           <p>
-            Your Trakt session is active in this browser. Disconnect to remove local Trakt access and stop syncing watch data for this device.
+            Your Trakt session is active in this browser. Disconnect to remove local Trakt access
+            and stop syncing watch data for this device.
           </p>
         )}
       </div>

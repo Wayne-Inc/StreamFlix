@@ -54,10 +54,7 @@ export async function getActiveSessionCount(userId: string): Promise<number> {
 
 export async function cleanupSessions(): Promise<void> {
   const cutoff = Timestamp.fromMillis(Date.now() - 24 * 60 * 60 * 1000);
-  const q = query(
-    collection(db, "sessions"),
-    where("lastActiveAt", "<=", cutoff),
-  );
+  const q = query(collection(db, "sessions"), where("lastActiveAt", "<=", cutoff));
   const snap = await getDocs(q);
   await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
 }

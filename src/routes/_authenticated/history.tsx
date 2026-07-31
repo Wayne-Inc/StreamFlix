@@ -23,20 +23,22 @@ function HistoryPage() {
 
   const clearAll = () => {
     try {
-      const keys = Object.keys(localStorage).filter(k => k.startsWith("streamflix:watch_history"));
-      keys.forEach(k => localStorage.removeItem(k));
+      const keys = Object.keys(localStorage).filter((k) =>
+        k.startsWith("streamflix:watch_history"),
+      );
+      keys.forEach((k) => localStorage.removeItem(k));
       setHistory([]);
     } catch {}
   };
 
   const removeItem = (id: string) => {
     try {
-      const key = Object.keys(localStorage).find(k => k.startsWith("streamflix:watch_history"));
+      const key = Object.keys(localStorage).find((k) => k.startsWith("streamflix:watch_history"));
       if (!key) return;
       const raw = localStorage.getItem(key);
       if (!raw) return;
       const list = JSON.parse(raw) as WatchHistoryItem[];
-      const filtered = list.filter(x => x.id !== id);
+      const filtered = list.filter((x) => x.id !== id);
       localStorage.setItem(key, JSON.stringify(filtered));
       setHistory(filtered);
     } catch {}
@@ -63,7 +65,7 @@ function HistoryPage() {
 
         {!loaded ? (
           <div className="space-y-4">
-            {[1, 2, 3, 4, 5].map(i => (
+            {[1, 2, 3, 4, 5].map((i) => (
               <Skeleton key={i} className="h-24 w-full rounded-lg" />
             ))}
           </div>
@@ -85,7 +87,11 @@ function HistoryPage() {
                 key={item.id}
                 to="/watch/$id"
                 params={{ id: item.id.includes(":") ? item.id.split(":")[0] : item.id }}
-                search={item.season != null && item.episode != null ? { season: item.season, episode: item.episode } : {}}
+                search={
+                  item.season != null && item.episode != null
+                    ? { season: item.season, episode: item.episode }
+                    : {}
+                }
                 className="flex items-center gap-4 rounded-lg border border-border bg-surface/40 p-3 transition-colors hover:bg-surface/80 group sm:p-4"
               >
                 <div className="relative shrink-0">
@@ -104,15 +110,25 @@ function HistoryPage() {
                     {item.year} &middot; {item.runtime}
                     {item.episodeLabel && <span> &middot; {item.episodeLabel}</span>}
                   </p>
-                  <p className="text-xs text-muted-foreground/70 line-clamp-1 mt-1">{item.description}</p>
+                  <p className="text-xs text-muted-foreground/70 line-clamp-1 mt-1">
+                    {item.description}
+                  </p>
                   <p className="text-[10px] text-muted-foreground/50 mt-1">
                     {new Date(item.watchedAt).toLocaleDateString(undefined, {
-                      month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit"
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
                     })}
                   </p>
                 </div>
                 <button
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeItem(item.id); }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    removeItem(item.id);
+                  }}
                   className="shrink-0 text-muted-foreground hover:text-destructive p-1"
                   aria-label="Remove"
                 >

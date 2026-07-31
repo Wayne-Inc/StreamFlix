@@ -94,7 +94,17 @@ type Props = {
 };
 
 export function WatchPartyPanel(props: Props) {
-  const { movieId, open, onClose, videoRef, defaultCode, mainVideoUrl, season, episode, onRoomStateUpdate } = props;
+  const {
+    movieId,
+    open,
+    onClose,
+    videoRef,
+    defaultCode,
+    mainVideoUrl,
+    season,
+    episode,
+    onRoomStateUpdate,
+  } = props;
   const [userId, setUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState("Viewer");
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
@@ -135,16 +145,29 @@ export function WatchPartyPanel(props: Props) {
       if (!code) return;
       setBusy(true);
       const q = query(collection(db, "watch_party_rooms"), where("code", "==", code), limit(1));
-      getDocs(q).then((snap) => {
-        if (snap.empty) { toast.error("Room not found"); setBusy(false); return; }
-        const d = snap.docs[0];
-        const data = d.data();
-        if (data.movie_id !== movieId) { toast.error("Wrong movie for this party"); setBusy(false); return; }
-        setRoom({ id: d.id, ...data } as Room);
-        pushRoomStateToPlayer({ id: d.id, ...data } as Room, userId, onRoomStateUpdate);
-        toast.success(`Joined ${code}`);
-        setBusy(false);
-      }).catch(() => { setBusy(false); toast.error("Failed to join"); });
+      getDocs(q)
+        .then((snap) => {
+          if (snap.empty) {
+            toast.error("Room not found");
+            setBusy(false);
+            return;
+          }
+          const d = snap.docs[0];
+          const data = d.data();
+          if (data.movie_id !== movieId) {
+            toast.error("Wrong movie for this party");
+            setBusy(false);
+            return;
+          }
+          setRoom({ id: d.id, ...data } as Room);
+          pushRoomStateToPlayer({ id: d.id, ...data } as Room, userId, onRoomStateUpdate);
+          toast.success(`Joined ${code}`);
+          setBusy(false);
+        })
+        .catch(() => {
+          setBusy(false);
+          toast.error("Failed to join");
+        });
     }, 500);
     return () => clearTimeout(t);
   }, [open, userId, defaultCode]);
@@ -159,12 +182,14 @@ export function WatchPartyPanel(props: Props) {
       const r = roomRef.current;
       const uid = userIdRef.current;
       if (!r || !uid || r.host_id !== uid) return;
-      getDocs(query(collection(db, "watch_party_messages"), where("room_id", "==", r.id))).then((snap) => {
-        const batch = writeBatch(db);
-        snap.docs.forEach((d) => batch.delete(d.ref));
-        batch.delete(doc(db, "watch_party_rooms", r.id));
-        batch.commit().catch(() => {});
-      }).catch(() => {});
+      getDocs(query(collection(db, "watch_party_messages"), where("room_id", "==", r.id)))
+        .then((snap) => {
+          const batch = writeBatch(db);
+          snap.docs.forEach((d) => batch.delete(d.ref));
+          batch.delete(doc(db, "watch_party_rooms", r.id));
+          batch.commit().catch(() => {});
+        })
+        .catch(() => {});
     };
   }, []);
 
@@ -178,7 +203,7 @@ export function WatchPartyPanel(props: Props) {
       limit(200),
     );
     const unsubMessages = onSnapshot(messagesQuery, (snap) => {
-      const msgs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Message));
+      const msgs = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Message);
       setMessages(msgs);
       msgs.forEach((m) => {
         if (m.kind === "reaction" && m.user_id !== userId) {
@@ -329,7 +354,9 @@ export function WatchPartyPanel(props: Props) {
         msgSnap.docs.forEach((d) => batch.delete(d.ref));
         batch.delete(doc(db, "watch_party_rooms", room.id));
         await batch.commit();
-      } catch { /* best effort */ }
+      } catch {
+        /* best effort */
+      }
     }
     setRoom(null);
     setMessages([]);
@@ -392,7 +419,11 @@ export function WatchPartyPanel(props: Props) {
             <Users className="size-5 text-primary" />
             <h3 className="font-semibold">Watch Party</h3>
           </div>
-          <button onClick={onClose} aria-label="Close" className="rounded p-1 text-muted-foreground hover:text-foreground">
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="rounded p-1 text-muted-foreground hover:text-foreground"
+          >
             <X className="size-5" />
           </button>
         </header>
@@ -400,7 +431,9 @@ export function WatchPartyPanel(props: Props) {
         {!room ? (
           <div className="flex-1 space-y-6 p-6">
             <div>
-              <p className="text-sm text-muted-foreground">Watch with friends — synced playback, live chat, reactions.</p>
+              <p className="text-sm text-muted-foreground">
+                Watch with friends — synced playback, live chat, reactions.
+              </p>
             </div>
             <button
               onClick={createRoom}
@@ -410,10 +443,14 @@ export function WatchPartyPanel(props: Props) {
               Host a new party
             </button>
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <div className="h-px flex-1 bg-border" /> OR JOIN <div className="h-px flex-1 bg-border" />
+              <div className="h-px flex-1 bg-border" /> OR JOIN{" "}
+              <div className="h-px flex-1 bg-border" />
             </div>
             <form
-              onSubmit={(e) => { e.preventDefault(); joinRoom(); }}
+              onSubmit={(e) => {
+                e.preventDefault();
+                joinRoom();
+              }}
               className="space-y-2"
             >
               <input
@@ -436,16 +473,26 @@ export function WatchPartyPanel(props: Props) {
             <div className="flex items-center justify-between border-b border-border p-3 text-sm">
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground">Code</span>
-                <code className="rounded bg-surface px-2 py-1 font-mono font-bold tracking-widest">{room.code}</code>
+                <code className="rounded bg-surface px-2 py-1 font-mono font-bold tracking-widest">
+                  {room.code}
+                </code>
                 <button
-                  onClick={() => { navigator.clipboard.writeText(room.code); toast.success("Code copied"); }}
+                  onClick={() => {
+                    navigator.clipboard.writeText(room.code);
+                    toast.success("Code copied");
+                  }}
                   className="text-muted-foreground hover:text-foreground"
                   aria-label="Copy code"
                 >
                   <Copy className="size-4" />
                 </button>
               </div>
-              <button onClick={leave} className="text-xs text-muted-foreground hover:text-destructive">Leave</button>
+              <button
+                onClick={leave}
+                className="text-xs text-muted-foreground hover:text-destructive"
+              >
+                Leave
+              </button>
             </div>
 
             <div className="border-b border-border p-2">
@@ -477,18 +524,29 @@ export function WatchPartyPanel(props: Props) {
                   {m.kind === "reaction" ? (
                     <p className="text-muted-foreground">
                       {m.user_photo_url ? (
-                        <img src={m.user_photo_url} alt="" className="mr-1 inline size-4 rounded-full" />
+                        <img
+                          src={m.user_photo_url}
+                          alt=""
+                          className="mr-1 inline size-4 rounded-full"
+                        />
                       ) : (
                         <span className="mr-1 inline-flex size-4 items-center justify-center rounded-full bg-gradient-to-br from-primary to-purple-600 text-[8px] font-bold text-white">
                           {m.user_name[0]?.toUpperCase()}
                         </span>
                       )}
-                      <span className="font-medium text-foreground">{m.user_name}</span> reacted {m.content}
+                      <span className="font-medium text-foreground">{m.user_name}</span> reacted{" "}
+                      {m.content}
                     </p>
                   ) : (
-                    <div className={`flex items-start gap-2 ${m.user_id === userId ? "flex-row-reverse" : ""}`}>
+                    <div
+                      className={`flex items-start gap-2 ${m.user_id === userId ? "flex-row-reverse" : ""}`}
+                    >
                       {m.user_photo_url ? (
-                        <img src={m.user_photo_url} alt="" className="mt-0.5 size-6 shrink-0 rounded-full" />
+                        <img
+                          src={m.user_photo_url}
+                          alt=""
+                          className="mt-0.5 size-6 shrink-0 rounded-full"
+                        />
                       ) : (
                         <span className="mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-purple-600 text-[10px] font-bold text-white">
                           {m.user_name[0]?.toUpperCase()}
@@ -496,7 +554,9 @@ export function WatchPartyPanel(props: Props) {
                       )}
                       <div className={m.user_id === userId ? "text-right" : ""}>
                         <p className="text-xs text-muted-foreground">{m.user_name}</p>
-                        <p className={`inline-block max-w-[85%] rounded-2xl px-3 py-2 ${m.user_id === userId ? "bg-primary text-primary-foreground" : "bg-surface"}`}>
+                        <p
+                          className={`inline-block max-w-[85%] rounded-2xl px-3 py-2 ${m.user_id === userId ? "bg-primary text-primary-foreground" : "bg-surface"}`}
+                        >
                           {m.content}
                         </p>
                       </div>
@@ -514,7 +574,11 @@ export function WatchPartyPanel(props: Props) {
                 placeholder="Send a message…"
                 className="flex-1 rounded-full bg-surface px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
-              <button type="submit" aria-label="Send" className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
+              <button
+                type="submit"
+                aria-label="Send"
+                className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+              >
                 <Send className="size-4" />
               </button>
             </form>

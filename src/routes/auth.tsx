@@ -4,7 +4,16 @@ import { toast } from "sonner";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
 import { auth } from "@/lib/firebase";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, updateProfile as updateFirebaseProfile, sendEmailVerification, sendPasswordResetEmail } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+  onAuthStateChanged,
+  updateProfile as updateFirebaseProfile,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+} from "firebase/auth";
 import heroImg from "@/assets/hero-1.jpg";
 
 export const Route = createFileRoute("/auth")({
@@ -35,7 +44,7 @@ function AuthPage() {
   const [forgotPw, setForgotPw] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const captchaRef = useRef<HTMLDivElement>(null);
-  const [captchaRendered, setCaptchaRendered] = useState(false);
+  const [captchaVerified, setCaptchaVerified] = useState(false);
 
   // Rate limiting
   const checkRateLimit = (): boolean => {
@@ -54,7 +63,9 @@ function AuthPage() {
       recent.push(now);
       localStorage.setItem(key, JSON.stringify(recent));
       return true;
-    } catch { return true; }
+    } catch {
+      return true;
+    }
   };
 
   // Redirect away if already signed in (use profile chooser).
@@ -66,54 +77,66 @@ function AuthPage() {
   }, [navigate]);
 
   useEffect(() => {
-    setCaptchaRendered(false);
-    if (mode === "signup") {
-      import("@/lib/captcha").then(({ renderCaptcha }) => {
-        setTimeout(() => {
-          if (captchaRef.current) {
-            renderCaptcha("signup-captcha").then(() => setCaptchaRendered(true));
-          }
-        }, 100);
-      });
-    }
-  }, [mode]);
+    setCaptchaVerified(false);
+    import("@/lib/captcha").then(({ renderCaptcha }) => {
+      setTimeout(() => {
+        if (captchaRef.current) {
+          renderCaptcha(
+            "auth-captcha",
+            () => setCaptchaVerified(true),
+            () => setCaptchaVerified(false),
+          );
+        }
+      }, 100);
+    });
+  }, [mode, forgotPw]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!checkRateLimit()) return;
+    if (!captchaVerified) {
+      toast.error("Please complete the CAPTCHA before proceeding.");
+      return;
+    }
     setBusy(true);
     setVerifyMsg("");
     try {
+      const { getCaptchaToken, resetCaptcha } = await import("@/lib/captcha");
+      const token = await getCaptchaToken();
+      if (!token || !captchaVerified) {
+        toast.error("Please complete the CAPTCHA");
+        setBusy(false);
+        return;
+      }
+
       if (mode === "signup") {
-        const { getCaptchaToken, resetCaptcha } = await import("@/lib/captcha");
-        const token = await getCaptchaToken();
-        if (!token) {
-          toast.error("Please complete the CAPTCHA");
-          setBusy(false);
-          return;
-        }
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         if (name.trim()) {
           await updateFirebaseProfile(cred.user, { displayName: name.trim() });
         }
         await sendEmailVerification(cred.user);
         resetCaptcha();
-        setVerifyMsg(`Verification email sent to ${email}. Please check your inbox and then sign in.`);
+        setCaptchaVerified(false);
+        setVerifyMsg(
+          `Verification email sent to ${email}. Please check your inbox and then sign in.`,
+        );
         setMode("signin");
       } else {
         const cred = await signInWithEmailAndPassword(auth, email, password);
         if (!cred.user.emailVerified) {
           await auth.signOut();
           setVerifyMsg("Please verify your email before signing in. Check your inbox.");
+          setBusy(false);
           return;
         }
+        resetCaptcha();
         toast.success("Signed in.");
         navigate({ to: "/profiles" });
       }
     } catch (err: any) {
       const msg = err?.code
         ? err.code.replace("auth/", "").replace(/-/g, " ")
-        : err?.message ?? "Authentication failed.";
+        : (err?.message ?? "Authentication failed.");
       toast.error(msg);
     } finally {
       setBusy(false);
@@ -136,15 +159,22 @@ function AuthPage() {
   const onForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
+    if (!captchaVerified) {
+      toast.error("Please complete the CAPTCHA before proceeding.");
+      return;
+    }
     setBusy(true);
     try {
+      const { resetCaptcha } = await import("@/lib/captcha");
       await sendPasswordResetEmail(auth, email.trim());
+      resetCaptcha();
+      setCaptchaVerified(false);
       setResetSent(true);
       toast.success("Password reset email sent.");
     } catch (err: any) {
       const msg = err?.code
         ? err.code.replace("auth/", "").replace(/-/g, " ")
-        : err?.message ?? "Failed to send reset email.";
+        : (err?.message ?? "Failed to send reset email.");
       toast.error(msg);
     } finally {
       setBusy(false);
@@ -171,7 +201,13 @@ function AuthPage() {
 
   const s = strengthScore(password);
   const labels = ["Too weak", "Weak", "Okay", "Strong", "Excellent"];
-  const colors = ["bg-destructive", "bg-orange-500", "bg-amber-500", "bg-emerald-500", "bg-emerald-400"];
+  const colors = [
+    "bg-destructive",
+    "bg-orange-500",
+    "bg-amber-500",
+    "bg-emerald-500",
+    "bg-emerald-400",
+  ];
 
   return (
     <main className="relative min-h-dvh">
@@ -193,158 +229,170 @@ function AuthPage() {
             {forgotPw ? "Reset Password" : mode === "signin" ? "Sign In" : "Create Account"}
           </h1>
           {forgotPw ? (
-              <form className="mt-6 space-y-4" onSubmit={onForgotPassword}>
-                <p className="text-sm text-muted-foreground">
-                  Enter your email address and we'll send you a link to reset your password.
-                </p>
+            <form className="mt-6 space-y-4" onSubmit={onForgotPassword}>
+              <p className="text-sm text-muted-foreground">
+                Enter your email address and we'll send you a link to reset your password.
+              </p>
+              <input
+                required
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                className="w-full rounded bg-neutral-800 px-4 py-4 focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              {resetSent && (
+                <div className="rounded border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
+                  Check your inbox. If an account with that email exists, a reset link has been
+                  sent.
+                </div>
+              )}
+              <div id="auth-captcha" ref={captchaRef} className="flex justify-center" />
+              <button
+                disabled={busy || !captchaVerified}
+                className="w-full rounded bg-primary py-3 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+              >
+                {busy ? "Please wait…" : "Send Reset Link"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setForgotPw(false);
+                  setResetSent(false);
+                }}
+                className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+              >
+                <ArrowLeft className="size-3" /> Back to sign in
+              </button>
+            </form>
+          ) : (
+            <form className="mt-6 space-y-4" onSubmit={onSubmit}>
+              {verifyMsg && (
+                <div className="rounded border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
+                  {verifyMsg}
+                  {mode === "signin" && (
+                    <button
+                      type="button"
+                      onClick={resendVerification}
+                      disabled={busy}
+                      className="ml-2 underline hover:no-underline"
+                    >
+                      Resend
+                    </button>
+                  )}
+                </div>
+              )}
+              {mode === "signup" && (
                 <input
                   required
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
+                  placeholder="Full name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className="w-full rounded bg-neutral-800 px-4 py-4 focus:outline-none focus:ring-2 focus:ring-primary"
                 />
-                {resetSent && (
-                  <div className="rounded border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
-                    Check your inbox. If an account with that email exists, a reset link has been sent.
-                  </div>
-                )}
-                <button
-                  disabled={busy}
-                  className="w-full rounded bg-primary py-3 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
-                >
-                  {busy ? "Please wait…" : "Send Reset Link"}
-                </button>
+              )}
+              <input
+                required
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                className="w-full rounded bg-neutral-800 px-4 py-4 focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <div className="relative">
+                <input
+                  required
+                  minLength={6}
+                  type={showPw ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                  className="w-full rounded bg-neutral-800 px-4 py-4 pr-12 focus:outline-none focus:ring-2 focus:ring-primary"
+                />
                 <button
                   type="button"
-                  onClick={() => { setForgotPw(false); setResetSent(false); }}
-                  className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowPw((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label="Toggle password"
                 >
-                  <ArrowLeft className="size-3" /> Back to sign in
+                  {showPw ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
                 </button>
-              </form>
-            ) : (
-              <form className="mt-6 space-y-4" onSubmit={onSubmit}>
-                {verifyMsg && (
-                  <div className="rounded border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
-                    {verifyMsg}
-                    {mode === "signin" && (
-                      <button type="button" onClick={resendVerification} disabled={busy} className="ml-2 underline hover:no-underline">
-                        Resend
-                      </button>
-                    )}
-                  </div>
-                )}
-                {mode === "signup" && (
-                  <input
-                    required
-                    placeholder="Full name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full rounded bg-neutral-800 px-4 py-4 focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                )}
-                <input
-                  required
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  className="w-full rounded bg-neutral-800 px-4 py-4 focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                <div className="relative">
-                  <input
-                    required
-                    minLength={6}
-                    type={showPw ? "text" : "password"}
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete={mode === "signin" ? "current-password" : "new-password"}
-                    className="w-full rounded bg-neutral-800 px-4 py-4 pr-12 focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPw((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    aria-label="Toggle password"
-                  >
-                    {showPw ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
-                  </button>
-                </div>
+              </div>
 
-                {mode === "signin" && !forgotPw && (
-                  <button
-                    type="button"
-                    onClick={() => { setForgotPw(true); setResetSent(false); }}
-                    className="text-sm text-muted-foreground hover:text-foreground hover:underline"
-                  >
-                    Forgot password?
-                  </button>
-                )}
-
-                {mode === "signup" && (
-                  <div id="signup-captcha" ref={captchaRef} className="flex justify-center" />
-                )}
-
-                {mode === "signup" && password && (
-                  <div className="space-y-1">
-                    <div className="flex gap-1">
-                      {[0, 1, 2, 3].map((i) => (
-                        <div
-                          key={i}
-                          className={`h-1 flex-1 rounded ${i < s ? colors[s - 1] : "bg-border"}`}
-                        />
-                      ))}
-                    </div>
-                    <p className="text-xs text-muted-foreground">{labels[Math.max(0, s - 1)]}</p>
-                  </div>
-                )}
-
+              {mode === "signin" && !forgotPw && (
                 <button
-                  disabled={busy}
-                  className="w-full rounded bg-primary py-3 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                  type="button"
+                  onClick={() => {
+                    setForgotPw(true);
+                    setResetSent(false);
+                  }}
+                  className="text-sm text-muted-foreground hover:text-foreground hover:underline"
                 >
-                  {busy ? "Please wait…" : mode === "signin" ? "Sign In" : "Create Account"}
+                  Forgot password?
                 </button>
-              </form>
-            )}
+              )}
+
+              <div id="auth-captcha" ref={captchaRef} className="flex justify-center" />
+
+              {mode === "signup" && password && (
+                <div className="space-y-1">
+                  <div className="flex gap-1">
+                    {[0, 1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        className={`h-1 flex-1 rounded ${i < s ? colors[s - 1] : "bg-border"}`}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{labels[Math.max(0, s - 1)]}</p>
+                </div>
+              )}
+
+              <button
+                disabled={busy || !captchaVerified}
+                className="w-full rounded bg-primary py-3 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+              >
+                {busy ? "Please wait…" : mode === "signin" ? "Sign In" : "Create Account"}
+              </button>
+            </form>
+          )}
 
           {popupBlocked && (
             <div className="mt-4 rounded border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
-              Popup was blocked. Please{" "}
-              <strong>allow popups for this site</strong> and try again, or
-              sign in with email and password.
+              Popup was blocked. Please <strong>allow popups for this site</strong> and try again,
+              or sign in with email and password.
             </div>
           )}
 
-          {!forgotPw && (<>
-            <div className="mt-6 flex items-center gap-3 text-sm text-muted-foreground">
-              <div className="h-px flex-1 bg-border" /> OR <div className="h-px flex-1 bg-border" />
-            </div>
-            <button
-              onClick={onGoogle}
-              disabled={busy}
-              className="mt-4 w-full rounded bg-foreground/10 py-3 font-semibold text-foreground hover:bg-foreground/20 disabled:opacity-60"
-            >
-              Continue with Google
-            </button>
-
-            <p className="mt-8 text-muted-foreground">
-              {mode === "signin" ? "New to StreamFlix?" : "Already have an account?"}{" "}
+          {!forgotPw && (
+            <>
+              <div className="mt-6 flex items-center gap-3 text-sm text-muted-foreground">
+                <div className="h-px flex-1 bg-border" /> OR{" "}
+                <div className="h-px flex-1 bg-border" />
+              </div>
               <button
-                type="button"
-                onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-                className="text-foreground hover:underline"
+                onClick={onGoogle}
+                disabled={busy}
+                className="mt-4 w-full rounded bg-foreground/10 py-3 font-semibold text-foreground hover:bg-foreground/20 disabled:opacity-60"
               >
-                {mode === "signin" ? "Sign up now." : "Sign in."}
+                Continue with Google
               </button>
-            </p>
-          </>)}
-          
+
+              <p className="mt-8 text-muted-foreground">
+                {mode === "signin" ? "New to StreamFlix?" : "Already have an account?"}{" "}
+                <button
+                  type="button"
+                  onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+                  className="text-foreground hover:underline"
+                >
+                  {mode === "signin" ? "Sign up now." : "Sign in."}
+                </button>
+              </p>
+            </>
+          )}
         </div>
       </div>
     </main>

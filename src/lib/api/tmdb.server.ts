@@ -72,7 +72,7 @@ export function toTv(m: any): Movie {
   );
   const castRoles = castRaw.map((c: any) => c.character || "");
   const castIds = castRaw.map((c: any) => String(c.id));
-  const tvDir = (m.created_by?.[0]) || (credits?.crew || []).find((c: any) => c.job === "Director");
+  const tvDir = m.created_by?.[0] || (credits?.crew || []).find((c: any) => c.job === "Director");
   const creator = tvDir?.name || "Unknown";
   const directorId = tvDir ? String(tvDir.id) : "";
   const trailer = (m.videos?.results || []).find(
@@ -85,7 +85,11 @@ export function toTv(m: any): Movie {
     description: m.overview || "No description available.",
     year: m.first_air_date ? new Date(m.first_air_date).getFullYear() : new Date().getFullYear(),
     rating: "TV-MA",
-    runtime: epRuntime ? `${epRuntime}m / ep` : (m.number_of_seasons ? `${m.number_of_seasons} season${m.number_of_seasons > 1 ? "s" : ""}` : "Series"),
+    runtime: epRuntime
+      ? `${epRuntime}m / ep`
+      : m.number_of_seasons
+        ? `${m.number_of_seasons} season${m.number_of_seasons > 1 ? "s" : ""}`
+        : "Series",
     genres: (m.genres || []).map((g: any) => g.name),
     genreIds: m.genre_ids || (m.genres || []).map((g: any) => g.id),
     poster: m.poster_path ? `${IMG_BASE}w500${m.poster_path}` : "",

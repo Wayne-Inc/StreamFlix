@@ -221,13 +221,15 @@ const availableEmbedServers: EmbedServer[] = [
   },
 ];
 
-const embedHostnames = new Set(availableEmbedServers.map((server) => {
-  try {
-    return new URL(server.urls.movie).hostname;
-  } catch {
-    return server.urls.movie;
-  }
-}));
+const embedHostnames = new Set(
+  availableEmbedServers.map((server) => {
+    try {
+      return new URL(server.urls.movie).hostname;
+    } catch {
+      return server.urls.movie;
+    }
+  }),
+);
 
 function buildEmbedUrl(
   serverId: string,
@@ -235,7 +237,8 @@ function buildEmbedUrl(
   season: number | undefined,
   episode: number | undefined,
 ) {
-  const server = availableEmbedServers.find((item) => item.id === serverId) ?? availableEmbedServers[0];
+  const server =
+    availableEmbedServers.find((item) => item.id === serverId) ?? availableEmbedServers[0];
   const isTv = movieId.startsWith("tv-");
   const tmdbId = isTv ? movieId.slice(3) : movieId;
   const template = isTv ? server.urls.tv : server.urls.movie;
@@ -269,7 +272,11 @@ type EmbedPlaybackResponse = {
   isPlaying?: boolean;
 };
 
-function sendEmbedPlaybackCommand(iframe: HTMLIFrameElement | null, command: EmbedPlaybackCommand, time?: number) {
+function sendEmbedPlaybackCommand(
+  iframe: HTMLIFrameElement | null,
+  command: EmbedPlaybackCommand,
+  time?: number,
+) {
   if (!iframe?.contentWindow) return;
   const message: EmbedPlaybackMessage = {
     type: "STREAMFLIX_EMBED_PLAYBACK",
@@ -289,7 +296,9 @@ function PlayerPage() {
     return (
       <div className="grid min-h-dvh place-items-center gap-4 bg-black text-white">
         <p className="text-red-400">Movie not available</p>
-        <Link to="/" className="text-sm text-white/60 hover:text-white underline">Go home</Link>
+        <Link to="/" className="text-sm text-white/60 hover:text-white underline">
+          Go home
+        </Link>
       </div>
     );
   }
@@ -298,7 +307,9 @@ function PlayerPage() {
   const mainVideoUrlRef = useRef<string>("");
   const [mainVideoUrl, setMainVideoUrl] = useState("");
   const [selectedServerId, setSelectedServerId] = useState<string>("vsembed");
-  const selectedServer = availableEmbedServers.find((server) => server.id === selectedServerId) ?? availableEmbedServers[0];
+  const selectedServer =
+    availableEmbedServers.find((server) => server.id === selectedServerId) ??
+    availableEmbedServers[0];
   const [partyRoomSource, setPartyRoomSource] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [mainSourceReady, setMainSourceReady] = useState(false);
@@ -334,7 +345,9 @@ function PlayerPage() {
   const [buffering, setBuffering] = useState(false);
   const [showRotateHint, setShowRotateHint] = useState(false);
   const [isPortrait, setIsPortrait] = useState(
-    typeof window !== "undefined" && window.innerWidth < 768 && window.innerHeight > window.innerWidth
+    typeof window !== "undefined" &&
+      window.innerWidth < 768 &&
+      window.innerHeight > window.innerWidth,
   );
   const [activeSubtitle, setActiveSubtitle] = useState<string | null>(null);
   const [captionsEnabled, setCaptionsEnabled] = useState(true);
@@ -342,7 +355,9 @@ function PlayerPage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
 
   const goBack = useCallback(() => {
-    try { screen.orientation?.unlock(); } catch {}
+    try {
+      screen.orientation?.unlock();
+    } catch {}
     navigate({ to: "/movie/$id", params: { id: movie.id } });
   }, [navigate, movie.id]);
 
@@ -352,11 +367,14 @@ function PlayerPage() {
     hideTimer.current = window.setTimeout(() => setShowControls(false), 3000);
   }, []);
 
-  const handleWakeTap = useCallback((event: MouseEvent<HTMLButtonElement> | TouchEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    wake();
-  }, [wake]);
+  const handleWakeTap = useCallback(
+    (event: MouseEvent<HTMLButtonElement> | TouchEvent<HTMLButtonElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      wake();
+    },
+    [wake],
+  );
 
   useEffect(() => {
     wake();
@@ -385,33 +403,35 @@ function PlayerPage() {
     }
   }, []);
 
-
   const lastTapRef = useRef(0);
   const lastTapXRef = useRef(0);
 
-  const onContainerTouch = useCallback((e: React.TouchEvent) => {
-    if (!containerRef.current || !videoRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = e.touches[0].clientX - rect.left;
-    const now = Date.now();
-    const timeSince = now - lastTapRef.current;
-    const distSince = Math.abs(x - lastTapXRef.current);
+  const onContainerTouch = useCallback(
+    (e: React.TouchEvent) => {
+      if (!containerRef.current || !videoRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const x = e.touches[0].clientX - rect.left;
+      const now = Date.now();
+      const timeSince = now - lastTapRef.current;
+      const distSince = Math.abs(x - lastTapXRef.current);
 
-    if (timeSince < 300 && distSince < 40) {
-      e.preventDefault();
-      if (x < rect.width / 2) {
-        videoRef.current.currentTime -= 10;
+      if (timeSince < 300 && distSince < 40) {
+        e.preventDefault();
+        if (x < rect.width / 2) {
+          videoRef.current.currentTime -= 10;
+        } else {
+          videoRef.current.currentTime += 10;
+        }
+        lastTapRef.current = 0;
       } else {
-        videoRef.current.currentTime += 10;
+        setShowControls((v) => !v);
+        lastTapRef.current = now;
+        lastTapXRef.current = x;
       }
-      lastTapRef.current = 0;
-    } else {
-      setShowControls((v) => !v);
-      lastTapRef.current = now;
-      lastTapXRef.current = x;
-    }
-    wake();
-  }, [wake]);
+      wake();
+    },
+    [wake],
+  );
 
   const seek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const v = videoRef.current;
@@ -500,46 +520,53 @@ function PlayerPage() {
     };
   }, [movie.id]);
 
-  const handleWatchPartyRoomUpdate = useCallback((roomState: any) => {
-    const video = videoRef.current;
-    const iframe = iframeRef.current;
-    const isEmbed = isEmbedUrl(videoUrl) && iframe;
+  const handleWatchPartyRoomUpdate = useCallback(
+    (roomState: any) => {
+      const video = videoRef.current;
+      const iframe = iframeRef.current;
+      const isEmbed = isEmbedUrl(videoUrl) && iframe;
 
-    if (roomState.video_url) {
-      setVideoUrl(roomState.video_url);
-      setMainVideoUrl(roomState.video_url);
-      mainVideoUrlRef.current = roomState.video_url;
-    }
+      if (roomState.video_url) {
+        setVideoUrl(roomState.video_url);
+        setMainVideoUrl(roomState.video_url);
+        mainVideoUrlRef.current = roomState.video_url;
+      }
 
-    if (isEmbed && embedSyncSupported) {
+      if (isEmbed && embedSyncSupported) {
+        if (typeof roomState.position_seconds === "number") {
+          const seekTime = compensatePartyTime(
+            roomState.position_seconds,
+            roomState.is_playing,
+            roomState.updated_at,
+          );
+          sendEmbedPlaybackCommand(iframe, "seek", seekTime);
+        }
+        if (typeof roomState.is_playing === "boolean") {
+          sendEmbedPlaybackCommand(iframe, roomState.is_playing ? "play" : "pause");
+        }
+        return;
+      }
+
+      if (!video) return;
+
       if (typeof roomState.position_seconds === "number") {
-        const seekTime = compensatePartyTime(roomState.position_seconds, roomState.is_playing, roomState.updated_at);
-        sendEmbedPlaybackCommand(iframe, "seek", seekTime);
+        const targetTime = roomState.position_seconds;
+        if (Math.abs(video.currentTime - targetTime) > 1) {
+          video.currentTime = targetTime;
+        }
       }
+
       if (typeof roomState.is_playing === "boolean") {
-        sendEmbedPlaybackCommand(iframe, roomState.is_playing ? "play" : "pause");
+        if (roomState.is_playing && video.paused) {
+          video.play().catch(() => {});
+        }
+        if (!roomState.is_playing && !video.paused) {
+          video.pause();
+        }
       }
-      return;
-    }
-
-    if (!video) return;
-
-    if (typeof roomState.position_seconds === "number") {
-      const targetTime = roomState.position_seconds;
-      if (Math.abs(video.currentTime - targetTime) > 1) {
-        video.currentTime = targetTime;
-      }
-    }
-
-    if (typeof roomState.is_playing === "boolean") {
-      if (roomState.is_playing && video.paused) {
-        video.play().catch(() => {});
-      }
-      if (!roomState.is_playing && !video.paused) {
-        video.pause();
-      }
-    }
-  }, [videoUrl, embedSyncSupported]);
+    },
+    [videoUrl, embedSyncSupported],
+  );
 
   useEffect(() => {
     const url = buildEmbedUrl(selectedServerId, movie.id, season, episode);
@@ -570,7 +597,9 @@ function PlayerPage() {
         if (elapsed >= 5 || data.currentTime === 0) {
           lastEmbedProgressRef.current = data.currentTime;
           recordProgress(movie, data.currentTime, data.duration, season, episode);
-          saveProgressToFirestore(movie, data.currentTime, data.duration, season, episode).catch(() => {});
+          saveProgressToFirestore(movie, data.currentTime, data.duration, season, episode).catch(
+            () => {},
+          );
         }
       }
     };
@@ -665,7 +694,13 @@ function PlayerPage() {
             className="size-full object-contain"
           >
             {subtitles.map((sub) => (
-              <track key={sub.lang} kind="subtitles" src={sub.url} srcLang={sub.lang} label={sub.label} />
+              <track
+                key={sub.lang}
+                kind="subtitles"
+                src={sub.url}
+                srcLang={sub.lang}
+                label={sub.label}
+              />
             ))}
           </video>
         )
@@ -737,7 +772,9 @@ function PlayerPage() {
                         </button>
                       ))}
                     </div>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/50">Selected</p>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/50">
+                      Selected
+                    </p>
                     <div className="mb-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/80">
                       {selectedServer.name}
                     </div>
@@ -748,7 +785,10 @@ function PlayerPage() {
                             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/50">
                               Captions
                             </p>
-                            <p className="text-[11px] text-white/50">Toggle captions on or off without changing the selected subtitle language.</p>
+                            <p className="text-[11px] text-white/50">
+                              Toggle captions on or off without changing the selected subtitle
+                              language.
+                            </p>
                           </div>
                           <button
                             onClick={toggleCaptions}
@@ -858,7 +898,9 @@ export const Route = createFileRoute("/_authenticated/watch/$id")({
   validateSearch: watchSearchSchema,
   loader: async ({ params }) => {
     let movie: any = null;
-    try { movie = await movieById(params.id); } catch {}
+    try {
+      movie = await movieById(params.id);
+    } catch {}
     return { movie };
   },
   head: ({ loaderData }) => ({
@@ -869,9 +911,11 @@ export const Route = createFileRoute("/_authenticated/watch/$id")({
     <div className="grid min-h-dvh place-items-center gap-4 bg-black p-8 text-white">
       <p className="text-red-400">Error: {(error as Error).message}</p>
       <p className="whitespace-pre font-mono text-xs text-white/40">
-        {(error as Error).stack?.split('\n').slice(0, 3).join('\n')}
+        {(error as Error).stack?.split("\n").slice(0, 3).join("\n")}
       </p>
-      <Link to="/" className="text-sm text-white/60 hover:text-white underline">Go home</Link>
+      <Link to="/" className="text-sm text-white/60 hover:text-white underline">
+        Go home
+      </Link>
     </div>
   ),
 });

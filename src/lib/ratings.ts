@@ -1,5 +1,14 @@
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc, setDoc, serverTimestamp, collection, getDocs, query, where } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp,
+  collection,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
 
 function docId(userId: string, movieId: string) {
   return `${userId}_${movieId}`;
@@ -24,7 +33,9 @@ export async function getUserRating(movieId: string): Promise<number | null> {
   return snap.data().rating as number;
 }
 
-export async function getMovieRatings(movieId: string): Promise<{ average: number; count: number }> {
+export async function getMovieRatings(
+  movieId: string,
+): Promise<{ average: number; count: number }> {
   const q = query(collection(db, "ratings"), where("movieId", "==", movieId));
   const snap = await getDocs(q);
   const ratings = snap.docs.map((d) => d.data().rating as number);

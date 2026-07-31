@@ -13,7 +13,10 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
   if (slides.length === 0) return null;
   const s = slides[i];
   if (!s) return null;
-  const description = s.description && s.description.length > 220 ? `${s.description.slice(0, 217).trimEnd()}...` : s.description;
+  const description =
+    s.description && s.description.length > 220
+      ? `${s.description.slice(0, 217).trimEnd()}...`
+      : s.description;
 
   return (
     <section className="relative min-h-[45vh] h-[55vh] w-full overflow-hidden sm:min-h-[420px] sm:h-[75vh] lg:min-h-[560px] lg:h-[88vh]">
@@ -31,7 +34,10 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
       <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background to-transparent" />
 
       <div className="relative z-10 flex h-full items-end justify-center px-4 pb-8 pt-10 text-center md:items-end md:justify-start">
-        <div key={s.id} className="animate-fade-in w-full max-w-none space-y-3 text-center md:max-w-3xl md:text-left">
+        <div
+          key={s.id}
+          className="animate-fade-in w-full max-w-none space-y-3 text-center md:max-w-3xl md:text-left"
+        >
           <div className="hidden sm:inline-flex items-center gap-2 rounded-full border border-primary/30 bg-background/40 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary">
             <span className="inline-block h-px w-6 bg-primary" />
             StreamFlix Original
@@ -42,7 +48,9 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
           <div className="mx-auto flex max-w-full flex-wrap items-center justify-center gap-2 text-xs sm:text-sm md:justify-start md:text-sm">
             <span className="font-semibold text-emerald-400">{s.match}% Match</span>
             <span className="text-muted-foreground">{s.year}</span>
-            <span className="rounded border border-border px-2 text-muted-foreground">{s.rating}</span>
+            <span className="rounded border border-border px-2 text-muted-foreground">
+              {s.rating}
+            </span>
             <span className="text-muted-foreground">{s.runtime}</span>
             <span className="text-muted-foreground">{s.genres.join(" · ")}</span>
           </div>

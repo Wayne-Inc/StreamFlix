@@ -28,7 +28,8 @@ function ContactPage() {
           <p className="text-sm uppercase tracking-[0.25em] text-muted-foreground">Contact</p>
           <h1 className="text-2xl sm:text-4xl font-black">Get in Touch</h1>
           <p className="text-base leading-relaxed text-muted-foreground">
-            Have a question, concern, or feedback? We'd love to hear from you. Reach out using the information below and we'll get back to you as soon as possible.
+            Have a question, concern, or feedback? We'd love to hear from you. Reach out using the
+            information below and we'll get back to you as soon as possible.
           </p>
         </div>
 
@@ -37,30 +38,39 @@ function ContactPage() {
           <div className="rounded-xl border border-border bg-background p-4 text-sm leading-relaxed text-muted-foreground space-y-2">
             <p>
               <strong>Email:</strong>{" "}
-              <a href="mailto:support@streamflix.app" className="text-primary hover:underline">support@streamflix.app</a>
+              <a href="mailto:support@streamflix.app" className="text-primary hover:underline">
+                support@streamflix.app
+              </a>
             </p>
-                        
           </div>
         </section>
 
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold">Support Hours</h2>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            Our support team aims to respond to all inquiries within 24–48 hours during regular business days. For urgent matters, please include "URGENT" in your email subject line.
+            Our support team aims to respond to all inquiries within 24–48 hours during regular
+            business days. For urgent matters, please include "URGENT" in your email subject line.
           </p>
         </section>
 
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold">Project Creator</h2>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            This project was created by <strong>Samwel Wayne</strong>. For legal or business inquiries, please refer to our <Link to="/privacy-policy" className="text-primary hover:underline">Privacy Policy</Link>.
+            This project was created by <strong>Samwel Wayne</strong>. For legal or business
+            inquiries, please refer to our{" "}
+            <Link to="/privacy-policy" className="text-primary hover:underline">
+              Privacy Policy
+            </Link>
+            .
           </p>
         </section>
 
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold">Report an Issue</h2>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            If you encounter a technical issue, bug, or security concern, please email us with as much detail as possible, including steps to reproduce the issue and your browser/device information.
+            If you encounter a technical issue, bug, or security concern, please email us with as
+            much detail as possible, including steps to reproduce the issue and your browser/device
+            information.
           </p>
         </section>
       </div>

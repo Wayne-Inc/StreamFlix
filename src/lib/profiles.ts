@@ -36,10 +36,7 @@ const profileColors = [
 ];
 
 export async function getUserProfiles(userId: string): Promise<Profile[]> {
-  const q = query(
-    collection(db, "users", userId, "profiles"),
-    orderBy("createdAt", "asc")
-  );
+  const q = query(collection(db, "users", userId, "profiles"), orderBy("createdAt", "asc"));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({
     id: d.id,
@@ -51,13 +48,13 @@ export async function getUserProfiles(userId: string): Promise<Profile[]> {
 
 function removeUndefinedFields<T extends Record<string, unknown>>(data: T): Partial<T> {
   return Object.fromEntries(
-    Object.entries(data).filter(([, value]) => value !== undefined)
+    Object.entries(data).filter(([, value]) => value !== undefined),
   ) as Partial<T>;
 }
 
 export async function createProfile(
   userId: string,
-  data: Omit<Profile, "id" | "userId" | "color" | "createdAt" | "updatedAt">
+  data: Omit<Profile, "id" | "userId" | "color" | "createdAt" | "updatedAt">,
 ): Promise<Profile> {
   const profiles = await getUserProfiles(userId);
   const color = profileColors[profiles.length % profileColors.length];
@@ -84,7 +81,7 @@ export async function createProfile(
 export async function updateProfile(
   userId: string,
   profileId: string,
-  data: Partial<Omit<Profile, "id" | "userId" | "createdAt">>
+  data: Partial<Omit<Profile, "id" | "userId" | "createdAt">>,
 ): Promise<void> {
   const payload = {
     ...removeUndefinedFields(data),
@@ -97,7 +94,10 @@ export async function deleteProfile(userId: string, profileId: string): Promise<
   await deleteDoc(doc(db, "users", userId, "profiles", profileId));
 }
 
-export async function ensureUserHasProfile(userId: string, displayName: string): Promise<Profile[]> {
+export async function ensureUserHasProfile(
+  userId: string,
+  displayName: string,
+): Promise<Profile[]> {
   const profiles = await getUserProfiles(userId);
   if (profiles.length === 0) {
     await createProfile(userId, {
@@ -117,7 +117,11 @@ export async function setProfilePin(userId: string, profileId: string, pin: stri
   });
 }
 
-export async function verifyProfilePin(userId: string, profileId: string, pin: string): Promise<boolean> {
+export async function verifyProfilePin(
+  userId: string,
+  profileId: string,
+  pin: string,
+): Promise<boolean> {
   const snap = await getDoc(doc(db, "users", userId, "profiles", profileId));
   if (!snap.exists()) return false;
   const data = snap.data();

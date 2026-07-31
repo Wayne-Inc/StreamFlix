@@ -42,7 +42,13 @@ export const fetchTraktPopular = createServerFn({ method: "POST" }).handler(asyn
 export const fetchTraktSummary = createServerFn({ method: "POST" })
   .validator(z.object({ id: z.string() }))
   .handler(async ({ data }): Promise<TraktSummary> => {
-    const empty: TraktSummary = { rating: null, votes: null, watchers: null, plays: null, url: null };
+    const empty: TraktSummary = {
+      rating: null,
+      votes: null,
+      watchers: null,
+      plays: null,
+      url: null,
+    };
     try {
       const { traktFetch } = await import("./trakt.server");
       const isTv = data.id.startsWith("tv-");
@@ -123,9 +129,10 @@ export const getTraktClientId = createServerFn({ method: "GET" }).handler(async 
 });
 
 function traktError(prefix: string, res: Response): never {
-  const msg = res.status === 403
-    ? `${prefix}: 403 — Trakt token expired. Disconnect and reconnect in Settings.`
-    : `${prefix}: ${res.status}`;
+  const msg =
+    res.status === 403
+      ? `${prefix}: 403 — Trakt token expired. Disconnect and reconnect in Settings.`
+      : `${prefix}: ${res.status}`;
   throw new Error(msg);
 }
 
@@ -183,7 +190,9 @@ export const rateMovie = createServerFn({ method: "POST" })
         "trakt-api-key": traktClientId,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ movies: [{ ids: { tmdb: Number(data.tmdbId) }, rating: data.rating }] }),
+      body: JSON.stringify({
+        movies: [{ ids: { tmdb: Number(data.tmdbId) }, rating: data.rating }],
+      }),
     });
     if (!res.ok) traktError("Rate failed", res);
     return { rated: true };

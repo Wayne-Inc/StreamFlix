@@ -1,6 +1,17 @@
 import { Link, useRouter, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Search, ChevronDown, LogOut, User, Settings, Menu, X, ArrowRight, Users, Clock } from "lucide-react";
+import {
+  Search,
+  ChevronDown,
+  LogOut,
+  User,
+  Settings,
+  Menu,
+  X,
+  ArrowRight,
+  Users,
+  Clock,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Logo } from "./Logo";
 import { auth, db } from "@/lib/firebase";
@@ -19,8 +30,16 @@ export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const u = auth.currentUser;
-  const [selectedProfile, setSelectedProfile] = useState<{ id: string; name: string; color: string; avatarUrl?: string } | null>(null);
-  const [userData, setUserData] = useState<{ email: string | null; photoURL: string | null }>({ email: u?.email ?? null, photoURL: u?.photoURL ?? null });
+  const [selectedProfile, setSelectedProfile] = useState<{
+    id: string;
+    name: string;
+    color: string;
+    avatarUrl?: string;
+  } | null>(null);
+  const [userData, setUserData] = useState<{ email: string | null; photoURL: string | null }>({
+    email: u?.email ?? null,
+    photoURL: u?.photoURL ?? null,
+  });
   const [joinOpen, setJoinOpen] = useState(false);
   const [joinCode, setJoinCode] = useState("");
   const [joinBusy, setJoinBusy] = useState(false);
@@ -81,14 +100,24 @@ export function Navbar() {
 
   const profileAvatar = selectedProfile ? (
     selectedProfile.avatarUrl ? (
-      <img src={selectedProfile.avatarUrl} alt="" className="size-9 sm:size-8 shrink-0 aspect-square rounded-lg object-cover" />
+      <img
+        src={selectedProfile.avatarUrl}
+        alt=""
+        className="size-9 sm:size-8 shrink-0 aspect-square rounded-lg object-cover"
+      />
     ) : (
-      <div className={`grid size-9 sm:size-8 place-items-center rounded-lg bg-gradient-to-br ${selectedProfile.color} text-xs font-bold text-white`}>
+      <div
+        className={`grid size-9 sm:size-8 place-items-center rounded-lg bg-gradient-to-br ${selectedProfile.color} text-xs font-bold text-white`}
+      >
         {selectedProfile.name[0]?.toUpperCase()}
       </div>
     )
   ) : userData.photoURL ? (
-    <img src={userData.photoURL} alt="" className="size-9 sm:size-8 shrink-0 aspect-square rounded-lg object-cover" />
+    <img
+      src={userData.photoURL}
+      alt=""
+      className="size-9 sm:size-8 shrink-0 aspect-square rounded-lg object-cover"
+    />
   ) : (
     <div className="grid size-9 sm:size-8 place-items-center rounded-lg bg-gradient-to-br from-rose-500 to-red-700 text-xs font-bold text-white">
       {(userData.email || "?")[0]?.toUpperCase()}
@@ -98,7 +127,9 @@ export function Navbar() {
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
-        scrolled ? "bg-background/95 backdrop-blur" : "bg-gradient-to-b from-black/80 to-transparent"
+        scrolled
+          ? "bg-background/95 backdrop-blur"
+          : "bg-gradient-to-b from-black/80 to-transparent"
       }`}
     >
       <div className="mx-auto flex h-16 items-center gap-6 px-4 sm:px-8">
@@ -141,7 +172,9 @@ export function Navbar() {
                 className="fixed sm:absolute right-4 left-4 sm:left-auto sm:right-0 top-16 sm:top-12 z-50 sm:w-80 rounded-lg border border-border bg-card/95 p-4 shadow-xl backdrop-blur"
                 onMouseLeave={() => setJoinOpen(false)}
               >
-                <p className="mb-2 text-xs font-medium text-muted-foreground">Enter Watch Party code</p>
+                <p className="mb-2 text-xs font-medium text-muted-foreground">
+                  Enter Watch Party code
+                </p>
                 <form
                   onSubmit={async (e) => {
                     e.preventDefault();
@@ -149,14 +182,28 @@ export function Navbar() {
                     if (!code || joinBusy) return;
                     setJoinBusy(true);
                     try {
-                      const q = query(collection(db, "watch_party_rooms"), where("code", "==", code), limit(1));
+                      const q = query(
+                        collection(db, "watch_party_rooms"),
+                        where("code", "==", code),
+                        limit(1),
+                      );
                       const snap = await getDocs(q);
-                      if (snap.empty) { toast.error("Room not found"); setJoinBusy(false); return; }
+                      if (snap.empty) {
+                        toast.error("Room not found");
+                        setJoinBusy(false);
+                        return;
+                      }
                       const room = snap.docs[0].data();
                       setJoinOpen(false);
                       setJoinCode("");
-                      router.navigate({ to: "/watch/$id", params: { id: room.movie_id }, search: { party: code } });
-                    } catch { toast.error("Failed to join"); }
+                      router.navigate({
+                        to: "/watch/$id",
+                        params: { id: room.movie_id },
+                        search: { party: code },
+                      });
+                    } catch {
+                      toast.error("Failed to join");
+                    }
                     setJoinBusy(false);
                   }}
                   className="flex gap-2"
@@ -179,7 +226,11 @@ export function Navbar() {
               </div>
             )}
           </div>
-          <Link to="/search" className="text-muted-foreground hover:text-foreground" aria-label="Search">
+          <Link
+            to="/search"
+            className="text-muted-foreground hover:text-foreground"
+            aria-label="Search"
+          >
             <Search className="size-5" />
           </Link>
           <div className="relative pr-1 sm:pr-0">
@@ -189,7 +240,9 @@ export function Navbar() {
               aria-label="Account menu"
             >
               {profileAvatar}
-              <ChevronDown className={`size-4 text-muted-foreground transition-transform ${menuOpen ? "rotate-180" : ""}`} />
+              <ChevronDown
+                className={`size-4 text-muted-foreground transition-transform ${menuOpen ? "rotate-180" : ""}`}
+              />
             </button>
             {menuOpen && (
               <div
@@ -201,15 +254,26 @@ export function Navbar() {
                     {selectedProfile.name}
                   </div>
                 ) : userData.email ? (
-                  <div className="border-b border-border px-4 py-2 text-xs text-muted-foreground truncate">{userData.email}</div>
+                  <div className="border-b border-border px-4 py-2 text-xs text-muted-foreground truncate">
+                    {userData.email}
+                  </div>
                 ) : null}
-                <Link to="/profiles" className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-accent">
+                <Link
+                  to="/profiles"
+                  className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-accent"
+                >
                   <ArrowRight className="size-4" /> Switch Profile
                 </Link>
-                <Link to="/settings" className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-accent">
+                <Link
+                  to="/settings"
+                  className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-accent"
+                >
                   <Settings className="size-4" /> Account & Devices
                 </Link>
-                <Link to="/history" className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-accent">
+                <Link
+                  to="/history"
+                  className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-accent"
+                >
                   <Clock className="size-4" /> Watch History
                 </Link>
                 <button
@@ -234,7 +298,9 @@ export function Navbar() {
                 search={{ kind: l.kind }}
                 onClick={() => setMobileNavOpen(false)}
                 className={`block text-sm transition-colors ${
-                  active ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
+                  active
+                    ? "text-foreground font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {l.label}
