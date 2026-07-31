@@ -86,8 +86,17 @@ export const searchMovies = createServerFn({ method: "POST" })
   .validator(z.object({ query: z.string().min(1) }))
   .handler(async ({ data }) => {
     const { tmdbFetch, toMovie, toTv } = await import("./tmdb.server");
-    const res = await tmdbFetch("/search/multi", { query: data.query });
-    return (res.results || [])
+    const [res1, res2, res3] = await Promise.all([
+      tmdbFetch("/search/multi", { query: data.query, page: "1" }),
+      tmdbFetch("/search/multi", { query: data.query, page: "2" }),
+      tmdbFetch("/search/multi", { query: data.query, page: "3" }),
+    ]);
+    const combined = [
+      ...(res1.results || []),
+      ...(res2.results || []),
+      ...(res3.results || []),
+    ];
+    return combined
       .filter((m: any) => m.media_type === "movie" || m.media_type === "tv")
       .map((m: any) => (m.media_type === "tv" ? toTv(m) : toMovie(m)));
   });
@@ -96,11 +105,29 @@ export const discoverByGenre = createServerFn({ method: "POST" })
   .validator(z.object({ genreId: z.string() }))
   .handler(async ({ data }) => {
     const { tmdbFetch, toMovie } = await import("./tmdb.server");
-    const res = await tmdbFetch("/discover/movie", {
-      with_genres: data.genreId,
-      sort_by: "popularity.desc",
-    });
-    return (res.results || []).map((m: any) => toMovie(m));
+    const [res1, res2, res3] = await Promise.all([
+      tmdbFetch("/discover/movie", {
+        with_genres: data.genreId,
+        sort_by: "popularity.desc",
+        page: "1",
+      }),
+      tmdbFetch("/discover/movie", {
+        with_genres: data.genreId,
+        sort_by: "popularity.desc",
+        page: "2",
+      }),
+      tmdbFetch("/discover/movie", {
+        with_genres: data.genreId,
+        sort_by: "popularity.desc",
+        page: "3",
+      }),
+    ]);
+    const combined = [
+      ...(res1.results || []),
+      ...(res2.results || []),
+      ...(res3.results || []),
+    ];
+    return combined.map((m: any) => toMovie(m));
   });
 
 export const fetchMoviesByIds = createServerFn({ method: "POST" })

@@ -4,6 +4,7 @@ import { Search as SearchIcon, X, User, Film, ChevronLeft, ChevronRight } from "
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { MovieCard } from "@/components/streamflix/MovieCard";
+import { Skeleton } from "@/components/ui/skeleton";
 import { search, searchByGenre, searchByPerson, getGenres } from "@/lib/streamflix-data";
 import type { Movie } from "@/lib/types";
 import { isKidsProfile, filterKidsContent, filterKidsGenres } from "@/lib/kids-mode";
@@ -187,11 +188,21 @@ function SearchPage() {
                   </button>
                 ))}
               </div>
-              {genreResults.length > 0 && (
+              {loading && (
+                <div className="mt-10">
+                  <Skeleton className="h-4 w-32 rounded mb-4" />
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    {Array.from({ length: 12 }).map((_, i) => (
+                      <Skeleton key={i} className="w-[160px] sm:w-[200px] aspect-[2/3] rounded-md" />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {!loading && genreResults.length > 0 && (
                 <div className="mt-10">
                   <p className="text-sm text-muted-foreground">{genreResults.length} results</p>
                   <div className="mt-4 flex flex-wrap gap-3 justify-center">
-                    {genreResults.slice((page - 1) * 15, page * 15).map((m) => (
+                    {genreResults.slice((page - 1) * 24, page * 24).map((m) => (
                       <button
                         key={m.id}
                         onClick={() => navigate({ to: "/movie/$id", params: { id: m.id } })}
@@ -201,7 +212,7 @@ function SearchPage() {
                       </button>
                     ))}
                   </div>
-                  {genreResults.length > 15 && (
+                  {genreResults.length > 24 && (
                     <div className="mt-8 hidden items-center justify-center gap-2 md:flex">
                       <button
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -211,7 +222,7 @@ function SearchPage() {
                         <ChevronLeft className="size-4" /> Previous
                       </button>
                       {Array.from(
-                        { length: Math.ceil(genreResults.length / 15) },
+                        { length: Math.ceil(genreResults.length / 24) },
                         (_, i) => i + 1,
                       ).map((p) => (
                         <button
@@ -224,9 +235,9 @@ function SearchPage() {
                       ))}
                       <button
                         onClick={() =>
-                          setPage((p) => Math.min(Math.ceil(genreResults.length / 15), p + 1))
+                          setPage((p) => Math.min(Math.ceil(genreResults.length / 24), p + 1))
                         }
-                        disabled={page === Math.ceil(genreResults.length / 15)}
+                        disabled={page === Math.ceil(genreResults.length / 24)}
                         className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-default"
                       >
                         Next <ChevronRight className="size-4" />
@@ -262,45 +273,56 @@ function SearchPage() {
                   ? "Searching..."
                   : `${results.length} result${results.length === 1 ? "" : "s"} for "${q}"`}
               </p>
-              <div className="mt-6 flex flex-wrap gap-3 justify-center">
-                {results.slice((page - 1) * 15, page * 15).map((m) => (
-                  <button
-                    key={m.id}
-                    onClick={() => navigate({ to: "/movie/$id", params: { id: m.id } })}
-                    className="text-left"
-                  >
-                    <MovieCard movie={m} />
-                  </button>
-                ))}
-              </div>
-              {results.length > 15 && (
-                <div className="mt-8 hidden items-center justify-center gap-2 md:flex">
-                  <button
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-default"
-                  >
-                    <ChevronLeft className="size-4" /> Previous
-                  </button>
-                  {Array.from({ length: Math.ceil(results.length / 15) }, (_, i) => i + 1).map(
-                    (p) => (
-                      <button
-                        key={p}
-                        onClick={() => setPage(p)}
-                        className={`rounded-md px-3 py-2 text-sm ${p === page ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground hover:text-foreground"}`}
-                      >
-                        {p}
-                      </button>
-                    ),
-                  )}
-                  <button
-                    onClick={() => setPage((p) => Math.min(Math.ceil(results.length / 15), p + 1))}
-                    disabled={page === Math.ceil(results.length / 15)}
-                    className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-default"
-                  >
-                    Next <ChevronRight className="size-4" />
-                  </button>
+              {loading && (
+                <div className="mt-6 flex flex-wrap gap-3 justify-center">
+                  {Array.from({ length: 12 }).map((_, i) => (
+                    <Skeleton key={i} className="w-[160px] sm:w-[200px] aspect-[2/3] rounded-md" />
+                  ))}
                 </div>
+              )}
+              {!loading && (
+                <>
+                  <div className="mt-6 flex flex-wrap gap-3 justify-center">
+                    {results.slice((page - 1) * 24, page * 24).map((m) => (
+                      <button
+                        key={m.id}
+                        onClick={() => navigate({ to: "/movie/$id", params: { id: m.id } })}
+                        className="text-left"
+                      >
+                        <MovieCard movie={m} />
+                      </button>
+                    ))}
+                  </div>
+                  {results.length > 24 && (
+                    <div className="mt-8 hidden items-center justify-center gap-2 md:flex">
+                      <button
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                        className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-default"
+                      >
+                        <ChevronLeft className="size-4" /> Previous
+                      </button>
+                      {Array.from({ length: Math.ceil(results.length / 24) }, (_, i) => i + 1).map(
+                        (p) => (
+                          <button
+                            key={p}
+                            onClick={() => setPage(p)}
+                            className={`rounded-md px-3 py-2 text-sm ${p === page ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground hover:text-foreground"}`}
+                          >
+                            {p}
+                          </button>
+                        ),
+                      )}
+                      <button
+                        onClick={() => setPage((p) => Math.min(Math.ceil(results.length / 24), p + 1))}
+                        disabled={page === Math.ceil(results.length / 24)}
+                        className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-default"
+                      >
+                        Next <ChevronRight className="size-4" />
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
