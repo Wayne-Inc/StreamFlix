@@ -94,7 +94,7 @@ export function Row({
           <button
             onClick={() => scrollBy(-1)}
             aria-label={`Scroll ${title} back`}
-            className="absolute left-1 sm:left-2 top-1/2 z-20 hidden -translate-y-1/2 place-items-center rounded-md bg-background/80 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid size-10 opacity-0 group-hover:opacity-100"
+            className="absolute left-1 sm:left-2 top-1/2 z-40 hidden -translate-y-1/2 place-items-center rounded-md bg-background/80 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid size-10 opacity-0 group-hover:opacity-100"
           >
             <ChevronLeft className="size-5" />
           </button>
@@ -103,7 +103,7 @@ export function Row({
           <button
             onClick={() => scrollBy(1)}
             aria-label={`Scroll ${title} forward`}
-            className="absolute right-1 sm:right-2 top-1/2 z-20 hidden -translate-y-1/2 place-items-center rounded-md bg-background/80 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid size-10 opacity-0 group-hover:opacity-100"
+            className="absolute right-1 sm:right-2 top-1/2 z-40 hidden -translate-y-1/2 place-items-center rounded-md bg-background/80 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid size-10 opacity-0 group-hover:opacity-100"
           >
             <ChevronRight className="size-5" />
           </button>

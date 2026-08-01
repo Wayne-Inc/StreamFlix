@@ -387,18 +387,6 @@ export function Navbar() {
                 </Link>
               );
             })}
-          </div>
-          <p className="px-2 pb-2 pt-5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Account
-          </p>
-          <div className="space-y-1">
-            <Link
-              to="/history"
-              onClick={() => setMobileNavOpen(false)}
-              className="flex items-center gap-3 rounded-md px-2 py-2.5 text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground transition-colors"
-            >
-              <Clock className="size-4" /> History
-            </Link>
             <Link
               to="/calendar"
               onClick={() => setMobileNavOpen(false)}
@@ -406,26 +394,6 @@ export function Navbar() {
             >
               <CalendarDays className="size-4" /> Calendar
             </Link>
-            <Link
-              to="/profiles"
-              onClick={() => setMobileNavOpen(false)}
-              className="flex items-center gap-3 rounded-md px-2 py-2.5 text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground transition-colors"
-            >
-              <Users className="size-4" /> Switch Profile
-            </Link>
-            <Link
-              to="/settings"
-              onClick={() => setMobileNavOpen(false)}
-              className="flex items-center gap-3 rounded-md px-2 py-2.5 text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground transition-colors"
-            >
-              <Settings className="size-4" /> Account & Devices
-            </Link>
-            <button
-              onClick={signOut}
-              className="flex w-full items-center gap-3 rounded-md px-2 py-2.5 text-left text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground transition-colors"
-            >
-              <LogOut className="size-4" /> Sign out
-            </button>
           </div>
         </div>
       )}
