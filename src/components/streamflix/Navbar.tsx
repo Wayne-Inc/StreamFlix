@@ -331,6 +331,7 @@ export function Navbar() {
                   ) : (
                     <Link
                       to="/profiles"
+                      preload={false}
                       className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-accent"
                     >
                       <Users className="size-4 text-muted-foreground" /> Switch Profile

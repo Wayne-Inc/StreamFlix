@@ -1,6 +1,7 @@
 export type BiometricCredential = {
   credentialId: string;
   publicKey: string;
+  algorithm?: number;
 };
 
 const rpName = "StreamFlix";
@@ -55,7 +56,10 @@ export async function registerBiometric(displayName: string): Promise<BiometricC
     challenge,
     rp: { name: rpName, id: getRpId() },
     user: { name: displayName, displayName, id: userId },
-    pubKeyCredParams: [{ type: "public-key", alg: -7 }],
+    pubKeyCredParams: [
+      { type: "public-key", alg: -7 },
+      { type: "public-key", alg: -257 },
+    ],
     timeout: 60000,
     attestation: "none",
     authenticatorSelection: {
@@ -94,10 +98,16 @@ export async function registerBiometric(displayName: string): Promise<BiometricC
   if (!publicKey) {
     throw new Error("This browser can't store the biometric key — use a PIN instead");
   }
+  const getPublicKeyAlgorithm = (response as unknown as {
+    getPublicKeyAlgorithm?: () => number;
+  }).getPublicKeyAlgorithm?.bind(response);
+  const algorithm =
+    typeof getPublicKeyAlgorithm === "function" ? getPublicKeyAlgorithm() : -7;
 
   return {
     credentialId: bufToB64u(credential.rawId),
     publicKey: bufToB64u(publicKey),
+    algorithm,
   };
 }
 
@@ -117,10 +127,13 @@ export async function verifyBiometric(credential: BiometricCredential): Promise<
 
   const response = assertion.response as AuthenticatorAssertionResponse;
   try {
+    const algorithm = credential.algorithm ?? -7;
     const key = await crypto.subtle.importKey(
       "spki",
       b64uToBuf(credential.publicKey),
-      { name: "ECDSA", namedCurve: "P-256" },
+      algorithm === -257
+        ? { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }
+        : { name: "ECDSA", namedCurve: "P-256" },
       false,
       ["verify"],
     );
@@ -131,7 +144,9 @@ export async function verifyBiometric(credential: BiometricCredential): Promise<
     signedData.set(new Uint8Array(response.authenticatorData), 0);
     signedData.set(new Uint8Array(clientDataHash), response.authenticatorData.byteLength);
     return await crypto.subtle.verify(
-      { name: "ECDSA", hash: "SHA-256" },
+      algorithm === -257
+        ? { name: "RSASSA-PKCS1-v1_5" }
+        : { name: "ECDSA", hash: "SHA-256" },
       key,
       response.signature,
       signedData,
