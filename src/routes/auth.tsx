@@ -107,6 +107,10 @@ function AuthPage() {
   }, []);
 
   useEffect(() => {
+    if (mode !== "signin" || forgotPw) {
+      setCaptchaVerified(true);
+      return;
+    }
     setCaptchaVerified(false);
     import("@/lib/captcha").then(({ renderCaptcha }) => {
       setTimeout(() => {
@@ -124,34 +128,21 @@ function AuthPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!checkRateLimit()) return;
-    if (!captchaVerified) {
+    if (mode === "signin" && !captchaVerified) {
       toast.error("Please complete the CAPTCHA before proceeding.");
       return;
     }
     setBusy(true);
     setVerifyMsg("");
     try {
-      const { getCaptchaToken, resetCaptcha } = await import("@/lib/captcha");
-      const token = await getCaptchaToken();
-      if (!token || !captchaVerified) {
-        toast.error("Please complete the CAPTCHA");
-        setBusy(false);
-        return;
-      }
-
-      if (mode === "signup") {
-        const cred = await createUserWithEmailAndPassword(auth, email, password);
-        if (name.trim()) {
-          await updateFirebaseProfile(cred.user, { displayName: name.trim() });
+      if (mode === "signin") {
+        const { getCaptchaToken, resetCaptcha } = await import("@/lib/captcha");
+        const token = await getCaptchaToken();
+        if (!token || !captchaVerified) {
+          toast.error("Please complete the CAPTCHA");
+          setBusy(false);
+          return;
         }
-        await sendEmailVerification(cred.user);
-        resetCaptcha();
-        setCaptchaVerified(false);
-        setVerifyMsg(
-          `Verification email sent to ${email}. Please check your inbox and then sign in.`,
-        );
-        setMode("signin");
-      } else {
         const cred = await signInWithEmailAndPassword(auth, email, password);
         if (!cred.user.emailVerified) {
           await auth.signOut();
@@ -162,6 +153,16 @@ function AuthPage() {
         resetCaptcha();
         toast.success("Signed in.");
         navigate({ to: "/profiles" });
+      } else {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        if (name.trim()) {
+          await updateFirebaseProfile(cred.user, { displayName: name.trim() });
+        }
+        await sendEmailVerification(cred.user);
+        setVerifyMsg(
+          `Verification email sent to ${email}. Please check your inbox and then sign in.`,
+        );
+        setMode("signin");
       }
     } catch (err: any) {
       const msg = err?.code
@@ -189,16 +190,9 @@ function AuthPage() {
   const onForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
-    if (!captchaVerified) {
-      toast.error("Please complete the CAPTCHA before proceeding.");
-      return;
-    }
     setBusy(true);
     try {
-      const { resetCaptcha } = await import("@/lib/captcha");
       await sendPasswordResetEmail(auth, email.trim());
-      resetCaptcha();
-      setCaptchaVerified(false);
       setResetSent(true);
       toast.success("Password reset email sent.");
     } catch (err: any) {
@@ -288,9 +282,8 @@ function AuthPage() {
                   sent.
                 </div>
               )}
-              <div id="auth-captcha" ref={captchaRef} className="flex justify-center" />
               <button
-                disabled={busy || !captchaVerified}
+                disabled={busy}
                 className="w-full rounded bg-primary py-3 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
               >
                 {busy ? "Please wait…" : "Send Reset Link"}
@@ -375,7 +368,9 @@ function AuthPage() {
                 </button>
               )}
 
-              <div id="auth-captcha" ref={captchaRef} className="flex justify-center" />
+              {mode === "signin" && (
+                <div id="auth-captcha" ref={captchaRef} className="flex justify-center" />
+              )}
 
               {mode === "signup" && password && (
                 <div className="space-y-1">
@@ -392,7 +387,7 @@ function AuthPage() {
               )}
 
               <button
-                disabled={busy || !captchaVerified}
+                disabled={busy || (mode === "signin" && !captchaVerified)}
                 className="w-full rounded bg-primary py-3 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
               >
                 {busy ? "Please wait…" : mode === "signin" ? "Sign In" : "Create Account"}

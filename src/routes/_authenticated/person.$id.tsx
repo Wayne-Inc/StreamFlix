@@ -34,8 +34,6 @@ type PersonData = {
   tvShows: Credit[];
 };
 
-const INITIAL_VISIBLE = 4;
-
 function CreditSection({
   title,
   credits,
@@ -46,7 +44,6 @@ function CreditSection({
   countLabel: string;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const visible = expanded ? credits : credits.slice(0, INITIAL_VISIBLE);
 
   if (credits.length === 0) return null;
 
@@ -59,7 +56,7 @@ function CreditSection({
             ({credits.length} {countLabel})
           </span>
         </h2>
-        {credits.length > INITIAL_VISIBLE && (
+        {credits.length > 4 && (
           <button
             onClick={() => setExpanded((v) => !v)}
             className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition"
@@ -69,15 +66,15 @@ function CreditSection({
           </button>
         )}
       </div>
-      <div
-        className={`grid gap-3 ${expanded ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5" : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"}`}
-      >
-        {visible.map((item) => (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+        {(expanded ? credits : credits.slice(0, 5)).map((item, idx) => (
           <Link
             key={`${item.id}-${item.character}`}
             to="/movie/$id"
             params={{ id: item.id }}
-            className="group relative aspect-video overflow-hidden rounded-lg bg-surface hover:ring-1 hover:ring-primary transition"
+            className={`group relative aspect-video overflow-hidden rounded-lg bg-surface hover:ring-1 hover:ring-primary transition ${
+              !expanded && idx === 4 ? "hidden lg:block" : ""
+            }`}
           >
             {item.backdrop ? (
               <img

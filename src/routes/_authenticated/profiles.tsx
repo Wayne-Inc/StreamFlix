@@ -155,16 +155,16 @@ function ProfilesPage() {
         </h1>
 
         {profiles === null ? (
-          <ul className="mt-10 flex flex-wrap justify-center gap-4 sm:gap-8">
+          <ul className="mt-8 flex flex-wrap justify-center gap-3 sm:mt-10 sm:gap-8">
             {[1, 2, 3, 4].map((i) => (
               <li key={i} className="flex flex-col items-center gap-3">
-                <Skeleton className="size-24 sm:size-32 rounded-lg" />
+                <Skeleton className="size-20 sm:size-32 rounded-lg" />
                 <Skeleton className="h-4 w-20 rounded" />
               </li>
             ))}
           </ul>
         ) : (
-          <ul className="mt-10 flex flex-wrap justify-center gap-4 sm:gap-8">
+          <ul className="mt-8 flex flex-wrap justify-center gap-3 sm:mt-10 sm:gap-8">
             {profiles.map((p) => (
               <li key={p.id}>
                 <button
@@ -172,12 +172,12 @@ function ProfilesPage() {
                   className="group flex flex-col items-center gap-3"
                 >
                   <div
-                    className={`relative size-24 overflow-hidden rounded-lg transition-all group-hover:ring-4 group-hover:ring-foreground sm:size-32 ${p.avatarUrl ? "" : `bg-gradient-to-br ${p.color}`}`}
+                    className={`relative size-20 overflow-hidden rounded-lg transition-all group-hover:ring-4 group-hover:ring-foreground sm:size-32 ${p.avatarUrl ? "" : `bg-gradient-to-br ${p.color}`}`}
                   >
                     {p.avatarUrl ? (
                       <img src={p.avatarUrl} alt="" className="size-full object-cover" />
                     ) : (
-                      <span className="grid size-full place-items-center text-3xl font-black text-white/90 sm:text-5xl">
+                      <span className="grid size-full place-items-center text-2xl font-black text-white/90 sm:text-5xl">
                         {p.name[0]?.toUpperCase()}
                       </span>
                     )}
@@ -204,8 +204,8 @@ function ProfilesPage() {
                   onClick={() => setEditTarget("new")}
                   className="group flex flex-col items-center gap-3"
                 >
-                  <div className="grid size-24 place-items-center rounded-lg border border-dashed border-border text-muted-foreground transition-colors group-hover:border-foreground group-hover:text-foreground sm:size-32">
-                    <Plus className="size-10" />
+                  <div className="grid size-20 place-items-center rounded-lg border border-dashed border-border text-muted-foreground transition-colors group-hover:border-foreground group-hover:text-foreground sm:size-32">
+                    <Plus className="size-8 sm:size-10" />
                   </div>
                   <span className="text-muted-foreground">Add Profile</span>
                 </button>
@@ -216,7 +216,7 @@ function ProfilesPage() {
 
         <button
           onClick={() => setEditing((v) => !v)}
-          className="mt-12 rounded border border-border px-6 py-2 text-sm tracking-widest text-muted-foreground transition-colors hover:border-foreground hover:text-foreground uppercase"
+          className="mt-8 rounded border border-border px-6 py-2 text-sm tracking-widest text-muted-foreground transition-colors hover:border-foreground hover:text-foreground uppercase sm:mt-12"
         >
           {editing ? "Done" : "Manage Profiles"}
         </button>
