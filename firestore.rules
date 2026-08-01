@@ -17,6 +17,12 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
     }
 
+    // VIP: any authenticated user can check membership; only admins can manage it
+    match /vip/{uid} {
+      allow read: if isAuth();
+      allow write: if isAuth() && request.auth.token.admin == true;
+    }
+
     // User devices: user can read/write only their own
     match /user_devices/{docId} {
       allow read, write: if isAuth() && resource.data.user_id == request.auth.uid;

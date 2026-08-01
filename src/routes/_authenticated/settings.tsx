@@ -16,6 +16,7 @@ import {
   Camera,
   Upload,
   Check,
+  Crown,
 } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
 import {
@@ -110,6 +111,16 @@ function SettingsPage() {
   }, [profile?.display_name, profile?.avatar_url]);
 
   const googlePhotoURL: string | undefined = user?.photoURL ?? undefined;
+
+  const { data: isVip } = useQuery({
+    queryKey: ["vip", user?.uid],
+    enabled: !!user,
+    queryFn: async (): Promise<boolean> => {
+      if (!user) return false;
+      const snap = await getDoc(doc(db, "vip", user.uid));
+      return snap.exists();
+    },
+  });
 
   const useGooglePfp = async () => {
     if (!googlePhotoURL || !user) return;
@@ -300,6 +311,28 @@ function SettingsPage() {
         <p className="mt-1 text-sm text-muted-foreground">
           Manage your profile, security, and signed-in devices.
         </p>
+
+        {/* VIP (only for users listed in the vip collection) */}
+        {isVip && (
+          <section className="mt-8 rounded-lg border border-yellow-500/30 bg-gradient-to-r from-yellow-500/15 via-amber-500/5 to-transparent p-4 sm:p-6">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="grid size-12 shrink-0 place-items-center rounded-full bg-yellow-500/20 text-yellow-400">
+                <Crown className="size-6" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-lg font-bold text-yellow-400">VIP Member</p>
+                  <span className="rounded-full bg-yellow-500/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-yellow-400">
+                    Exclusive
+                  </span>
+                </div>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  Enjoy an ad-free experience, early access to new releases, and priority support.
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Profile */}
         <section className="mt-8 rounded-lg border border-border bg-card/40 p-4 sm:p-6">

@@ -25,9 +25,6 @@ export function Footer() {
             <Link to="/privacy-policy" className="hover:text-foreground">
               Privacy Policy
             </Link>
-            <Link to="/contact" className="hover:text-foreground">
-              Contact
-            </Link>
           </div>
         </div>
         <div className="max-w-2xl space-y-2 rounded-lg border border-yellow-500/10 bg-yellow-500/5 px-4 py-3 text-[10px] sm:text-xs leading-relaxed text-yellow-400/80">

@@ -313,14 +313,6 @@ export function Navbar() {
                     {userData.email}
                   </div>
                 ) : null}
-                {selectedProfile?.kids && (
-                  <button
-                    onClick={handleExitKids}
-                    className="flex w-full items-center gap-2 border-b border-border px-4 py-2.5 text-left text-sm text-foreground hover:bg-accent"
-                  >
-                    <Lock className="size-4" /> Exit Kids Mode
-                  </button>
-                )}
                 {selectedProfile?.kids ? (
                   <button
                     onClick={handleExitKids}

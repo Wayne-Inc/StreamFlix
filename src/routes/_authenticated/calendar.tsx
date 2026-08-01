@@ -109,7 +109,7 @@ function CalendarPage() {
           Tap the bell to get a reminder when a title arrives.
         </p>
 
-        <div className="mt-8 flex items-center justify-between">
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
           <button
             onClick={() => setMonth((m) => addMonths(m, -1))}
             className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
@@ -117,25 +117,23 @@ function CalendarPage() {
           >
             <ChevronLeft className="size-4" /> Previous
           </button>
-          <button
-            onClick={() => setMonth(startOfMonth(new Date()))}
-            title="Jump back to today"
-            className="text-lg font-semibold capitalize transition hover:text-primary"
-          >
-            {format(month, "MMMM yyyy")}
-            {!isSameMonth(month, new Date()) && (
-              <span className="ml-2 rounded bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">
-                Today
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setMonth((m) => addMonths(m, 1))}
-            className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
-            aria-label="Next month"
-          >
-            Next <ChevronRight className="size-4" />
-          </button>
+          <h2 className="text-lg font-semibold capitalize">{format(month, "MMMM yyyy")}</h2>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setMonth(startOfMonth(new Date()))}
+              disabled={isSameMonth(month, new Date())}
+              className="inline-flex items-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/20 disabled:cursor-default disabled:opacity-40"
+            >
+              Today
+            </button>
+            <button
+              onClick={() => setMonth((m) => addMonths(m, 1))}
+              className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
+              aria-label="Next month"
+            >
+              Next <ChevronRight className="size-4" />
+            </button>
+          </div>
         </div>
 
         <div className="mt-6 rounded-lg border border-border bg-card/40 p-3 sm:p-5">

@@ -105,10 +105,10 @@ function PrivacyPolicyPage() {
           <p className="text-sm leading-relaxed text-muted-foreground">
             Depending on your jurisdiction, you may have the right to access, correct, delete, or
             port your personal data. You can manage your cookie preferences through your browser
-            settings. To exercise your rights, please contact us through our{" "}
-            <Link to="/contact" className="text-primary hover:underline">
-              Contact page
-            </Link>
+            settings. To exercise your rights, please email us at{" "}
+            <a href="mailto:hello@samway.dpdns.org" className="text-primary hover:underline">
+              hello@samway.dpdns.org
+            </a>
             .
           </p>
         </section>
@@ -153,10 +153,10 @@ function PrivacyPolicyPage() {
           <h2 className="text-base sm:text-2xl font-semibold">Contact Us</h2>
           <p className="text-sm leading-relaxed text-muted-foreground">
             If you have questions or concerns about this Privacy Policy or your data, please reach
-            out through our{" "}
-            <Link to="/contact" className="text-primary hover:underline">
-              Contact page
-            </Link>
+            out to{" "}
+            <a href="mailto:hello@samway.dpdns.org" className="text-primary hover:underline">
+              hello@samway.dpdns.org
+            </a>
             .
           </p>
         </section>

@@ -166,10 +166,10 @@ function TermsOfServicePage() {
         <section className="space-y-2 sm:space-y-4">
           <h2 className="text-base sm:text-2xl font-semibold">Contact Information</h2>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            If you have any questions about these Terms, please contact us through our{" "}
-            <Link to="/contact" className="text-primary hover:underline">
-              Contact page
-            </Link>
+            If you have any questions about these Terms, please email us at{" "}
+            <a href="mailto:hello@samway.dpdns.org" className="text-primary hover:underline">
+              hello@samway.dpdns.org
+            </a>
             .
           </p>
         </section>
