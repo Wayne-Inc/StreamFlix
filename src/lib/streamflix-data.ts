@@ -16,8 +16,6 @@ import {
   discoverByGenre,
   searchPeople,
   fetchGenres,
-  fetchTrendingByRegion,
-  fetchCountries,
   fetchUpcomingCalendar,
   fetchAiringCalendar,
 } from "./api/tmdb";
@@ -188,22 +186,6 @@ export async function searchByPerson(query: string) {
 export async function getGenres() {
   try {
     return await fetchGenres();
-  } catch {
-    return [];
-  }
-}
-
-export async function loadTrendingByRegion(region: string): Promise<Movie[]> {
-  try {
-    return await fetchTrendingByRegion({ data: { region } });
-  } catch {
-    return [];
-  }
-}
-
-export async function getCountries(): Promise<{ iso: string; name: string }[]> {
-  try {
-    return await fetchCountries();
   } catch {
     return [];
   }

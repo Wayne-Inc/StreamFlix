@@ -19,7 +19,15 @@ import {
   Timestamp,
   deleteDoc,
   writeBatch,
+  arrayUnion,
+  arrayRemove,
 } from "firebase/firestore";
+
+type Member = {
+  uid: string;
+  name: string;
+  photo?: string | null;
+};
 
 type Room = {
   id: string;
@@ -32,6 +40,7 @@ type Room = {
   video_url?: string;
   season?: number;
   episode?: number;
+  members?: Member[];
   updated_at: Timestamp | ReturnType<typeof serverTimestamp> | null;
 };
 
@@ -92,6 +101,7 @@ type Props = {
   season?: number;
   episode?: number;
   onRoomStateUpdate?: (state: WatchPartyRoomState) => void;
+  onViewerCountChange?: (count: number) => void;
 };
 
 export function WatchPartyPanel(props: Props) {
@@ -105,6 +115,7 @@ export function WatchPartyPanel(props: Props) {
     season,
     episode,
     onRoomStateUpdate,
+    onViewerCountChange,
   } = props;
   const [userId, setUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState("Viewer");
@@ -161,6 +172,7 @@ export function WatchPartyPanel(props: Props) {
             return;
           }
           setRoom({ id: d.id, ...data } as Room);
+          addMember(d.id);
           pushRoomStateToPlayer({ id: d.id, ...data } as Room, userId, onRoomStateUpdate);
           toast.success(`Joined ${code}`);
           setBusy(false);
@@ -296,6 +308,18 @@ export function WatchPartyPanel(props: Props) {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages.length]);
 
+  // notify parent of viewer count
+  useEffect(() => {
+    onViewerCountChange?.(room?.members?.length ?? 0);
+  }, [room?.members?.length, onViewerCountChange]);
+
+  const addMember = (roomId: string) => {
+    if (!userId) return;
+    updateDoc(doc(db, "watch_party_rooms", roomId), {
+      members: arrayUnion({ uid: userId, name: userName, photo: userPhoto }),
+    }).catch(() => {});
+  };
+
   const createRoom = async () => {
     if (!userId) return toast.error("Please sign in to host a watch party.");
     setBusy(true);
@@ -307,6 +331,7 @@ export function WatchPartyPanel(props: Props) {
         movie_id: movieId,
         position_seconds: 0,
         is_playing: false,
+        members: [{ uid: userId, name: userName, photo: userPhoto }],
         ...(mainVideoUrl ? { video_url: mainVideoUrl } : {}),
         ...(season != null ? { season } : {}),
         ...(episode != null ? { episode } : {}),
@@ -338,6 +363,7 @@ export function WatchPartyPanel(props: Props) {
       const data = d.data();
       const joined = { id: d.id, ...data } as Room;
       setRoom(joined);
+      addMember(d.id);
       pushRoomStateToPlayer(joined, userId, onRoomStateUpdate);
       toast.success(`Joined ${code}`);
     } catch (err: any) {
@@ -347,16 +373,22 @@ export function WatchPartyPanel(props: Props) {
   };
 
   const leave = async () => {
-    if (room && userId && room.host_id === userId) {
-      try {
-        const msgQ = query(collection(db, "watch_party_messages"), where("room_id", "==", room.id));
-        const msgSnap = await getDocs(msgQ);
-        const batch = writeBatch(db);
-        msgSnap.docs.forEach((d) => batch.delete(d.ref));
-        batch.delete(doc(db, "watch_party_rooms", room.id));
-        await batch.commit();
-      } catch {
-        /* best effort */
+    if (room && userId) {
+      if (room.host_id === userId) {
+        try {
+          const msgQ = query(collection(db, "watch_party_messages"), where("room_id", "==", room.id));
+          const msgSnap = await getDocs(msgQ);
+          const batch = writeBatch(db);
+          msgSnap.docs.forEach((d) => batch.delete(d.ref));
+          batch.delete(doc(db, "watch_party_rooms", room.id));
+          await batch.commit();
+        } catch {
+          /* best effort */
+        }
+      } else {
+        updateDoc(doc(db, "watch_party_rooms", room.id), {
+          members: arrayRemove({ uid: userId, name: userName, photo: userPhoto }),
+        }).catch(() => {});
       }
     }
     setRoom(null);
@@ -427,6 +459,11 @@ export function WatchPartyPanel(props: Props) {
           <div className="flex items-center gap-2">
             <Users className="size-5 text-primary" />
             <h3 className="font-semibold">Watch Party</h3>
+            {room && (
+              <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">
+                {room.members?.length ?? 1} watching
+              </span>
+            )}
           </div>
           <button
             onClick={onClose}
@@ -519,6 +556,40 @@ export function WatchPartyPanel(props: Props) {
                 Leave
               </button>
             </div>
+
+            {(room.members?.length ?? 1) > 0 && (
+              <div className="flex items-center gap-2.5 border-b border-border px-3 py-2">
+                <div className="flex -space-x-1.5">
+                  {room.members?.slice(0, 6).map((m) =>
+                    m.photo ? (
+                      <img
+                        key={m.uid}
+                        src={m.photo}
+                        alt=""
+                        title={m.name}
+                        className="size-6 rounded-full border-2 border-background object-cover"
+                      />
+                    ) : (
+                      <span
+                        key={m.uid}
+                        title={m.name}
+                        className="grid size-6 place-items-center rounded-full border-2 border-background bg-gradient-to-br from-primary to-purple-600 text-[9px] font-bold text-white"
+                      >
+                        {m.name[0]?.toUpperCase()}
+                      </span>
+                    ),
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-foreground">
+                    {room.members?.length ?? 1} watching
+                  </p>
+                  <p className="truncate text-[11px] text-muted-foreground">
+                    {room.members?.map((m) => m.name).join(", ") ?? ""}
+                  </p>
+                </div>
+              </div>
+            )}
 
             <div className="border-b border-border p-2">
               <div className="flex justify-around">

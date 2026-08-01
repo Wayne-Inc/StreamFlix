@@ -4,7 +4,7 @@ function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>)
   return (
     <div
       className={cn(
-        "animate-pulse rounded-md bg-gradient-to-r from-primary/5 via-primary/15 to-primary/5 bg-[length:800px_100%] animate-shimmer",
+        "animate-shimmer rounded-md bg-gradient-to-r from-primary/[0.06] via-primary/[0.18] to-primary/[0.06] bg-[length:800px_100%]",
         className,
       )}
       {...props}

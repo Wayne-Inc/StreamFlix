@@ -19,19 +19,29 @@ export const Route = createFileRoute("/_authenticated/explore/")({
   pendingComponent: () => (
     <div className="min-h-dvh bg-background">
       <Navbar />
-      <div className="mx-auto max-w-[1800px] px-4 pt-24 pb-16 sm:px-8">
-        <Skeleton className="h-10 w-52 rounded" />
+      <section className="relative flex h-[38vh] items-end overflow-hidden sm:h-[46vh]">
+        <Skeleton className="absolute inset-0 h-full w-full rounded-none opacity-60" />
+        <div className="relative z-10 w-full px-4 pb-8 sm:px-8 md:px-16">
+          <Skeleton className="h-4 w-24 rounded" />
+          <Skeleton className="mt-2 h-10 w-64 rounded sm:h-14" />
+          <Skeleton className="mt-3 h-4 w-72 rounded" />
+        </div>
+      </section>
+      <main className="mx-auto max-w-[1800px] px-4 pb-16 sm:px-8">
         <div className="mt-8 flex flex-wrap gap-2">
           {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-9 w-24 rounded-full" />
           ))}
         </div>
-        <div className="mt-8 flex flex-wrap gap-3 justify-center">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <Skeleton key={i} className="w-[160px] sm:w-[200px] aspect-[2/3] rounded-md" />
-          ))}
+        <div className="mt-10">
+          <Skeleton className="h-5 w-44 rounded" />
+          <div className="mt-4 flex flex-wrap gap-3 justify-center">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <Skeleton key={i} className="w-[160px] sm:w-[200px] aspect-[2/3] rounded-lg" />
+            ))}
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   ),
   component: ExplorePage,

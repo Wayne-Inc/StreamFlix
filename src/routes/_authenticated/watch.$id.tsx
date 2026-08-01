@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { useEffect, useRef, useState, useCallback, type MouseEvent, type TouchEvent } from "react";
-import { ArrowLeft, Settings, Wifi, Loader, RotateCw } from "lucide-react";
+import { ArrowLeft, Settings, Wifi, Loader, RotateCw, Users } from "lucide-react";
 import { movieById } from "@/lib/streamflix-data";
 import { getContinueWatching, recordProgress } from "@/lib/continue-watching";
 import { saveProgressToFirestore } from "@/lib/continue-watching-firestore";
@@ -350,6 +350,7 @@ function PlayerPage() {
   const [showControls, setShowControls] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [partyOpen, setPartyOpen] = useState(false);
+  const [partyViewerCount, setPartyViewerCount] = useState(0);
   const [ended, setEnded] = useState(false);
   const [subtitles, setSubtitles] = useState<{ lang: string; label: string; url: string }[]>([]);
   const [buffering, setBuffering] = useState(false);
@@ -793,6 +794,11 @@ function PlayerPage() {
 
             <div className="flex items-center gap-2">
               <WatchPartyButton onClick={() => setPartyOpen((v) => !v)} />
+              {partyViewerCount > 0 && (
+                <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-white/90 backdrop-blur-sm">
+                  <Users className="size-3.5" /> {partyViewerCount} watching
+                </span>
+              )}
               <div className="relative">
                 <button
                   onClick={() => setShowSettings((v) => !v)}
@@ -933,6 +939,7 @@ function PlayerPage() {
         season={season}
         episode={episode}
         onRoomStateUpdate={handleWatchPartyRoomUpdate}
+        onViewerCountChange={setPartyViewerCount}
       />
     </div>
   );

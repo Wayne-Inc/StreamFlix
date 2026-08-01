@@ -37,11 +37,12 @@ function BrowseSkeleton() {
   return (
     <div className="min-h-dvh bg-background">
       <Navbar />
-      <div className="min-h-[45vh] h-[55vh] w-full bg-surface/50 sm:min-h-[420px] sm:h-[75vh] lg:min-h-[560px] lg:h-[88vh]">
-        <div className="flex h-full items-end justify-center px-4 pb-8 pt-10 text-center md:items-end md:justify-start md:px-16 lg:px-24">
+      <div className="relative min-h-[45vh] h-[55vh] w-full overflow-hidden bg-surface/60 sm:min-h-[420px] sm:h-[75vh] lg:min-h-[560px] lg:h-[88vh]">
+        <Skeleton className="absolute inset-0 h-full w-full rounded-none opacity-60" />
+        <div className="relative flex h-full items-end justify-center px-4 pb-8 pt-10 text-center md:items-end md:justify-start md:px-16 lg:px-24">
           <div className="max-w-2xl space-y-3 w-full text-center md:text-left">
             <div className="hidden sm:block">
-              <Skeleton className="h-4 w-32 rounded mx-auto sm:mx-0" />
+              <Skeleton className="h-5 w-32 rounded mx-auto sm:mx-0" />
             </div>
             <Skeleton className="h-8 w-full max-w-lg rounded sm:h-14" />
             <Skeleton className="h-4 w-72 rounded mx-auto sm:mx-0" />
@@ -64,11 +65,11 @@ function BrowseSkeleton() {
 
 function RowSkeleton() {
   return (
-    <div className="space-y-3 py-4">
-      <Skeleton className="h-5 w-48 rounded" />
+    <div className="space-y-4 py-4">
+      <Skeleton className="h-8 sm:h-9 w-52 rounded" />
       <div className="flex gap-2 sm:gap-3 overflow-hidden px-4 sm:px-8">
         {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-          <Skeleton key={i} className="w-[200px] sm:w-[260px] aspect-[2/3] rounded-md shrink-0" />
+          <Skeleton key={i} className="w-[200px] sm:w-[260px] aspect-[2/3] rounded-lg shrink-0" />
         ))}
       </div>
     </div>

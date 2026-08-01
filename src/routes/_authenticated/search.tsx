@@ -1,11 +1,11 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Search as SearchIcon, X, User, Film, ChevronLeft, ChevronRight } from "lucide-react";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { search, searchByGenre, searchByPerson, getGenres } from "@/lib/streamflix-data";
+import { search, searchByPerson, getGenres } from "@/lib/streamflix-data";
 import type { Movie } from "@/lib/types";
 import { isKidsProfile, filterKidsContent, filterKidsGenres } from "@/lib/kids-mode";
 import { z } from "zod";
@@ -40,7 +40,6 @@ function SearchPage() {
   const [results, setResults] = useState<Movie[]>([]);
   const [people, setPeople] = useState<PersonResult[]>([]);
   const [genres, setGenres] = useState<{ id: number; name: string }[]>([]);
-  const [genreResults, setGenreResults] = useState<Movie[]>([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const debouncedQ = useDebounce(q, 300);
@@ -95,30 +94,7 @@ function SearchPage() {
     getGenres().then((list) => setGenres(isKidsProfile() ? filterKidsGenres(list) : list));
   }, []);
 
-  const handleGenreClick = async (genreId: number) => {
-    setTab("genres");
-    setQ("");
-    setPage(1);
-    setLoading(true);
-    try {
-      const res = await searchByGenre(String(genreId));
-      setGenreResults(isKidsProfile() ? filterKidsContent(res) : res);
-    } catch {
-      setGenreResults([]);
-    }
-    setLoading(false);
-  };
-
-  // Handle genre pre-selection from URL when genres load
-  const genreTriggered = useRef(false);
-  useEffect(() => {
-    if (tab === "genres" && q && genres.length && !genreTriggered.current) {
-      genreTriggered.current = true;
-      const match = genres.find((g) => g.name.toLowerCase() === q.toLowerCase());
-      if (match) handleGenreClick(match.id);
-      else setQ("");
-    }
-  }, [tab, q, genres]);
+  const trending = ["Action", "Sci-Fi", "Thriller", "Comedy"];
 
   return (
     <div className="min-h-dvh bg-background">
@@ -160,7 +136,6 @@ function SearchPage() {
                   setQ("");
                   setResults([]);
                   setPeople([]);
-                  setGenreResults([]);
                   setPage(1);
                 }}
                 className={`flex items-center gap-1.5 px-4 py-2.5 sm:py-2 text-sm font-medium transition border-b-2 -mb-px ${tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
@@ -177,75 +152,22 @@ function SearchPage() {
         <section className="mx-auto w-full max-w-[1800px]">
           {tab === "genres" && (
             <div className="mt-6">
-              <div className="flex flex-wrap gap-2">
+              <p className="text-sm text-muted-foreground">
+                {genres.length} genres — tap one to open its page
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
                 {genres.map((g) => (
-                  <button
+                  <Link
                     key={g.id}
-                    onClick={() => handleGenreClick(g.id)}
+                    to="/explore/$genreId"
+                    params={{ genreId: String(g.id) }}
+                    search={{ q: g.name }}
                     className="rounded-full border border-border px-4 py-2.5 sm:py-2 text-sm hover:border-primary hover:text-foreground transition"
                   >
                     {g.name}
-                  </button>
+                  </Link>
                 ))}
               </div>
-              {loading && (
-                <div className="mt-10">
-                  <Skeleton className="h-4 w-32 rounded mb-4" />
-                  <div className="flex flex-wrap gap-3 justify-center">
-                    {Array.from({ length: 12 }).map((_, i) => (
-                      <Skeleton key={i} className="w-[160px] sm:w-[200px] aspect-[2/3] rounded-md" />
-                    ))}
-                  </div>
-                </div>
-              )}
-              {!loading && genreResults.length > 0 && (
-                <div className="mt-10">
-                  <p className="text-sm text-muted-foreground">{genreResults.length} results</p>
-                  <div className="mt-4 flex flex-wrap gap-3 justify-center">
-                    {genreResults.slice((page - 1) * 24, page * 24).map((m) => (
-                      <button
-                        key={m.id}
-                        onClick={() => navigate({ to: "/movie/$id", params: { id: m.id } })}
-                        className="text-left"
-                      >
-                        <MovieCard movie={m} />
-                      </button>
-                    ))}
-                  </div>
-                  {genreResults.length > 24 && (
-                    <div className="mt-8 hidden items-center justify-center gap-2 md:flex">
-                      <button
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        disabled={page === 1}
-                        className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-default"
-                      >
-                        <ChevronLeft className="size-4" /> Previous
-                      </button>
-                      {Array.from(
-                        { length: Math.ceil(genreResults.length / 24) },
-                        (_, i) => i + 1,
-                      ).map((p) => (
-                        <button
-                          key={p}
-                          onClick={() => setPage(p)}
-                          className={`rounded-md px-3 py-2 text-sm ${p === page ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground hover:text-foreground"}`}
-                        >
-                          {p}
-                        </button>
-                      ))}
-                      <button
-                        onClick={() =>
-                          setPage((p) => Math.min(Math.ceil(genreResults.length / 24), p + 1))
-                        }
-                        disabled={page === Math.ceil(genreResults.length / 24)}
-                        className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-default"
-                      >
-                        Next <ChevronRight className="size-4" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           )}
 
@@ -253,15 +175,28 @@ function SearchPage() {
             <div className="mt-6">
               <p className="text-sm text-muted-foreground">Trending searches</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {["Action", "Sci-Fi", "Thriller", "Comedy"].map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setQ(t)}
-                    className="rounded-full border border-border px-3 py-1.5 text-sm hover:border-foreground"
-                  >
-                    {t}
-                  </button>
-                ))}
+                {trending.map((t) => {
+                  const match = genres.find((g) => g.name.toLowerCase() === t.toLowerCase());
+                  return match ? (
+                    <Link
+                      key={t}
+                      to="/explore/$genreId"
+                      params={{ genreId: String(match.id) }}
+                      search={{ q: match.name }}
+                      className="rounded-full border border-border px-3 py-1.5 text-sm hover:border-foreground"
+                    >
+                      {t}
+                    </Link>
+                  ) : (
+                    <button
+                      key={t}
+                      onClick={() => setQ(t)}
+                      className="rounded-full border border-border px-3 py-1.5 text-sm hover:border-foreground"
+                    >
+                      {t}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

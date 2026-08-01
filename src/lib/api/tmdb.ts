@@ -31,23 +31,6 @@ export const fetchUpcoming = createServerFn({ method: "POST" }).handler(async ()
   return (data.results || []).map((m: any) => toMovie(m));
 });
 
-export const fetchTrendingByRegion = createServerFn({ method: "POST" })
-  .validator(z.object({ region: z.string().min(2).max(10) }))
-  .handler(async ({ data }) => {
-    const { tmdbFetch, toMovie } = await import("./tmdb.server");
-    const res = await tmdbFetch("/trending/movie/week", { region: data.region });
-    return (res.results || []).map((m: any) => toMovie(m));
-  });
-
-export const fetchCountries = createServerFn({ method: "GET" }).handler(async () => {
-  const { tmdbFetch } = await import("./tmdb.server");
-  const data = await tmdbFetch("/configuration/countries");
-  return (data || []).map((c: any) => ({
-    iso: String(c.iso_3166_1),
-    name: c.english_name ?? c.native_name ?? String(c.iso_3166_1),
-  }));
-});
-
 export type CalendarTitle = {
   id: string;
   title: string;
