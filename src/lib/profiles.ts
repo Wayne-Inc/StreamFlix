@@ -20,6 +20,7 @@ export type Profile = {
   kids: boolean;
   avatarUrl?: string;
   pin?: string;
+  hasPin?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 };
@@ -41,6 +42,7 @@ export async function getUserProfiles(userId: string): Promise<Profile[]> {
   return snap.docs.map((d) => ({
     id: d.id,
     ...d.data(),
+    hasPin: !!d.data().pinHash,
     createdAt: d.data().createdAt?.toDate(),
     updatedAt: d.data().updatedAt?.toDate(),
   })) as Profile[];

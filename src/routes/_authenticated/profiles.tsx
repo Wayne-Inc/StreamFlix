@@ -182,6 +182,14 @@ function ProfilesPage() {
                         {p.name[0]?.toUpperCase()}
                       </span>
                     )}
+                    {p.hasPin && !editing && (
+                      <span
+                        className="absolute bottom-1 right-1 grid size-5 place-items-center rounded-full bg-black/70 text-foreground ring-1 ring-border sm:size-6"
+                        title="Locked profile"
+                      >
+                        <Lock className="size-3 sm:size-3.5" />
+                      </span>
+                    )}
                     {editing && (
                       <div className="absolute inset-0 grid place-items-center bg-black/60">
                         <Pencil className="size-7 text-foreground" />

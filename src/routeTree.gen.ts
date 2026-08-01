@@ -24,10 +24,11 @@ import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedExploreRouteImport } from './routes/_authenticated/explore'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedBrowseRouteImport } from './routes/_authenticated/browse'
+import { Route as AuthenticatedExploreIndexRouteImport } from './routes/_authenticated/explore/index'
 import { Route as AuthenticatedWatchIdRouteImport } from './routes/_authenticated/watch.$id'
 import { Route as AuthenticatedPersonIdRouteImport } from './routes/_authenticated/person.$id'
 import { Route as AuthenticatedMovieIdRouteImport } from './routes/_authenticated/movie.$id'
-import { Route as AuthenticatedExploreGenreIdRouteImport } from './routes/_authenticated/explore.$genreId'
+import { Route as AuthenticatedExploreGenreIdRouteImport } from './routes/_authenticated/explore/$genreId'
 
 const TosRoute = TosRouteImport.update({
   id: '/tos',
@@ -103,6 +104,12 @@ const AuthenticatedBrowseRoute = AuthenticatedBrowseRouteImport.update({
   path: '/browse',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedExploreIndexRoute =
+  AuthenticatedExploreIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedExploreRoute,
+  } as any)
 const AuthenticatedWatchIdRoute = AuthenticatedWatchIdRouteImport.update({
   id: '/watch/$id',
   path: '/watch/$id',
@@ -144,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/movie/$id': typeof AuthenticatedMovieIdRoute
   '/person/$id': typeof AuthenticatedPersonIdRoute
   '/watch/$id': typeof AuthenticatedWatchIdRoute
+  '/explore/': typeof AuthenticatedExploreIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -154,7 +162,6 @@ export interface FileRoutesByTo {
   '/tos': typeof TosRoute
   '/browse': typeof AuthenticatedBrowseRoute
   '/calendar': typeof AuthenticatedCalendarRoute
-  '/explore': typeof AuthenticatedExploreRouteWithChildren
   '/history': typeof AuthenticatedHistoryRoute
   '/profiles': typeof AuthenticatedProfilesRoute
   '/search': typeof AuthenticatedSearchRoute
@@ -164,6 +171,7 @@ export interface FileRoutesByTo {
   '/movie/$id': typeof AuthenticatedMovieIdRoute
   '/person/$id': typeof AuthenticatedPersonIdRoute
   '/watch/$id': typeof AuthenticatedWatchIdRoute
+  '/explore': typeof AuthenticatedExploreIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -186,6 +194,7 @@ export interface FileRoutesById {
   '/_authenticated/movie/$id': typeof AuthenticatedMovieIdRoute
   '/_authenticated/person/$id': typeof AuthenticatedPersonIdRoute
   '/_authenticated/watch/$id': typeof AuthenticatedWatchIdRoute
+  '/_authenticated/explore/': typeof AuthenticatedExploreIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -208,6 +217,7 @@ export interface FileRouteTypes {
     | '/movie/$id'
     | '/person/$id'
     | '/watch/$id'
+    | '/explore/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -218,7 +228,6 @@ export interface FileRouteTypes {
     | '/tos'
     | '/browse'
     | '/calendar'
-    | '/explore'
     | '/history'
     | '/profiles'
     | '/search'
@@ -228,6 +237,7 @@ export interface FileRouteTypes {
     | '/movie/$id'
     | '/person/$id'
     | '/watch/$id'
+    | '/explore'
   id:
     | '__root__'
     | '/'
@@ -249,6 +259,7 @@ export interface FileRouteTypes {
     | '/_authenticated/movie/$id'
     | '/_authenticated/person/$id'
     | '/_authenticated/watch/$id'
+    | '/_authenticated/explore/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -368,6 +379,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBrowseRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/explore/': {
+      id: '/_authenticated/explore/'
+      path: '/'
+      fullPath: '/explore/'
+      preLoaderRoute: typeof AuthenticatedExploreIndexRouteImport
+      parentRoute: typeof AuthenticatedExploreRoute
+    }
     '/_authenticated/watch/$id': {
       id: '/_authenticated/watch/$id'
       path: '/watch/$id'
@@ -401,10 +419,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedExploreRouteChildren {
   AuthenticatedExploreGenreIdRoute: typeof AuthenticatedExploreGenreIdRoute
+  AuthenticatedExploreIndexRoute: typeof AuthenticatedExploreIndexRoute
 }
 
 const AuthenticatedExploreRouteChildren: AuthenticatedExploreRouteChildren = {
   AuthenticatedExploreGenreIdRoute: AuthenticatedExploreGenreIdRoute,
+  AuthenticatedExploreIndexRoute: AuthenticatedExploreIndexRoute,
 }
 
 const AuthenticatedExploreRouteWithChildren =

@@ -117,17 +117,18 @@ function CalendarPage() {
           >
             <ChevronLeft className="size-4" /> Previous
           </button>
-          <h2 className="text-lg font-semibold capitalize">
+          <button
+            onClick={() => setMonth(startOfMonth(new Date()))}
+            title="Jump back to today"
+            className="text-lg font-semibold capitalize transition hover:text-primary"
+          >
             {format(month, "MMMM yyyy")}
             {!isSameMonth(month, new Date()) && (
-              <button
-                onClick={() => setMonth(startOfMonth(new Date()))}
-                className="ml-3 text-xs font-normal text-primary"
-              >
+              <span className="ml-2 rounded bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">
                 Today
-              </button>
+              </span>
             )}
-          </h2>
+          </button>
           <button
             onClick={() => setMonth((m) => addMonths(m, 1))}
             className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground"

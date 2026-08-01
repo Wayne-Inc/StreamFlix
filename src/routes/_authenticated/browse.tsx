@@ -8,9 +8,9 @@ import { MovieCard } from "@/components/streamflix/MovieCard";
 import { Footer } from "@/components/streamflix/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReleaseReminderBanner } from "@/components/streamflix/ReleaseReminderBanner";
-import { loadBrowseData, loadTrendingByRegion, getCountries, type BrowseKind } from "@/lib/streamflix-data";
+import { loadBrowseData, searchByGenre, type BrowseKind } from "@/lib/streamflix-data";
+import { fetchPopular } from "@/lib/api/tmdb";
 import type { Movie } from "@/lib/types";
-import { detectRegion, regionLabel } from "@/lib/region";
 import {
   getContinueWatching,
   getWatchHistory,
@@ -99,7 +99,6 @@ function BrowsePage() {
     reasons: Record<string, string>;
     reasonLinks: Record<string, string>;
   } | null>(null);
-  const [regionRow, setRegionRow] = useState<{ title: string; items: Movie[] } | null>(null);
   useEffect(() => {
     const update = async () => {
       const localItems = getContinueWatching();
@@ -199,28 +198,54 @@ function BrowsePage() {
     };
   }, [kind]);
 
-  // Trending in your region (home only)
+  const kidsMode = useMemo(() => isKidsProfile(), []);
+
+  const [kidsPool, setKidsPool] = useState<Movie[]>([]);
   useEffect(() => {
-    if (kind !== "home") return;
+    if (!kidsMode) {
+      setKidsPool([]);
+      return;
+    }
     let cancelled = false;
-    const load = async () => {
-      const [countries, region] = await Promise.all([
-        getCountries(),
-        Promise.resolve(detectRegion()),
-      ]);
-      const label = regionLabel(region, countries);
-      const items = await loadTrendingByRegion(region);
-      if (!cancelled && items.length > 0) {
-        setRegionRow({ title: `Trending in ${label}`, items: items.slice(0, 10) });
+    const loadPool = async () => {
+      try {
+        const results = await Promise.all([
+          fetchPopular().catch(() => [] as Movie[]),
+          searchByGenre("16").catch(() => [] as Movie[]),
+          searchByGenre("12").catch(() => [] as Movie[]),
+          searchByGenre("10751").catch(() => [] as Movie[]),
+        ]);
+        const seen = new Set<string>();
+        const pool = filterKidsContent(results.flat()).filter((m) => {
+          if (seen.has(m.id)) return false;
+          seen.add(m.id);
+          return true;
+        });
+        if (!cancelled) setKidsPool(pool);
+      } catch {
+        /* keep pool empty */
       }
     };
-    load().catch(() => {});
+    loadPool();
     return () => {
       cancelled = true;
     };
-  }, [kind]);
+  }, [kidsMode]);
 
-  const kidsMode = useMemo(() => isKidsProfile(), []);
+  const fillRow = useMemo(() => {
+    return (items: Movie[], target = 12) => {
+      if (!kidsMode) return items;
+      const out = [...items];
+      const seenIds = new Set(out.map((m) => m.id));
+      for (const p of kidsPool) {
+        if (out.length >= target) break;
+        if (seenIds.has(p.id)) continue;
+        seenIds.add(p.id);
+        out.push(p);
+      }
+      return out;
+    };
+  }, [kidsMode, kidsPool]);
 
   const filteredHeroSlides = useMemo(() => {
     if (!kidsMode) return heroSlides;
@@ -233,9 +258,9 @@ function BrowsePage() {
       .filter((r) => r.title !== "Award-Winning Dramas")
       .map((r) => ({
         ...r,
-        items: filterKidsContent(r.items),
+        items: fillRow(filterKidsContent(r.items)),
       }));
-  }, [kidsMode, rows]);
+  }, [kidsMode, rows, fillRow]);
 
   return (
     <div className="min-h-dvh bg-background">
@@ -269,18 +294,12 @@ function BrowsePage() {
         {watchedRow && kind === "home" && (
           <Row
             title={watchedRow.title}
-            items={kidsMode ? filterKidsContent(watchedRow.items) : watchedRow.items}
+            items={kidsMode ? fillRow(filterKidsContent(watchedRow.items)) : watchedRow.items}
             reasons={watchedRow.reasons}
             reasonLinks={watchedRow.reasonLinks}
           />
         )}
-        {regionRow && kind === "home" && (
-          <Row
-            title={regionRow.title}
-            items={kidsMode ? filterKidsContent(regionRow.items) : regionRow.items}
-          />
-        )}
-        {kind === "home" && (
+        {!kidsMode && kind === "home" && (
           <section className="space-y-3 py-4">
             <h2 className="px-4 sm:px-8 text-lg sm:text-xl font-semibold tracking-tight">
               Explore moods

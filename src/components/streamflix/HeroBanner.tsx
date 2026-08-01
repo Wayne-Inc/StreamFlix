@@ -42,7 +42,7 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
             <span className="inline-block h-px w-6 bg-primary" />
             StreamFlix Original
           </div>
-          <h1 className="text-shadow-hero text-3xl font-black leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl">
+          <h1 className="text-shadow-hero text-3xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl">
             {s.title}
           </h1>
           <div className="mx-auto flex max-w-full flex-wrap items-center justify-center gap-2 text-xs sm:text-sm md:justify-start md:text-sm">

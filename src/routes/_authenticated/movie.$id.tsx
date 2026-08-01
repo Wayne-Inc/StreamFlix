@@ -135,10 +135,12 @@ function MoviePage() {
   return (
     <div className="min-h-dvh bg-background">
       <Navbar />
-      <section className="relative flex min-h-[75vh] items-center overflow-hidden pt-16 md:min-h-[85vh] md:pt-20">
-        <img src={movie.backdrop} alt="" className="absolute inset-0 size-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
+      <section className="relative overflow-hidden pt-16 md:flex md:min-h-[85vh] md:items-center md:pt-20">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[52vh] sm:h-[58vh] md:inset-y-0 md:h-auto">
+          <img src={movie.backdrop} alt="" className="absolute inset-0 size-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
+        </div>
 
         <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-10 sm:px-8 md:px-16 md:py-16">
           <div className="grid w-full gap-10 md:grid-cols-3 md:items-center md:gap-8">
@@ -219,7 +221,7 @@ function MoviePage() {
                       <Link
                         to="/person/$id"
                         params={{ id: movie.directorId }}
-                        className="font-medium text-foreground hover:text-primary hover:underline"
+                        className="font-normal text-foreground hover:text-primary hover:underline"
                       >
                         {movie.director}
                       </Link>
