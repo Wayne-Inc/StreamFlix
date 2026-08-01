@@ -22,7 +22,6 @@ const links = [
   { kind: "tv", label: "TV Shows" },
   { kind: "movies", label: "Movies" },
   { kind: "new", label: "New & Popular" },
-  { kind: "my-list", label: "My List", myList: true },
 ] as const;
 
 export function Navbar() {
@@ -136,7 +135,7 @@ export function Navbar() {
         <Logo />
         <nav className="hidden md:flex items-center gap-5 text-sm text-muted-foreground">
           {links.map((l, i) => {
-            const active = pathname === "/browse" && searchKind === l.kind && !("myList" in l);
+            const active = pathname === "/browse" && searchKind === l.kind;
             return (
               <Link
                 key={i}
@@ -162,7 +161,7 @@ export function Navbar() {
           <div className="relative">
             <button
               onClick={() => setJoinOpen((v) => !v)}
-              className="text-muted-foreground hover:text-foreground"
+              className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
               aria-label="Join Watch Party"
             >
               <Users className="size-5" />
@@ -228,7 +227,7 @@ export function Navbar() {
           </div>
           <Link
             to="/search"
-            className="text-muted-foreground hover:text-foreground"
+            className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
             aria-label="Search"
           >
             <Search className="size-5" />
@@ -290,7 +289,7 @@ export function Navbar() {
       {mobileNavOpen && (
         <div className="md:hidden border-t border-border bg-background/95 backdrop-blur px-4 py-4 space-y-3">
           {links.map((l, i) => {
-            const active = pathname === "/browse" && searchKind === l.kind && !("myList" in l);
+            const active = pathname === "/browse" && searchKind === l.kind;
             return (
               <Link
                 key={i}

@@ -87,9 +87,9 @@ export function ScreenSaver() {
         />
       ))}
 
-      {/* Dark gradient vignette (desktop only) */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/60 hidden md:block" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/80 hidden md:block" />
+      {/* Soft gradient vignette */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/15 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/25 via-transparent to-black/35" />
 
       {/* StreamFlix brand watermark top-left */}
       <div className="absolute top-8 left-8 text-white/50 text-xl font-bold tracking-widest uppercase">

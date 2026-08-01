@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { Play, Plus, Share2, Clapperboard, CheckCheck } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Play, Share2, Clapperboard } from "lucide-react";
 import { isKidsProfile, filterKidsContent, isBlockedKidsGenre } from "@/lib/kids-mode";
 import { toast } from "sonner";
 import { Navbar } from "@/components/streamflix/Navbar";
@@ -9,8 +9,6 @@ import { Row } from "@/components/streamflix/Row";
 import { Skeleton } from "@/components/ui/skeleton";
 import { movieById, loadSimilar, loadRecommendations } from "@/lib/streamflix-data";
 import { discoverByGenre } from "@/lib/api/tmdb";
-import { auth } from "@/lib/firebase";
-import { isInMyList, addToMyList, removeFromMyList } from "@/lib/my-list";
 import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
 import { TrailerModal } from "@/components/streamflix/TrailerModal";
 
@@ -115,7 +113,6 @@ function MoviePage() {
     "9648": "Mystery",
   };
   const isTv = movie.id.startsWith("tv-");
-  const [inWatchlist, setInWatchlist] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
 
   const [trailerOpen, setTrailerOpen] = useState(false);
@@ -133,31 +130,6 @@ function MoviePage() {
         )
         .map((gr) => ({ ...gr, items: filterKidsContent(gr.items) }))
     : genreRows;
-
-  useEffect(() => {
-    isInMyList(movie.id).then(setInWatchlist);
-  }, [movie.id]);
-
-  const handleWatchlist = async () => {
-    try {
-      if (inWatchlist) {
-        await removeFromMyList(movie.id);
-        setInWatchlist(false);
-        toast.success("Removed from My List");
-      } else {
-        await addToMyList({
-          id: movie.id,
-          title: movie.title,
-          year: movie.year,
-          poster: movie.poster,
-        });
-        setInWatchlist(true);
-        toast.success("Added to My List");
-      }
-    } catch (e: any) {
-      toast.error(e.message);
-    }
-  };
 
   return (
     <div className="min-h-dvh bg-background">
@@ -212,17 +184,6 @@ function MoviePage() {
                     <Clapperboard className="size-5" /> Trailer
                   </button>
                 )}
-                <button
-                  onClick={handleWatchlist}
-                  className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground"
-                  aria-label={inWatchlist ? "Remove from list" : "Add to list"}
-                >
-                  {inWatchlist ? (
-                    <CheckCheck className="size-4 sm:size-5" />
-                  ) : (
-                    <Plus className="size-4 sm:size-5" />
-                  )}
-                </button>
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(window.location.href);

@@ -7,14 +7,6 @@ import { Row } from "@/components/streamflix/Row";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import { Footer } from "@/components/streamflix/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
-import { List, ArrowUpDown } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { loadBrowseData, type BrowseKind } from "@/lib/streamflix-data";
 import type { Movie } from "@/lib/types";
 import {
@@ -27,12 +19,11 @@ import {
   getContinueWatchingFromFirestore,
   toMovie as fsToMovie,
 } from "@/lib/continue-watching-firestore";
-import { getMyList } from "@/lib/my-list";
 import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
 import { getPersonalizedRecommendations, type RecommendSeed } from "@/lib/recommendations";
 
 const searchSchema = z.object({
-  kind: z.enum(["home", "movies", "tv", "new", "my-list"]).catch("home").default("home"),
+  kind: z.enum(["home", "movies", "tv", "new"]).catch("home").default("home"),
 });
 
 function BrowseSkeleton() {
@@ -86,43 +77,12 @@ export const Route = createFileRoute("/_authenticated/browse")({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => ({ kind: search.kind }),
   loader: async ({ deps }) => {
-    if (deps.kind === "my-list") {
-      let watchlist: Movie[] = [];
-      try {
-        const items = await getMyList();
-        watchlist = items
-          .filter((i) => i.poster || i.title)
-          .map((i) => ({
-            id: i.tmdbId,
-            title: i.title,
-            year: i.year,
-            poster: i.poster ?? "",
-            backdrop: "",
-            description: "",
-            rating: "",
-            runtime: "",
-            genres: [],
-            genreIds: [],
-            cast: [],
-            castPfp: [],
-            director: "",
-            directorId: "",
-            match: 0,
-          }));
-      } catch {}
-      return {
-        heroSlides: [],
-        rows: watchlist.length ? [{ title: "My List", items: watchlist }] : [],
-      };
-    }
     return await loadBrowseData(deps.kind as BrowseKind);
   },
   head: () => ({ meta: [{ title: "Browse — StreamFlix" }] }),
   component: BrowsePage,
   pendingComponent: BrowseSkeleton,
 });
-
-type SortMode = "recent" | "title-asc" | "title-desc";
 
 function BrowsePage() {
   const { heroSlides, rows } = Route.useLoaderData();
@@ -131,9 +91,7 @@ function BrowsePage() {
     title: string;
     items: { movie: Movie; progress: number }[];
   } | null>(null);
-  const [sortBy, setSortBy] = useState<SortMode>("recent");
   const [watchedRow, setWatchedRow] = useState<{ title: string; items: Movie[] } | null>(null);
-
   useEffect(() => {
     const update = async () => {
       const localItems = getContinueWatching();
@@ -231,27 +189,6 @@ function BrowsePage() {
     };
   }, [kind]);
 
-  const isMyList = kind === "my-list";
-
-  const sortedRows: { title: string; items: Movie[] }[] = useMemo(() => {
-    if (!isMyList) return rows;
-    return rows.map((r) => {
-      const sorted = [...r.items].sort((a, b) => {
-        if (sortBy === "title-asc") return (a.title ?? "").localeCompare(b.title ?? "");
-        if (sortBy === "title-desc") return (b.title ?? "").localeCompare(a.title ?? "");
-        return 0;
-      });
-      return { ...r, items: sorted };
-    });
-  }, [rows, sortBy, isMyList]);
-
-  const displayedRows = useMemo(() => {
-    if (!isMyList) return sortedRows;
-    const merged = new Map<string, Movie>();
-    sortedRows.forEach((row) => row.items.forEach((movie) => merged.set(movie.id, movie)));
-    return [{ title: "My List", items: Array.from(merged.values()) }];
-  }, [isMyList, sortedRows]);
-
   const kidsMode = useMemo(() => isKidsProfile(), []);
 
   const filteredHeroSlides = useMemo(() => {
@@ -260,25 +197,21 @@ function BrowsePage() {
   }, [kidsMode, heroSlides]);
 
   const filteredRows = useMemo(() => {
-    if (!kidsMode) return displayedRows;
-    return displayedRows
+    if (!kidsMode) return rows;
+    return rows
       .filter((r) => r.title !== "Award-Winning Dramas")
       .map((r) => ({
         ...r,
         items: filterKidsContent(r.items),
       }));
-  }, [kidsMode, displayedRows]);
-
-  const showEmptyMyList = isMyList && displayedRows[0]?.items.length === 0;
+  }, [kidsMode, rows]);
 
   return (
     <div className="min-h-dvh bg-background">
       <Navbar />
-      {!isMyList && <HeroBanner slides={filteredHeroSlides} />}
-      <div
-        className={`relative z-10 ${isMyList ? "pt-24" : "mt-0 md:mt-12"} space-y-4 md:space-y-8`}
-      >
-        {!isMyList && continueRow && kind === "home" && (
+      <HeroBanner slides={filteredHeroSlides} />
+      <div className="relative z-10 mt-0 md:mt-12 space-y-4 md:space-y-8">
+        {continueRow && kind === "home" && (
           <section className="space-y-3 py-4">
             <h2 className="px-4 sm:px-8 text-lg sm:text-xl font-semibold tracking-tight">
               Continue Watching
@@ -292,35 +225,11 @@ function BrowsePage() {
             </div>
           </section>
         )}
-        {!isMyList && watchedRow && kind === "home" && (
+        {watchedRow && kind === "home" && (
           <Row
             title={watchedRow.title}
             items={kidsMode ? filterKidsContent(watchedRow.items) : watchedRow.items}
           />
-        )}
-        {rows.length === 0 && isMyList && (
-          <div className="flex flex-col items-center justify-center px-4 pt-16 text-center">
-            <List className="size-12 text-muted-foreground/40" />
-            <p className="mt-4 text-lg font-medium">Your list is empty</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Browse movies and add them to your list to see them here.
-            </p>
-          </div>
-        )}
-        {isMyList && rows.length > 0 && (
-          <div className="flex items-center gap-2 px-4 sm:px-8 pt-4 pb-2">
-            <ArrowUpDown className="size-4 text-muted-foreground" />
-            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortMode)}>
-              <SelectTrigger className="w-44 h-9 text-sm">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="recent">Recently Added</SelectItem>
-                <SelectItem value="title-asc">Title A-Z</SelectItem>
-                <SelectItem value="title-desc">Title Z-A</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         )}
         {filteredRows.map((r: { title: string; items: Movie[] }) => (
           <Row key={r.title} title={r.title} items={r.items} />

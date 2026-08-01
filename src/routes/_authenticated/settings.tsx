@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -14,13 +14,13 @@ import {
   ShieldCheck,
   CheckCircle2,
   Camera,
+  Upload,
   Check,
 } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
 import {
   signOut as firebaseSignOut,
   sendEmailVerification,
-  sendSignInLinkToEmail,
 } from "firebase/auth";
 import {
   collection,
@@ -37,6 +37,7 @@ import {
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AvatarCropModal } from "@/components/streamflix/AvatarCropModal";
 import { getDeviceId, recordCurrentDevice } from "@/lib/device-tracking";
 import { formatDistanceToNow } from "date-fns";
 
@@ -78,7 +79,8 @@ function SettingsPage() {
   const [avatarInput, setAvatarInput] = useState("");
   const [savingName, setSavingName] = useState(false);
   const currentDeviceId = typeof window !== "undefined" ? getDeviceId() : "";
-  const [deleteConfirming, setDeleteConfirming] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     recordCurrentDevice();
@@ -176,6 +178,38 @@ function SettingsPage() {
     setSavingName(false);
   };
 
+  const onFilePicked = (file: File | undefined) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setCropSrc(String(reader.result));
+    reader.readAsDataURL(file);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const saveUploadedAvatar = async (dataUrl: string) => {
+    if (!user) return;
+    setSavingName(true);
+    try {
+      await setDoc(
+        doc(db, "profiles", user.uid),
+        {
+          avatar_url: dataUrl,
+          show_google_pfp: false,
+          updated_at: serverTimestamp(),
+        },
+        { merge: true },
+      );
+      setAvatarUrl(dataUrl);
+      setAvatarInput("");
+      setCropSrc(null);
+      toast.success("Avatar updated");
+      qc.invalidateQueries({ queryKey: ["profile"] });
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+    setSavingName(false);
+  };
+
   const devicesQ = useQuery({
     queryKey: ["user_devices", user?.uid],
     enabled: !!user,
@@ -256,25 +290,6 @@ function SettingsPage() {
     router.navigate({ to: "/auth", replace: true });
   };
 
-  const isEmailPassword = user?.providerData.some((p) => p?.providerId === "password") ?? false;
-
-  const requestDelete = async () => {
-    if (!user?.email) return;
-    const email = user.email;
-    const actionCodeSettings = {
-      url: `${window.location.origin}/delete-account?email=${encodeURIComponent(email)}`,
-      handleCodeInApp: true,
-    };
-    try {
-      window.localStorage.setItem("emailForDelete", email);
-      await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-      setDeleteConfirming(true);
-    } catch (err: any) {
-      setDeleteConfirming(false);
-      toast.error(err?.message ?? "Failed to send confirmation email.");
-    }
-  };
-
   const createdAt = user?.metadata?.creationTime ?? null;
 
   return (
@@ -336,6 +351,13 @@ function SettingsPage() {
                       <Check className="size-3" /> Use Google photo
                     </button>
                   )}
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={savingName}
+                    className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1 text-xs hover:bg-accent disabled:opacity-50"
+                  >
+                    <Upload className="size-3" /> Upload
+                  </button>
                   {(avatarUrl || (googlePhotoURL && (profile?.show_google_pfp ?? true))) && (
                     <button
                       onClick={removeAvatar}
@@ -346,6 +368,13 @@ function SettingsPage() {
                     </button>
                   )}
                 </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => onFilePicked(e.target.files?.[0])}
+                />
               </div>
               <div className="flex-1 grid gap-4 sm:grid-cols-2">
                 <div>
@@ -552,51 +581,19 @@ function SettingsPage() {
           </div>
         </section>
 
-        {isEmailPassword && (
-          <section className="mt-6 rounded-lg border border-red-500/20 bg-card/40 p-4 sm:p-6">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-red-400">Delete account</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Permanently remove your account and all data. This cannot be undone.
-                </p>
-              </div>
-              {deleteConfirming ? (
-                <p className="text-xs text-muted-foreground">
-                  Check your email for the confirmation link.
-                </p>
-              ) : (
-                <button
-                  onClick={requestDelete}
-                  className="inline-flex items-center gap-2 rounded-md bg-destructive px-3 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90"
-                >
-                  <Trash2 className="size-4" /> Delete account
-                </button>
-              )}
-            </div>
-            {deleteConfirming && (
-              <div className="mt-4 rounded-lg bg-background/80 p-3 text-sm text-muted-foreground">
-                <p>
-                  A confirmation email has been sent to <strong>{user?.email}</strong>. Click the
-                  link in the email to permanently delete your account.
-                </p>
-                <button
-                  onClick={() => setDeleteConfirming(false)}
-                  className="mt-2 text-xs text-muted-foreground hover:text-foreground hover:underline"
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
-          </section>
-        )}
-
         <div className="mt-8 text-center">
           <Link to="/browse" className="text-xs text-muted-foreground hover:text-foreground">
             ← Back to browsing
           </Link>
         </div>
       </main>
+      {cropSrc && (
+        <AvatarCropModal
+          src={cropSrc}
+          onClose={() => setCropSrc(null)}
+          onConfirm={saveUploadedAvatar}
+        />
+      )}
       <Footer />
     </div>
   );
