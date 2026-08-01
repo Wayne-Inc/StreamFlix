@@ -86,7 +86,7 @@ export function Row({
   };
 
   return (
-    <section className="group relative space-y-0 py-0 sm:space-y-0 sm:py-0">
+    <section className="relative space-y-0 py-0 sm:space-y-0 sm:py-0">
       <h2 className="px-4 sm:px-8 text-2xl sm:text-3xl font-bold tracking-tight">{title}</h2>
 
       <div className="relative">
@@ -94,7 +94,7 @@ export function Row({
           <button
             onClick={() => scrollBy(-1)}
             aria-label={`Scroll ${title} back`}
-            className="absolute left-1 sm:left-2 top-1/2 z-40 hidden -translate-y-1/2 place-items-center rounded-md bg-background/80 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid size-10 opacity-0 group-hover:opacity-100"
+            className="absolute left-1 sm:left-2 top-1/2 z-50 hidden sm:grid size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
           >
             <ChevronLeft className="size-5" />
           </button>
@@ -103,7 +103,7 @@ export function Row({
           <button
             onClick={() => scrollBy(1)}
             aria-label={`Scroll ${title} forward`}
-            className="absolute right-1 sm:right-2 top-1/2 z-40 hidden -translate-y-1/2 place-items-center rounded-md bg-background/80 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid size-10 opacity-0 group-hover:opacity-100"
+            className="absolute right-1 sm:right-2 top-1/2 z-50 hidden sm:grid size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
           >
             <ChevronRight className="size-5" />
           </button>

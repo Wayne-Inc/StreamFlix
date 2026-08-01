@@ -14,7 +14,7 @@ export function MovieCard({
   reasonLink?: string;
 }) {
   return (
-    <div className="group relative w-[200px] sm:w-[260px] shrink-0 transition-all duration-300 hover:z-30 hover:scale-[1.02]">
+    <div className="group relative w-[200px] sm:w-[260px] shrink-0">
       <div className="relative aspect-[2/3] overflow-hidden rounded-md bg-surface shadow-md transition-shadow duration-300 group-hover:shadow-2xl">
         <Link
           to={progress != null ? "/watch/$id" : "/movie/$id"}
