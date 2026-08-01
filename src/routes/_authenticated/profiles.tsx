@@ -6,8 +6,6 @@ import {
   X,
   Lock,
   Upload,
-  Fingerprint,
-  ShieldCheck,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -27,13 +25,6 @@ import {
   verifyProfilePin,
   type Profile,
 } from "@/lib/profiles";
-import {
-  isBiometricAvailable,
-  registerBiometric,
-  verifyBiometric,
-  getBiometricLabel,
-  type BiometricCredential,
-} from "@/lib/biometric";
 import { getFavoriteGenres, setFavoriteGenres, GENRE_OPTIONS } from "@/lib/favorite-genres";
 
 export const Route = createFileRoute("/_authenticated/profiles")({
@@ -65,8 +56,6 @@ function ProfilesPage() {
   const [pinTarget, setPinTarget] = useState<Profile | null>(null);
   const [pinValue, setPinValue] = useState("");
   const [pinBusy, setPinBusy] = useState(false);
-  const [biometricBusy, setBiometricBusy] = useState(false);
-  const biometricLabel = getBiometricLabel();
   const [onboardOpen, setOnboardOpen] = useState(false);
   const [pickedGenres, setPickedGenres] = useState<number[]>([]);
   const [onboardBusy, setOnboardBusy] = useState(false);
@@ -127,7 +116,7 @@ function ProfilesPage() {
   const choose = async (p: Profile) => {
     if (!editing) {
       const u = auth.currentUser;
-      if (u && (p.hasPin || p.biometric)) {
+      if (u && p.hasPin) {
         setPinTarget(p);
         setPinValue("");
         return;
@@ -170,24 +159,6 @@ function ProfilesPage() {
       toast.error("Failed to verify PIN");
     }
     setPinBusy(false);
-  };
-
-  const unlockWithBiometric = async () => {
-    if (!pinTarget?.biometric) return;
-    setBiometricBusy(true);
-    try {
-      const ok = await verifyBiometric(pinTarget.biometric);
-      if (ok) {
-        selectProfile(pinTarget);
-        setPinTarget(null);
-        setPinValue("");
-      } else {
-        toast.error("Biometric verification failed");
-      }
-    } catch {
-      toast.error("Biometric verification failed");
-    }
-    setBiometricBusy(false);
   };
 
   const skipOnboard = () => {
@@ -378,16 +349,6 @@ function ProfilesPage() {
                 {pinBusy ? "Verifying…" : "Unlock"}
               </button>
             </div>
-            {pinTarget?.biometric && (
-              <button
-                onClick={unlockWithBiometric}
-                disabled={biometricBusy}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/20 disabled:opacity-60"
-              >
-                <Fingerprint className="size-4" />
-                {biometricBusy ? "Verifying…" : `Use ${biometricLabel}`}
-              </button>
-            )}
           </div>
         </div>
       )}
@@ -464,16 +425,6 @@ function ProfileEditor({
   const [busy, setBusy] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const biometricLabel = getBiometricLabel();
-  const [biometric, setBiometric] = useState<BiometricCredential | null>(
-    existing?.biometric ?? null,
-  );
-  const [biometricBusy, setBiometricBusy] = useState(false);
-  const [biometricOk, setBiometricOk] = useState(false);
-
-  useEffect(() => {
-    isBiometricAvailable().then(setBiometricOk);
-  }, []);
 
   const onFilePicked = (file: File | undefined) => {
     if (!file) return;
@@ -543,37 +494,6 @@ function ProfileEditor({
       toast.error("Couldn't remove PIN");
     }
     setBusy(false);
-  };
-
-  const setupBiometric = async () => {
-    if (!existing) return;
-    const u = auth.currentUser;
-    if (!u) return;
-    setBiometricBusy(true);
-    try {
-      const cred = await registerBiometric(name.trim() || existing.name || "Profile");
-      await updateProfile(u.uid, existing.id, { biometric: cred });
-      setBiometric(cred);
-      toast.success("Biometric unlock enabled");
-    } catch (e: any) {
-      toast.error(e?.message ?? "Couldn't set up biometrics");
-    }
-    setBiometricBusy(false);
-  };
-
-  const removeBiometric = async () => {
-    if (!existing) return;
-    const u = auth.currentUser;
-    if (!u) return;
-    setBiometricBusy(true);
-    try {
-      await updateProfile(u.uid, existing.id, { biometric: null });
-      setBiometric(null);
-      toast.success("Biometric unlock removed");
-    } catch {
-      toast.error("Couldn't remove biometrics");
-    }
-    setBiometricBusy(false);
   };
 
   const remove = async () => {
@@ -732,42 +652,6 @@ function ProfileEditor({
             </div>
           )}
         </div>
-
-        {!isNew && (
-          <div className="mt-4 rounded border border-border p-3">
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="flex items-center gap-1.5 text-sm font-medium">
-                  <Fingerprint className="size-4 text-muted-foreground" /> {biometricLabel}
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {biometric
-                    ? "Unlock this profile with your device's biometrics."
-                    : `Set up ${biometricLabel} to unlock without a PIN.`}
-                </p>
-              </div>
-              {biometric ? (
-                <button
-                  onClick={removeBiometric}
-                  disabled={biometricBusy}
-                  className="shrink-0 rounded border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:border-destructive hover:text-destructive disabled:opacity-60"
-                >
-                  {biometricBusy ? "Removing…" : "Remove"}
-                </button>
-              ) : (
-                <button
-                  onClick={setupBiometric}
-                  disabled={biometricBusy || !biometricOk}
-                  className="inline-flex shrink-0 items-center gap-1.5 rounded border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 disabled:opacity-60"
-                  title={biometricOk ? "" : "Not available on this device"}
-                >
-                  <ShieldCheck className="size-3.5" />
-                  {biometricBusy ? "Setting up…" : "Set up"}
-                </button>
-              )}
-            </div>
-          </div>
-        )}
 
         <div className="mt-7 flex flex-wrap items-center justify-between gap-3">
           {!isNew ? (

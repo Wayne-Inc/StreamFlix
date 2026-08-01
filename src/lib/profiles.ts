@@ -1,5 +1,4 @@
 import { db } from "./firebase";
-import type { BiometricCredential } from "./biometric";
 import {
   collection,
   doc,
@@ -23,7 +22,6 @@ export type Profile = {
   avatarUrl?: string;
   pin?: string;
   hasPin?: boolean;
-  biometric?: BiometricCredential | null;
   createdAt?: Date;
   updatedAt?: Date;
 };
@@ -46,7 +44,6 @@ export async function getUserProfiles(userId: string): Promise<Profile[]> {
     id: d.id,
     ...d.data(),
     hasPin: !!d.data().pinHash,
-    biometric: d.data().biometric ?? null,
     createdAt: d.data().createdAt?.toDate(),
     updatedAt: d.data().updatedAt?.toDate(),
   })) as Profile[];
