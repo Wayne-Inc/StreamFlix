@@ -23,6 +23,7 @@ import {
   getUserProfiles,
   updateProfile,
   setProfilePin,
+  removeProfilePin,
   verifyProfilePin,
   type Profile,
 } from "@/lib/profiles";
@@ -30,6 +31,7 @@ import {
   isBiometricAvailable,
   registerBiometric,
   verifyBiometric,
+  getBiometricLabel,
   type BiometricCredential,
 } from "@/lib/biometric";
 import { getFavoriteGenres, setFavoriteGenres, GENRE_OPTIONS } from "@/lib/favorite-genres";
@@ -64,6 +66,7 @@ function ProfilesPage() {
   const [pinValue, setPinValue] = useState("");
   const [pinBusy, setPinBusy] = useState(false);
   const [biometricBusy, setBiometricBusy] = useState(false);
+  const biometricLabel = getBiometricLabel();
   const [onboardOpen, setOnboardOpen] = useState(false);
   const [pickedGenres, setPickedGenres] = useState<number[]>([]);
   const [onboardBusy, setOnboardBusy] = useState(false);
@@ -382,7 +385,7 @@ function ProfilesPage() {
                 className="mt-3 flex w-full items-center justify-center gap-2 rounded border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/20 disabled:opacity-60"
               >
                 <Fingerprint className="size-4" />
-                {biometricBusy ? "Verifying…" : "Use Face ID / Fingerprint"}
+                {biometricBusy ? "Verifying…" : `Use ${biometricLabel}`}
               </button>
             )}
           </div>
@@ -457,9 +460,11 @@ function ProfileEditor({
   const [color, setColor] = useState(existing?.color ?? COLORS[existingCount % COLORS.length]);
   const [avatarUrl, setAvatarUrl] = useState(existing?.avatarUrl ?? "");
   const [pin, setPin] = useState("");
+  const [hasPin, setHasPin] = useState(existing?.hasPin ?? false);
   const [busy, setBusy] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const biometricLabel = getBiometricLabel();
   const [biometric, setBiometric] = useState<BiometricCredential | null>(
     existing?.biometric ?? null,
   );
@@ -499,6 +504,7 @@ function ProfileEditor({
           await updateProfile(u.uid, created.id, { color, avatarUrl: avatarUrl.trim() || "" });
           if (pin.trim()) {
             await setProfilePin(u.uid, created.id, pin.trim());
+            setHasPin(true);
           }
         }
         toast.success("Profile added");
@@ -511,6 +517,7 @@ function ProfileEditor({
         });
         if (pin.trim()) {
           await setProfilePin(u.uid, existing.id, pin.trim());
+          setHasPin(true);
         }
         toast.success("Profile updated");
       }
@@ -520,6 +527,22 @@ function ProfileEditor({
     } finally {
       setBusy(false);
     }
+  };
+
+  const removePin = async () => {
+    if (!existing) return;
+    const u = auth.currentUser;
+    if (!u) return;
+    setBusy(true);
+    try {
+      await removeProfilePin(u.uid, existing.id);
+      setHasPin(false);
+      setPin("");
+      toast.success("PIN removed");
+    } catch {
+      toast.error("Couldn't remove PIN");
+    }
+    setBusy(false);
   };
 
   const setupBiometric = async () => {
@@ -690,10 +713,24 @@ function ProfileEditor({
             type="password"
             value={pin}
             onChange={(e) => setPin(e.target.value)}
-            placeholder="Parental PIN (optional)"
+            placeholder={hasPin ? "Enter a new PIN to change it" : "Parental PIN (optional)"}
             maxLength={6}
             className="w-full rounded bg-neutral-800 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
+          {hasPin && (
+            <div className="mt-2 flex items-center justify-between gap-3 rounded border border-border px-3 py-2">
+              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Lock className="size-3.5" /> A PIN is currently set
+              </p>
+              <button
+                onClick={removePin}
+                disabled={busy}
+                className="shrink-0 rounded border border-border px-2.5 py-1 text-xs font-semibold text-muted-foreground hover:border-destructive hover:text-destructive disabled:opacity-60"
+              >
+                {busy ? "Removing…" : "Remove PIN"}
+              </button>
+            </div>
+          )}
         </div>
 
         {!isNew && (
@@ -701,12 +738,12 @@ function ProfileEditor({
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="flex items-center gap-1.5 text-sm font-medium">
-                  <Fingerprint className="size-4 text-muted-foreground" /> Face ID / Fingerprint
+                  <Fingerprint className="size-4 text-muted-foreground" /> {biometricLabel}
                 </p>
                 <p className="mt-0.5 text-xs text-muted-foreground">
                   {biometric
                     ? "Unlock this profile with your device's biometrics."
-                    : "Unlock without typing a PIN."}
+                    : `Set up ${biometricLabel} to unlock without a PIN.`}
                 </p>
               </div>
               {biometric ? (

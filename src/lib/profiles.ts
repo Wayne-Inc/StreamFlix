@@ -8,6 +8,7 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
+  deleteField,
   serverTimestamp,
   query,
   orderBy,
@@ -118,6 +119,13 @@ export async function setProfilePin(userId: string, profileId: string, pin: stri
   const pinHash = btoa(pin);
   await updateDoc(doc(db, "users", userId, "profiles", profileId), {
     pinHash,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function removeProfilePin(userId: string, profileId: string): Promise<void> {
+  await updateDoc(doc(db, "users", userId, "profiles", profileId), {
+    pinHash: deleteField(),
     updatedAt: serverTimestamp(),
   });
 }

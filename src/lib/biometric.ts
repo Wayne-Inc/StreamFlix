@@ -35,13 +35,23 @@ export async function isBiometricAvailable(): Promise<boolean> {
   }
 }
 
+export function getBiometricLabel(): string {
+  if (typeof navigator === "undefined") return "Biometric";
+  const ua = navigator.userAgent;
+  if (/windows/i.test(ua)) return "Windows Hello";
+  if (/iphone|ipad|ipod/i.test(ua)) return "Face ID";
+  if (/macintosh|mac os/i.test(ua)) return "Touch ID / Face ID";
+  if (/android/i.test(ua)) return "Fingerprint / Face unlock";
+  return "Biometric";
+}
+
 export async function registerBiometric(displayName: string): Promise<BiometricCredential> {
   if (!(await isBiometricAvailable())) {
-    throw new Error("Face ID / fingerprint is not available on this device");
+    throw new Error(`${getBiometricLabel()} is not available on this device`);
   }
   const challenge = crypto.getRandomValues(new Uint8Array(32));
   const userId = crypto.getRandomValues(new Uint8Array(16));
-  const options: PublicKeyCredentialCreationOptions = {
+  const baseOptions: PublicKeyCredentialCreationOptions = {
     challenge,
     rp: { name: rpName, id: getRpId() },
     user: { name: displayName, displayName, id: userId },
@@ -49,14 +59,28 @@ export async function registerBiometric(displayName: string): Promise<BiometricC
     timeout: 60000,
     attestation: "none",
     authenticatorSelection: {
-      authenticatorAttachment: "platform",
       residentKey: "preferred",
       userVerification: "required",
     },
   };
-  const credential = (await navigator.credentials.create({ publicKey: options })) as
-    | PublicKeyCredential
-    | null;
+  const platformOptions: PublicKeyCredentialCreationOptions = {
+    ...baseOptions,
+    authenticatorSelection: {
+      ...baseOptions.authenticatorSelection,
+      authenticatorAttachment: "platform",
+    },
+  };
+
+  let credential: PublicKeyCredential | null = null;
+  try {
+    credential = (await navigator.credentials.create({
+      publicKey: platformOptions,
+    })) as PublicKeyCredential | null;
+  } catch {
+    credential = (await navigator.credentials.create({
+      publicKey: baseOptions,
+    })) as PublicKeyCredential | null;
+  }
   if (!credential) throw new Error("Biometric setup was cancelled");
 
   const response = credential.response as AuthenticatorAttestationResponse;
