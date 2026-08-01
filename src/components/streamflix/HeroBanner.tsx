@@ -31,7 +31,7 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
         />
       ))}
       <div className="absolute inset-0 bg-gradient-to-r from-background via-background/50 to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background/70 to-transparent md:h-72 md:from-background md:via-background/70 md:to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background via-background/70 to-transparent md:h-72" />
 
       <div className="relative z-10 flex h-full items-end justify-center px-4 pb-8 pt-10 text-center md:items-end md:justify-start">
         <div

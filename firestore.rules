@@ -17,6 +17,16 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
     }
 
+    // User docs (onboarding preferences): user can read/write only their own
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // User profiles subcollection
+    match /users/{userId}/profiles/{profileId} {
+      allow read, write: if isOwner(userId);
+    }
+
     // VIP: any authenticated user can check membership; only admins can manage it
     match /vip/{uid} {
       allow read: if isAuth();

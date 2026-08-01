@@ -13,6 +13,9 @@ import {
   Clock,
   CalendarDays,
   Lock,
+  Tv,
+  Film,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Logo } from "./Logo";
@@ -301,90 +304,129 @@ export function Navbar() {
             </button>
             {menuOpen && (
               <div
-                className="fixed sm:absolute right-4 left-4 sm:left-auto sm:right-0 top-16 sm:top-12 z-50 sm:w-56 overflow-hidden rounded-md border border-border bg-card/95 backdrop-blur shadow-xl"
+                className="fixed sm:absolute right-4 left-4 sm:left-auto sm:right-0 top-16 sm:top-12 z-50 sm:w-72 overflow-hidden rounded-xl border border-border bg-card/95 backdrop-blur shadow-2xl animate-fade-in"
                 onMouseLeave={() => setMenuOpen(false)}
               >
-                {selectedProfile ? (
-                  <div className="border-b border-border px-4 py-2 text-xs text-muted-foreground truncate">
-                    {selectedProfile.name}
+                <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+                  {profileAvatar}
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">
+                      {selectedProfile?.name ?? userData.email ?? "Account"}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {selectedProfile?.kids
+                        ? "Kids profile"
+                        : userData.email ?? "Signed in"}
+                    </p>
                   </div>
-                ) : userData.email ? (
-                  <div className="border-b border-border px-4 py-2 text-xs text-muted-foreground truncate">
-                    {userData.email}
-                  </div>
-                ) : null}
-                {selectedProfile?.kids ? (
-                  <button
-                    onClick={handleExitKids}
-                    className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm hover:bg-accent"
-                  >
-                    <ArrowRight className="size-4" /> Switch Profile
-                  </button>
-                ) : (
+                </div>
+                <div className="py-1">
+                  {selectedProfile?.kids ? (
+                    <button
+                      onClick={handleExitKids}
+                      className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm hover:bg-accent"
+                    >
+                      <ArrowRight className="size-4 text-muted-foreground" /> Switch Profile
+                    </button>
+                  ) : (
+                    <Link
+                      to="/profiles"
+                      className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-accent"
+                    >
+                      <Users className="size-4 text-muted-foreground" /> Switch Profile
+                    </Link>
+                  )}
                   <Link
-                    to="/profiles"
-                    className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-accent"
+                    to="/settings"
+                    className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-accent"
                   >
-                    <ArrowRight className="size-4" /> Switch Profile
+                    <Settings className="size-4 text-muted-foreground" /> Account & Devices
                   </Link>
-                )}
-                <Link
-                  to="/settings"
-                  className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-accent"
-                >
-                  <Settings className="size-4" /> Account & Devices
-                </Link>
-                <Link
-                  to="/history"
-                  className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-accent"
-                >
-                  <Clock className="size-4" /> Watch History
-                </Link>
-                <button
-                  onClick={signOut}
-                  className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm hover:bg-accent"
-                >
-                  <LogOut className="size-4" /> Sign out of StreamFlix
-                </button>
+                  <Link
+                    to="/history"
+                    className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-accent"
+                  >
+                    <Clock className="size-4 text-muted-foreground" /> Watch History
+                  </Link>
+                </div>
+                <div className="border-t border-border py-1">
+                  <button
+                    onClick={signOut}
+                    className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+                  >
+                    <LogOut className="size-4" /> Sign out
+                  </button>
+                </div>
               </div>
             )}
           </div>
         </div>
       </div>
       {mobileNavOpen && (
-        <div className="md:hidden border-t border-border bg-background/95 backdrop-blur px-4 py-4 space-y-3">
-          {links.map((l, i) => {
-            const active = pathname === "/browse" && searchKind === l.kind;
-            return (
-              <Link
-                key={i}
-                to="/browse"
-                search={{ kind: l.kind }}
-                onClick={() => setMobileNavOpen(false)}
-                className={`block text-sm transition-colors ${
-                  active
-                    ? "text-foreground font-semibold"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {l.label}
-              </Link>
-            );
-          })}
-          <Link
-            to="/history"
-            onClick={() => setMobileNavOpen(false)}
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <Clock className="size-4" /> History
-          </Link>
-          <Link
-            to="/calendar"
-            onClick={() => setMobileNavOpen(false)}
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <CalendarDays className="size-4" /> Calendar
-          </Link>
+        <div className="md:hidden border-t border-border bg-background/95 backdrop-blur px-4 py-4 animate-fade-in">
+          <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Browse
+          </p>
+          <div className="space-y-1">
+            {links.map((l, i) => {
+              const active = pathname === "/browse" && searchKind === l.kind;
+              const Icon = [Tv, Film, Sparkles][i] ?? Film;
+              return (
+                <Link
+                  key={i}
+                  to="/browse"
+                  search={{ kind: l.kind }}
+                  onClick={() => setMobileNavOpen(false)}
+                  className={`flex items-center gap-3 rounded-md px-2 py-2.5 text-sm transition-colors ${
+                    active
+                      ? "bg-accent text-foreground font-semibold"
+                      : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="size-4 text-muted-foreground" /> {l.label}
+                </Link>
+              );
+            })}
+          </div>
+          <p className="px-2 pb-2 pt-5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Account
+          </p>
+          <div className="space-y-1">
+            <Link
+              to="/history"
+              onClick={() => setMobileNavOpen(false)}
+              className="flex items-center gap-3 rounded-md px-2 py-2.5 text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground transition-colors"
+            >
+              <Clock className="size-4" /> History
+            </Link>
+            <Link
+              to="/calendar"
+              onClick={() => setMobileNavOpen(false)}
+              className="flex items-center gap-3 rounded-md px-2 py-2.5 text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground transition-colors"
+            >
+              <CalendarDays className="size-4" /> Calendar
+            </Link>
+            <Link
+              to="/profiles"
+              onClick={() => setMobileNavOpen(false)}
+              className="flex items-center gap-3 rounded-md px-2 py-2.5 text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground transition-colors"
+            >
+              <Users className="size-4" /> Switch Profile
+            </Link>
+            <Link
+              to="/settings"
+              onClick={() => setMobileNavOpen(false)}
+              className="flex items-center gap-3 rounded-md px-2 py-2.5 text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground transition-colors"
+            >
+              <Settings className="size-4" /> Account & Devices
+            </Link>
+            <button
+              onClick={signOut}
+              className="flex w-full items-center gap-3 rounded-md px-2 py-2.5 text-left text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground transition-colors"
+            >
+              <LogOut className="size-4" /> Sign out
+            </button>
+          </div>
         </div>
       )}
       {exitKidsOpen && (

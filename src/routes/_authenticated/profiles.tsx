@@ -1,5 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Pencil, Plus, Trash2, X, Lock, Upload } from "lucide-react";
+import {
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+  Lock,
+  Upload,
+  Fingerprint,
+  ShieldCheck,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Logo } from "@/components/streamflix/Logo";
@@ -15,9 +24,15 @@ import {
   updateProfile,
   setProfilePin,
   verifyProfilePin,
-  profileHasPin,
   type Profile,
 } from "@/lib/profiles";
+import {
+  isBiometricAvailable,
+  registerBiometric,
+  verifyBiometric,
+  type BiometricCredential,
+} from "@/lib/biometric";
+import { getFavoriteGenres, setFavoriteGenres, GENRE_OPTIONS } from "@/lib/favorite-genres";
 
 export const Route = createFileRoute("/_authenticated/profiles")({
   head: () => ({ meta: [{ title: "Who's watching? — StreamFlix" }] }),
@@ -48,8 +63,30 @@ function ProfilesPage() {
   const [pinTarget, setPinTarget] = useState<Profile | null>(null);
   const [pinValue, setPinValue] = useState("");
   const [pinBusy, setPinBusy] = useState(false);
+  const [biometricBusy, setBiometricBusy] = useState(false);
+  const [onboardOpen, setOnboardOpen] = useState(false);
+  const [pickedGenres, setPickedGenres] = useState<number[]>([]);
+  const [onboardBusy, setOnboardBusy] = useState(false);
   const [bgSlides, setBgSlides] = useState<string[]>([]);
   const [bgIdx, setBgIdx] = useState(0);
+
+  useEffect(() => {
+    const u = auth.currentUser;
+    if (!u) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        if (localStorage.getItem("sf:onboarded")) return;
+        const genres = await getFavoriteGenres(u.uid);
+        if (!cancelled && genres.length === 0) setOnboardOpen(true);
+      } catch {
+        /* skip onboarding if lookup fails */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const history = getWatchHistory().slice(0, 8);
@@ -87,7 +124,7 @@ function ProfilesPage() {
   const choose = async (p: Profile) => {
     if (!editing) {
       const u = auth.currentUser;
-      if (u && (await profileHasPin(u.uid, p.id))) {
+      if (u && (p.hasPin || p.biometric)) {
         setPinTarget(p);
         setPinValue("");
         return;
@@ -130,6 +167,63 @@ function ProfilesPage() {
       toast.error("Failed to verify PIN");
     }
     setPinBusy(false);
+  };
+
+  const unlockWithBiometric = async () => {
+    if (!pinTarget?.biometric) return;
+    setBiometricBusy(true);
+    try {
+      const ok = await verifyBiometric(pinTarget.biometric);
+      if (ok) {
+        selectProfile(pinTarget);
+        setPinTarget(null);
+        setPinValue("");
+      } else {
+        toast.error("Biometric verification failed");
+      }
+    } catch {
+      toast.error("Biometric verification failed");
+    }
+    setBiometricBusy(false);
+  };
+
+  const skipOnboard = () => {
+    try {
+      localStorage.setItem("sf:onboarded", "1");
+    } catch {}
+    setOnboardOpen(false);
+  };
+
+  const saveOnboard = async () => {
+    const u = auth.currentUser;
+    if (!u) return;
+    if (pickedGenres.length === 0) {
+      toast.error("Pick at least one genre");
+      return;
+    }
+    setOnboardBusy(true);
+    try {
+      await setFavoriteGenres(u.uid, pickedGenres);
+      try {
+        localStorage.setItem("sf:onboarded", "1");
+      } catch {}
+      setOnboardOpen(false);
+      toast.success("Preferences saved");
+    } catch {
+      toast.error("Couldn't save preferences");
+    }
+    setOnboardBusy(false);
+  };
+
+  const toggleGenre = (id: number) => {
+    setPickedGenres((cur) => {
+      if (cur.includes(id)) return cur.filter((g) => g !== id);
+      if (cur.length >= 5) {
+        toast.error("You can pick up to 5 genres");
+        return cur;
+      }
+      return [...cur, id];
+    });
   };
 
   return (
@@ -281,6 +375,63 @@ function ProfilesPage() {
                 {pinBusy ? "Verifying…" : "Unlock"}
               </button>
             </div>
+            {pinTarget?.biometric && (
+              <button
+                onClick={unlockWithBiometric}
+                disabled={biometricBusy}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/20 disabled:opacity-60"
+              >
+                <Fingerprint className="size-4" />
+                {biometricBusy ? "Verifying…" : "Use Face ID / Fingerprint"}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {onboardOpen && (
+        <div className="fixed inset-0 z-[70] grid place-items-center overflow-y-auto bg-black/90 p-4">
+          <div className="w-full max-w-xl rounded-md bg-card p-6 shadow-2xl sm:p-8">
+            <h2 className="text-2xl font-semibold">What do you like to watch?</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Pick up to 5 genres and we'll personalize your recommendations.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              {GENRE_OPTIONS.map((g) => {
+                const selected = pickedGenres.includes(g.id);
+                return (
+                  <button
+                    key={g.id}
+                    onClick={() => toggleGenre(g.id)}
+                    className={`rounded-full border px-4 py-2 text-sm transition ${
+                      selected
+                        ? "border-primary bg-primary/15 text-primary"
+                        : "border-border text-foreground hover:border-primary/60"
+                    }`}
+                  >
+                    {g.name}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-6 flex items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground">{pickedGenres.length}/5 picked</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={skipOnboard}
+                  className="rounded border border-border px-4 py-2 text-sm hover:bg-accent"
+                >
+                  Skip
+                </button>
+                <button
+                  onClick={saveOnboard}
+                  disabled={onboardBusy || pickedGenres.length === 0}
+                  className="rounded bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                >
+                  {onboardBusy ? "Saving…" : "Continue"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -309,6 +460,15 @@ function ProfileEditor({
   const [busy, setBusy] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [biometric, setBiometric] = useState<BiometricCredential | null>(
+    existing?.biometric ?? null,
+  );
+  const [biometricBusy, setBiometricBusy] = useState(false);
+  const [biometricOk, setBiometricOk] = useState(false);
+
+  useEffect(() => {
+    isBiometricAvailable().then(setBiometricOk);
+  }, []);
 
   const onFilePicked = (file: File | undefined) => {
     if (!file) return;
@@ -360,6 +520,37 @@ function ProfileEditor({
     } finally {
       setBusy(false);
     }
+  };
+
+  const setupBiometric = async () => {
+    if (!existing) return;
+    const u = auth.currentUser;
+    if (!u) return;
+    setBiometricBusy(true);
+    try {
+      const cred = await registerBiometric(name.trim() || existing.name || "Profile");
+      await updateProfile(u.uid, existing.id, { biometric: cred });
+      setBiometric(cred);
+      toast.success("Biometric unlock enabled");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Couldn't set up biometrics");
+    }
+    setBiometricBusy(false);
+  };
+
+  const removeBiometric = async () => {
+    if (!existing) return;
+    const u = auth.currentUser;
+    if (!u) return;
+    setBiometricBusy(true);
+    try {
+      await updateProfile(u.uid, existing.id, { biometric: null });
+      setBiometric(null);
+      toast.success("Biometric unlock removed");
+    } catch {
+      toast.error("Couldn't remove biometrics");
+    }
+    setBiometricBusy(false);
   };
 
   const remove = async () => {
@@ -504,6 +695,42 @@ function ProfileEditor({
             className="w-full rounded bg-neutral-800 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
+
+        {!isNew && (
+          <div className="mt-4 rounded border border-border p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="flex items-center gap-1.5 text-sm font-medium">
+                  <Fingerprint className="size-4 text-muted-foreground" /> Face ID / Fingerprint
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {biometric
+                    ? "Unlock this profile with your device's biometrics."
+                    : "Unlock without typing a PIN."}
+                </p>
+              </div>
+              {biometric ? (
+                <button
+                  onClick={removeBiometric}
+                  disabled={biometricBusy}
+                  className="shrink-0 rounded border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:border-destructive hover:text-destructive disabled:opacity-60"
+                >
+                  {biometricBusy ? "Removing…" : "Remove"}
+                </button>
+              ) : (
+                <button
+                  onClick={setupBiometric}
+                  disabled={biometricBusy || !biometricOk}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 disabled:opacity-60"
+                  title={biometricOk ? "" : "Not available on this device"}
+                >
+                  <ShieldCheck className="size-3.5" />
+                  {biometricBusy ? "Setting up…" : "Set up"}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="mt-7 flex flex-wrap items-center justify-between gap-3">
           {!isNew ? (

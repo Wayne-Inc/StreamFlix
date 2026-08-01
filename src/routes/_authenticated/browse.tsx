@@ -11,6 +11,8 @@ import { ReleaseReminderBanner } from "@/components/streamflix/ReleaseReminderBa
 import { loadBrowseData, searchByGenre, type BrowseKind } from "@/lib/streamflix-data";
 import { fetchPopular } from "@/lib/api/tmdb";
 import type { Movie } from "@/lib/types";
+import { auth } from "@/lib/firebase";
+import { getFavoriteGenres, GENRE_OPTIONS } from "@/lib/favorite-genres";
 import {
   getContinueWatching,
   getWatchHistory,
@@ -95,6 +97,12 @@ function BrowsePage() {
     items: { movie: Movie; progress: number }[];
   } | null>(null);
   const [watchedRow, setWatchedRow] = useState<{
+    title: string;
+    items: Movie[];
+    reasons: Record<string, string>;
+    reasonLinks: Record<string, string>;
+  } | null>(null);
+  const [pickedRow, setPickedRow] = useState<{
     title: string;
     items: Movie[];
     reasons: Record<string, string>;
@@ -199,6 +207,50 @@ function BrowsePage() {
     };
   }, [kind]);
 
+  useEffect(() => {
+    if (kind !== "home" || typeof window === "undefined") return;
+    const u = auth.currentUser;
+    if (!u) return;
+    let cancelled = false;
+    const loadPicked = async () => {
+      try {
+        const genres = await getFavoriteGenres(u.uid);
+        if (genres.length === 0) {
+          if (!cancelled) setPickedRow(null);
+          return;
+        }
+        const seen = new Set<string>();
+        const items: Movie[] = [];
+        const reasons: Record<string, string> = {};
+        for (const gid of genres.slice(0, 5)) {
+          const label = GENRE_OPTIONS.find((g) => g.id === gid)?.name ?? "this genre";
+          const batch = await searchByGenre(String(gid)).catch(() => [] as Movie[]);
+          for (const m of batch) {
+            if (seen.has(m.id)) continue;
+            seen.add(m.id);
+            items.push(m);
+            reasons[m.id] = `Because you like ${label}`;
+            if (items.length >= 12) break;
+          }
+          if (items.length >= 12) break;
+        }
+        if (!cancelled) {
+          setPickedRow(
+            items.length
+              ? { title: "Picked for You", items, reasons, reasonLinks: {} }
+              : null,
+          );
+        }
+      } catch {
+        if (!cancelled) setPickedRow(null);
+      }
+    };
+    loadPicked();
+    return () => {
+      cancelled = true;
+    };
+  }, [kind]);
+
   const kidsMode = useMemo(() => isKidsProfile(), []);
 
   const [kidsPool, setKidsPool] = useState<Movie[]>([]);
@@ -298,6 +350,14 @@ function BrowsePage() {
             items={kidsMode ? fillRow(filterKidsContent(watchedRow.items)) : watchedRow.items}
             reasons={watchedRow.reasons}
             reasonLinks={watchedRow.reasonLinks}
+          />
+        )}
+        {!watchedRow && pickedRow && kind === "home" && (
+          <Row
+            title={pickedRow.title}
+            items={kidsMode ? fillRow(filterKidsContent(pickedRow.items)) : pickedRow.items}
+            reasons={pickedRow.reasons}
+            reasonLinks={pickedRow.reasonLinks}
           />
         )}
         {!kidsMode && kind === "home" && (

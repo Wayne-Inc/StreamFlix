@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Movie } from "@/lib/types";
 import { MovieCard } from "./MovieCard";
 
@@ -22,6 +23,7 @@ export function Row({
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [viewportW, setViewportW] = useState(0);
+  const [scrollWidth, setScrollWidth] = useState(0);
   const [isSm, setIsSm] = useState(
     typeof window !== "undefined" ? window.innerWidth >= 640 : false,
   );
@@ -33,6 +35,7 @@ export function Row({
     const measure = () => {
       setViewportW(el.clientWidth);
       setScrollLeft(el.scrollLeft);
+      setScrollWidth(el.scrollWidth);
       setIsSm(window.innerWidth >= 640);
     };
     measure();
@@ -72,24 +75,54 @@ export function Row({
 
   const visible = items.slice(start, end);
 
+  const canScrollLeft = scrollLeft > 2;
+  const canScrollRight = viewportW > 0 && scrollLeft + viewportW < scrollWidth - 2;
+
+  const scrollBy = (dir: 1 | -1) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const distance = step * Math.max(1, Math.ceil(viewportW / step));
+    el.scrollBy({ left: dir * distance, behavior: "smooth" });
+  };
+
   return (
-    <section className="relative space-y-0 py-0 sm:space-y-0 sm:py-0">
+    <section className="group relative space-y-0 py-0 sm:space-y-0 sm:py-0">
       <h2 className="px-4 sm:px-8 text-2xl sm:text-3xl font-bold tracking-tight">{title}</h2>
 
-      <div
-        ref={scrollerRef}
-        className="scrollbar-hide flex gap-2 sm:gap-3 overflow-x-auto scroll-smooth px-4 sm:px-8 pb-4 sm:pb-10"
-      >
-        {padStart > 0 && <div aria-hidden style={{ width: padStart }} className="shrink-0" />}
-        {visible.map((m) => (
-          <MovieCard
-            key={m.id + title}
-            movie={m}
-            reason={reasons?.[m.id]}
-            reasonLink={reasonLinks?.[m.id]}
-          />
-        ))}
-        {padEnd > 0 && <div aria-hidden style={{ width: padEnd }} className="shrink-0" />}
+      <div className="relative">
+        {isSm && canScrollLeft && (
+          <button
+            onClick={() => scrollBy(-1)}
+            aria-label={`Scroll ${title} back`}
+            className="absolute left-1 sm:left-2 top-1/2 z-20 hidden -translate-y-1/2 place-items-center rounded-md bg-background/80 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid size-10 opacity-0 group-hover:opacity-100"
+          >
+            <ChevronLeft className="size-5" />
+          </button>
+        )}
+        {isSm && canScrollRight && (
+          <button
+            onClick={() => scrollBy(1)}
+            aria-label={`Scroll ${title} forward`}
+            className="absolute right-1 sm:right-2 top-1/2 z-20 hidden -translate-y-1/2 place-items-center rounded-md bg-background/80 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid size-10 opacity-0 group-hover:opacity-100"
+          >
+            <ChevronRight className="size-5" />
+          </button>
+        )}
+        <div
+          ref={scrollerRef}
+          className="scrollbar-hide flex gap-2 sm:gap-3 overflow-x-auto scroll-smooth px-4 sm:px-8 pb-4 sm:pb-10"
+        >
+          {padStart > 0 && <div aria-hidden style={{ width: padStart }} className="shrink-0" />}
+          {visible.map((m) => (
+            <MovieCard
+              key={m.id + title}
+              movie={m}
+              reason={reasons?.[m.id]}
+              reasonLink={reasonLinks?.[m.id]}
+            />
+          ))}
+          {padEnd > 0 && <div aria-hidden style={{ width: padEnd }} className="shrink-0" />}
+        </div>
       </div>
     </section>
   );
