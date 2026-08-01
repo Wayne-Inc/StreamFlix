@@ -321,12 +321,21 @@ export function Navbar() {
                     <Lock className="size-4" /> Exit Kids Mode
                   </button>
                 )}
-                <Link
-                  to="/profiles"
-                  className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-accent"
-                >
-                  <ArrowRight className="size-4" /> Switch Profile
-                </Link>
+                {selectedProfile?.kids ? (
+                  <button
+                    onClick={handleExitKids}
+                    className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm hover:bg-accent"
+                  >
+                    <ArrowRight className="size-4" /> Switch Profile
+                  </button>
+                ) : (
+                  <Link
+                    to="/profiles"
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-accent"
+                  >
+                    <ArrowRight className="size-4" /> Switch Profile
+                  </Link>
+                )}
                 <Link
                   to="/settings"
                   className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-accent"
