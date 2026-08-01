@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Play, Share2, Clapperboard } from "lucide-react";
 import { isKidsProfile, filterKidsContent, isBlockedKidsGenre } from "@/lib/kids-mode";
 import { toast } from "sonner";
+import { shareContent } from "@/lib/share";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { Row } from "@/components/streamflix/Row";
@@ -186,8 +187,13 @@ function MoviePage() {
                 )}
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(window.location.href);
-                    toast.success("Link copied");
+                    shareContent({
+                      title: `${movie.title} — StreamFlix`,
+                      text: movie.description.slice(0, 140),
+                      url: window.location.href,
+                    }).then((mode) =>
+                      toast.success(mode === "shared" ? "Shared" : "Link copied"),
+                    );
                   }}
                   className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground"
                   aria-label="Share"
@@ -288,16 +294,20 @@ function MoviePage() {
               </div>
 
               <div className="flex flex-wrap gap-1.5">
-                {movie.genres.map((name: string) => (
-                  <Link
-                    key={name}
-                    to="/search"
-                    search={{ q: name, tab: "genres" }}
-                    className="rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-foreground transition hover:bg-card hover:border-primary/50"
-                  >
-                    {name}
-                  </Link>
-                ))}
+                {movie.genreIds.map((gid: number, i: number) => {
+                  const label = genreLabels[String(gid)] || movie.genres[i] || "Explore";
+                  return (
+                    <Link
+                      key={`${gid}-${i}`}
+                      to="/explore/$genreId"
+                      params={{ genreId: String(gid) }}
+                      search={{ q: label }}
+                      className="rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-foreground transition hover:bg-card hover:border-primary/50"
+                    >
+                      {label}
+                    </Link>
+                  );
+                })}
               </div>
 
               {isTv && movie.numberOfSeasons && movie.numberOfSeasons > 0 && (

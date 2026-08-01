@@ -1,8 +1,18 @@
 import { Link } from "@tanstack/react-router";
-import { Play, Info } from "lucide-react";
+import { Play, Info, Sparkles } from "lucide-react";
 import type { Movie } from "@/lib/types";
 
-export function MovieCard({ movie, progress }: { movie: Movie; progress?: number }) {
+export function MovieCard({
+  movie,
+  progress,
+  reason,
+  reasonLink,
+}: {
+  movie: Movie;
+  progress?: number;
+  reason?: string;
+  reasonLink?: string;
+}) {
   return (
     <div className="group relative w-[200px] sm:w-[260px] shrink-0 transition-all duration-300 hover:z-30 hover:scale-[1.02]">
       <div className="relative aspect-[2/3] overflow-hidden rounded-md bg-surface shadow-md transition-shadow duration-300 group-hover:shadow-2xl">
@@ -36,6 +46,23 @@ export function MovieCard({ movie, progress }: { movie: Movie; progress?: number
             <span>·</span>
             <span className="text-muted-foreground">{movie.year}</span>
           </div>
+          {reason && (
+            <p className="mb-2 flex items-center gap-1 text-[10px] sm:text-[11px] text-purple-300">
+              <Sparkles className="size-3 shrink-0" />
+              {reasonLink ? (
+                <Link
+                  to="/movie/$id"
+                  params={{ id: reasonLink }}
+                  className="line-clamp-1 underline decoration-purple-300/40 underline-offset-2 hover:text-purple-200"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {reason}
+                </Link>
+              ) : (
+                <span className="line-clamp-1">{reason}</span>
+              )}
+            </p>
+          )}
           <div className="flex items-center gap-2">
             <Link
               to="/watch/$id"

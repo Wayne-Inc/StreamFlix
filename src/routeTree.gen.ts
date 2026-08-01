@@ -21,10 +21,13 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
 import { Route as AuthenticatedProfilesRouteImport } from './routes/_authenticated/profiles'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
+import { Route as AuthenticatedExploreRouteImport } from './routes/_authenticated/explore'
+import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedBrowseRouteImport } from './routes/_authenticated/browse'
 import { Route as AuthenticatedWatchIdRouteImport } from './routes/_authenticated/watch.$id'
 import { Route as AuthenticatedPersonIdRouteImport } from './routes/_authenticated/person.$id'
 import { Route as AuthenticatedMovieIdRouteImport } from './routes/_authenticated/movie.$id'
+import { Route as AuthenticatedExploreGenreIdRouteImport } from './routes/_authenticated/explore.$genreId'
 
 const TosRoute = TosRouteImport.update({
   id: '/tos',
@@ -85,6 +88,16 @@ const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
   path: '/history',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedExploreRoute = AuthenticatedExploreRouteImport.update({
+  id: '/explore',
+  path: '/explore',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedBrowseRoute = AuthenticatedBrowseRouteImport.update({
   id: '/browse',
   path: '/browse',
@@ -105,6 +118,12 @@ const AuthenticatedMovieIdRoute = AuthenticatedMovieIdRouteImport.update({
   path: '/movie/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedExploreGenreIdRoute =
+  AuthenticatedExploreGenreIdRouteImport.update({
+    id: '/$genreId',
+    path: '/$genreId',
+    getParentRoute: () => AuthenticatedExploreRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -114,11 +133,14 @@ export interface FileRoutesByFullPath {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/tos': typeof TosRoute
   '/browse': typeof AuthenticatedBrowseRoute
+  '/calendar': typeof AuthenticatedCalendarRoute
+  '/explore': typeof AuthenticatedExploreRouteWithChildren
   '/history': typeof AuthenticatedHistoryRoute
   '/profiles': typeof AuthenticatedProfilesRoute
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/auth/action': typeof AuthActionRoute
+  '/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
   '/movie/$id': typeof AuthenticatedMovieIdRoute
   '/person/$id': typeof AuthenticatedPersonIdRoute
   '/watch/$id': typeof AuthenticatedWatchIdRoute
@@ -131,11 +153,14 @@ export interface FileRoutesByTo {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/tos': typeof TosRoute
   '/browse': typeof AuthenticatedBrowseRoute
+  '/calendar': typeof AuthenticatedCalendarRoute
+  '/explore': typeof AuthenticatedExploreRouteWithChildren
   '/history': typeof AuthenticatedHistoryRoute
   '/profiles': typeof AuthenticatedProfilesRoute
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/auth/action': typeof AuthActionRoute
+  '/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
   '/movie/$id': typeof AuthenticatedMovieIdRoute
   '/person/$id': typeof AuthenticatedPersonIdRoute
   '/watch/$id': typeof AuthenticatedWatchIdRoute
@@ -150,11 +175,14 @@ export interface FileRoutesById {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/tos': typeof TosRoute
   '/_authenticated/browse': typeof AuthenticatedBrowseRoute
+  '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
+  '/_authenticated/explore': typeof AuthenticatedExploreRouteWithChildren
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/profiles': typeof AuthenticatedProfilesRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/auth/action': typeof AuthActionRoute
+  '/_authenticated/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
   '/_authenticated/movie/$id': typeof AuthenticatedMovieIdRoute
   '/_authenticated/person/$id': typeof AuthenticatedPersonIdRoute
   '/_authenticated/watch/$id': typeof AuthenticatedWatchIdRoute
@@ -169,11 +197,14 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/tos'
     | '/browse'
+    | '/calendar'
+    | '/explore'
     | '/history'
     | '/profiles'
     | '/search'
     | '/settings'
     | '/auth/action'
+    | '/explore/$genreId'
     | '/movie/$id'
     | '/person/$id'
     | '/watch/$id'
@@ -186,11 +217,14 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/tos'
     | '/browse'
+    | '/calendar'
+    | '/explore'
     | '/history'
     | '/profiles'
     | '/search'
     | '/settings'
     | '/auth/action'
+    | '/explore/$genreId'
     | '/movie/$id'
     | '/person/$id'
     | '/watch/$id'
@@ -204,11 +238,14 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/tos'
     | '/_authenticated/browse'
+    | '/_authenticated/calendar'
+    | '/_authenticated/explore'
     | '/_authenticated/history'
     | '/_authenticated/profiles'
     | '/_authenticated/search'
     | '/_authenticated/settings'
     | '/auth/action'
+    | '/_authenticated/explore/$genreId'
     | '/_authenticated/movie/$id'
     | '/_authenticated/person/$id'
     | '/_authenticated/watch/$id'
@@ -310,6 +347,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHistoryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/explore': {
+      id: '/_authenticated/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof AuthenticatedExploreRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/calendar': {
+      id: '/_authenticated/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof AuthenticatedCalendarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/browse': {
       id: '/_authenticated/browse'
       path: '/browse'
@@ -338,11 +389,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMovieIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/explore/$genreId': {
+      id: '/_authenticated/explore/$genreId'
+      path: '/$genreId'
+      fullPath: '/explore/$genreId'
+      preLoaderRoute: typeof AuthenticatedExploreGenreIdRouteImport
+      parentRoute: typeof AuthenticatedExploreRoute
+    }
   }
 }
 
+interface AuthenticatedExploreRouteChildren {
+  AuthenticatedExploreGenreIdRoute: typeof AuthenticatedExploreGenreIdRoute
+}
+
+const AuthenticatedExploreRouteChildren: AuthenticatedExploreRouteChildren = {
+  AuthenticatedExploreGenreIdRoute: AuthenticatedExploreGenreIdRoute,
+}
+
+const AuthenticatedExploreRouteWithChildren =
+  AuthenticatedExploreRoute._addFileChildren(AuthenticatedExploreRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedBrowseRoute: typeof AuthenticatedBrowseRoute
+  AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
+  AuthenticatedExploreRoute: typeof AuthenticatedExploreRouteWithChildren
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
   AuthenticatedProfilesRoute: typeof AuthenticatedProfilesRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
@@ -354,6 +425,8 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBrowseRoute: AuthenticatedBrowseRoute,
+  AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
+  AuthenticatedExploreRoute: AuthenticatedExploreRouteWithChildren,
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
   AuthenticatedProfilesRoute: AuthenticatedProfilesRoute,
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,

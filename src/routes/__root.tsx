@@ -4,10 +4,11 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
@@ -133,6 +134,17 @@ function RootComponent() {
   const photoSaved = useRef<string | null>(null);
   const offlineRoute = "/offline";
 
+  // Cinematic page transitions: brief overlay fade + scale-in on navigation.
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [transitionKey, setTransitionKey] = useState(pathname);
+  const [fadeKey, setFadeKey] = useState<number | null>(null);
+
+  useEffect(() => {
+    setTransitionKey(pathname);
+    setFadeKey(Date.now());
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
   useEffect(() => {
     if (typeof window !== "undefined" && window.electronAPI) {
       document.body.classList.add("electron-app");
@@ -192,7 +204,16 @@ function RootComponent() {
       <CustomTitleBar />
       <div>
         <Toaster richColors theme="dark" position="top-center" />
-        <Outlet />
+        <div key={transitionKey} className="animate-page-enter">
+          <Outlet />
+        </div>
+        {fadeKey != null && (
+          <div
+            key={fadeKey}
+            className="animate-page-fade pointer-events-none fixed inset-0 z-[60] bg-black"
+            style={{ animationDuration: "0.4s" }}
+          />
+        )}
         <CookieConsent />
         <ScreenSaver />
       </div>

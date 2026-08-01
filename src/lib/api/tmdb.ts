@@ -31,6 +31,79 @@ export const fetchUpcoming = createServerFn({ method: "POST" }).handler(async ()
   return (data.results || []).map((m: any) => toMovie(m));
 });
 
+export const fetchTrendingByRegion = createServerFn({ method: "POST" })
+  .validator(z.object({ region: z.string().min(2).max(10) }))
+  .handler(async ({ data }) => {
+    const { tmdbFetch, toMovie } = await import("./tmdb.server");
+    const res = await tmdbFetch("/trending/movie/week", { region: data.region });
+    return (res.results || []).map((m: any) => toMovie(m));
+  });
+
+export const fetchCountries = createServerFn({ method: "GET" }).handler(async () => {
+  const { tmdbFetch } = await import("./tmdb.server");
+  const data = await tmdbFetch("/configuration/countries");
+  return (data || []).map((c: any) => ({
+    iso: String(c.iso_3166_1),
+    name: c.english_name ?? c.native_name ?? String(c.iso_3166_1),
+  }));
+});
+
+export type CalendarTitle = {
+  id: string;
+  title: string;
+  poster: string;
+  backdrop: string;
+  releaseDate: string;
+  year: number;
+  genreIds: number[];
+  media: "movie" | "tv";
+};
+
+export const fetchUpcomingCalendar = createServerFn({ method: "POST" }).handler(async () => {
+  const { tmdbFetch } = await import("./tmdb.server");
+  const data = await tmdbFetch("/movie/upcoming", { page: "1" });
+  return (data.results || []).map((m: any): CalendarTitle => ({
+    id: String(m.id),
+    title: m.title ?? "",
+    poster: m.poster_path ? `https://image.tmdb.org/t/p/w342${m.poster_path}` : "",
+    backdrop: m.backdrop_path ? `https://image.tmdb.org/t/p/w780${m.backdrop_path}` : "",
+    releaseDate: m.release_date ?? "",
+    year: m.release_date ? new Date(m.release_date).getFullYear() : new Date().getFullYear(),
+    genreIds: m.genre_ids || [],
+    media: "movie",
+  }));
+});
+
+export const fetchAiringCalendar = createServerFn({ method: "POST" }).handler(async () => {
+  const { tmdbFetch } = await import("./tmdb.server");
+  const data = await tmdbFetch("/tv/on_the_air", { page: "1" });
+  return (data.results || []).map((m: any): CalendarTitle => ({
+    id: `tv-${m.id}`,
+    title: m.name ?? "",
+    poster: m.poster_path ? `https://image.tmdb.org/t/p/w342${m.poster_path}` : "",
+    backdrop: m.backdrop_path ? `https://image.tmdb.org/t/p/w780${m.backdrop_path}` : "",
+    releaseDate: m.first_air_date ?? "",
+    year: m.first_air_date ? new Date(m.first_air_date).getFullYear() : new Date().getFullYear(),
+    genreIds: m.genre_ids || [],
+    media: "tv",
+  }));
+});
+
+export const probeEmbedUrl = createServerFn({ method: "POST" })
+  .validator(z.object({ url: z.string().url() }))
+  .handler(async ({ data }) => {
+    try {
+      const res = await fetch(data.url, {
+        method: "GET",
+        redirect: "follow",
+        signal: AbortSignal.timeout(8000),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  });
+
 // ---- TV ----
 export const fetchTrendingTv = createServerFn({ method: "POST" }).handler(async () => {
   const { tmdbFetch, toTv } = await import("./tmdb.server");

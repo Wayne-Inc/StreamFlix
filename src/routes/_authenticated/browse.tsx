@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { Navbar } from "@/components/streamflix/Navbar";
@@ -7,8 +7,10 @@ import { Row } from "@/components/streamflix/Row";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import { Footer } from "@/components/streamflix/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
-import { loadBrowseData, type BrowseKind } from "@/lib/streamflix-data";
+import { ReleaseReminderBanner } from "@/components/streamflix/ReleaseReminderBanner";
+import { loadBrowseData, loadTrendingByRegion, getCountries, type BrowseKind } from "@/lib/streamflix-data";
 import type { Movie } from "@/lib/types";
+import { detectRegion, regionLabel } from "@/lib/region";
 import {
   getContinueWatching,
   getWatchHistory,
@@ -91,7 +93,13 @@ function BrowsePage() {
     title: string;
     items: { movie: Movie; progress: number }[];
   } | null>(null);
-  const [watchedRow, setWatchedRow] = useState<{ title: string; items: Movie[] } | null>(null);
+  const [watchedRow, setWatchedRow] = useState<{
+    title: string;
+    items: Movie[];
+    reasons: Record<string, string>;
+    reasonLinks: Record<string, string>;
+  } | null>(null);
+  const [regionRow, setRegionRow] = useState<{ title: string; items: Movie[] } | null>(null);
   useEffect(() => {
     const update = async () => {
       const localItems = getContinueWatching();
@@ -170,6 +178,8 @@ function BrowsePage() {
                     ? `Because You Watched ${result.basedOnTitle}`
                     : "Because You Watched",
                   items: result.items,
+                  reasons: result.reasons,
+                  reasonLinks: result.reasonLinks,
                 }
               : null,
           );
@@ -186,6 +196,27 @@ function BrowsePage() {
       cancelled = true;
       window.removeEventListener("storage", loadWatchedRow);
       window.removeEventListener("focus", loadWatchedRow);
+    };
+  }, [kind]);
+
+  // Trending in your region (home only)
+  useEffect(() => {
+    if (kind !== "home") return;
+    let cancelled = false;
+    const load = async () => {
+      const [countries, region] = await Promise.all([
+        getCountries(),
+        Promise.resolve(detectRegion()),
+      ]);
+      const label = regionLabel(region, countries);
+      const items = await loadTrendingByRegion(region);
+      if (!cancelled && items.length > 0) {
+        setRegionRow({ title: `Trending in ${label}`, items: items.slice(0, 10) });
+      }
+    };
+    load().catch(() => {});
+    return () => {
+      cancelled = true;
     };
   }, [kind]);
 
@@ -211,6 +242,16 @@ function BrowsePage() {
       <Navbar />
       <HeroBanner slides={filteredHeroSlides} />
       <div className="relative z-10 mt-0 md:mt-12 space-y-4 md:space-y-8">
+        {kind === "new" && (
+          <div className="px-4 sm:px-8 pt-2">
+            <Link
+              to="/calendar"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-4 py-2 text-sm text-foreground transition hover:border-primary"
+            >
+              <span aria-hidden>📅</span> Release Calendar — get notified when titles arrive
+            </Link>
+          </div>
+        )}
         {continueRow && kind === "home" && (
           <section className="space-y-3 py-4">
             <h2 className="px-4 sm:px-8 text-lg sm:text-xl font-semibold tracking-tight">
@@ -229,12 +270,56 @@ function BrowsePage() {
           <Row
             title={watchedRow.title}
             items={kidsMode ? filterKidsContent(watchedRow.items) : watchedRow.items}
+            reasons={watchedRow.reasons}
+            reasonLinks={watchedRow.reasonLinks}
           />
+        )}
+        {regionRow && kind === "home" && (
+          <Row
+            title={regionRow.title}
+            items={kidsMode ? filterKidsContent(regionRow.items) : regionRow.items}
+          />
+        )}
+        {kind === "home" && (
+          <section className="space-y-3 py-4">
+            <h2 className="px-4 sm:px-8 text-lg sm:text-xl font-semibold tracking-tight">
+              Explore moods
+            </h2>
+            <div className="flex flex-wrap gap-2 px-4 sm:px-8">
+              {[
+                { id: "28", name: "Action" },
+                { id: "35", name: "Comedy" },
+                { id: "878", name: "Sci-Fi" },
+                { id: "27", name: "Horror" },
+                { id: "10749", name: "Romance" },
+                { id: "18", name: "Drama" },
+                { id: "16", name: "Animation" },
+                { id: "53", name: "Thriller" },
+              ].map((m) => (
+                <Link
+                  key={m.id}
+                  to="/explore/$genreId"
+                  params={{ genreId: m.id }}
+                  search={{ q: m.name }}
+                  className="rounded-full border border-border bg-card/60 px-4 py-2 text-sm text-foreground transition hover:border-primary hover:bg-card"
+                >
+                  {m.name}
+                </Link>
+              ))}
+              <Link
+                to="/explore"
+                className="rounded-full border border-primary/60 px-4 py-2 text-sm font-medium text-primary transition hover:bg-primary/10"
+              >
+                All moods →
+              </Link>
+            </div>
+          </section>
         )}
         {filteredRows.map((r: { title: string; items: Movie[] }) => (
           <Row key={r.title} title={r.title} items={r.items} />
         ))}
       </div>
+      <ReleaseReminderBanner />
       <Footer />
     </div>
   );

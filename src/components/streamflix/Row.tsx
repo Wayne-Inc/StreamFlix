@@ -8,7 +8,17 @@ const BASE_GAP = 8;
 const SM_GAP = 12;
 const OVERSCAN = 3;
 
-export function Row({ title, items }: { title: string; items: Movie[] }) {
+export function Row({
+  title,
+  items,
+  reasons,
+  reasonLinks,
+}: {
+  title: string;
+  items: Movie[];
+  reasons?: Record<string, string>;
+  reasonLinks?: Record<string, string>;
+}) {
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [viewportW, setViewportW] = useState(0);
@@ -72,7 +82,12 @@ export function Row({ title, items }: { title: string; items: Movie[] }) {
       >
         {padStart > 0 && <div aria-hidden style={{ width: padStart }} className="shrink-0" />}
         {visible.map((m) => (
-          <MovieCard key={m.id + title} movie={m} />
+          <MovieCard
+            key={m.id + title}
+            movie={m}
+            reason={reasons?.[m.id]}
+            reasonLink={reasonLinks?.[m.id]}
+          />
         ))}
         {padEnd > 0 && <div aria-hidden style={{ width: padEnd }} className="shrink-0" />}
       </div>

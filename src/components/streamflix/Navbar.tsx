@@ -11,6 +11,7 @@ import {
   ArrowRight,
   Users,
   Clock,
+  CalendarDays,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Logo } from "./Logo";
@@ -149,6 +150,14 @@ export function Navbar() {
               </Link>
             );
           })}
+          <Link
+            to="/calendar"
+            className={`hover:text-foreground transition-colors ${
+              pathname === "/calendar" ? "text-foreground font-semibold" : ""
+            }`}
+          >
+            Calendar
+          </Link>
         </nav>
         <div className="ml-auto flex items-center gap-3">
           <button
@@ -177,7 +186,10 @@ export function Navbar() {
                 <form
                   onSubmit={async (e) => {
                     e.preventDefault();
-                    const code = joinCode.trim().toUpperCase();
+                    let code = joinCode.trim().toUpperCase();
+                    const paramMatch = code.match(/[?&]PARTY=([A-Z0-9]{1,8})/);
+                    if (paramMatch) code = paramMatch[1];
+                    code = code.replace(/[^A-Z0-9]/g, "").slice(0, 8);
                     if (!code || joinBusy) return;
                     setJoinBusy(true);
                     try {
@@ -210,8 +222,8 @@ export function Navbar() {
                   <input
                     value={joinCode}
                     onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                    placeholder="CODE"
-                    maxLength={8}
+                    placeholder="CODE or invite link"
+                    maxLength={120}
                     className="flex-1 rounded bg-surface px-3 py-2 text-sm font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                   <button
@@ -312,6 +324,13 @@ export function Navbar() {
             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <Clock className="size-4" /> History
+          </Link>
+          <Link
+            to="/calendar"
+            onClick={() => setMobileNavOpen(false)}
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <CalendarDays className="size-4" /> Calendar
           </Link>
         </div>
       )}

@@ -463,15 +463,28 @@ function ProfileEditor({
           </div>
         </div>
 
-        <label className="mt-5 flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={kids}
-            onChange={(e) => setKids(e.target.checked)}
-            className="size-4"
-          />
-          Kids profile
-        </label>
+        <div className="mt-5 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium">Kids profile</p>
+            <p className="text-xs text-muted-foreground">
+              Filters out mature titles so kids only see age-appropriate content.
+            </p>
+          </div>
+          <button
+            role="switch"
+            aria-checked={kids}
+            onClick={() => setKids((v) => !v)}
+            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${
+              kids ? "bg-emerald-500" : "bg-neutral-700"
+            }`}
+          >
+            <span
+              className={`inline-block size-5 rounded-full bg-white shadow transition-transform ${
+                kids ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </div>
 
         <div className="mt-4">
           <input

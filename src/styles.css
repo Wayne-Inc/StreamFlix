@@ -203,3 +203,19 @@ body.electron-app .min-h-dvh {
 body.electron-app .min-h-screen {
   min-height: calc(100vh - 40px) !important;
 }
+
+/* Cinematic page transitions */
+@keyframes pageEnter {
+  from { opacity: 0; transform: scale(0.985); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes pageFade {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+.animate-page-enter {
+  animation: pageEnter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-page-fade {
+  animation: pageFade 0.4s ease-out both;
+}

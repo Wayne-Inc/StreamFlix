@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Send, Copy, Link2, X, Users, Smile, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { auth, db } from "@/lib/firebase";
+import { shareContent } from "@/lib/share";
 import {
   collection,
   query,
@@ -386,11 +387,18 @@ export function WatchPartyPanel(props: Props) {
     setDraft("");
   };
 
-  if (!open) return null;
+  const inviteUrl = (() => {
+    const isElectron = typeof window !== "undefined" && "electronAPI" in window;
+    const base = isElectron ? "streamflix://watch/" : `${window.location.origin}/watch/`;
+    const params = new URLSearchParams({ party: room?.code ?? "" });
+    if (season) params.set("season", String(season));
+    if (episode) params.set("episode", String(episode));
+    return `${base}${movieId}?${params.toString()}`;
+  })();
 
   return (
     <>
-      {/* Floating reactions over the video */}
+      {/* Floating reactions over the video — visible even when the panel is closed */}
       <div className="pointer-events-none fixed inset-y-0 right-1/3 z-30 overflow-hidden">
         {floats.map((f) => (
           <span
@@ -413,7 +421,8 @@ export function WatchPartyPanel(props: Props) {
         `}</style>
       </div>
 
-      <aside className="fixed inset-y-0 right-0 z-40 flex w-full max-w-sm flex-col border-l border-border bg-background/95 backdrop-blur-xl shadow-2xl">
+      {open && (
+        <aside className="fixed bottom-3 left-3 right-3 z-40 flex max-h-[82dvh] flex-col overflow-hidden rounded-2xl border border-border bg-background/95 shadow-2xl backdrop-blur-xl sm:bottom-4 sm:left-auto sm:right-4 sm:top-4 sm:max-h-[calc(100dvh-2rem)] sm:w-96">
         <header className="flex items-center justify-between border-b border-border p-4">
           <div className="flex items-center gap-2">
             <Users className="size-5 text-primary" />
@@ -488,19 +497,17 @@ export function WatchPartyPanel(props: Props) {
                 </button>
                 <button
                   onClick={() => {
-                    const isElectron = typeof window !== "undefined" && "electronAPI" in window;
-                    const base = isElectron
-                      ? "streamflix://watch/"
-                      : `${window.location.origin}/watch/`;
-                    const params = new URLSearchParams({ party: room.code });
-                    if (season) params.set("season", String(season));
-                    if (episode) params.set("episode", String(episode));
-                    navigator.clipboard.writeText(`${base}${movieId}?${params.toString()}`);
-                    toast.success("Invite link copied");
+                    shareContent({
+                      title: "Join my StreamFlix watch party",
+                      text: `Join my watch party for ${movieId} using code ${room.code}`,
+                      url: inviteUrl,
+                    }).then((mode) =>
+                      toast.success(mode === "shared" ? "Invite shared" : "Invite link copied"),
+                    );
                   }}
                   className="text-muted-foreground hover:text-foreground"
-                  aria-label="Copy invite link"
-                  title="Copy invite link"
+                  aria-label="Share invite link"
+                  title="Share invite link"
                 >
                   <Link2 className="size-4" />
                 </button>
@@ -602,7 +609,8 @@ export function WatchPartyPanel(props: Props) {
             </form>
           </>
         )}
-      </aside>
+        </aside>
+      )}
     </>
   );
 }

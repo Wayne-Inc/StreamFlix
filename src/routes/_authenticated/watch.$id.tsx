@@ -6,6 +6,7 @@ import { movieById } from "@/lib/streamflix-data";
 import { getContinueWatching, recordProgress } from "@/lib/continue-watching";
 import { saveProgressToFirestore } from "@/lib/continue-watching-firestore";
 import { getVideoSource } from "@/lib/video-sources";
+import { probeEmbedUrl } from "@/lib/api/tmdb";
 import { auth } from "@/lib/firebase";
 import { startSession, endSession } from "@/lib/session-tracking";
 import { toast } from "sonner";
@@ -517,6 +518,41 @@ function PlayerPage() {
   useEffect(() => {
     if (party && !partyOpen) setPartyOpen(true);
   }, [party]);
+
+  // server fallback: probe all embed servers once on load; if the default
+  // server is unreachable, switch to the first responding one.
+  const probedRef = useRef(false);
+  useEffect(() => {
+    if (probedRef.current) return;
+    probedRef.current = true;
+    let cancelled = false;
+    (async () => {
+      const results = await Promise.all(
+        availableEmbedServers.map(async (s) => ({
+          id: s.id,
+          ok: await probeEmbedUrl({
+            data: { url: buildEmbedUrl(s.id, movie.id, season, episode) },
+          }),
+        })),
+      );
+      if (cancelled) return;
+      const live = results.find((r) => r.ok);
+      const currentOk = results.find((r) => r.id === selectedServerId)?.ok;
+      if (live && !currentOk) {
+        const liveServer = availableEmbedServers.find((s) => s.id === live.id);
+        setSelectedServerId(live.id);
+        toast.warning(
+          `"${selectedServer.name}" was unreachable — switched to ${liveServer?.name ?? live.id}`,
+        );
+      } else if (!currentOk) {
+        toast.error(`${selectedServer.name} is unreachable. Try a different server below.`);
+      }
+    })().catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [movie.id]);
 
   useEffect(() => {
     let sid: string | null = null;
