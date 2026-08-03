@@ -20,6 +20,7 @@ import { CookieConsent } from "@/components/streamflix/CookieConsent";
 import { CustomTitleBar } from "@/components/streamflix/CustomTitleBar";
 import { ScreenSaver } from "@/components/streamflix/ScreenSaver";
 import { auth, db } from "@/lib/firebase";
+import { metaImageUrl } from "@/lib/seo";
 
 function NotFoundComponent() {
   return (
@@ -94,9 +95,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Unlimited movies, TV shows, and more" },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "StreamFlix" },
+      { property: "og:image", content: metaImageUrl() },
+      { property: "og:image:width", content: "1101" },
+      { property: "og:image:height", content: "1101" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "StreamFlix" },
       { name: "twitter:description", content: "Unlimited movies, TV shows, and more" },
+      { name: "twitter:image", content: metaImageUrl() },
     ],
     links: [
       {
