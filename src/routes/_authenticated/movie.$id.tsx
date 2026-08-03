@@ -1,10 +1,18 @@
-import { createFileRoute, Link, notFound, useNavigate, useRouter } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  notFound,
+  useLocation,
+  useNavigate,
+  useRouter,
+} from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Play, Share2, Clapperboard, ArrowLeft } from "lucide-react";
 import { isKidsProfile, filterKidsContent, isBlockedKidsGenre } from "@/lib/kids-mode";
 import { toast } from "sonner";
 import { shareContent } from "@/lib/share";
 import { seoMetaFor, siteUrl } from "@/lib/seo";
+import { stepsToUsefulBackTarget } from "@/lib/nav-history";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { Row } from "@/components/streamflix/Row";
@@ -133,9 +141,11 @@ function MoviePage() {
 
   const navigate = useNavigate();
   const router = useRouter();
+  const location = useLocation();
   const goBack = () => {
-    if (window.history.length > 1) {
-      router.history.back();
+    const steps = stepsToUsefulBackTarget(location.pathname, [`/watch/${movie.id}`]);
+    if (steps !== null) {
+      router.history.go(-steps);
     } else {
       navigate({ to: "/browse" });
     }

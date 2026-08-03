@@ -21,6 +21,7 @@ import { CustomTitleBar } from "@/components/streamflix/CustomTitleBar";
 import { ScreenSaver } from "@/components/streamflix/ScreenSaver";
 import { auth, db } from "@/lib/firebase";
 import { metaImageUrl } from "@/lib/seo";
+import { useNavTracker } from "@/lib/nav-history";
 
 function NotFoundComponent() {
   return (
@@ -142,6 +143,8 @@ function RootComponent() {
   const initial = useRef(true);
   const photoSaved = useRef<string | null>(null);
   const offlineRoute = "/offline";
+
+  useNavTracker();
 
   // Scroll to top on route changes.
   const pathname = useLocation().pathname;
