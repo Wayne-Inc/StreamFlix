@@ -3,14 +3,9 @@ import { useState } from "react";
 import {
   ChevronRight,
   Play,
-  Download,
-  Globe,
-  Tv,
-  Smartphone,
   ChevronDown,
-  Phone,
-  Camera,
-  Code2,
+  Mail,
+  Instagram,
 } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
 import { tmdbFetch, toMovie } from "@/lib/api/tmdb.server";
@@ -180,30 +175,22 @@ function Landing() {
       <footer className="border-t border-border px-4 py-10 text-sm text-muted-foreground">
         <div className="mx-auto max-w-6xl text-center">
           <p className="font-medium text-foreground">StreamFlix — Free for everyone.</p>
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-            <a
-              href="tel:+254718429870"
-              className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
-            >
-              <Phone className="size-4" /> +254 718 429 870
-            </a>
-            <a
-              href="https://instagram.com/itiswayneee"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
-            >
-              <Camera className="size-4" /> @itiswayneee
-            </a>
-            <a
-              href="https://github.com/itiswayneee"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
-            >
-              <Code2 className="size-4" /> @itiswayneee
-            </a>
-          </div>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+              <a
+                href="mailto:hello@samway.dpdns.org"
+                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+              >
+                <Mail className="size-4" /> hello@samway.dpdns.org
+              </a>
+              <a
+                href="https://instagram.com/itiswayneee"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+              >
+                <Instagram className="size-4" /> @itiswayneee
+              </a>
+            </div>
           <p className="mt-6 text-xs">© {new Date().getFullYear()} StreamFlix</p>
         </div>
       </footer>
