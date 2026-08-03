@@ -16,6 +16,10 @@ import {
   discoverByGenre,
   searchPeople,
   fetchGenres,
+  searchFiltered as searchFilteredFn,
+  suggestTitles as suggestTitlesFn,
+  type SearchFilterInput,
+  type SearchSort,
   fetchUpcomingCalendar,
   fetchAiringCalendar,
 } from "./api/tmdb";
@@ -166,6 +170,24 @@ export async function search(query: string): Promise<Movie[]> {
     return [];
   }
 }
+
+export async function searchWithFilters(filters: SearchFilterInput): Promise<Movie[]> {
+  try {
+    return await searchFilteredFn({ data: filters });
+  } catch {
+    return [];
+  }
+}
+
+export async function suggestTitles(query: string) {
+  try {
+    return await suggestTitlesFn({ data: { query } });
+  } catch {
+    return [];
+  }
+}
+
+export type { SearchFilterInput, SearchSort };
 
 export async function searchByGenre(genreId: string): Promise<Movie[]> {
   try {

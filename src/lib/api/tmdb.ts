@@ -157,6 +157,138 @@ export const searchMovies = createServerFn({ method: "POST" })
       .map((m: any) => (m.media_type === "tv" ? toTv(m) : toMovie(m)));
   });
 
+export type SearchSort = "relevance" | "popularity" | "rating" | "year" | "title";
+
+export type SearchFilterInput = {
+  query?: string;
+  genreId?: number;
+  year?: number;
+  minRating?: number;
+  sort?: SearchSort;
+};
+
+function sortRawMovies(list: any[], sort?: SearchSort) {
+  switch (sort) {
+    case "popularity":
+      list.sort((a: any, b: any) => (b.vote_count ?? 0) - (a.vote_count ?? 0));
+      break;
+    case "rating":
+      list.sort((a: any, b: any) => (b.vote_average ?? 0) - (a.vote_average ?? 0));
+      break;
+    case "year":
+      list.sort((a: any, b: any) =>
+        String(b.release_date ?? "").localeCompare(String(a.release_date ?? "")),
+      );
+      break;
+    case "title":
+      list.sort((a: any, b: any) =>
+        String(a.title ?? a.name ?? "").localeCompare(String(b.title ?? b.name ?? "")),
+      );
+      break;
+    default:
+      break;
+  }
+  return list;
+}
+
+function dedupeMovies(list: any[]) {
+  const seen = new Set<string>();
+  return list.filter((m: any) => {
+    if (!m.id) return false;
+    const key = String(m.id);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+export const searchFiltered = createServerFn({ method: "POST" })
+  .validator(
+    z.object({
+      query: z.string().optional().catch(""),
+      genreId: z.number().optional().catch(undefined),
+      year: z.number().optional().catch(undefined),
+      minRating: z.number().optional().catch(undefined),
+      sort: z
+        .enum(["relevance", "popularity", "rating", "year", "title"])
+        .optional()
+        .catch(undefined),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const { tmdbFetch, toMovie } = await import("./tmdb.server");
+    const q = (data.query ?? "").trim();
+
+    const sortBy = (sort?: SearchSort) => {
+      switch (sort) {
+        case "rating":
+          return "vote_average.desc";
+        case "year":
+          return "primary_release_date.desc";
+        case "title":
+          return "original_title.asc";
+        case "popularity":
+          return "popularity.desc";
+        default:
+          return "popularity.desc";
+      }
+    };
+
+    if (q.length >= 2) {
+      const pages = await Promise.all(
+        [1, 2, 3, 4].map((p) =>
+          tmdbFetch("/search/movie", {
+            query: q,
+            page: String(p),
+            ...(data.year ? { primary_release_year: String(data.year) } : {}),
+          }).catch(() => ({ results: [] })),
+        ),
+      );
+      let list = dedupeMovies(pages.flatMap((r: any) => r.results || []));
+      if (data.genreId) {
+        list = list.filter((m: any) => (m.genre_ids || []).includes(data.genreId));
+      }
+      if (data.minRating) {
+        list = list.filter((m: any) => (m.vote_average ?? 0) >= (data.minRating ?? 0));
+      }
+      sortRawMovies(list, data.sort);
+      return list.map((m: any) => toMovie(m));
+    }
+
+    const params: Record<string, string> = {
+      sort_by: sortBy(data.sort),
+    };
+    if (data.genreId) params.with_genres = String(data.genreId);
+    if (data.year) params.primary_release_year = String(data.year);
+    if (data.minRating) params["vote_average.gte"] = String(data.minRating);
+    const pages = await Promise.all(
+      [1, 2, 3, 4].map((p) =>
+        tmdbFetch("/discover/movie", { ...params, page: String(p) }).catch(() => ({
+          results: [],
+        })),
+      ),
+    );
+    return dedupeMovies(pages.flatMap((r: any) => r.results || [])).map((m: any) => toMovie(m));
+  });
+
+export const suggestTitles = createServerFn({ method: "POST" })
+  .validator(z.object({ query: z.string().min(1) }))
+  .handler(async ({ data }) => {
+    const { tmdbFetch } = await import("./tmdb.server");
+    const res = await tmdbFetch("/search/multi", { query: data.query, page: "1" });
+    return (res.results || [])
+      .filter((m: any) => m.media_type === "movie" || m.media_type === "tv")
+      .slice(0, 8)
+      .map((m: any) => ({
+        id: m.media_type === "tv" ? `tv-${m.id}` : String(m.id),
+        title: m.title || m.name || "Untitled",
+        year: m.release_date || m.first_air_date ? Number((m.release_date || m.first_air_date).slice(0, 4)) : null,
+        poster: m.poster_path ? `https://image.tmdb.org/t/p/w185${m.poster_path}` : "",
+        mediaType: m.media_type,
+        genreIds: m.genre_ids || [],
+      }));
+  });
+
 export const discoverByGenre = createServerFn({ method: "POST" })
   .validator(z.object({ genreId: z.string() }))
   .handler(async ({ data }) => {
