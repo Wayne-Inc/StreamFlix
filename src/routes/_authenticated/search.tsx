@@ -15,6 +15,13 @@ import { MovieCard } from "@/components/streamflix/MovieCard";
 import { LazyImage } from "@/components/streamflix/LazyImage";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   search,
   searchByPerson,
   searchWithFilters,
@@ -69,6 +76,9 @@ const CURATED_GENRES: { id: number; name: string }[] = [
   { id: 53, name: "Thriller" },
 ];
 
+const filterSelectClass =
+  "h-9 w-auto min-w-[8rem] border-border bg-surface text-sm text-foreground data-[placeholder]:text-muted-foreground";
+
 function useDebounce<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
@@ -77,9 +87,6 @@ function useDebounce<T>(value: T, delay: number): T {
   }, [value, delay]);
   return debounced;
 }
-
-const selectClass =
-  "rounded-md border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary";
 
 function SearchPage() {
   const currentSearch = useSearch({ from: "/_authenticated/search" });
@@ -274,72 +281,84 @@ function SearchPage() {
                 <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <SlidersHorizontal className="size-4" /> Filters
                 </span>
-                <select
-                  value={year ?? ""}
-                  onChange={(e) => {
-                    const v = e.target.value ? Number(e.target.value) : undefined;
-                    setYear(v);
-                    pushFilters({ year: v });
+                <Select
+                  value={year ? String(year) : "all"}
+                  onValueChange={(v) => {
+                    const val = v === "all" ? undefined : Number(v);
+                    setYear(val);
+                    pushFilters({ year: val });
                   }}
-                  aria-label="Year"
-                  className={selectClass}
                 >
-                  <option value="">Any year</option>
-                  {years.map((y) => (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={genre ?? ""}
-                  onChange={(e) => {
-                    const v = e.target.value ? Number(e.target.value) : undefined;
-                    setGenre(v);
-                    pushFilters({ genre: v });
+                  <SelectTrigger aria-label="Year" className={filterSelectClass}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Any year</SelectItem>
+                    {years.map((y) => (
+                      <SelectItem key={y} value={String(y)}>
+                        {y}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={genre ? String(genre) : "all"}
+                  onValueChange={(v) => {
+                    const val = v === "all" ? undefined : Number(v);
+                    setGenre(val);
+                    pushFilters({ genre: val });
                   }}
-                  aria-label="Category"
-                  className={selectClass}
                 >
-                  <option value="">All categories</option>
-                  {curatedGenres.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.name}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={rating ?? ""}
-                  onChange={(e) => {
-                    const v = e.target.value ? Number(e.target.value) : undefined;
-                    setRating(v);
-                    pushFilters({ rating: v });
+                  <SelectTrigger aria-label="Category" className={filterSelectClass}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All categories</SelectItem>
+                    {curatedGenres.map((g) => (
+                      <SelectItem key={g.id} value={String(g.id)}>
+                        {g.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={rating ? String(rating) : "all"}
+                  onValueChange={(v) => {
+                    const val = v === "all" ? undefined : Number(v);
+                    setRating(val);
+                    pushFilters({ rating: val });
                   }}
-                  aria-label="Minimum rating"
-                  className={selectClass}
                 >
-                  <option value="">Any rating</option>
-                  <option value={7}>7+</option>
-                  <option value={8}>8+</option>
-                  <option value={9}>9+</option>
-                </select>
-                <select
-                  value={sort ?? ""}
-                  onChange={(e) => {
-                    const v = (e.target.value || undefined) as SearchSort | undefined;
-                    setSort(v);
-                    pushFilters({ sort: v });
+                  <SelectTrigger aria-label="Minimum rating" className={filterSelectClass}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Any rating</SelectItem>
+                    <SelectItem value="7">7+</SelectItem>
+                    <SelectItem value="8">8+</SelectItem>
+                    <SelectItem value="9">9+</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={sort ?? "relevance"}
+                  onValueChange={(v) => {
+                    const val = v === "relevance" ? undefined : (v as SearchSort);
+                    setSort(val);
+                    pushFilters({ sort: val });
                   }}
-                  aria-label="Sort"
-                  className={selectClass}
                 >
-                  <option value="">Sort: Relevance</option>
-                  {(["popularity", "rating", "year", "title"] as SearchSort[]).map((s) => (
-                    <option key={s} value={s}>
-                      {SORT_LABELS[s]}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger aria-label="Sort" className={filterSelectClass}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="relevance">Sort: Relevance</SelectItem>
+                    {(["popularity", "rating", "year", "title"] as SearchSort[]).map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {SORT_LABELS[s]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {hasFilters && (
                   <button
                     onClick={clearFilters}
