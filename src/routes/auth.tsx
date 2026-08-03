@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
 import { auth } from "@/lib/firebase";
+import { strengthScore, STRENGTH_LABELS, STRENGTH_COLORS } from "@/lib/password";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -23,15 +24,6 @@ export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Sign In — StreamFlix" }] }),
   component: AuthPage,
 });
-
-function strengthScore(pw: string) {
-  let s = 0;
-  if (pw.length >= 8) s++;
-  if (/[A-Z]/.test(pw)) s++;
-  if (/[0-9]/.test(pw)) s++;
-  if (/[^A-Za-z0-9]/.test(pw)) s++;
-  return s;
-}
 
 function AuthPage() {
   const navigate = useNavigate();
@@ -234,14 +226,8 @@ function AuthPage() {
   };
 
   const s = strengthScore(password);
-  const labels = ["Too weak", "Weak", "Okay", "Strong", "Excellent"];
-  const colors = [
-    "bg-destructive",
-    "bg-orange-500",
-    "bg-amber-500",
-    "bg-emerald-500",
-    "bg-emerald-400",
-  ];
+  const labels = STRENGTH_LABELS;
+  const colors = STRENGTH_COLORS;
 
   return (
     <main className="relative min-h-dvh">
