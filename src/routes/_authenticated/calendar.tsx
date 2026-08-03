@@ -4,6 +4,7 @@ import { Bell, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Film, Tv } f
 import { toast } from "sonner";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
+import { LazyImage } from "@/components/streamflix/LazyImage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { loadUpcomingCalendar, loadAiringCalendar } from "@/lib/streamflix-data";
 import type { CalendarTitle } from "@/lib/api/tmdb";
@@ -181,7 +182,7 @@ function CalendarPage() {
                           title={item.title}
                         >
                           {item.poster ? (
-                            <img
+                            <LazyImage
                               src={item.poster}
                               alt=""
                               className="size-8 rounded-sm object-cover sm:size-10"

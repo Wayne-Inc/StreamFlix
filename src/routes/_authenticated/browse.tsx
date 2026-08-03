@@ -7,6 +7,7 @@ import { Row } from "@/components/streamflix/Row";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import { Footer } from "@/components/streamflix/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
+import { RowSkeleton } from "@/components/streamflix/RowSkeleton";
 import { ReleaseReminderBanner } from "@/components/streamflix/ReleaseReminderBanner";
 import { loadBrowseData, searchByGenre, type BrowseKind } from "@/lib/streamflix-data";
 import { fetchPopular } from "@/lib/api/tmdb";
@@ -65,19 +66,6 @@ function BrowseSkeleton() {
   );
 }
 
-function RowSkeleton() {
-  return (
-    <div className="space-y-4 py-4">
-      <Skeleton className="h-8 sm:h-9 w-52 rounded" />
-      <div className="flex gap-2 sm:gap-3 overflow-hidden px-4 sm:px-8">
-        {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-          <Skeleton key={i} className="w-[200px] sm:w-[260px] aspect-[2/3] rounded-lg shrink-0" />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export const Route = createFileRoute("/_authenticated/browse")({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => ({ kind: search.kind }),
@@ -96,20 +84,24 @@ function BrowsePage() {
     title: string;
     items: { movie: Movie; progress: number }[];
   } | null>(null);
+  const [continueLoading, setContinueLoading] = useState(true);
   const [watchedRow, setWatchedRow] = useState<{
     title: string;
     items: Movie[];
     reasons: Record<string, string>;
     reasonLinks: Record<string, string>;
   } | null>(null);
+  const [watchedLoading, setWatchedLoading] = useState(false);
   const [pickedRow, setPickedRow] = useState<{
     title: string;
     items: Movie[];
     reasons: Record<string, string>;
     reasonLinks: Record<string, string>;
   } | null>(null);
+  const [pickedLoading, setPickedLoading] = useState(false);
   useEffect(() => {
     const update = async () => {
+      setContinueLoading(true);
       const localItems = getContinueWatching();
       let items = localItems.map((c) => ({
         movie: continueToMovie(c),
@@ -134,6 +126,7 @@ function BrowsePage() {
         }
       } catch {}
       setContinueRow(items.length > 0 ? { title: "Continue Watching", items } : null);
+      setContinueLoading(false);
     };
     update();
     window.addEventListener("storage", update);
@@ -149,34 +142,35 @@ function BrowsePage() {
     let cancelled = false;
 
     const loadWatchedRow = async () => {
-      const history = getWatchHistory();
-      const seeds = new Map<string, RecommendSeed>();
-      for (const item of history) {
-        seeds.set(item.id, {
-          id: item.id,
-          title: item.title,
-          watchedAt: item.watchedAt,
-          genreIds: item.genreIds,
-        });
-      }
+      setWatchedLoading(true);
       try {
-        const fsItems = await getContinueWatchingFromFirestore();
-        for (const fs of fsItems) {
-          const existing = seeds.get(fs.movieId);
-          seeds.set(fs.movieId, {
-            id: fs.movieId,
-            title: fs.title,
-            watchedAt: Math.max(existing?.watchedAt ?? 0, fs.updatedAt),
-            genreIds: fs.genreIds,
+        const history = getWatchHistory();
+        const seeds = new Map<string, RecommendSeed>();
+        for (const item of history) {
+          seeds.set(item.id, {
+            id: item.id,
+            title: item.title,
+            watchedAt: item.watchedAt,
+            genreIds: item.genreIds,
           });
         }
-      } catch {}
-      if (seeds.size === 0) {
-        if (!cancelled) setWatchedRow(null);
-        return;
-      }
+        try {
+          const fsItems = await getContinueWatchingFromFirestore();
+          for (const fs of fsItems) {
+            const existing = seeds.get(fs.movieId);
+            seeds.set(fs.movieId, {
+              id: fs.movieId,
+              title: fs.title,
+              watchedAt: Math.max(existing?.watchedAt ?? 0, fs.updatedAt),
+              genreIds: fs.genreIds,
+            });
+          }
+        } catch {}
+        if (seeds.size === 0) {
+          if (!cancelled) setWatchedRow(null);
+          return;
+        }
 
-      try {
         const result = await getPersonalizedRecommendations(Array.from(seeds.values()));
         if (!cancelled) {
           setWatchedRow(
@@ -194,6 +188,8 @@ function BrowsePage() {
         }
       } catch {
         if (!cancelled) setWatchedRow(null);
+      } finally {
+        if (!cancelled) setWatchedLoading(false);
       }
     };
 
@@ -213,6 +209,7 @@ function BrowsePage() {
     if (!u) return;
     let cancelled = false;
     const loadPicked = async () => {
+      setPickedLoading(true);
       try {
         const genres = await getFavoriteGenres(u.uid);
         if (genres.length === 0) {
@@ -243,6 +240,8 @@ function BrowsePage() {
         }
       } catch {
         if (!cancelled) setPickedRow(null);
+      } finally {
+        if (!cancelled) setPickedLoading(false);
       }
     };
     loadPicked();
@@ -330,6 +329,7 @@ function BrowsePage() {
             </Link>
           </div>
         )}
+        {kind === "home" && continueLoading && <RowSkeleton />}
         {continueRow && kind === "home" && (
           <section className="space-y-3 py-4">
             <h2 className="px-4 sm:px-8 text-lg sm:text-xl font-semibold tracking-tight">
@@ -344,6 +344,7 @@ function BrowsePage() {
             </div>
           </section>
         )}
+        {kind === "home" && (watchedLoading || pickedLoading) && <RowSkeleton />}
         {watchedRow && kind === "home" && (
           <Row
             title={watchedRow.title}

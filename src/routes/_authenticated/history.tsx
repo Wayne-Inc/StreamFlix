@@ -4,6 +4,7 @@ import { Link } from "@tanstack/react-router";
 import { Trash2, Clock, Play, Film, X } from "lucide-react";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
+import { LazyImage } from "@/components/streamflix/LazyImage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getWatchHistory, type WatchHistoryItem } from "@/lib/continue-watching";
 
@@ -95,7 +96,7 @@ function HistoryPage() {
                 className="flex items-center gap-4 rounded-lg border border-border bg-surface/40 p-3 transition-colors hover:bg-surface/80 group sm:p-4"
               >
                 <div className="relative shrink-0">
-                  <img
+                  <LazyImage
                     src={item.poster || "/placeholder.svg"}
                     alt={item.title}
                     className="h-16 w-12 rounded object-cover sm:h-20 sm:w-14"

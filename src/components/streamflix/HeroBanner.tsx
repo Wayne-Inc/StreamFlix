@@ -20,16 +20,22 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
 
   return (
     <section className="relative min-h-[60vh] h-[70vh] w-full overflow-hidden sm:min-h-[520px] sm:h-[85vh] lg:min-h-[620px] lg:h-[92vh]">
-      {slides.map((slide, idx) => (
-        <img
-          key={slide.id}
-          src={slide.backdrop}
-          alt=""
-          className={`absolute inset-0 size-full object-cover transition-opacity duration-1000 ${
-            idx === i ? "opacity-100 animate-ken-burns" : "opacity-0"
-          }`}
-        />
-      ))}
+      {slides.map((slide, idx) => {
+        const near = Math.abs(idx - i) <= 1;
+        return (
+          <img
+            key={slide.id}
+            src={near ? slide.backdrop : undefined}
+            alt=""
+            loading={idx === i ? "eager" : "lazy"}
+            decoding="async"
+            fetchPriority={idx === i ? "high" : "low"}
+            className={`absolute inset-0 size-full object-cover transition-opacity duration-1000 ${
+              idx === i ? "opacity-100 animate-ken-burns" : "opacity-0"
+            }`}
+          />
+        );
+      })}
       <div className="absolute inset-0 bg-gradient-to-r from-background via-background/50 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background via-background/70 to-transparent md:h-72" />
 

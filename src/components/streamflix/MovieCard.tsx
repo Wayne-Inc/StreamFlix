@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Play, Info, Sparkles } from "lucide-react";
 import type { Movie } from "@/lib/types";
+import { LazyImage } from "./LazyImage";
 
 export function MovieCard({
   movie,
@@ -23,10 +24,9 @@ export function MovieCard({
           aria-label={progress != null ? `Continue ${movie.title}` : `Details for ${movie.title}`}
         >
           {movie.poster ? (
-            <img
+            <LazyImage
               src={movie.poster}
               alt={movie.title}
-              loading="lazy"
               width={400}
               height={600}
               className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
