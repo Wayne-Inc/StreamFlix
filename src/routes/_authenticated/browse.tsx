@@ -366,7 +366,7 @@ function BrowsePage() {
             <h2 className="px-4 sm:px-8 text-lg sm:text-xl font-semibold tracking-tight">
               Explore moods
             </h2>
-            <div className="flex flex-nowrap gap-2 overflow-x-auto px-4 sm:flex-wrap sm:overflow-visible sm:px-8">
+            <div className="flex flex-nowrap items-center gap-1.5 overflow-hidden px-3 sm:flex-wrap sm:gap-2 sm:overflow-visible sm:px-8">
               {[
                 { id: "28", name: "Action" },
                 { id: "35", name: "Comedy" },
@@ -382,14 +382,14 @@ function BrowsePage() {
                   to="/explore/$genreId"
                   params={{ genreId: m.id }}
                   search={{ q: m.name }}
-                  className={`whitespace-nowrap rounded-full border border-border bg-card/60 px-4 py-2 text-sm text-foreground transition hover:border-primary hover:bg-card ${i >= 3 ? "hidden sm:inline-flex" : ""}`}
+                  className={`min-w-0 shrink overflow-hidden whitespace-nowrap rounded-full border border-border bg-card/60 px-3 py-2 text-sm text-foreground transition hover:border-primary hover:bg-card ${i >= 2 ? "hidden sm:inline-flex" : ""}`}
                 >
                   {m.name}
                 </Link>
               ))}
               <Link
                 to="/explore"
-                className="whitespace-nowrap rounded-full border border-primary/60 px-4 py-2 text-sm font-medium text-primary transition hover:bg-primary/10"
+                className="min-w-0 shrink overflow-hidden whitespace-nowrap rounded-full border border-primary/60 px-3 py-2 text-sm font-medium text-primary transition hover:bg-primary/10"
               >
                 All moods →
               </Link>

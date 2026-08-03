@@ -326,6 +326,7 @@ function ProfilesPage() {
               maxLength={6}
               autoFocus
               placeholder="Enter PIN"
+              aria-label="Enter PIN"
               className="w-full rounded bg-neutral-800 px-4 py-3 text-center text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-primary mb-4"
               onKeyDown={(e) => {
                 if (e.key === "Enter") verifyPinAndSelect();
@@ -550,6 +551,7 @@ function ProfileEditor({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Profile name"
+              aria-label="Profile name"
               className="w-full rounded bg-neutral-800 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <div className="flex gap-2">
@@ -557,6 +559,7 @@ function ProfileEditor({
                 value={avatarUrl}
                 onChange={(e) => setAvatarUrl(e.target.value)}
                 placeholder="Avatar URL (optional)"
+                aria-label="Avatar URL"
                 className="min-w-0 flex-1 rounded bg-neutral-800 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
               <button
@@ -634,6 +637,7 @@ function ProfileEditor({
             value={pin}
             onChange={(e) => setPin(e.target.value)}
             placeholder={hasPin ? "Enter a new PIN to change it" : "Parental PIN (optional)"}
+            aria-label="Parental PIN"
             maxLength={6}
             className="w-full rounded bg-neutral-800 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />

@@ -208,6 +208,7 @@ function SearchPage() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search titles or people\u2026"
+              aria-label="Search titles or people"
               className="w-full rounded-full border border-border bg-surface pl-12 pr-12 py-3.5 sm:py-4 text-base sm:text-lg focus:border-primary focus:outline-none"
             />
             {q && (

@@ -257,6 +257,7 @@ function AuthPage() {
                 required
                 type="email"
                 placeholder="Email"
+                aria-label="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
@@ -306,6 +307,7 @@ function AuthPage() {
                 <input
                   required
                   placeholder="Full name"
+                  aria-label="Full name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full rounded bg-neutral-800 px-4 py-4 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -315,6 +317,7 @@ function AuthPage() {
                 required
                 type="email"
                 placeholder="Email"
+                aria-label="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
@@ -326,6 +329,7 @@ function AuthPage() {
                   minLength={6}
                   type={showPw ? "text" : "password"}
                   placeholder="Password"
+                  aria-label="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete={mode === "signin" ? "current-password" : "new-password"}

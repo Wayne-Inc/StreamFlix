@@ -94,6 +94,7 @@ function ActionPage() {
                     minLength={6}
                     type="password"
                     placeholder="New password"
+                    aria-label="New password"
                     value={newPw}
                     onChange={(e) => setNewPw(e.target.value)}
                     className="w-full rounded bg-neutral-800 px-4 py-4 focus:outline-none focus:ring-2 focus:ring-primary"
