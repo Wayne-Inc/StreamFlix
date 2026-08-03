@@ -6,11 +6,13 @@ import { movieById } from "@/lib/streamflix-data";
 import { getContinueWatching, recordProgress } from "@/lib/continue-watching";
 import { saveProgressToFirestore } from "@/lib/continue-watching-firestore";
 import { getVideoSource } from "@/lib/video-sources";
-import { probeEmbedUrl } from "@/lib/api/tmdb";
+import { probeEmbedUrl, fetchTvSeason } from "@/lib/api/tmdb";
 import { auth } from "@/lib/firebase";
 import { startSession, endSession } from "@/lib/session-tracking";
 import { toast } from "sonner";
 import { WatchPartyPanel, WatchPartyButton } from "@/components/streamflix/WatchParty";
+import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
+import { seoMetaFor } from "@/lib/seo";
 import { MAIN_VIDEO_URL } from "@/lib/constants";
 
 interface NetworkInformation {
@@ -316,7 +318,14 @@ function PlayerPage() {
   const [videoUrl, setVideoUrl] = useState<string>("");
   const mainVideoUrlRef = useRef<string>("");
   const [mainVideoUrl, setMainVideoUrl] = useState("");
-  const [selectedServerId, setSelectedServerId] = useState<string>("vidking");
+  const [selectedServerId, setSelectedServerId] = useState<string>(() => {
+    if (typeof window === "undefined") return "vidking";
+    try {
+      return localStorage.getItem("sf:embedServer") || "vidking";
+    } catch {
+      return "vidking";
+    }
+  });
   const selectedServer =
     availableEmbedServers.find((server) => server.id === selectedServerId) ??
     availableEmbedServers[0];
@@ -364,6 +373,84 @@ function PlayerPage() {
   const [captionsEnabled, setCaptionsEnabled] = useState(true);
   const [connectionQuality, setConnectionQuality] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
+
+  const isTv = movie.id.startsWith("tv-");
+  const [autoplayNext, setAutoplayNext] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return localStorage.getItem("sf:autoplayNext") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const [nextEp, setNextEp] = useState<{ season: number; episode: number } | null>(null);
+  const embedEndedFiredRef = useRef(false);
+
+  const handleServerSelect = useCallback((id: string) => {
+    setSelectedServerId(id);
+    try {
+      localStorage.setItem("sf:embedServer", id);
+    } catch {}
+  }, []);
+
+  const toggleAutoplayNext = useCallback(() => {
+    setAutoplayNext((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("sf:autoplayNext", next ? "1" : "0");
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    embedEndedFiredRef.current = false;
+  }, [movie.id, season, episode]);
+
+  useEffect(() => {
+    if (!isTv || season == null || episode == null) {
+      setNextEp(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const tmdbId = movie.id.replace(/^tv-/, "");
+      let epsInSeason = 0;
+      try {
+        const seasonData = await fetchTvSeason({ data: { id: tmdbId, season } });
+        epsInSeason = (seasonData.episodes || []).length;
+      } catch {}
+      if (cancelled) return;
+      if (epsInSeason > 0 && episode < epsInSeason) {
+        setNextEp({ season, episode: episode + 1 });
+      } else if (
+        epsInSeason > 0 &&
+        episode >= epsInSeason &&
+        season < (movie.numberOfSeasons ?? season)
+      ) {
+        setNextEp({ season: season + 1, episode: 1 });
+      } else {
+        setNextEp(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [movie.id, movie.numberOfSeasons, season, episode, isTv]);
+
+  const goToNextEpisode = useCallback(() => {
+    if (!nextEp) return;
+    navigate({
+      to: "/watch/$id",
+      params: { id: movie.id },
+      search: { season: nextEp.season, episode: nextEp.episode, autoplay: true },
+    });
+  }, [nextEp, movie.id, navigate]);
+
+  const handleVideoEnded = useCallback(() => {
+    setEnded(true);
+    if (autoplayNext && isTv) goToNextEpisode();
+  }, [autoplayNext, isTv, goToNextEpisode]);
 
   const goBack = useCallback(() => {
     try {
@@ -647,11 +734,23 @@ function PlayerPage() {
             () => {},
           );
         }
+
+        if (
+          embedSyncSupported &&
+          autoplayNext &&
+          isTv &&
+          data.duration > 0 &&
+          data.currentTime / data.duration >= 0.98 &&
+          !embedEndedFiredRef.current
+        ) {
+          embedEndedFiredRef.current = true;
+          goToNextEpisode();
+        }
       }
     };
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [movie, season, episode]);
+  }, [movie, season, episode, embedSyncSupported, autoplayNext, isTv, goToNextEpisode]);
 
   useEffect(() => {
     const iframe = iframeRef.current;
@@ -734,7 +833,7 @@ function PlayerPage() {
               setVolume(e.currentTarget.volume);
               setMuted(e.currentTarget.muted);
             }}
-            onEnded={() => setEnded(true)}
+            onEnded={handleVideoEnded}
             onWaiting={() => setBuffering(true)}
             onPlaying={() => setBuffering(false)}
             className="size-full object-contain"
@@ -808,7 +907,9 @@ function PlayerPage() {
                   <Settings className="size-6 sm:size-6" />
                 </button>
                 {showSettings && (
-                  <div className="absolute top-full right-0 mt-2 w-56 rounded-lg border border-white/10 bg-black/90 p-3 text-sm shadow-2xl backdrop-blur-xl">
+                  <div
+                    className={`absolute top-full right-0 mt-2 ${isTv ? "w-80" : "w-56"} max-h-[calc(100dvh-6rem)] overflow-y-auto rounded-lg border border-white/10 bg-black/90 p-3 text-sm shadow-2xl backdrop-blur-xl scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent`}
+                  >
                     <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/50">
                       Server
                     </p>
@@ -816,7 +917,7 @@ function PlayerPage() {
                       {availableEmbedServers.map((server) => (
                         <button
                           key={server.id}
-                          onClick={() => setSelectedServerId(server.id)}
+                          onClick={() => handleServerSelect(server.id)}
                           className={`rounded px-3 py-1.5 text-xs text-left transition ${selectedServerId === server.id ? "bg-white/20 text-white" : "text-white/60 hover:bg-white/10 hover:text-white"}`}
                         >
                           {server.name}
@@ -829,6 +930,34 @@ function PlayerPage() {
                     <div className="mb-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/80">
                       {selectedServer.name}
                     </div>
+                    {isTv && (
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <div>
+                          <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-white/50">
+                            Autoplay next episode
+                          </p>
+                          <p className="text-[11px] text-white/50">
+                            Automatically start the next episode when one ends.
+                          </p>
+                        </div>
+                        <button
+                          onClick={toggleAutoplayNext}
+                          className={`rounded px-3 py-1.5 text-xs transition ${autoplayNext ? "bg-white/20 text-white" : "text-white/60 hover:bg-white/10 hover:text-white"}`}
+                        >
+                          {autoplayNext ? "On" : "Off"}
+                        </button>
+                      </div>
+                    )}
+                    {isTv && movie.numberOfSeasons && movie.numberOfSeasons > 0 && (
+                      <div className="mb-3">
+                        <SeasonEpisodePicker
+                          movieId={movie.id}
+                          numberOfSeasons={movie.numberOfSeasons}
+                          currentSeason={season}
+                          currentEpisode={episode}
+                        />
+                      </div>
+                    )}
                     {subtitles.length > 0 && (
                       <>
                         <div className="mb-3 flex items-center justify-between gap-3">
@@ -904,6 +1033,17 @@ function PlayerPage() {
             <p className="text-lg text-white/70">You've finished watching</p>
             <h2 className="text-2xl font-bold text-white">{movie.title}</h2>
             <div className="flex items-center gap-3">
+              {isTv && nextEp && (
+                <button
+                  onClick={() => {
+                    setEnded(false);
+                    goToNextEpisode();
+                  }}
+                  className="rounded bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition"
+                >
+                  Next Episode
+                </button>
+              )}
               <button
                 onClick={() => {
                   const v = videoRef.current;
@@ -955,9 +1095,27 @@ export const Route = createFileRoute("/_authenticated/watch/$id")({
     } catch {}
     return { movie };
   },
-  head: ({ loaderData }) => ({
-    meta: [{ title: `Watching ${loaderData?.movie?.title ?? "Video"} — StreamFlix` }],
-  }),
+  head: ({ loaderData }) => {
+    const movie = loaderData?.movie;
+    const title = `Watching ${movie?.title ?? "Video"} — StreamFlix`;
+    const description = movie?.description
+      ? `${movie.description.slice(0, 200)}`
+      : "Watch movies and TV shows on StreamFlix.";
+    const image = movie?.backdropSm || movie?.poster || "";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        ...seoMetaFor(
+          title,
+          description,
+          image,
+          movie?.id?.startsWith("tv-") ? "video.tv_show" : "video.movie",
+          "",
+        ),
+      ],
+    };
+  },
   component: PlayerPage,
   errorComponent: ({ error }) => (
     <div className="grid min-h-dvh place-items-center gap-4 bg-black p-8 text-white">
