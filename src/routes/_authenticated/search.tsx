@@ -174,7 +174,7 @@ function SearchPage() {
   }, [debouncedQ, tab, year, genre, rating, sort, canSearch, hasFilters, kidsMode]);
 
   useEffect(() => {
-    if (tab === "people" || debouncedQ.length < 2) {
+    if (tab !== "people" || debouncedQ.length < 2) {
       setPeople([]);
       return;
     }
