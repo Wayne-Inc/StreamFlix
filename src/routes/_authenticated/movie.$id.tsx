@@ -1,6 +1,6 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate, useRouter } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Play, Share2, Clapperboard } from "lucide-react";
+import { Play, Share2, Clapperboard, ArrowLeft } from "lucide-react";
 import { isKidsProfile, filterKidsContent, isBlockedKidsGenre } from "@/lib/kids-mode";
 import { toast } from "sonner";
 import { shareContent } from "@/lib/share";
@@ -131,6 +131,16 @@ function MoviePage() {
 
   const [trailerOpen, setTrailerOpen] = useState(false);
 
+  const navigate = useNavigate();
+  const router = useRouter();
+  const goBack = () => {
+    if (window.history.length > 1) {
+      router.history.back();
+    } else {
+      navigate({ to: "/browse" });
+    }
+  };
+
   const kidsMode = useMemo(() => isKidsProfile(), []);
   const filteredSimilar = kidsMode ? filterKidsContent(similar) : similar;
   const filteredRecommendations = kidsMode
@@ -156,6 +166,14 @@ function MoviePage() {
         </div>
 
         <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-10 sm:px-8 md:px-16 md:py-16">
+          <button
+            type="button"
+            onClick={goBack}
+            aria-label="Go back"
+            className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 px-4 py-2 text-sm font-medium text-white backdrop-blur transition hover:bg-black/60"
+          >
+            <ArrowLeft className="size-4" /> Back
+          </button>
           <div className="grid w-full gap-10 md:grid-cols-3 md:items-center md:gap-8">
             <div className="space-y-4 md:col-span-2">
               <h1 className="text-4xl font-black tracking-tight sm:text-6xl">{movie.title}</h1>
