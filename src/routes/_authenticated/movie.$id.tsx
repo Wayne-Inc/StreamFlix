@@ -4,6 +4,7 @@ import { Play, Share2, Clapperboard } from "lucide-react";
 import { isKidsProfile, filterKidsContent, isBlockedKidsGenre } from "@/lib/kids-mode";
 import { toast } from "sonner";
 import { shareContent } from "@/lib/share";
+import { seoMetaFor, siteUrl } from "@/lib/seo";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { Row } from "@/components/streamflix/Row";
@@ -64,7 +65,6 @@ function MovieSkeleton() {
 }
 
 export const Route = createFileRoute("/_authenticated/movie/$id")({
-  ssr: false,
   loader: async ({ params }) => {
     const extraGenres = ["27", "878", "35", "53"];
     const [movie, similar, recommendations, ...genreResults] = await Promise.all([
@@ -80,12 +80,25 @@ export const Route = createFileRoute("/_authenticated/movie/$id")({
     }));
     return { movie, similar, genreRows, recommendations };
   },
-  head: ({ loaderData }) => ({
-    meta: [
-      { title: `${loaderData?.movie.title ?? "Movie"} — StreamFlix` },
-      { name: "description", content: loaderData?.movie.description },
-    ],
-  }),
+  head: ({ loaderData }) => {
+    const movie = loaderData?.movie;
+    const title = movie ? `${movie.title} (${movie.year}) — StreamFlix` : "Movie — StreamFlix";
+    const description = movie?.description
+      ? `${movie.description.slice(0, 200)}`
+      : "Watch movies and TV shows on StreamFlix.";
+    const image = movie?.backdropSm || movie?.poster || "";
+    const site = siteUrl();
+    const url = site ? `${site}/movie/${movie?.id ?? ""}` : "";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        ...(movie && movie.genres.length ? [{ name: "keywords", content: movie.genres.join(", ") }] : []),
+        ...seoMetaFor(title, description, image, movie?.id?.startsWith("tv-") ? "video.tv_show" : "video.movie", url),
+      ],
+      links: [...(url ? [{ rel: "canonical", href: url }] : [])],
+    };
+  },
   notFoundComponent: () => (
     <div className="grid min-h-dvh place-items-center bg-background">
       <p className="text-muted-foreground">Title not found.</p>
@@ -189,10 +202,11 @@ function MoviePage() {
                 )}
                 <button
                   onClick={() => {
+                    const base = siteUrl();
                     shareContent({
-                      title: `${movie.title} — StreamFlix`,
+                      title: `${movie.title} (${movie.year}) — StreamFlix`,
                       text: movie.description.slice(0, 140),
-                      url: window.location.href,
+                      url: base ? `${base}/movie/${movie.id}` : window.location.href,
                     }).then((mode) =>
                       toast.success(mode === "shared" ? "Shared" : "Link copied"),
                     );

@@ -9,6 +9,7 @@ export type Movie = {
   genreIds: number[];
   poster: string;
   backdrop: string;
+  backdropSm?: string;
   trailer?: string;
   cast: string[];
   castPfp: string[];

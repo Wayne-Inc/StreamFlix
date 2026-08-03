@@ -50,6 +50,7 @@ export function toMovie(m: any): Movie {
     genreIds: m.genre_ids || (m.genres || []).map((g: any) => g.id),
     poster: m.poster_path ? `${IMG_BASE}w500${m.poster_path}` : "",
     backdrop: m.backdrop_path ? `${IMG_BASE}original${m.backdrop_path}` : "",
+    backdropSm: m.backdrop_path ? `${IMG_BASE}w1280${m.backdrop_path}` : "",
     trailer: trailer
       ? `https://www.youtube.com/watch?v=${trailer.key}`
       : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
@@ -94,6 +95,7 @@ export function toTv(m: any): Movie {
     genreIds: m.genre_ids || (m.genres || []).map((g: any) => g.id),
     poster: m.poster_path ? `${IMG_BASE}w500${m.poster_path}` : "",
     backdrop: m.backdrop_path ? `${IMG_BASE}original${m.backdrop_path}` : "",
+    backdropSm: m.backdrop_path ? `${IMG_BASE}w1280${m.backdrop_path}` : "",
     trailer: trailer
       ? `https://www.youtube.com/watch?v=${trailer.key}`
       : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",

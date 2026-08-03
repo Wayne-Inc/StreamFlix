@@ -93,6 +93,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "StreamFlix" },
       { property: "og:description", content: "Unlimited movies, TV shows, and more" },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "StreamFlix" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "StreamFlix" },
+      { name: "twitter:description", content: "Unlimited movies, TV shows, and more" },
     ],
     links: [
       {
