@@ -18,18 +18,13 @@ import {
   Check,
   Crown,
   KeyRound,
-  Eye,
-  EyeOff,
 } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
 import {
   signOut as firebaseSignOut,
   sendEmailVerification,
-  EmailAuthProvider,
-  reauthenticateWithCredential,
-  updatePassword,
+  sendPasswordResetEmail,
 } from "firebase/auth";
-import { strengthScore, STRENGTH_LABELS, STRENGTH_COLORS } from "@/lib/password";
 import {
   collection,
   query,
@@ -89,52 +84,28 @@ function SettingsPage() {
   const currentDeviceId = typeof window !== "undefined" ? getDeviceId() : "";
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [curPw, setCurPw] = useState("");
-  const [newPw, setNewPw] = useState("");
-  const [confirmPw, setConfirmPw] = useState("");
-  const [showCur, setShowCur] = useState(false);
-  const [showNew, setShowNew] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [showPwFields, setShowPwFields] = useState(false);
-  const [changingPw, setChangingPw] = useState(false);
+  const [sendingReset, setSendingReset] = useState(false);
 
+  const providers = user?.providerData ?? [];
   const canChangePassword =
-    !!user && (user.providerData ?? []).some((p) => p.providerId === "password");
+    !!user?.email &&
+    providers.some((p) => p.providerId === "password") &&
+    !providers.some((p) => p.providerId === "google.com");
 
-  const changePassword = async () => {
+  const sendResetEmail = async () => {
     if (!user?.email) return;
-    if (newPw.length < 8) {
-      toast.error("New password must be at least 8 characters.");
-      return;
-    }
-    if (newPw !== confirmPw) {
-      toast.error("New passwords do not match.");
-      return;
-    }
-    if (newPw === curPw) {
-      toast.error("New password must be different from your current password.");
-      return;
-    }
-    setChangingPw(true);
+    setSendingReset(true);
     try {
-      const cred = EmailAuthProvider.credential(user.email, curPw);
-      await reauthenticateWithCredential(user, cred);
-      await updatePassword(user, newPw);
-      toast.success("Password updated.");
-      setCurPw("");
-      setNewPw("");
-      setConfirmPw("");
-      setShowPwFields(false);
+      await sendPasswordResetEmail(auth, user.email);
+      toast.success(`Password reset email sent to ${user.email}.`);
     } catch (e: any) {
-      if (e?.code === "auth/wrong-password" || e?.code === "auth/invalid-credential") {
-        toast.error("Current password is incorrect.");
-      } else if (e?.code === "auth/weak-password") {
-        toast.error("New password is too weak.");
+      if (e?.code === "auth/too-many-requests") {
+        toast.error("Too many requests. Try again later.");
       } else {
-        toast.error(e?.message ?? "Failed to update password.");
+        toast.error(e?.message ?? "Failed to send password reset email.");
       }
     } finally {
-      setChangingPw(false);
+      setSendingReset(false);
     }
   };
 
@@ -575,118 +546,27 @@ function SettingsPage() {
         {/* Security */}
         {canChangePassword && (
           <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2 text-sm font-semibold">
-                  <KeyRound className="size-4" /> Password
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Change the password used to sign in to your account.
-                </p>
-              </div>
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <KeyRound className="size-4" /> Password
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              We'll send a password reset link to {user.email}. Follow the link to set a new
+              password for your account.
+            </p>
+            <div className="mt-4">
               <button
-                onClick={() => setShowPwFields((v) => !v)}
-                className="rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent"
+                onClick={sendResetEmail}
+                disabled={sendingReset}
+                className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
               >
-                {showPwFields ? "Cancel" : "Change password"}
+                {sendingReset ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Mail className="size-4" />
+                )}
+                {sendingReset ? "Sending..." : "Send reset email"}
               </button>
             </div>
-            {showPwFields && (
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="text-xs uppercase tracking-wider text-muted-foreground">
-                    Current password
-                  </label>
-                  <div className="mt-1 flex gap-2">
-                    <input
-                      type={showCur ? "text" : "password"}
-                      value={curPw}
-                      onChange={(e) => setCurPw(e.target.value)}
-                      autoComplete="current-password"
-                      className="flex-1 rounded-md border border-border bg-background/60 px-3 py-2 text-sm outline-none focus:border-primary"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowCur((v) => !v)}
-                      className="grid size-9 shrink-0 place-items-center rounded-md border border-border hover:bg-accent"
-                      aria-label="Toggle current password visibility"
-                    >
-                      {showCur ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs uppercase tracking-wider text-muted-foreground">
-                    New password
-                  </label>
-                  <div className="mt-1 flex gap-2">
-                    <input
-                      type={showNew ? "text" : "password"}
-                      value={newPw}
-                      onChange={(e) => setNewPw(e.target.value)}
-                      autoComplete="new-password"
-                      className="flex-1 rounded-md border border-border bg-background/60 px-3 py-2 text-sm outline-none focus:border-primary"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNew((v) => !v)}
-                      className="grid size-9 shrink-0 place-items-center rounded-md border border-border hover:bg-accent"
-                      aria-label="Toggle new password visibility"
-                    >
-                      {showNew ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                    </button>
-                  </div>
-                  {newPw && (
-                    <div className="mt-2">
-                      <div className="h-1 w-full overflow-hidden rounded-full bg-border">
-                        <div
-                          className={`h-full transition-all ${STRENGTH_COLORS[strengthScore(newPw)]}`}
-                          style={{ width: `${(strengthScore(newPw) / 4) * 100}%` }}
-                        />
-                      </div>
-                      <p className="mt-1 text-[11px] text-muted-foreground">
-                        {STRENGTH_LABELS[strengthScore(newPw)]}
-                      </p>
-                    </div>
-                  )}
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="text-xs uppercase tracking-wider text-muted-foreground">
-                    Confirm new password
-                  </label>
-                  <div className="mt-1 flex gap-2">
-                    <input
-                      type={showConfirm ? "text" : "password"}
-                      value={confirmPw}
-                      onChange={(e) => setConfirmPw(e.target.value)}
-                      autoComplete="new-password"
-                      className="flex-1 rounded-md border border-border bg-background/60 px-3 py-2 text-sm outline-none focus:border-primary"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirm((v) => !v)}
-                      className="grid size-9 shrink-0 place-items-center rounded-md border border-border hover:bg-accent"
-                      aria-label="Toggle confirm password visibility"
-                    >
-                      {showConfirm ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                    </button>
-                  </div>
-                </div>
-                <div className="sm:col-span-2">
-                  <button
-                    onClick={changePassword}
-                    disabled={changingPw}
-                    className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
-                  >
-                    {changingPw ? (
-                      <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      "Update password"
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
           </section>
         )}
 
