@@ -17,23 +17,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   search,
   searchByPerson,
-  getGenres,
   searchWithFilters,
-  suggestTitles,
   type SearchSort,
 } from "@/lib/streamflix-data";
 import type { Movie } from "@/lib/types";
-import {
-  isKidsProfile,
-  filterKidsContent,
-  filterKidsGenres,
-  isBlockedKidsGenre,
-} from "@/lib/kids-mode";
+import { isKidsProfile, filterKidsContent, filterKidsGenres } from "@/lib/kids-mode";
 import { z } from "zod";
 
 const searchSchema = z.object({
   q: z.string().optional().catch(""),
-  tab: z.enum(["titles", "genres", "people"]).optional().catch("titles"),
+  tab: z.enum(["titles", "people"]).optional().catch("titles"),
   year: z.coerce.number().optional().catch(undefined),
   genre: z.coerce.number().optional().catch(undefined),
   rating: z.coerce.number().optional().catch(undefined),
@@ -49,16 +42,8 @@ export const Route = createFileRoute("/_authenticated/search")({
   component: SearchPage,
 });
 
-type Tab = "titles" | "genres" | "people";
+type Tab = "titles" | "people";
 type PersonResult = { id: string; name: string; known_for: string; photo: string };
-type SuggestItem = {
-  id: string;
-  title: string;
-  year: number | null;
-  poster: string;
-  mediaType: "movie" | "tv";
-  genreIds: number[];
-};
 
 const SORT_LABELS: Record<SearchSort, string> = {
   relevance: "Relevance",
@@ -67,6 +52,22 @@ const SORT_LABELS: Record<SearchSort, string> = {
   year: "Newest",
   title: "A–Z",
 };
+
+const CURATED_GENRES: { id: number; name: string }[] = [
+  { id: 28, name: "Action" },
+  { id: 12, name: "Adventure" },
+  { id: 16, name: "Animation" },
+  { id: 35, name: "Comedy" },
+  { id: 80, name: "Crime" },
+  { id: 99, name: "Documentary" },
+  { id: 18, name: "Drama" },
+  { id: 10751, name: "Family" },
+  { id: 14, name: "Fantasy" },
+  { id: 27, name: "Horror" },
+  { id: 10749, name: "Romance" },
+  { id: 878, name: "Sci-Fi" },
+  { id: 53, name: "Thriller" },
+];
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -92,11 +93,8 @@ function SearchPage() {
   const [sort, setSort] = useState<SearchSort | undefined>(urlSort);
   const [results, setResults] = useState<Movie[]>([]);
   const [people, setPeople] = useState<PersonResult[]>([]);
-  const [genres, setGenres] = useState<{ id: number; name: string }[]>([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [suggestions, setSuggestions] = useState<SuggestItem[]>([]);
-  const [suggestOpen, setSuggestOpen] = useState(false);
   const debouncedQ = useDebounce(q, 300);
   const navigate = useNavigate();
 
@@ -109,7 +107,7 @@ function SearchPage() {
     (_, i) => new Date().getFullYear() - i,
   );
 
-  const safeGenres = kidsMode ? filterKidsGenres(genres) : genres;
+  const curatedGenres = kidsMode ? filterKidsGenres(CURATED_GENRES) : CURATED_GENRES;
 
   const pushFilters = (next: {
     year?: number;
@@ -186,34 +184,6 @@ function SearchPage() {
     };
   }, [debouncedQ, tab]);
 
-  useEffect(() => {
-    if (tab !== "titles" || debouncedQ.length < 2) {
-      setSuggestions([]);
-      setSuggestOpen(false);
-      return;
-    }
-    let cancelled = false;
-    suggestTitles(debouncedQ)
-      .then((res: SuggestItem[]) => {
-        if (cancelled) return;
-        const list = kidsMode
-          ? res.filter((s) => !s.genreIds.some(isBlockedKidsGenre))
-          : res;
-        setSuggestions(list);
-        setSuggestOpen(list.length > 0);
-      })
-      .catch(() => {
-        if (!cancelled) setSuggestions([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [debouncedQ, tab, kidsMode]);
-
-  useEffect(() => {
-    getGenres().then((list) => setGenres(kidsMode ? filterKidsGenres(list) : list));
-  }, [kidsMode]);
-
   const trending = ["Action", "Sci-Fi", "Thriller", "Comedy"];
 
   const totalPages = Math.max(1, Math.ceil(results.length / 24));
@@ -228,20 +198,9 @@ function SearchPage() {
             <SearchIcon className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
             <input
               autoFocus
-              value={tab === "genres" ? "" : q}
-              onChange={(e) => {
-                setQ(e.target.value);
-                setSuggestOpen(true);
-              }}
-              onFocus={() => {
-                if (suggestions.length > 0) setSuggestOpen(true);
-              }}
-              onBlur={() => {
-                setTimeout(() => setSuggestOpen(false), 150);
-              }}
-              placeholder={
-                tab === "genres" ? "Click a genre below" : "Titles, genres, people\u2026"
-              }
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search titles or people\u2026"
               className="w-full rounded-full border border-border bg-surface pl-12 pr-12 py-3.5 sm:py-4 text-base sm:text-lg focus:border-primary focus:outline-none"
             />
             {q && (
@@ -255,45 +214,10 @@ function SearchPage() {
                 <X className="size-5" />
               </button>
             )}
-            {suggestOpen && suggestions.length > 0 && (
-              <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-border bg-background shadow-2xl">
-                <p className="px-3 pt-2.5 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Suggestions
-                </p>
-                {suggestions.map((s) => (
-                  <Link
-                    key={s.id}
-                    to="/movie/$id"
-                    params={{ id: s.id }}
-                    onMouseDown={(e) => e.preventDefault()}
-                    className="flex items-center gap-3 px-3 py-2 transition hover:bg-accent"
-                  >
-                    {s.poster ? (
-                      <img
-                        src={s.poster}
-                        alt=""
-                        className="size-10 shrink-0 rounded-md object-cover"
-                      />
-                    ) : (
-                      <div className="grid size-10 shrink-0 place-items-center rounded-md bg-muted text-muted-foreground">
-                        <Film className="size-4" />
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">{s.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {s.year ?? "—"}
-                        {s.mediaType === "tv" ? " · Series" : ""}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
           </div>
 
           <div className="mt-4 flex gap-2 border-b border-border overflow-x-auto">
-            {(["titles", "genres", "people"] as Tab[]).map((t) => (
+            {(["titles", "people"] as Tab[]).map((t) => (
               <button
                 key={t}
                 onClick={() => {
@@ -301,14 +225,11 @@ function SearchPage() {
                   setQ("");
                   setResults([]);
                   setPeople([]);
-                  setSuggestions([]);
-                  setSuggestOpen(false);
                   setPage(1);
                 }}
                 className={`flex items-center gap-1.5 px-4 py-2.5 sm:py-2 text-sm font-medium transition border-b-2 -mb-px ${tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
               >
                 {t === "titles" && <Film className="size-4" />}
-                {t === "genres" && <SearchIcon className="size-4" />}
                 {t === "people" && <User className="size-4" />}
                 {t.charAt(0).toUpperCase() + t.slice(1)}
               </button>
@@ -317,33 +238,12 @@ function SearchPage() {
         </div>
 
         <section className="mx-auto w-full max-w-[1800px]">
-          {tab === "genres" && (
-            <div className="mt-6">
-              <p className="text-sm text-muted-foreground">
-                {genres.length} genres — tap one to open its page
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {genres.map((g) => (
-                  <Link
-                    key={g.id}
-                    to="/explore/$genreId"
-                    params={{ genreId: String(g.id) }}
-                    search={{ q: g.name }}
-                    className="rounded-full border border-border px-4 py-2.5 sm:py-2 text-sm hover:border-primary hover:text-foreground transition"
-                  >
-                    {g.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-
           {tab === "titles" && !q && !hasFilters && (
             <div className="mt-6">
               <p className="text-sm text-muted-foreground">Trending searches</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {trending.map((t) => {
-                  const match = genres.find((g) => g.name.toLowerCase() === t.toLowerCase());
+                  const match = curatedGenres.find((g) => g.name.toLowerCase() === t.toLowerCase());
                   return match ? (
                     <Link
                       key={t}
@@ -398,11 +298,11 @@ function SearchPage() {
                     setGenre(v);
                     pushFilters({ genre: v });
                   }}
-                  aria-label="Genre"
+                  aria-label="Category"
                   className={selectClass}
                 >
-                  <option value="">All genres</option>
-                  {safeGenres.map((g) => (
+                  <option value="">All categories</option>
+                  {curatedGenres.map((g) => (
                     <option key={g.id} value={g.id}>
                       {g.name}
                     </option>
