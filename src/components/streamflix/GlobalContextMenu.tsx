@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "@tanstack/react-router";
-import { ArrowLeft, ArrowRight, Copy, Link2, RotateCw } from "lucide-react";
+import { ArrowLeft, ArrowRight, Copy, ExternalLink, Link2, RotateCw } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -36,6 +36,7 @@ export function GlobalContextMenu({ children }: { children: ReactNode }) {
   );
   const [nav, setNav] = useState({ canBack: false, canForward: false });
   const [hasSelection, setHasSelection] = useState(false);
+  const [cardContext, setCardContext] = useState<{ title: string; url: string } | null>(null);
 
   useEffect(() => {
     const update = () => {
@@ -70,7 +71,17 @@ export function GlobalContextMenu({ children }: { children: ReactNode }) {
       onOpenChange={(open) => setHasSelection(open && !!getSelectedText())}
     >
       <ContextMenuTrigger asChild>
-        <div className="min-h-dvh">{children}</div>
+        <div
+          className="min-h-dvh"
+          onContextMenu={(e) => {
+            const el = (e.target as HTMLElement).closest<HTMLElement>("[data-context='movie']");
+            setCardContext(
+              el ? { title: el.dataset.title ?? "", url: el.dataset.url ?? "" } : null,
+            );
+          }}
+        >
+          {children}
+        </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-56">
         <ContextMenuItem onClick={() => window.location.reload()}>
@@ -93,6 +104,19 @@ export function GlobalContextMenu({ children }: { children: ReactNode }) {
           <Link2 className="mr-2 h-4 w-4" />
           Copy page URL
         </ContextMenuItem>
+        {cardContext && (
+          <>
+            <ContextMenuSeparator />
+            <ContextMenuItem onClick={() => copyToClipboard(cardContext.title, "Title copied")}>
+              <Copy className="mr-2 h-4 w-4" />
+              Copy movie/show title
+            </ContextMenuItem>
+            <ContextMenuItem onClick={() => window.open(cardContext.url, "_blank", "noopener")}>
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Open page in new tab
+            </ContextMenuItem>
+          </>
+        )}
         <ContextMenuItem
           disabled={!hasSelection}
           onClick={() => {
