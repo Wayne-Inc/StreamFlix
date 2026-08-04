@@ -34,13 +34,14 @@ export function isKidsProfile(): boolean {
   }
 }
 
+export function isGenreBlockedForKids(genreIds: number[]): boolean {
+  return genreIds.some((gid) => UNSAFE_GENRE_IDS.has(gid));
+}
+
 export function filterKidsContent(items: Movie[]): Movie[] {
   return items.filter((m) => {
     if (isRatingBlockedForKids(m.rating)) return false;
-    if (!m.rating) {
-      const ids = m.genreIds ?? [];
-      if (ids.some((gid) => UNSAFE_GENRE_IDS.has(gid))) return false;
-    }
+    if (isGenreBlockedForKids(m.genreIds ?? [])) return false;
     return true;
   });
 }

@@ -7,8 +7,8 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Play, Share2, Clapperboard, ArrowLeft } from "lucide-react";
-import { isKidsProfile, isRatingBlockedForKids, filterKidsContent } from "@/lib/kids-mode";
+import { Play, Share2, Clapperboard, ArrowLeft, ShieldOff } from "lucide-react";
+import { isKidsProfile, isRatingBlockedForKids, isGenreBlockedForKids, filterKidsContent } from "@/lib/kids-mode";
 import { toast } from "sonner";
 import { shareContent } from "@/lib/share";
 import { seoMetaFor, siteUrl } from "@/lib/seo";
@@ -153,7 +153,7 @@ function MoviePage() {
   };
 
   const kidsMode = useMemo(() => isKidsProfile(), []);
-  const blocked = kidsMode && isRatingBlockedForKids(movie.rating);
+  const blocked = kidsMode && (isRatingBlockedForKids(movie.rating) || isGenreBlockedForKids(movie.genreIds ?? []));
   const filteredSimilar = kidsMode ? filterKidsContent(similar) : similar;
   const filteredRecommendations = kidsMode ? filterKidsContent(recommendations) : recommendations;
   const filteredGenreRows = kidsMode
@@ -166,14 +166,30 @@ function MoviePage() {
     return (
       <div className="min-h-dvh bg-background">
         <Navbar />
-        <div className="grid min-h-[60vh] place-items-center gap-4 px-4">
-          <p className="text-amber-400 text-lg">This content isn't available on kids profiles.</p>
-          <Link
-            to="/browse"
-            className="text-sm text-muted-foreground hover:text-foreground underline"
-          >
-            Back to Browse
-          </Link>
+        <div className="grid min-h-[70vh] place-items-center gap-6 px-4">
+          <div className="grid size-24 place-items-center rounded-full bg-amber-500/15">
+            <ShieldOff className="size-12 text-amber-400" />
+          </div>
+          <div className="text-center space-y-2">
+            <h2 className="text-xl font-semibold text-foreground">Content not available for kids</h2>
+            <p className="max-w-sm text-sm text-muted-foreground">
+              This title isn't suitable for kids profiles. Try switching to a regular profile to watch it.
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <Link
+              to="/browse"
+              className="inline-flex items-center rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+            >
+              Back to Browse
+            </Link>
+            <Link
+              to="/profiles"
+              className="inline-flex items-center rounded-md border border-border px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-surface"
+            >
+              Switch Profile
+            </Link>
+          </div>
         </div>
       </div>
     );

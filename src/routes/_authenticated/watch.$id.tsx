@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { useEffect, useRef, useState, useCallback, type MouseEvent, type TouchEvent } from "react";
-import { ArrowLeft, Settings, Wifi, Loader, RotateCw, Users } from "lucide-react";
+import { ArrowLeft, Settings, Wifi, Loader, RotateCw, Users, ShieldOff } from "lucide-react";
 import { movieById } from "@/lib/streamflix-data";
 import { getContinueWatching, recordProgress } from "@/lib/continue-watching";
 import { saveProgressToFirestore } from "@/lib/continue-watching-firestore";
@@ -14,7 +14,7 @@ import { WatchPartyPanel, WatchPartyButton } from "@/components/streamflix/Watch
 import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
 import { seoMetaFor } from "@/lib/seo";
 import { MAIN_VIDEO_URL } from "@/lib/constants";
-import { isKidsProfile, isRatingBlockedForKids } from "@/lib/kids-mode";
+import { isKidsProfile, isRatingBlockedForKids, isGenreBlockedForKids } from "@/lib/kids-mode";
 
 interface NetworkInformation {
   effectiveType: "slow-2g" | "2g" | "3g" | "4g";
@@ -772,13 +772,26 @@ function PlayerPage() {
     );
   }
 
-  if (kidsMode && isRatingBlockedForKids(movie.rating)) {
+  if (kidsMode && (isRatingBlockedForKids(movie.rating) || isGenreBlockedForKids(movie.genreIds ?? []))) {
     return (
-      <div className="grid min-h-dvh place-items-center gap-4 bg-black text-white">
-        <p className="text-amber-400">This content isn't available on kids profiles.</p>
-        <Link to="/browse" className="text-sm text-white/60 hover:text-white underline">
-          Back to Browse
-        </Link>
+      <div className="grid min-h-dvh place-items-center gap-6 bg-black px-4 text-center">
+        <div className="grid size-24 place-items-center rounded-full bg-amber-500/15">
+          <ShieldOff className="size-12 text-amber-400" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-xl font-semibold text-white">Content not available for kids</h2>
+          <p className="max-w-sm text-sm text-white/50">
+            This title isn't suitable for kids profiles. Switch to a regular profile to watch it.
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <Link to="/browse" className="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+            Back to Browse
+          </Link>
+          <Link to="/profiles" className="rounded-md border border-white/20 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10">
+            Switch Profile
+          </Link>
+        </div>
       </div>
     );
   }

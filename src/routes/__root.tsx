@@ -185,14 +185,14 @@ function RootComponent() {
     const handleOffline = () => {
       if (window.location.pathname !== offlineRoute) {
         sessionStorage.setItem("sf:returnUrl", window.location.pathname + window.location.search);
-        router.navigate({ to: offlineRoute, replace: true });
+        window.location.replace(offlineRoute);
       }
     };
     const handleOnline = () => {
       if (window.location.pathname === offlineRoute) {
         const returnUrl = sessionStorage.getItem("sf:returnUrl");
         sessionStorage.removeItem("sf:returnUrl");
-        router.navigate({ to: returnUrl || "/browse" });
+        window.location.replace(returnUrl || "/browse");
       }
     };
 
