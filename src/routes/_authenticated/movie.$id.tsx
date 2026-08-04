@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Play, Share2, Clapperboard, ArrowLeft } from "lucide-react";
-import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
+import { isKidsProfile, isRatingBlockedForKids, filterKidsContent } from "@/lib/kids-mode";
 import { toast } from "sonner";
 import { shareContent } from "@/lib/share";
 import { seoMetaFor, siteUrl } from "@/lib/seo";
@@ -153,6 +153,7 @@ function MoviePage() {
   };
 
   const kidsMode = useMemo(() => isKidsProfile(), []);
+  const blocked = kidsMode && isRatingBlockedForKids(movie.rating);
   const filteredSimilar = kidsMode ? filterKidsContent(similar) : similar;
   const filteredRecommendations = kidsMode ? filterKidsContent(recommendations) : recommendations;
   const filteredGenreRows = kidsMode
@@ -160,6 +161,23 @@ function MoviePage() {
         .filter((gr) => filterKidsContent(gr.items).length > 0)
         .map((gr) => ({ ...gr, items: filterKidsContent(gr.items) }))
     : genreRows;
+
+  if (blocked) {
+    return (
+      <div className="min-h-dvh bg-background">
+        <Navbar />
+        <div className="grid min-h-[60vh] place-items-center gap-4 px-4">
+          <p className="text-amber-400 text-lg">This content isn't available on kids profiles.</p>
+          <Link
+            to="/browse"
+            className="text-sm text-muted-foreground hover:text-foreground underline"
+          >
+            Back to Browse
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-dvh bg-background">

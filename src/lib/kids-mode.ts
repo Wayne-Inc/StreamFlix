@@ -15,6 +15,8 @@ const RATING_TIERS: Record<string, number> = {
 
 const KIDS_MAX_TIER = 1;
 
+const UNSAFE_GENRE_IDS = new Set([27, 53, 10752]);
+
 export function isRatingBlockedForKids(rating: string | undefined): boolean {
   if (!rating) return false;
   const tier = RATING_TIERS[rating.toUpperCase()] ?? 2;
@@ -33,5 +35,12 @@ export function isKidsProfile(): boolean {
 }
 
 export function filterKidsContent(items: Movie[]): Movie[] {
-  return items.filter((m) => !isRatingBlockedForKids(m.rating));
+  return items.filter((m) => {
+    if (isRatingBlockedForKids(m.rating)) return false;
+    if (!m.rating) {
+      const ids = m.genreIds ?? [];
+      if (ids.some((gid) => UNSAFE_GENRE_IDS.has(gid))) return false;
+    }
+    return true;
+  });
 }
