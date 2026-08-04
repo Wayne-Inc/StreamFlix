@@ -15,7 +15,8 @@ const RATING_TIERS: Record<string, number> = {
 
 const KIDS_MAX_TIER = 1;
 
-export function isRatingBlockedForKids(rating: string): boolean {
+export function isRatingBlockedForKids(rating: string | undefined): boolean {
+  if (!rating) return false;
   const tier = RATING_TIERS[rating.toUpperCase()] ?? 2;
   return tier > KIDS_MAX_TIER;
 }
