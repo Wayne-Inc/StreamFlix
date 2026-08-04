@@ -183,12 +183,6 @@ function MoviePage() {
             >
               Back to Browse
             </Link>
-            <Link
-              to="/profiles"
-              className="inline-flex items-center rounded-md border border-border px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-surface"
-            >
-              Switch Profile
-            </Link>
           </div>
         </div>
       </div>

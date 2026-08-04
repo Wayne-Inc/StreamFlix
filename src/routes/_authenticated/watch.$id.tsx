@@ -788,9 +788,6 @@ function PlayerPage() {
           <Link to="/browse" className="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
             Back to Browse
           </Link>
-          <Link to="/profiles" className="rounded-md border border-white/20 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10">
-            Switch Profile
-          </Link>
         </div>
       </div>
     );
