@@ -27,7 +27,7 @@ function extractCertification(m: any, country = "US"): string {
   const source = m.release_dates?.results ?? m.content_ratings?.results ?? [];
   const entry = source.find((r: any) => r.iso_3166_1 === country) ?? source[0];
   const cert = entry?.release_dates?.[0]?.certification ?? entry?.rating ?? "";
-  return cert || "NR";
+  return cert;
 }
 
 export function toMovie(m: any): Movie {
