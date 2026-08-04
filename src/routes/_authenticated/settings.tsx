@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -46,11 +46,6 @@ import { isKidsProfile } from "@/lib/kids-mode";
 import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/settings")({
-  beforeLoad: () => {
-    if (isKidsProfile()) {
-      throw redirect({ to: "/browse" });
-    }
-  },
   head: () => ({ meta: [{ title: "Account Settings — StreamFlix" }] }),
   component: SettingsPage,
 });

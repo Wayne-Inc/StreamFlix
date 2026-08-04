@@ -24,7 +24,7 @@ import {
   getContinueWatchingFromFirestore,
   toMovie as fsToMovie,
 } from "@/lib/continue-watching-firestore";
-import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
+import { isKidsProfile, filterKidsContent, filterKidsHeroSlides } from "@/lib/kids-mode";
 import { getPersonalizedRecommendations, type RecommendSeed } from "@/lib/recommendations";
 
 const searchSchema = z.object({
@@ -301,7 +301,7 @@ function BrowsePage() {
 
   const filteredHeroSlides = useMemo(() => {
     if (!kidsMode) return heroSlides;
-    return filterKidsContent(heroSlides);
+    return filterKidsHeroSlides(heroSlides);
   }, [kidsMode, heroSlides]);
 
   const filteredRows = useMemo(() => {

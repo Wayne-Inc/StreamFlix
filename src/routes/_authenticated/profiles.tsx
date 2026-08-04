@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Pencil,
   Plus,
@@ -26,14 +26,8 @@ import {
   type Profile,
 } from "@/lib/profiles";
 import { getFavoriteGenres, setFavoriteGenres, GENRE_OPTIONS } from "@/lib/favorite-genres";
-import { isKidsProfile } from "@/lib/kids-mode";
 
 export const Route = createFileRoute("/_authenticated/profiles")({
-  beforeLoad: () => {
-    if (isKidsProfile()) {
-      throw redirect({ to: "/browse" });
-    }
-  },
   head: () => ({ meta: [{ title: "Who's watching? — StreamFlix" }] }),
   component: ProfilesPage,
 });

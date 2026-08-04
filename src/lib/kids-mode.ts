@@ -45,3 +45,7 @@ export function filterKidsContent(items: Movie[]): Movie[] {
     return true;
   });
 }
+
+export function filterKidsHeroSlides(items: Movie[]): Movie[] {
+  return items.filter((m) => !isRatingBlockedForKids(m.rating));
+}
