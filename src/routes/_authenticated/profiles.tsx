@@ -110,6 +110,7 @@ function ProfilesPage() {
 
   useEffect(() => {
     load();
+    // load reads auth.currentUser (stable); mount-only is intentional
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

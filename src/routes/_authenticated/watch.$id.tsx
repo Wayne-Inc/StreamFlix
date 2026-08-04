@@ -640,6 +640,7 @@ function PlayerPage() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // probedRef guard ensures this runs once regardless of deps
   }, [movie.id]);
 
   useEffect(() => {

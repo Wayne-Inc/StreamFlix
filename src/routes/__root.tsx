@@ -192,7 +192,7 @@ function RootComponent() {
       if (window.location.pathname === offlineRoute) {
         const returnUrl = sessionStorage.getItem("sf:returnUrl");
         sessionStorage.removeItem("sf:returnUrl");
-        window.location.href = returnUrl || "/browse";
+        router.navigate({ to: returnUrl || "/browse" });
       }
     };
 
