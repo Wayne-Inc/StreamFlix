@@ -1,7 +1,27 @@
-import { Facebook, Instagram, Twitter, Youtube } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Download, Facebook, Instagram, Twitter, Youtube } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { APP_DOWNLOADS, detectInstallPlatform, isInApp } from "@/lib/app-downloads";
 
 export function Footer() {
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [downloadLabel, setDownloadLabel] = useState<string>("");
+
+  useEffect(() => {
+    if (isInApp()) return;
+    const p = detectInstallPlatform();
+    if (p === "windows") {
+      setDownloadUrl(APP_DOWNLOADS.windows.url);
+      setDownloadLabel("Download for Windows");
+    } else if (p === "android") {
+      setDownloadUrl(APP_DOWNLOADS.android.url);
+      setDownloadLabel("Download for Android");
+    } else {
+      setDownloadUrl(APP_DOWNLOADS.windows.url);
+      setDownloadLabel("Download the app");
+    }
+  }, []);
+
   return (
     <footer className="border-t border-border bg-background px-4 sm:px-8 py-12 text-sm text-muted-foreground">
       <div className="mx-auto max-w-6xl space-y-8">
@@ -25,6 +45,17 @@ export function Footer() {
             <Link to="/privacy-policy" className="hover:text-foreground">
               Privacy Policy
             </Link>
+            {downloadUrl && (
+              <a
+                href={downloadUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition hover:bg-primary/20"
+              >
+                <Download className="size-3.5" />
+                {downloadLabel}
+              </a>
+            )}
           </div>
         </div>
         <div className="max-w-2xl space-y-2 rounded-lg border border-yellow-500/10 bg-yellow-500/5 px-4 py-3 text-[10px] sm:text-xs leading-relaxed text-yellow-400/80">
