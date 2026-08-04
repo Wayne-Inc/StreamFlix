@@ -118,9 +118,11 @@ export function Navbar() {
         setExitKidsPin("");
         setExitKidsOpen(true);
       } else {
+        localStorage.removeItem("sf:selectedProfile");
         router.navigate({ to: "/profiles" });
       }
     } catch {
+      localStorage.removeItem("sf:selectedProfile");
       router.navigate({ to: "/profiles" });
     }
   };
@@ -135,6 +137,7 @@ export function Navbar() {
       if (ok) {
         setExitKidsOpen(false);
         setExitKidsPin("");
+        localStorage.removeItem("sf:selectedProfile");
         router.navigate({ to: "/profiles" });
       } else {
         toast.error("Incorrect PIN");
