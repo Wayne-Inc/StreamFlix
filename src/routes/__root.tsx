@@ -18,6 +18,7 @@ import { registerSW } from "../lib/pwa";
 import { Toaster } from "@/components/ui/sonner";
 import { CookieConsent } from "@/components/streamflix/CookieConsent";
 import { CustomTitleBar } from "@/components/streamflix/CustomTitleBar";
+import { GlobalContextMenu } from "@/components/streamflix/GlobalContextMenu";
 import { ScreenSaver } from "@/components/streamflix/ScreenSaver";
 import { auth, db } from "@/lib/firebase";
 import { metaImageUrl } from "@/lib/seo";
@@ -208,13 +209,15 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <CustomTitleBar />
-      <div>
-        <Toaster richColors theme="dark" position="top-center" />
-        <Outlet />
-        <CookieConsent />
-        <ScreenSaver />
-      </div>
+      <GlobalContextMenu>
+        <CustomTitleBar />
+        <div>
+          <Toaster richColors theme="dark" position="top-center" />
+          <Outlet />
+          <CookieConsent />
+          <ScreenSaver />
+        </div>
+      </GlobalContextMenu>
     </QueryClientProvider>
   );
 }

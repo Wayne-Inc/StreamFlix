@@ -74,6 +74,17 @@
     font-family: var(--font-display);
     -webkit-font-smoothing: antialiased;
   }
+  body {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+  body input,
+  body textarea,
+  body [contenteditable="true"] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
 }
 
 @utility scrollbar-hide {
