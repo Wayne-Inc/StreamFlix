@@ -384,6 +384,13 @@ export const fetchMovieVideos = createServerFn({ method: "POST" })
     return fetchMovieVideosData(data.id);
   });
 
+export const enrichCertifications = createServerFn({ method: "POST" })
+  .validator(z.object({ items: z.array(z.any()) }))
+  .handler(async ({ data }) => {
+    const { enrichCertifications: enrich } = await import("./tmdb.server");
+    return enrich(data.items);
+  });
+
 export const fetchPersonDetails = createServerFn({ method: "POST" })
   .validator(z.object({ id: z.string() }))
   .handler(async ({ data }) => {

@@ -69,6 +69,29 @@ export function toMovie(m: any): Movie {
   };
 }
 
+export async function enrichCertifications(items: Movie[]): Promise<Movie[]> {
+  const needIds = items.filter(m => !m.rating && !m.id.startsWith("tv-")).map(m => m.id);
+  if (!needIds.length) return items;
+
+  const details = await Promise.allSettled(
+    needIds.map(id =>
+      tmdbFetch(`/movie/${id}`, { append_to_response: "release_dates" }).then(r => ({
+        id,
+        cert: extractCertification(r),
+      }))
+    ),
+  );
+
+  const certMap = new Map<string, string>();
+  for (const d of details) {
+    if (d.status === "fulfilled") certMap.set(d.value.id, d.value.cert);
+  }
+
+  return items.map(m =>
+    certMap.has(m.id) ? { ...m, rating: certMap.get(m.id)! } : m
+  );
+}
+
 export function toTv(m: any): Movie {
   const credits = m.credits;
   const castRaw = (credits?.cast || []).slice(0, 20);
