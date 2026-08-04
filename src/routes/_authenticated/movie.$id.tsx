@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Play, Share2, Clapperboard, ArrowLeft } from "lucide-react";
-import { isKidsProfile, filterKidsContent, isBlockedKidsGenre } from "@/lib/kids-mode";
+import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
 import { toast } from "sonner";
 import { shareContent } from "@/lib/share";
 import { seoMetaFor, siteUrl } from "@/lib/seo";
@@ -21,6 +21,7 @@ import { movieById, loadSimilar, loadRecommendations } from "@/lib/streamflix-da
 import { discoverByGenre } from "@/lib/api/tmdb";
 import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
 import { TrailerModal } from "@/components/streamflix/TrailerModal";
+import { AgeRatingBadge } from "@/components/streamflix/AgeRatingBadge";
 
 function MovieSkeleton() {
   return (
@@ -153,15 +154,10 @@ function MoviePage() {
 
   const kidsMode = useMemo(() => isKidsProfile(), []);
   const filteredSimilar = kidsMode ? filterKidsContent(similar) : similar;
-  const filteredRecommendations = kidsMode
-    ? filterKidsContent(recommendations)
-    : recommendations;
+  const filteredRecommendations = kidsMode ? filterKidsContent(recommendations) : recommendations;
   const filteredGenreRows = kidsMode
     ? genreRows
-        .filter(
-          (gr) =>
-            !isBlockedKidsGenre(Number(gr.genreId)) && filterKidsContent(gr.items).length > 0,
-        )
+        .filter((gr) => filterKidsContent(gr.items).length > 0)
         .map((gr) => ({ ...gr, items: filterKidsContent(gr.items) }))
     : genreRows;
 
@@ -190,9 +186,7 @@ function MoviePage() {
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 <span className="font-semibold text-emerald-400">{movie.match}% Match</span>
                 <span className="text-muted-foreground">{movie.year}</span>
-                <span className="rounded border border-border px-1.5 text-muted-foreground">
-                  {movie.rating}
-                </span>
+                <AgeRatingBadge rating={movie.rating} />
                 <span className="text-muted-foreground">{movie.runtime}</span>
               </div>
               <div>
@@ -282,7 +276,8 @@ function MoviePage() {
                     <span className="font-medium text-foreground">Runtime:</span> {movie.runtime}
                   </p>
                   <p>
-                    <span className="font-medium text-foreground">Rating:</span> {movie.rating}
+                    <span className="font-medium text-foreground">Rating:</span>{" "}
+                    <AgeRatingBadge rating={movie.rating} />
                   </p>
                 </div>
               </div>

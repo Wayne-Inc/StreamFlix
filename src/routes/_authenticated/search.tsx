@@ -28,7 +28,7 @@ import {
   type SearchSort,
 } from "@/lib/streamflix-data";
 import type { Movie } from "@/lib/types";
-import { isKidsProfile, filterKidsContent, filterKidsGenres } from "@/lib/kids-mode";
+import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
 import { z } from "zod";
 
 const searchSchema = z.object({
@@ -114,7 +114,7 @@ function SearchPage() {
     (_, i) => new Date().getFullYear() - i,
   );
 
-  const curatedGenres = kidsMode ? filterKidsGenres(CURATED_GENRES) : CURATED_GENRES;
+  const curatedGenres = CURATED_GENRES;
 
   const pushFilters = (next: {
     year?: number;

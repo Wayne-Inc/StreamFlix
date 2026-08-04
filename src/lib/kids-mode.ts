@@ -1,14 +1,24 @@
 import type { Movie } from "./types";
 
-const ADULT_GENRE_IDS = new Set([
-  18, // Drama
-  27, // Horror
-  53, // Thriller
-  80, // Crime
-  9648, // Mystery
-  10752, // War
-  10749, // Romance
-]);
+const RATING_TIERS: Record<string, number> = {
+  G: 0,
+  "TV-G": 0,
+  PG: 1,
+  "TV-PG": 1,
+  "PG-13": 2,
+  "TV-14": 2,
+  R: 3,
+  "TV-MA": 3,
+  "NC-17": 3,
+  NR: 2,
+};
+
+const KIDS_MAX_TIER = 1;
+
+export function isRatingBlockedForKids(rating: string): boolean {
+  const tier = RATING_TIERS[rating.toUpperCase()] ?? 2;
+  return tier > KIDS_MAX_TIER;
+}
 
 export function isKidsProfile(): boolean {
   if (typeof window === "undefined") return false;
@@ -22,19 +32,5 @@ export function isKidsProfile(): boolean {
 }
 
 export function filterKidsContent(items: Movie[]): Movie[] {
-  return items.filter((m) => {
-    const ids = m.genreIds ?? [];
-    const hasAdult = ids.some((gid) => ADULT_GENRE_IDS.has(gid));
-    return !hasAdult;
-  });
-}
-
-export function isBlockedKidsGenre(genreId: number): boolean {
-  return ADULT_GENRE_IDS.has(genreId);
-}
-
-export function filterKidsGenres(
-  genres: { id: number; name: string }[],
-): { id: number; name: string }[] {
-  return genres.filter((g) => !ADULT_GENRE_IDS.has(g.id));
+  return items.filter((m) => !isRatingBlockedForKids(m.rating));
 }

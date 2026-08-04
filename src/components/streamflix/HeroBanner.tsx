@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Play, Info } from "lucide-react";
 import type { Movie } from "@/lib/types";
+import { AgeRatingBadge } from "./AgeRatingBadge";
 
 export function HeroBanner({ slides }: { slides: Movie[] }) {
   const [i, setI] = useState(0);
@@ -54,9 +55,7 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
           <div className="mx-auto flex max-w-full flex-wrap items-center justify-center gap-2 text-xs sm:text-sm md:justify-start md:text-sm">
             <span className="font-semibold text-emerald-400">{s.match}% Match</span>
             <span className="text-muted-foreground">{s.year}</span>
-            <span className="rounded border border-border px-2 text-muted-foreground">
-              {s.rating}
-            </span>
+            <AgeRatingBadge rating={s.rating} />
             <span className="text-muted-foreground">{s.runtime}</span>
             <span className="text-muted-foreground">{s.genres.join(" · ")}</span>
           </div>

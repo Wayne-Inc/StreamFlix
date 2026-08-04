@@ -306,12 +306,7 @@ function BrowsePage() {
 
   const filteredRows = useMemo(() => {
     if (!kidsMode) return rows;
-    return rows
-      .filter((r) => r.title !== "Award-Winning Dramas")
-      .map((r) => ({
-        ...r,
-        items: fillRow(filterKidsContent(r.items)),
-      }));
+    return rows.map((r) => ({ ...r, items: fillRow(filterKidsContent(r.items)) }));
   }, [kidsMode, rows, fillRow]);
 
   return (

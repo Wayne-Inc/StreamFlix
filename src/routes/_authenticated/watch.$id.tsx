@@ -14,6 +14,7 @@ import { WatchPartyPanel, WatchPartyButton } from "@/components/streamflix/Watch
 import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
 import { seoMetaFor } from "@/lib/seo";
 import { MAIN_VIDEO_URL } from "@/lib/constants";
+import { isKidsProfile, isRatingBlockedForKids } from "@/lib/kids-mode";
 
 interface NetworkInformation {
   effectiveType: "slow-2g" | "2g" | "3g" | "4g";
@@ -304,16 +305,7 @@ function PlayerPage() {
   const { season, episode, autoplay, party } = Route.useSearch();
   const isPartyMode = Boolean(party);
 
-  if (!movie) {
-    return (
-      <div className="grid min-h-dvh place-items-center gap-4 bg-black text-white">
-        <p className="text-red-400">Movie not available</p>
-        <Link to="/" className="text-sm text-white/60 hover:text-white underline">
-          Go home
-        </Link>
-      </div>
-    );
-  }
+  const kidsMode = isKidsProfile();
 
   const [videoUrl, setVideoUrl] = useState<string>("");
   const mainVideoUrlRef = useRef<string>("");
@@ -768,6 +760,28 @@ function PlayerPage() {
     sendEmbedPlaybackCommand(iframe, "handshake");
     sendEmbedPlaybackCommand(iframe, "requestProgress");
   };
+
+  if (!movie) {
+    return (
+      <div className="grid min-h-dvh place-items-center gap-4 bg-black text-white">
+        <p className="text-red-400">Movie not available</p>
+        <Link to="/" className="text-sm text-white/60 hover:text-white underline">
+          Go home
+        </Link>
+      </div>
+    );
+  }
+
+  if (kidsMode && isRatingBlockedForKids(movie.rating)) {
+    return (
+      <div className="grid min-h-dvh place-items-center gap-4 bg-black text-white">
+        <p className="text-amber-400">This content isn't available on kids profiles.</p>
+        <Link to="/browse" className="text-sm text-white/60 hover:text-white underline">
+          Back to Browse
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div
