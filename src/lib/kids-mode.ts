@@ -47,5 +47,5 @@ export function filterKidsContent(items: Movie[]): Movie[] {
 }
 
 export function filterKidsHeroSlides(items: Movie[]): Movie[] {
-  return items;
+  return items.filter((m) => !isGenreBlockedForKids(m.genreIds ?? []));
 }

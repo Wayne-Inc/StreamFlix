@@ -774,7 +774,7 @@ function PlayerPage() {
 
   if (kidsMode && (isRatingBlockedForKids(movie.rating) || isGenreBlockedForKids(movie.genreIds ?? []))) {
     return (
-      <div className="grid min-h-dvh place-items-center gap-6 bg-black px-4 text-center">
+      <div className="grid min-h-dvh place-items-center gap-4 bg-black px-4 text-center">
         <div className="grid size-24 place-items-center rounded-full bg-amber-500/15">
           <ShieldOff className="size-12 text-amber-400" />
         </div>
@@ -784,11 +784,9 @@ function PlayerPage() {
             This title isn't suitable for kids profiles. Switch to a regular profile to watch it.
           </p>
         </div>
-        <div className="flex gap-3">
-          <Link to="/browse" className="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
-            Back to Browse
-          </Link>
-        </div>
+        <Link to="/browse" className="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+          Back to Browse
+        </Link>
       </div>
     );
   }
