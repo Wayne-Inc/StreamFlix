@@ -115,7 +115,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://identitytoolkit.googleapis.com" },
       { rel: "preconnect", href: "https://securetoken.googleapis.com" },
       { rel: "preconnect", href: "https://image.tmdb.org" },
+      { rel: "preconnect", href: "https://www.googletagmanager.com" },
       { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
+    ],
+    scripts: [
+      {
+        async: true,
+        src: "https://www.googletagmanager.com/gtag/js?id=G-V9783E9S0W",
+      },
+      {
+        children: `window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-V9783E9S0W');`,
+      },
     ],
   }),
   shellComponent: RootShell,

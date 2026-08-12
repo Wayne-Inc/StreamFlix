@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { hasConsent, isConsentDecided } from "@/lib/consent";
-import { initAnalytics } from "@/lib/analytics";
 
 const STORAGE_KEY = "streamflix:cookieConsent";
 const COOKIE_NAME = "streamflix_cookie_consent";
@@ -19,10 +18,7 @@ export function CookieConsent() {
 
   useEffect(() => {
     setMounted(true);
-    if (isConsentDecided()) {
-      setDecided(true);
-      if (hasConsent()) initAnalytics();
-    }
+    if (isConsentDecided()) setDecided(true);
   }, []);
 
   if (!mounted) return null;
@@ -55,7 +51,6 @@ export function CookieConsent() {
           <button
             onClick={() => {
               setConsent("accepted");
-              initAnalytics();
               setDecided(true);
             }}
             className="rounded-2xl bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
