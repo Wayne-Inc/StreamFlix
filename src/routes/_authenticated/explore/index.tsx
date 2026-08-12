@@ -35,9 +35,9 @@ export const Route = createFileRoute("/_authenticated/explore/")({
         </div>
         <div className="mt-10">
           <Skeleton className="h-5 w-44 rounded" />
-          <div className="mt-4 flex flex-wrap gap-3 justify-center">
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
             {Array.from({ length: 12 }).map((_, i) => (
-              <Skeleton key={i} className="w-[160px] sm:w-[200px] aspect-[2/3] rounded-lg" />
+              <Skeleton key={i} className="w-full aspect-[2/3] rounded-lg" />
             ))}
           </div>
         </div>
@@ -95,14 +95,14 @@ function ExplorePage() {
         {safeItems.length > 0 && (
           <div className="mt-10">
             <h2 className="text-lg font-semibold tracking-tight">Popular right now</h2>
-            <div className="mt-4 flex flex-wrap gap-3 justify-center">
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
               {visible.map((m) => (
                 <button
                   key={m.id}
                   onClick={() => navigate({ to: "/movie/$id", params: { id: m.id } })}
-                  className="text-left"
+                  className="w-full text-left"
                 >
-                  <MovieCard movie={m} />
+                  <MovieCard movie={m} fluid />
                 </button>
               ))}
             </div>

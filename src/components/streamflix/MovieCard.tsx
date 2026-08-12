@@ -8,15 +8,17 @@ export function MovieCard({
   progress,
   reason,
   reasonLink,
+  fluid = false,
 }: {
   movie: Movie;
   progress?: number;
   reason?: string;
   reasonLink?: string;
+  fluid?: boolean;
 }) {
   return (
     <div
-      className="group relative w-[200px] sm:w-[260px] shrink-0"
+      className={`group relative ${fluid ? "w-full" : "w-[200px] sm:w-[260px] shrink-0"}`}
       data-context="movie"
       data-title={movie.title}
       data-url={`/movie/${movie.id}`}

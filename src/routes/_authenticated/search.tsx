@@ -378,9 +378,9 @@ function SearchPage() {
                     : `${results.length} title${results.length === 1 ? "" : "s"} matching your filters`}
               </p>
               {loading && (
-                <div className="mt-6 flex flex-wrap gap-3 justify-center">
+                <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
                   {Array.from({ length: 12 }).map((_, i) => (
-                    <Skeleton key={i} className="w-[160px] sm:w-[200px] aspect-[2/3] rounded-md" />
+                    <Skeleton key={i} className="w-full aspect-[2/3] rounded-md" />
                   ))}
                 </div>
               )}
@@ -391,14 +391,14 @@ function SearchPage() {
               )}
               {!loading && results.length > 0 && (
                 <>
-                  <div className="mt-6 flex flex-wrap gap-3 justify-center">
+                  <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
                     {visible.map((m) => (
                       <button
                         key={m.id}
                         onClick={() => navigate({ to: "/movie/$id", params: { id: m.id } })}
-                        className="text-left"
+                        className="w-full text-left"
                       >
-                        <MovieCard movie={m} />
+                        <MovieCard movie={m} fluid />
                       </button>
                     ))}
                   </div>
