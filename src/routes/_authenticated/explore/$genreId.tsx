@@ -77,11 +77,7 @@ function ExploreGenrePage() {
       {/* Cinematic hero */}
       <section className="relative flex h-[42vh] items-end overflow-hidden sm:h-[52vh]">
         {hero?.backdrop ? (
-          <img
-            src={hero.backdrop}
-            alt=""
-            className="absolute inset-0 size-full object-cover"
-          />
+          <img src={hero.backdrop} alt="" className="absolute inset-0 size-full object-cover" />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-primary/40 via-surface to-background" />
         )}

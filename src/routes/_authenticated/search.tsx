@@ -21,12 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  search,
-  searchByPerson,
-  searchWithFilters,
-  type SearchSort,
-} from "@/lib/streamflix-data";
+import { search, searchByPerson, searchWithFilters, type SearchSort } from "@/lib/streamflix-data";
 import type { Movie } from "@/lib/types";
 import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
 import { z } from "zod";
@@ -37,10 +32,7 @@ const searchSchema = z.object({
   year: z.coerce.number().optional().catch(undefined),
   genre: z.coerce.number().optional().catch(undefined),
   rating: z.coerce.number().optional().catch(undefined),
-  sort: z
-    .enum(["relevance", "popularity", "rating", "year", "title"])
-    .optional()
-    .catch(undefined),
+  sort: z.enum(["relevance", "popularity", "rating", "year", "title"]).optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/_authenticated/search")({
@@ -90,8 +82,14 @@ function useDebounce<T>(value: T, delay: number): T {
 
 function SearchPage() {
   const currentSearch = useSearch({ from: "/_authenticated/search" });
-  const { q: urlQ, tab: urlTab, year: urlYear, genre: urlGenre, rating: urlRating, sort: urlSort } =
-    currentSearch;
+  const {
+    q: urlQ,
+    tab: urlTab,
+    year: urlYear,
+    genre: urlGenre,
+    rating: urlRating,
+    sort: urlSort,
+  } = currentSearch;
   const [q, setQ] = useState(urlQ ?? "");
   const [tab, setTab] = useState<Tab>(urlTab ?? "titles");
   const [year, setYear] = useState<number | undefined>(urlYear);
