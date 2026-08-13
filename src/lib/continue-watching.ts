@@ -33,7 +33,7 @@ export type WatchHistoryItem = ContinueItem & {
   watchedAt: number;
 };
 
-function getSelectedProfileId(): string | null {
+export function getSelectedProfileId(): string | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = window.localStorage.getItem("sf:selectedProfile");

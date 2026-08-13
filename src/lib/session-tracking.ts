@@ -13,7 +13,7 @@ import {
 import { getDeviceId } from "@/lib/device-tracking";
 import { hasConsent } from "@/lib/consent";
 
-function getSelectedProfileId(): string | null {
+export function getSelectedProfileId(): string | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem("sf:selectedProfile");
