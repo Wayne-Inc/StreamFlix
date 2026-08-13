@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthActionRouteImport } from './routes/auth/action'
+import { Route as ApiClientIpRouteImport } from './routes/api/client-ip'
 import { Route as ApiArchiveRouteImport } from './routes/api/archive'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
@@ -63,6 +64,11 @@ const AuthActionRoute = AuthActionRouteImport.update({
   id: '/action',
   path: '/action',
   getParentRoute: () => AuthRoute,
+} as any)
+const ApiClientIpRoute = ApiClientIpRouteImport.update({
+  id: '/api/client-ip',
+  path: '/api/client-ip',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiArchiveRoute = ApiArchiveRouteImport.update({
   id: '/api/archive',
@@ -146,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/archive': typeof ApiArchiveRoute
+  '/api/client-ip': typeof ApiClientIpRoute
   '/auth/action': typeof AuthActionRoute
   '/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
   '/movie/$id': typeof AuthenticatedMovieIdRoute
@@ -166,6 +173,7 @@ export interface FileRoutesByTo {
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/archive': typeof ApiArchiveRoute
+  '/api/client-ip': typeof ApiClientIpRoute
   '/auth/action': typeof AuthActionRoute
   '/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
   '/movie/$id': typeof AuthenticatedMovieIdRoute
@@ -189,6 +197,7 @@ export interface FileRoutesById {
   '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/api/archive': typeof ApiArchiveRoute
+  '/api/client-ip': typeof ApiClientIpRoute
   '/auth/action': typeof AuthActionRoute
   '/_authenticated/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
   '/_authenticated/movie/$id': typeof AuthenticatedMovieIdRoute
@@ -212,6 +221,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/api/archive'
+    | '/api/client-ip'
     | '/auth/action'
     | '/explore/$genreId'
     | '/movie/$id'
@@ -232,6 +242,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/api/archive'
+    | '/api/client-ip'
     | '/auth/action'
     | '/explore/$genreId'
     | '/movie/$id'
@@ -254,6 +265,7 @@ export interface FileRouteTypes {
     | '/_authenticated/search'
     | '/_authenticated/settings'
     | '/api/archive'
+    | '/api/client-ip'
     | '/auth/action'
     | '/_authenticated/explore/$genreId'
     | '/_authenticated/movie/$id'
@@ -270,6 +282,7 @@ export interface RootRouteChildren {
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   TosRoute: typeof TosRoute
   ApiArchiveRoute: typeof ApiArchiveRoute
+  ApiClientIpRoute: typeof ApiClientIpRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -322,6 +335,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/action'
       preLoaderRoute: typeof AuthActionRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/api/client-ip': {
+      id: '/api/client-ip'
+      path: '/api/client-ip'
+      fullPath: '/api/client-ip'
+      preLoaderRoute: typeof ApiClientIpRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/archive': {
       id: '/api/archive'
@@ -477,6 +497,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   TosRoute: TosRoute,
   ApiArchiveRoute: ApiArchiveRoute,
+  ApiClientIpRoute: ApiClientIpRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
