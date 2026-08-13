@@ -23,6 +23,7 @@ import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedProfilesRouteImport } from './routes/_authenticated/profiles'
 import { Route as AuthenticatedMylistRouteImport } from './routes/_authenticated/mylist'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
+import { Route as AuthenticatedForcePasswordRouteImport } from './routes/_authenticated/force-password'
 import { Route as AuthenticatedExploreRouteImport } from './routes/_authenticated/explore'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedBrowseRouteImport } from './routes/_authenticated/browse'
@@ -101,6 +102,12 @@ const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
   path: '/history',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedForcePasswordRoute =
+  AuthenticatedForcePasswordRouteImport.update({
+    id: '/force-password',
+    path: '/force-password',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedExploreRoute = AuthenticatedExploreRouteImport.update({
   id: '/explore',
   path: '/explore',
@@ -153,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/browse': typeof AuthenticatedBrowseRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/explore': typeof AuthenticatedExploreRouteWithChildren
+  '/force-password': typeof AuthenticatedForcePasswordRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/mylist': typeof AuthenticatedMylistRoute
   '/profiles': typeof AuthenticatedProfilesRoute
@@ -175,6 +183,7 @@ export interface FileRoutesByTo {
   '/tos': typeof TosRoute
   '/browse': typeof AuthenticatedBrowseRoute
   '/calendar': typeof AuthenticatedCalendarRoute
+  '/force-password': typeof AuthenticatedForcePasswordRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/mylist': typeof AuthenticatedMylistRoute
   '/profiles': typeof AuthenticatedProfilesRoute
@@ -200,6 +209,7 @@ export interface FileRoutesById {
   '/_authenticated/browse': typeof AuthenticatedBrowseRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/explore': typeof AuthenticatedExploreRouteWithChildren
+  '/_authenticated/force-password': typeof AuthenticatedForcePasswordRoute
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/mylist': typeof AuthenticatedMylistRoute
   '/_authenticated/profiles': typeof AuthenticatedProfilesRoute
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
     | '/browse'
     | '/calendar'
     | '/explore'
+    | '/force-password'
     | '/history'
     | '/mylist'
     | '/profiles'
@@ -247,6 +258,7 @@ export interface FileRouteTypes {
     | '/tos'
     | '/browse'
     | '/calendar'
+    | '/force-password'
     | '/history'
     | '/mylist'
     | '/profiles'
@@ -271,6 +283,7 @@ export interface FileRouteTypes {
     | '/_authenticated/browse'
     | '/_authenticated/calendar'
     | '/_authenticated/explore'
+    | '/_authenticated/force-password'
     | '/_authenticated/history'
     | '/_authenticated/mylist'
     | '/_authenticated/profiles'
@@ -397,6 +410,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHistoryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/force-password': {
+      id: '/_authenticated/force-password'
+      path: '/force-password'
+      fullPath: '/force-password'
+      preLoaderRoute: typeof AuthenticatedForcePasswordRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/explore': {
       id: '/_authenticated/explore'
       path: '/explore'
@@ -473,6 +493,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBrowseRoute: typeof AuthenticatedBrowseRoute
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedExploreRoute: typeof AuthenticatedExploreRouteWithChildren
+  AuthenticatedForcePasswordRoute: typeof AuthenticatedForcePasswordRoute
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
   AuthenticatedMylistRoute: typeof AuthenticatedMylistRoute
   AuthenticatedProfilesRoute: typeof AuthenticatedProfilesRoute
@@ -487,6 +508,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBrowseRoute: AuthenticatedBrowseRoute,
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedExploreRoute: AuthenticatedExploreRouteWithChildren,
+  AuthenticatedForcePasswordRoute: AuthenticatedForcePasswordRoute,
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
   AuthenticatedMylistRoute: AuthenticatedMylistRoute,
   AuthenticatedProfilesRoute: AuthenticatedProfilesRoute,

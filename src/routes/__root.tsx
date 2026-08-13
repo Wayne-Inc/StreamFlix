@@ -252,7 +252,7 @@ function RootComponent() {
       <GlobalContextMenu>
         <CustomTitleBar />
         <div>
-          <Toaster richColors theme="dark" position="top-center" />
+          <Toaster />
           <Outlet />
           <CookieConsent />
           <ScreenSaver />

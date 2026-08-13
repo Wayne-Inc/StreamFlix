@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
 import { auth } from "@/lib/firebase";
-import { strengthScore, STRENGTH_LABELS, STRENGTH_COLORS } from "@/lib/password";
+import { passwordMeetsPolicy } from "@/lib/password";
+import { PasswordPolicyChecklist } from "@/components/streamflix/PasswordPolicyChecklist";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -62,10 +63,17 @@ function AuthPage() {
     }
   };
 
-  // Redirect away if already signed in (use profile chooser).
+  // Redirect away if already signed in (use profile chooser), unless a
+  // password upgrade is pending.
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
-      if (user && user.emailVerified) navigate({ to: "/profiles" });
+      let pending = false;
+      try {
+        pending = localStorage.getItem("sf:upgrade_password") === "1";
+      } catch {}
+      const onUpgrade =
+        typeof window !== "undefined" && window.location.pathname === "/force-password";
+      if (user && user.emailVerified && !pending && !onUpgrade) navigate({ to: "/profiles" });
     });
     return () => unsub();
   }, [navigate]);
@@ -143,9 +151,29 @@ function AuthPage() {
           return;
         }
         resetCaptcha();
+        if (!passwordMeetsPolicy(password)) {
+          try {
+            localStorage.setItem("sf:upgrade_password", "1");
+          } catch {}
+          toast.error(
+            "Your password doesn't meet the new security requirements. Please set a stronger one.",
+          );
+          navigate({ to: "/force-password" });
+          return;
+        }
+        try {
+          localStorage.removeItem("sf:upgrade_password");
+        } catch {}
         toast.success("Signed in.");
         navigate({ to: "/profiles" });
       } else {
+        if (!passwordMeetsPolicy(password)) {
+          toast.error(
+            "Password must include uppercase, lowercase, number, and special characters (min 8 characters).",
+          );
+          setBusy(false);
+          return;
+        }
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         if (name.trim()) {
           await updateFirebaseProfile(cred.user, { displayName: name.trim() });
@@ -224,10 +252,6 @@ function AuthPage() {
       setBusy(false);
     }
   };
-
-  const s = strengthScore(password);
-  const labels = STRENGTH_LABELS;
-  const colors = STRENGTH_COLORS;
 
   return (
     <main className="relative min-h-dvh">
@@ -326,7 +350,7 @@ function AuthPage() {
               <div className="relative">
                 <input
                   required
-                  minLength={6}
+                  minLength={8}
                   type={showPw ? "text" : "password"}
                   placeholder="Password"
                   aria-label="Password"
@@ -363,21 +387,18 @@ function AuthPage() {
               )}
 
               {mode === "signup" && password && (
-                <div className="space-y-1">
-                  <div className="flex gap-1">
-                    {[0, 1, 2, 3].map((i) => (
-                      <div
-                        key={i}
-                        className={`h-1 flex-1 rounded ${i < s ? colors[s - 1] : "bg-border"}`}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-xs text-muted-foreground">{labels[Math.max(0, s - 1)]}</p>
+                <div className="space-y-2 rounded-md border border-border/60 bg-neutral-900/40 p-3">
+                  <p className="text-xs font-medium text-muted-foreground">Password requirements</p>
+                  <PasswordPolicyChecklist password={password} />
                 </div>
               )}
 
               <button
-                disabled={busy || (mode === "signin" && !captchaVerified)}
+                disabled={
+                  busy ||
+                  (mode === "signin" && !captchaVerified) ||
+                  (mode === "signup" && !passwordMeetsPolicy(password))
+                }
                 className="w-full rounded bg-primary py-3 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
               >
                 {busy ? "Please wait…" : mode === "signin" ? "Sign In" : "Create Account"}
