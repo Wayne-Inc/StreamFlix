@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { X } from "lucide-react";
 
 export function AvatarCropModal({
@@ -12,6 +12,10 @@ export function AvatarCropModal({
 }) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ startX: number; startY: number; ox: number; oy: number } | null>(null);
+  const pinchRef = useRef<{ startDist: number; startZoom: number } | null>(null);
+  const pointersRef = useRef<Map<number, { cx: number; cy: number }>>(new Map());
+  const zoomRef = useRef(1);
+  const offsetRef = useRef({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [image, setImage] = useState<HTMLImageElement | null>(null);
@@ -41,10 +45,12 @@ export function AvatarCropModal({
     if (!image || !size) return;
     const dispW = image.naturalWidth * renderScale;
     const dispH = image.naturalHeight * renderScale;
-    setOffset((o) => ({
-      x: Math.min(0, Math.max(size - dispW, o.x)),
-      y: Math.min(0, Math.max(size - dispH, o.y)),
-    }));
+    setOffset((o) => {
+      const nx = Math.min(0, Math.max(size - dispW, o.x));
+      const ny = Math.min(0, Math.max(size - dispH, o.y));
+      offsetRef.current = { x: nx, y: ny };
+      return { x: nx, y: ny };
+    });
   }, [image, size, renderScale]);
 
   const handleZoom = (z: number) => {
@@ -52,11 +58,30 @@ export function AvatarCropModal({
     const newScale = minScale * z;
     const dispW = image.naturalWidth * newScale;
     const dispH = image.naturalHeight * newScale;
-    setZoom(z);
-    setOffset({
+    const o = {
       x: (size - dispW) / 2,
       y: (size - dispH) / 2,
-    });
+    };
+    zoomRef.current = z;
+    offsetRef.current = o;
+    setZoom(z);
+    setOffset(o);
+  };
+
+  const endPointer = (e: ReactPointerEvent<HTMLDivElement>) => {
+    pointersRef.current.delete(e.pointerId);
+    if (pointersRef.current.size < 2) pinchRef.current = null;
+    if (pointersRef.current.size === 1) {
+      const [p] = [...pointersRef.current.values()];
+      dragRef.current = {
+        startX: p.cx,
+        startY: p.cy,
+        ox: offsetRef.current.x,
+        oy: offsetRef.current.y,
+      };
+    } else if (pointersRef.current.size === 0) {
+      dragRef.current = null;
+    }
   };
 
   const confirm = () => {
@@ -100,29 +125,71 @@ export function AvatarCropModal({
             const el = viewportRef.current;
             if (!image || !el) return;
             el.setPointerCapture(e.pointerId);
-            dragRef.current = {
-              startX: e.clientX,
-              startY: e.clientY,
-              ox: offset.x,
-              oy: offset.y,
-            };
+            pointersRef.current.set(e.pointerId, { cx: e.clientX, cy: e.clientY });
+
+            if (pointersRef.current.size === 2) {
+              dragRef.current = null;
+              const pts = [...pointersRef.current.values()];
+              pinchRef.current = {
+                startDist: Math.max(1, Math.hypot(pts[0].cx - pts[1].cx, pts[0].cy - pts[1].cy)),
+                startZoom: zoomRef.current,
+              };
+            } else {
+              dragRef.current = {
+                startX: e.clientX,
+                startY: e.clientY,
+                ox: offsetRef.current.x,
+                oy: offsetRef.current.y,
+              };
+            }
           }}
           onPointerMove={(e) => {
+            const el = viewportRef.current;
+            if (!image || !el) return;
+            const p = pointersRef.current.get(e.pointerId);
+            if (p) {
+              p.cx = e.clientX;
+              p.cy = e.clientY;
+            }
+
+            if (pointersRef.current.size >= 2 && pinchRef.current) {
+              const rect = el.getBoundingClientRect();
+              const pts = [...pointersRef.current.values()];
+              const dist = Math.max(1, Math.hypot(pts[0].cx - pts[1].cx, pts[0].cy - pts[1].cy));
+              const newZoom = Math.min(
+                3,
+                Math.max(1, pinchRef.current.startZoom * (dist / pinchRef.current.startDist)),
+              );
+              const newScale = minScale * newZoom;
+              const newDispW = image.naturalWidth * newScale;
+              const newDispH = image.naturalHeight * newScale;
+              const fx = (pts[0].cx + pts[1].cx) / 2 - rect.left;
+              const fy = (pts[0].cy + pts[1].cy) / 2 - rect.top;
+              const curScale = minScale * zoomRef.current;
+              const curDispW = image.naturalWidth * curScale;
+              const curDispH = image.naturalHeight * curScale;
+              const imgFx = curDispW > 0 ? (fx - offsetRef.current.x) / curDispW : 0;
+              const imgFy = curDispH > 0 ? (fy - offsetRef.current.y) / curDispH : 0;
+              const nx = Math.min(0, Math.max(size - newDispW, fx - imgFx * newDispW));
+              const ny = Math.min(0, Math.max(size - newDispH, fy - imgFy * newDispH));
+              zoomRef.current = newZoom;
+              offsetRef.current = { x: nx, y: ny };
+              setZoom(newZoom);
+              setOffset({ x: nx, y: ny });
+              return;
+            }
+
             const drag = dragRef.current;
-            if (!image || !drag) return;
+            if (!drag) return;
             const dispW = image.naturalWidth * renderScale;
             const dispH = image.naturalHeight * renderScale;
-            setOffset({
-              x: Math.min(0, Math.max(size - dispW, drag.ox + (e.clientX - drag.startX))),
-              y: Math.min(0, Math.max(size - dispH, drag.oy + (e.clientY - drag.startY))),
-            });
+            const nx = Math.min(0, Math.max(size - dispW, drag.ox + (e.clientX - drag.startX)));
+            const ny = Math.min(0, Math.max(size - dispH, drag.oy + (e.clientY - drag.startY)));
+            offsetRef.current = { x: nx, y: ny };
+            setOffset({ x: nx, y: ny });
           }}
-          onPointerUp={() => {
-            dragRef.current = null;
-          }}
-          onPointerCancel={() => {
-            dragRef.current = null;
-          }}
+          onPointerUp={endPointer}
+          onPointerCancel={endPointer}
           className="relative mt-4 aspect-square w-full touch-none cursor-move overflow-hidden rounded-lg bg-neutral-900"
         >
           {image && (
@@ -151,7 +218,8 @@ export function AvatarCropModal({
               step={0.01}
               value={zoom}
               onChange={(e) => handleZoom(parseFloat(e.target.value))}
-              className="flex-1"
+              className="zoom-slider flex-1"
+              style={{ ["--fill" as string]: `${((zoom - 1) / 2) * 100}%` } as React.CSSProperties}
             />
           </label>
         </div>

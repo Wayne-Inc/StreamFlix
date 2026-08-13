@@ -192,6 +192,47 @@ input[type="range"]::-moz-range-progress {
   border-radius: 2px;
   background: rgba(255, 255, 255, 0.3);
 }
+/* Avatar crop zoom slider */
+.zoom-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    #dc2626 0%,
+    #dc2626 var(--fill, 0%),
+    rgba(255, 255, 255, 0.15) var(--fill, 0%),
+    rgba(255, 255, 255, 0.15) 100%
+  );
+}
+.zoom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #dc2626;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+.zoom-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.15);
+}
+.zoom-slider::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: #dc2626;
+}
+.zoom-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #dc2626;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
 .volume-slider::-moz-range-track {
   height: 4px;
   border-radius: 2px;
