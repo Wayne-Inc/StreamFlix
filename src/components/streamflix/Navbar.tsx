@@ -209,14 +209,6 @@ export function Navbar() {
           >
             Calendar
           </Link>
-          <Link
-            to="/mylist"
-            className={`hover:text-foreground transition-colors ${
-              pathname === "/mylist" ? "text-foreground font-semibold" : ""
-            }`}
-          >
-            My List
-          </Link>
         </nav>
         <div className="ml-auto flex items-center gap-3">
           <button
@@ -410,13 +402,6 @@ export function Navbar() {
               className="flex items-center gap-3 rounded-md px-2 py-2.5 text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground transition-colors"
             >
               <CalendarDays className="size-4" /> Calendar
-            </Link>
-            <Link
-              to="/mylist"
-              onClick={() => setMobileNavOpen(false)}
-              className="flex items-center gap-3 rounded-md px-2 py-2.5 text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground transition-colors"
-            >
-              <Bookmark className="size-4" /> My List
             </Link>
           </div>
         </div>

@@ -289,7 +289,7 @@ function MoviePage() {
                   }}
                   className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-3 font-semibold text-foreground hover:bg-white/10"
                 >
-                  <Check className="size-5" /> {watched ? "Unwatched" : "Watched"}
+                  <Check className="size-5" /> {watched ? "Watched" : "Unwatched"}
                 </button>
                 <button
                   onClick={() => {
