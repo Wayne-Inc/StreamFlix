@@ -8,7 +8,12 @@ import {
 } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
 import { Play, Share2, Clapperboard, ArrowLeft, ShieldOff, Check, Bookmark } from "lucide-react";
-import { isKidsProfile, isRatingBlockedForKids, isGenreBlockedForKids, filterKidsContent } from "@/lib/kids-mode";
+import {
+  isKidsProfile,
+  isRatingBlockedForKids,
+  isGenreBlockedForKids,
+  filterKidsContent,
+} from "@/lib/kids-mode";
 import { toast } from "sonner";
 import { shareContent } from "@/lib/share";
 import { seoMetaFor, siteUrl } from "@/lib/seo";
@@ -104,8 +109,16 @@ export const Route = createFileRoute("/_authenticated/movie/$id")({
       meta: [
         { title },
         { name: "description", content: description },
-        ...(movie && movie.genres.length ? [{ name: "keywords", content: movie.genres.join(", ") }] : []),
-        ...seoMetaFor(title, description, image, movie?.id?.startsWith("tv-") ? "video.tv_show" : "video.movie", url),
+        ...(movie && movie.genres.length
+          ? [{ name: "keywords", content: movie.genres.join(", ") }]
+          : []),
+        ...seoMetaFor(
+          title,
+          description,
+          image,
+          movie?.id?.startsWith("tv-") ? "video.tv_show" : "video.movie",
+          url,
+        ),
       ],
       links: [...(url ? [{ rel: "canonical", href: url }] : [])],
     };
@@ -146,9 +159,7 @@ function MoviePage() {
   const [watched, setWatched] = useState(false);
   useEffect(() => {
     setInList(isInMyList(movie.id));
-    setWatched(
-      getWatchHistory().some((x) => x.id === movie.id || x.id.startsWith(`${movie.id}:`)),
-    );
+    setWatched(getWatchHistory().some((x) => x.id === movie.id || x.id.startsWith(`${movie.id}:`)));
   }, [movie.id]);
 
   const navigate = useNavigate();
@@ -164,7 +175,9 @@ function MoviePage() {
   };
 
   const kidsMode = useMemo(() => isKidsProfile(), []);
-  const blocked = kidsMode && (isRatingBlockedForKids(movie.rating) || isGenreBlockedForKids(movie.genreIds ?? []));
+  const blocked =
+    kidsMode &&
+    (isRatingBlockedForKids(movie.rating) || isGenreBlockedForKids(movie.genreIds ?? []));
   const filteredSimilar = kidsMode ? filterKidsContent(similar) : similar;
   const filteredRecommendations = kidsMode ? filterKidsContent(recommendations) : recommendations;
   const filteredGenreRows = kidsMode
@@ -182,9 +195,12 @@ function MoviePage() {
             <ShieldOff className="size-12 text-amber-400" />
           </div>
           <div className="text-center space-y-2">
-            <h2 className="text-xl font-semibold text-foreground">Content not available for kids</h2>
+            <h2 className="text-xl font-semibold text-foreground">
+              Content not available for kids
+            </h2>
             <p className="max-w-sm text-sm text-muted-foreground">
-              This title isn't suitable for kids profiles. Try switching to a regular profile to watch it.
+              This title isn't suitable for kids profiles. Try switching to a regular profile to
+              watch it.
             </p>
           </div>
           <Link
@@ -291,9 +307,7 @@ function MoviePage() {
                       title: `${movie.title} (${movie.year}) — StreamFlix`,
                       text: movie.description.slice(0, 140),
                       url: base ? `${base}/movie/${movie.id}` : window.location.href,
-                    }).then((mode) =>
-                      toast.success(mode === "shared" ? "Shared" : "Link copied"),
-                    );
+                    }).then((mode) => toast.success(mode === "shared" ? "Shared" : "Link copied"));
                   }}
                   className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground"
                   aria-label="Share"
@@ -328,8 +342,8 @@ function MoviePage() {
                     )}
                   </p>
                   <p>
-                    <span className="font-medium text-foreground">Cast:</span>{" "}
-                    {movie.cast.length} actors
+                    <span className="font-medium text-foreground">Cast:</span> {movie.cast.length}{" "}
+                    actors
                   </p>
                   <p>
                     <span className="font-medium text-foreground">Released:</span> {movie.year}
@@ -412,10 +426,7 @@ function MoviePage() {
               </div>
 
               {isTv && movie.numberOfSeasons && movie.numberOfSeasons > 0 && (
-                <SeasonEpisodePicker
-                  movieId={movie.id}
-                  numberOfSeasons={movie.numberOfSeasons}
-                />
+                <SeasonEpisodePicker movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} />
               )}
             </aside>
           </div>

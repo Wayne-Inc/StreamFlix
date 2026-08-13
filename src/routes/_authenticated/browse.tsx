@@ -252,9 +252,7 @@ function BrowsePage() {
         }
         if (!cancelled) {
           setPickedRow(
-            items.length
-              ? { title: "Picked for You", items, reasons, reasonLinks: {} }
-              : null,
+            items.length ? { title: "Picked for You", items, reasons, reasonLinks: {} } : null,
           );
         }
       } catch {
@@ -359,10 +357,7 @@ function BrowsePage() {
           </section>
         )}
         {kind === "home" && listRow && listRow.length > 0 && (
-          <Row
-            title="My List"
-            items={kidsMode ? fillRow(filterKidsContent(listRow)) : listRow}
-          />
+          <Row title="My List" items={kidsMode ? fillRow(filterKidsContent(listRow)) : listRow} />
         )}
         {kind === "home" && (watchedLoading || pickedLoading) && <RowSkeleton />}
         {watchedRow && kind === "home" && (
