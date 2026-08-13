@@ -96,41 +96,41 @@ export function AvatarCropModal({
 
         <div
           ref={viewportRef}
-          className="relative mt-4 aspect-square w-full overflow-hidden rounded-lg bg-neutral-900"
+          onPointerDown={(e) => {
+            const el = viewportRef.current;
+            if (!image || !el) return;
+            el.setPointerCapture(e.pointerId);
+            dragRef.current = {
+              startX: e.clientX,
+              startY: e.clientY,
+              ox: offset.x,
+              oy: offset.y,
+            };
+          }}
+          onPointerMove={(e) => {
+            const drag = dragRef.current;
+            if (!image || !drag) return;
+            const dispW = image.naturalWidth * renderScale;
+            const dispH = image.naturalHeight * renderScale;
+            setOffset({
+              x: Math.min(0, Math.max(size - dispW, drag.ox + (e.clientX - drag.startX))),
+              y: Math.min(0, Math.max(size - dispH, drag.oy + (e.clientY - drag.startY))),
+            });
+          }}
+          onPointerUp={() => {
+            dragRef.current = null;
+          }}
+          onPointerCancel={() => {
+            dragRef.current = null;
+          }}
+          className="relative mt-4 aspect-square w-full touch-none cursor-move overflow-hidden rounded-lg bg-neutral-900"
         >
           {image && (
             <img
               src={src}
               alt=""
               draggable={false}
-              onPointerDown={(e) => {
-                const el = viewportRef.current;
-                if (!el) return;
-                el.setPointerCapture(e.pointerId);
-                dragRef.current = {
-                  startX: e.clientX,
-                  startY: e.clientY,
-                  ox: offset.x,
-                  oy: offset.y,
-                };
-              }}
-              onPointerMove={(e) => {
-                const drag = dragRef.current;
-                if (!drag) return;
-                const dispW = image.naturalWidth * renderScale;
-                const dispH = image.naturalHeight * renderScale;
-                setOffset({
-                  x: Math.min(0, Math.max(size - dispW, drag.ox + (e.clientX - drag.startX))),
-                  y: Math.min(0, Math.max(size - dispH, drag.oy + (e.clientY - drag.startY))),
-                });
-              }}
-              onPointerUp={() => {
-                dragRef.current = null;
-              }}
-              onPointerCancel={() => {
-                dragRef.current = null;
-              }}
-              className="pointer-events-none absolute left-0 top-0 cursor-move select-none"
+              className="pointer-events-none absolute left-0 top-0 select-none"
               style={{
                 width: image.naturalWidth * renderScale,
                 height: image.naturalHeight * renderScale,
@@ -141,7 +141,7 @@ export function AvatarCropModal({
           <div className="pointer-events-none absolute inset-0 border-2 border-white/40" />
         </div>
 
-        <div className="mt-4">
+        <div className="mt-4 hidden sm:block">
           <label className="flex items-center gap-3 text-sm text-muted-foreground">
             <span>Zoom</span>
             <input
