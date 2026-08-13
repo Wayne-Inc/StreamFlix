@@ -240,15 +240,28 @@ function SettingsPage() {
     },
   });
 
+  const deviceQueryKey = ["user_devices", user?.uid] as const;
+
   const removeDevice = useMutation({
     mutationFn: async (id: string) => {
       await deleteDoc(doc(db, "user_devices", id));
     },
+    onMutate: async (id: string) => {
+      await qc.cancelQueries({ queryKey: deviceQueryKey });
+      const prev = qc.getQueryData<Device[]>(deviceQueryKey);
+      qc.setQueryData<Device[]>(deviceQueryKey, (old) => (old ?? []).filter((d) => d.id !== id));
+      return { prev };
+    },
+    onError: (e: Error, _id, context) => {
+      if (context?.prev) qc.setQueryData(deviceQueryKey, context.prev);
+      toast.error(e.message);
+    },
     onSuccess: () => {
       toast.success("Device removed");
-      qc.invalidateQueries({ queryKey: ["user_devices"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: deviceQueryKey });
+    },
   });
 
   const removeAllOthers = useMutation({
@@ -261,11 +274,24 @@ function SettingsPage() {
         .map((d) => deleteDoc(doc(db, "user_devices", d.id)));
       await Promise.all(deletes);
     },
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: deviceQueryKey });
+      const prev = qc.getQueryData<Device[]>(deviceQueryKey);
+      qc.setQueryData<Device[]>(deviceQueryKey, (old) =>
+        (old ?? []).filter((d) => d.device_id === currentDeviceId),
+      );
+      return { prev };
+    },
+    onError: (e: Error, _vars, context) => {
+      if (context?.prev) qc.setQueryData(deviceQueryKey, context.prev);
+      toast.error(e.message);
+    },
     onSuccess: () => {
       toast.success("Signed out of all other devices");
-      qc.invalidateQueries({ queryKey: ["user_devices"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: deviceQueryKey });
+    },
   });
 
   const saveName = async () => {

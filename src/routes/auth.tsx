@@ -387,7 +387,7 @@ function AuthPage() {
               )}
 
               {mode === "signup" && password && (
-                <div className="space-y-2 rounded-md border border-border/60 bg-neutral-900/40 p-3">
+                <div className="animate-checklist-drop space-y-2 rounded-md border border-border/60 bg-neutral-900/40 p-3">
                   <p className="text-xs font-medium text-muted-foreground">Password requirements</p>
                   <PasswordPolicyChecklist password={password} />
                 </div>

@@ -76,6 +76,13 @@ function CalendarPage() {
   const toggle = async (item: CalendarTitle) => {
     const user = auth.currentUser;
     if (!user) return toast.error("Sign in to get notified about releases");
+    const wasNotified = notified.has(item.id);
+    setNotified((prev) => {
+      const next = new Set(prev);
+      if (wasNotified) next.delete(item.id);
+      else next.add(item.id);
+      return next;
+    });
     try {
       const added = await toggleReleaseNotification(user.uid, {
         id: item.id,
@@ -83,15 +90,17 @@ function CalendarPage() {
         poster: item.poster,
         releaseDate: item.releaseDate,
       });
+      toast.success(added ? "We'll let you know when it releases" : "Notification removed");
+    } catch (err: unknown) {
       setNotified((prev) => {
         const next = new Set(prev);
-        if (added) next.add(item.id);
+        if (wasNotified) next.add(item.id);
         else next.delete(item.id);
         return next;
       });
-      toast.success(added ? "We'll let you know when it releases" : "Notification removed");
-    } catch (err: any) {
-      toast.error(err.message);
+      toast.error(
+        err instanceof Error ? err.message : "Couldn't update notification. Please try again.",
+      );
     }
   };
 

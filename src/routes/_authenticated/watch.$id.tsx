@@ -473,12 +473,24 @@ function PlayerPage() {
     };
   }, [wake]);
 
+  const lastSaveErrorAtRef = useRef(0);
+  const notifySaveError = useCallback((err?: unknown) => {
+    const now = Date.now();
+    if (now - lastSaveErrorAtRef.current < 30_000) return;
+    lastSaveErrorAtRef.current = now;
+    const message =
+      err instanceof Error && err.message
+        ? err.message
+        : "Couldn't save your progress. Check your connection.";
+    toast.error(message);
+  }, []);
+
   const doRecord = useCallback(
     (cur: number, dur: number) => {
       recordProgress(movie, cur, dur);
-      saveProgressToFirestore(movie, cur, dur).catch(() => {});
+      saveProgressToFirestore(movie, cur, dur).catch(notifySaveError);
     },
-    [movie],
+    [movie, notifySaveError],
   );
 
   const toggle = useCallback(() => {
@@ -724,7 +736,7 @@ function PlayerPage() {
           lastEmbedProgressRef.current = data.currentTime;
           recordProgress(movie, data.currentTime, data.duration, season, episode);
           saveProgressToFirestore(movie, data.currentTime, data.duration, season, episode).catch(
-            () => {},
+            notifySaveError,
           );
         }
 
@@ -743,7 +755,16 @@ function PlayerPage() {
     };
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [movie, season, episode, embedSyncSupported, autoplayNext, isTv, goToNextEpisode]);
+  }, [
+    movie,
+    season,
+    episode,
+    embedSyncSupported,
+    autoplayNext,
+    isTv,
+    goToNextEpisode,
+    notifySaveError,
+  ]);
 
   useEffect(() => {
     const iframe = iframeRef.current;

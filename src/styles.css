@@ -135,9 +135,22 @@
     background-position: 800px 0;
   }
 }
+@keyframes checklist-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 .animate-fade-in {
   animation: fade-in 0.6s ease-out both;
+}
+.animate-checklist-drop {
+  animation: checklist-drop 0.3s ease-out both;
 }
 .animate-ken-burns {
   animation: ken-burns 20s ease-out infinite alternate;
@@ -253,6 +266,17 @@ input[type="range"]::-moz-range-progress {
   height: 4px;
   border-radius: 2px;
   background: rgba(255, 255, 255, 0.3);
+}
+
+/* Sonner toast — dismiss button on the right side, vertically centered */
+[data-sonner-toaster][data-sonner-theme="dark"] [data-sonner-toast][data-styled="true"] {
+  padding-right: 44px;
+}
+[data-sonner-toaster][data-sonner-theme="dark"] [data-sonner-toast][data-styled="true"] [data-close-button] {
+  left: auto;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 body.electron-app {
