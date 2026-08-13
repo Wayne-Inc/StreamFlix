@@ -8,7 +8,7 @@ import { MovieCard } from "@/components/streamflix/MovieCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getGenres, searchByGenre } from "@/lib/streamflix-data";
 import type { Movie } from "@/lib/types";
-import { isKidsProfile, filterKidsContent, filterKidsGenres } from "@/lib/kids-mode";
+import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
 
 const exploreSearchSchema = z.object({
   q: z.string().optional().catch(""),
@@ -62,7 +62,7 @@ function ExploreGenrePage() {
   const navigate = useNavigate();
 
   const kidsMode = isKidsProfile();
-  const safeGenres = kidsMode ? filterKidsGenres(genres) : genres;
+  const safeGenres = genres;
   const safeItems = kidsMode ? filterKidsContent(items) : items;
   const genreName = safeGenres.find((g) => String(g.id) === genreId)?.name || q || "Explore";
   const hero = safeItems[0];
@@ -96,29 +96,27 @@ function ExploreGenrePage() {
 
       <main className="mx-auto max-w-[1800px] px-4 pb-16 sm:px-8">
         {/* Mood chips */}
-        {!kidsMode && (
-          <div className="mt-8 flex flex-wrap gap-2">
-            {safeGenres.map((g) => {
-              const active = String(g.id) === genreId;
-              return (
-                <Link
-                  key={g.id}
-                  to="/explore/$genreId"
-                  params={{ genreId: String(g.id) }}
-                  search={{ q: g.name }}
-                  onClick={() => setPage(1)}
-                  className={`rounded-full border px-4 py-2 text-sm transition ${
-                    active
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border text-muted-foreground hover:border-primary hover:text-foreground"
-                  }`}
-                >
-                  {g.name}
-                </Link>
-              );
-            })}
-          </div>
-        )}
+        <div className="mt-8 flex flex-wrap gap-2">
+          {safeGenres.map((g) => {
+            const active = String(g.id) === genreId;
+            return (
+              <Link
+                key={g.id}
+                to="/explore/$genreId"
+                params={{ genreId: String(g.id) }}
+                search={{ q: g.name }}
+                onClick={() => setPage(1)}
+                className={`rounded-full border px-4 py-2 text-sm transition ${
+                  active
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border text-muted-foreground hover:border-primary hover:text-foreground"
+                }`}
+              >
+                {g.name}
+              </Link>
+            );
+          })}
+        </div>
 
         {safeItems.length > 0 ? (
           <div className="mt-8">

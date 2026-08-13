@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { useEffect, useRef, useState, useCallback, type MouseEvent, type TouchEvent } from "react";
-import { ArrowLeft, Settings, Wifi, Loader, RotateCw } from "lucide-react";
+import { ArrowLeft, Settings, Wifi, Loader, RotateCw, Users, ShieldOff } from "lucide-react";
 import { movieById } from "@/lib/streamflix-data";
 import { getContinueWatching, recordProgress } from "@/lib/continue-watching";
 import { saveProgressToFirestore } from "@/lib/continue-watching-firestore";
@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
 import { seoMetaFor } from "@/lib/seo";
 import { MAIN_VIDEO_URL } from "@/lib/constants";
+import { isKidsProfile, isRatingBlockedForKids, isGenreBlockedForKids } from "@/lib/kids-mode";
 
 interface NetworkInformation {
   effectiveType: "slow-2g" | "2g" | "3g" | "4g";
@@ -276,16 +277,7 @@ function PlayerPage() {
   const movie = data?.movie;
   const { season, episode, autoplay } = Route.useSearch();
 
-  if (!movie) {
-    return (
-      <div className="grid min-h-dvh place-items-center gap-4 bg-black text-white">
-        <p className="text-red-400">Movie not available</p>
-        <Link to="/" className="text-sm text-white/60 hover:text-white underline">
-          Go home
-        </Link>
-      </div>
-    );
-  }
+  const kidsMode = isKidsProfile();
 
   const [videoUrl, setVideoUrl] = useState<string>("");
   const mainVideoUrlRef = useRef<string>("");
@@ -616,6 +608,7 @@ function PlayerPage() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // probedRef guard ensures this runs once regardless of deps
   }, [movie.id]);
 
   useEffect(() => {
@@ -629,6 +622,53 @@ function PlayerPage() {
     };
   }, [movie.id]);
 
+  const handleWatchPartyRoomUpdate = useCallback(
+    (roomState: any) => {
+      const video = videoRef.current;
+      const iframe = iframeRef.current;
+      const isEmbed = isEmbedUrl(videoUrl) && iframe;
+
+      if (roomState.video_url) {
+        setVideoUrl(roomState.video_url);
+        setMainVideoUrl(roomState.video_url);
+        mainVideoUrlRef.current = roomState.video_url;
+      }
+
+      if (isEmbed && embedSyncSupported) {
+        if (typeof roomState.position_seconds === "number") {
+          const seekTime = compensatePartyTime(
+            roomState.position_seconds,
+            roomState.is_playing,
+            roomState.updated_at,
+          );
+          sendEmbedPlaybackCommand(iframe, "seek", seekTime);
+        }
+        if (typeof roomState.is_playing === "boolean") {
+          sendEmbedPlaybackCommand(iframe, roomState.is_playing ? "play" : "pause");
+        }
+        return;
+      }
+
+      if (!video) return;
+
+      if (typeof roomState.position_seconds === "number") {
+        const targetTime = roomState.position_seconds;
+        if (Math.abs(video.currentTime - targetTime) > 1) {
+          video.currentTime = targetTime;
+        }
+      }
+
+      if (typeof roomState.is_playing === "boolean") {
+        if (roomState.is_playing && video.paused) {
+          video.play().catch(() => {});
+        }
+        if (!roomState.is_playing && !video.paused) {
+          video.pause();
+        }
+      }
+    },
+    [videoUrl, embedSyncSupported],
+  );
 
   useEffect(() => {
     const url = buildEmbedUrl(selectedServerId, movie.id, season, episode);
@@ -705,6 +745,36 @@ function PlayerPage() {
     sendEmbedPlaybackCommand(iframe, "handshake");
     sendEmbedPlaybackCommand(iframe, "requestProgress");
   };
+
+  if (!movie) {
+    return (
+      <div className="grid min-h-dvh place-items-center gap-4 bg-black text-white">
+        <p className="text-red-400">Movie not available</p>
+        <Link to="/" className="text-sm text-white/60 hover:text-white underline">
+          Go home
+        </Link>
+      </div>
+    );
+  }
+
+  if (kidsMode && (isRatingBlockedForKids(movie.rating) || isGenreBlockedForKids(movie.genreIds ?? []))) {
+    return (
+      <div className="grid min-h-dvh place-items-center gap-4 bg-black px-4 text-center">
+        <div className="grid size-24 place-items-center rounded-full bg-amber-500/15">
+          <ShieldOff className="size-12 text-amber-400" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-xl font-semibold text-white">Content not available for kids</h2>
+          <p className="max-w-sm text-sm text-white/50">
+            This title isn't suitable for kids profiles. Switch to a regular profile to watch it.
+          </p>
+        </div>
+        <Link to="/browse" className="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+          Back to Browse
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -794,6 +864,11 @@ function PlayerPage() {
         }`}
       >
         <div className="pointer-events-auto flex flex-col gap-2 px-2 sm:px-6">
+          {isPartyMode && (
+            <div className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/90 backdrop-blur-sm">
+              Watch party mode — host controls playback
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <div className="group/topbtn rounded-lg transition-colors duration-200 hover:bg-white/10 hover:backdrop-blur-sm -ml-1 sm:-ml-2 px-1 sm:px-2 py-2 sm:py-1">
               <button

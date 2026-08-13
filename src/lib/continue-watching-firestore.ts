@@ -40,7 +40,7 @@ export type FirestoreContinueItem = {
   episode?: number;
 };
 
-export function getSelectedProfileId(): string | null {
+function getSelectedProfileId(): string | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = window.localStorage.getItem("sf:selectedProfile");

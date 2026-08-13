@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import { search, searchByPerson, searchWithFilters, type SearchSort } from "@/lib/streamflix-data";
 import type { Movie } from "@/lib/types";
-import { isKidsProfile, filterKidsContent, filterKidsGenres } from "@/lib/kids-mode";
+import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
 import { z } from "zod";
 
 const searchSchema = z.object({
@@ -112,7 +112,7 @@ function SearchPage() {
     (_, i) => new Date().getFullYear() - i,
   );
 
-  const curatedGenres = kidsMode ? filterKidsGenres(CURATED_GENRES) : CURATED_GENRES;
+  const curatedGenres = CURATED_GENRES;
 
   const pushFilters = (next: {
     year?: number;
@@ -233,7 +233,7 @@ function SearchPage() {
                   setPeople([]);
                   setPage(1);
                 }}
-                className={`flex items-center gap-1.5 px-4 py-2.5 sm:py-2 text-sm font-medium transition-all duration-300 ease-in-out border-b-2 -mb-px transform hover:scale-105 ${tab === t ? "border-primary text-foreground font-semibold scale-105" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                className={`flex items-center gap-1.5 px-4 py-2.5 sm:py-2 text-sm font-medium transition border-b-2 -mb-px ${tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
               >
                 {t === "titles" && <Film className="size-4" />}
                 {t === "people" && <User className="size-4" />}

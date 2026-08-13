@@ -16,6 +16,7 @@ import {
   Tv,
   Film,
   Sparkles,
+  Bookmark,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Logo } from "./Logo";
@@ -115,9 +116,11 @@ export function Navbar() {
         setExitKidsPin("");
         setExitKidsOpen(true);
       } else {
+        localStorage.removeItem("sf:selectedProfile");
         router.navigate({ to: "/profiles" });
       }
     } catch {
+      localStorage.removeItem("sf:selectedProfile");
       router.navigate({ to: "/profiles" });
     }
   };
@@ -132,6 +135,7 @@ export function Navbar() {
       if (ok) {
         setExitKidsOpen(false);
         setExitKidsPin("");
+        localStorage.removeItem("sf:selectedProfile");
         router.navigate({ to: "/profiles" });
       } else {
         toast.error("Incorrect PIN");
@@ -241,9 +245,7 @@ export function Navbar() {
                       {selectedProfile?.name ?? userData.email ?? "Account"}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {selectedProfile?.kids
-                        ? "Kids profile"
-                        : userData.email ?? "Signed in"}
+                      {selectedProfile?.kids ? "Kids profile" : (userData.email ?? "Signed in")}
                     </p>
                   </div>
                 </div>
@@ -275,6 +277,12 @@ export function Navbar() {
                     className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-accent"
                   >
                     <Clock className="size-4 text-muted-foreground" /> Watch History
+                  </Link>
+                  <Link
+                    to="/mylist"
+                    className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-accent"
+                  >
+                    <Bookmark className="size-4 text-muted-foreground" /> My List
                   </Link>
                 </div>
                 <div className="border-t border-border py-1">

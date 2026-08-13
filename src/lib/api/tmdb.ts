@@ -118,10 +118,10 @@ export const fetchMovie = createServerFn({ method: "POST" })
     const { tmdbFetch, toMovie, toTv } = await import("./tmdb.server");
     if (data.id.startsWith("tv-")) {
       const realId = data.id.slice(3);
-      const m = await tmdbFetch(`/tv/${realId}`, { append_to_response: "credits,videos" });
+      const m = await tmdbFetch(`/tv/${realId}`, { append_to_response: "credits,videos,content_ratings" });
       return toTv(m);
     }
-    const m = await tmdbFetch(`/movie/${data.id}`, { append_to_response: "credits,videos" });
+    const m = await tmdbFetch(`/movie/${data.id}`, { append_to_response: "credits,videos,release_dates" });
     return toMovie(m);
   });
 
@@ -382,6 +382,13 @@ export const fetchMovieVideos = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { fetchMovieVideosData } = await import("./tmdb.server");
     return fetchMovieVideosData(data.id);
+  });
+
+export const enrichCertifications = createServerFn({ method: "POST" })
+  .validator(z.object({ items: z.array(z.any()) }))
+  .handler(async ({ data }) => {
+    const { enrichCertifications: enrich } = await import("./tmdb.server");
+    return enrich(data.items);
   });
 
 export const fetchPersonDetails = createServerFn({ method: "POST" })

@@ -23,6 +23,13 @@ export async function fetchMovieVideosData(id: string): Promise<string | null> {
   return trailer?.key ?? null;
 }
 
+function extractCertification(m: any, country = "US"): string {
+  const source = m.release_dates?.results ?? m.content_ratings?.results ?? [];
+  const entry = source.find((r: any) => r.iso_3166_1 === country) ?? source[0];
+  const cert = entry?.release_dates?.[0]?.certification ?? entry?.rating ?? "";
+  return cert;
+}
+
 export function toMovie(m: any): Movie {
   const credits = m.credits;
   const castRaw = (credits?.cast || []).slice(0, 20);
@@ -44,16 +51,14 @@ export function toMovie(m: any): Movie {
     title: m.title,
     description: m.overview || "No description available.",
     year: m.release_date ? new Date(m.release_date).getFullYear() : new Date().getFullYear(),
-    rating: "TV-MA",
+    rating: extractCertification(m),
     runtime: m.runtime ? `${Math.floor(m.runtime / 60)}h ${m.runtime % 60}m` : "2h",
     genres: (m.genres || []).map((g: any) => g.name),
     genreIds: m.genre_ids || (m.genres || []).map((g: any) => g.id),
     poster: m.poster_path ? `${IMG_BASE}w500${m.poster_path}` : "",
     backdrop: m.backdrop_path ? `${IMG_BASE}original${m.backdrop_path}` : "",
     backdropSm: m.backdrop_path ? `${IMG_BASE}w1280${m.backdrop_path}` : "",
-    trailer: trailer
-      ? `https://www.youtube.com/watch?v=${trailer.key}`
-      : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    trailer: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : undefined,
     cast: cast.length ? cast : ["Unknown"],
     castPfp: castPfp,
     castRoles: castRoles,
@@ -62,6 +67,29 @@ export function toMovie(m: any): Movie {
     directorId,
     match: m.vote_average ? Math.round(m.vote_average * 10) : 85,
   };
+}
+
+export async function enrichCertifications(items: Movie[]): Promise<Movie[]> {
+  const needIds = items.filter(m => !m.rating && !m.id.startsWith("tv-")).map(m => m.id);
+  if (!needIds.length) return items;
+
+  const details = await Promise.allSettled(
+    needIds.map(id =>
+      tmdbFetch(`/movie/${id}`, { append_to_response: "release_dates" }).then(r => ({
+        id,
+        cert: extractCertification(r),
+      }))
+    ),
+  );
+
+  const certMap = new Map<string, string>();
+  for (const d of details) {
+    if (d.status === "fulfilled") certMap.set(d.value.id, d.value.cert);
+  }
+
+  return items.map(m =>
+    certMap.has(m.id) ? { ...m, rating: certMap.get(m.id)! } : m
+  );
 }
 
 export function toTv(m: any): Movie {
@@ -85,7 +113,7 @@ export function toTv(m: any): Movie {
     title: m.name || m.original_name || "Untitled",
     description: m.overview || "No description available.",
     year: m.first_air_date ? new Date(m.first_air_date).getFullYear() : new Date().getFullYear(),
-    rating: "TV-MA",
+    rating: extractCertification(m),
     runtime: epRuntime
       ? `${epRuntime}m / ep`
       : m.number_of_seasons
@@ -96,9 +124,7 @@ export function toTv(m: any): Movie {
     poster: m.poster_path ? `${IMG_BASE}w500${m.poster_path}` : "",
     backdrop: m.backdrop_path ? `${IMG_BASE}original${m.backdrop_path}` : "",
     backdropSm: m.backdrop_path ? `${IMG_BASE}w1280${m.backdrop_path}` : "",
-    trailer: trailer
-      ? `https://www.youtube.com/watch?v=${trailer.key}`
-      : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    trailer: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : undefined,
     cast: cast.length ? cast : ["Unknown"],
     castPfp: castPfp,
     castRoles: castRoles,

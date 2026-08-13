@@ -1,11 +1,11 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
-import { Eye, EyeOff, ArrowLeft, Check } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
 import { auth } from "@/lib/firebase";
-import { isMobileApp } from "@/lib/mobile";
-import { strengthScore, STRENGTH_LABELS, STRENGTH_COLORS } from "@/lib/password";
+import { passwordMeetsPolicy } from "@/lib/password";
+import { PasswordPolicyChecklist } from "@/components/streamflix/PasswordPolicyChecklist";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -63,10 +63,17 @@ function AuthPage() {
     }
   };
 
-  // Redirect away if already signed in (use profile chooser).
+  // Redirect away if already signed in (use profile chooser), unless a
+  // password upgrade is pending.
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
-      if (user && user.emailVerified) navigate({ to: "/profiles" });
+      let pending = false;
+      try {
+        pending = localStorage.getItem("sf:upgrade_password") === "1";
+      } catch {}
+      const onUpgrade =
+        typeof window !== "undefined" && window.location.pathname === "/force-password";
+      if (user && user.emailVerified && !pending && !onUpgrade) navigate({ to: "/profiles" });
     });
     return () => unsub();
   }, [navigate]);
@@ -87,13 +94,13 @@ function AuthPage() {
       });
   }, [navigate]);
 
-  // Desktop/mobile app: the Google sign-in page was opened in the system's
-  // external browser, and its final step lands back here in that browser.
-  // Bounce the result back into the app through the deep link so the app can
+  // Desktop app: the Google sign-in page was opened in the system's external
+  // browser, and its final step lands back here in that browser. Bounce the
+  // result back into the app through the streamflix:// deep link so the app can
   // finish the sign-in with getRedirectResult.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if ("electronAPI" in window || isMobileApp()) return;
+    if ("electronAPI" in window) return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("mode") !== "signInIdp") return;
     window.location.replace(`streamflix://auth${window.location.search}`);
@@ -144,9 +151,29 @@ function AuthPage() {
           return;
         }
         resetCaptcha();
+        if (!passwordMeetsPolicy(password)) {
+          try {
+            localStorage.setItem("sf:upgrade_password", "1");
+          } catch {}
+          toast.error(
+            "Your password doesn't meet the new security requirements. Please set a stronger one.",
+          );
+          navigate({ to: "/force-password" });
+          return;
+        }
+        try {
+          localStorage.removeItem("sf:upgrade_password");
+        } catch {}
         toast.success("Signed in.");
         navigate({ to: "/profiles" });
       } else {
+        if (!passwordMeetsPolicy(password)) {
+          toast.error(
+            "Password must include uppercase, lowercase, number, and special characters (min 8 characters).",
+          );
+          setBusy(false);
+          return;
+        }
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         if (name.trim()) {
           await updateFirebaseProfile(cred.user, { displayName: name.trim() });
@@ -203,13 +230,12 @@ function AuthPage() {
     setPopupBlocked(false);
     const provider = new GoogleAuthProvider();
     const inElectron = typeof window !== "undefined" && "electronAPI" in window;
-    const inMobile = isMobileApp();
     try {
-      if (inElectron || inMobile) {
+      if (inElectron) {
         // Google refuses the embedded window as an insecure browser, so in the
-        // desktop/mobile shell we open Google's sign-in page in the system's
-        // default browser instead. The shell intercepts the redirect
-        // navigation, the result comes back through the deep link, and the
+        // desktop app we open Google's sign-in page in the system's default web
+        // browser instead. Electron intercepts the redirect navigation, the
+        // result comes back through the streamflix:// deep link, and the
         // getRedirectResult effect above finishes the login.
         await signInWithRedirect(auth, provider);
         return;
@@ -226,17 +252,6 @@ function AuthPage() {
       setBusy(false);
     }
   };
-
-  const s = strengthScore(password);
-  const labels = STRENGTH_LABELS;
-  const colors = STRENGTH_COLORS;
-
-  const requirements = [
-    { label: "At least 8 characters", test: (pw: string) => pw.length >= 8 },
-    { label: "One uppercase letter (A–Z)", test: (pw: string) => /[A-Z]/.test(pw) },
-    { label: "One number (0–9)", test: (pw: string) => /[0-9]/.test(pw) },
-    { label: "One special character (!@#$…)", test: (pw: string) => /[^A-Za-z0-9]/.test(pw) },
-  ];
 
   return (
     <main className="relative min-h-dvh">
@@ -335,7 +350,7 @@ function AuthPage() {
               <div className="relative">
                 <input
                   required
-                  minLength={6}
+                  minLength={8}
                   type={showPw ? "text" : "password"}
                   placeholder="Password"
                   aria-label="Password"
@@ -372,39 +387,18 @@ function AuthPage() {
               )}
 
               {mode === "signup" && password && (
-                <div className="animate-checklist-drop space-y-2 rounded-md border border-border bg-black/40 p-3">
-                  <div className="flex gap-1">
-                    {[0, 1, 2, 3].map((i) => (
-                      <div
-                        key={i}
-                        className={`h-1 flex-1 rounded ${i < s ? colors[s - 1] : "bg-border"}`}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-xs text-muted-foreground">{labels[Math.max(0, s - 1)]}</p>
-                  <ul className="space-y-1">
-                    {requirements.map((r) => {
-                      const ok = r.test(password);
-                      return (
-                        <li
-                          key={r.label}
-                          className={`flex items-center gap-2 text-xs transition-colors ${ok ? "text-foreground" : "text-muted-foreground"}`}
-                        >
-                          {ok ? (
-                            <Check className="size-3.5 shrink-0 text-emerald-400" />
-                          ) : (
-                            <span className="size-3.5 shrink-0 rounded-full border border-border" />
-                          )}
-                          {r.label}
-                        </li>
-                      );
-                    })}
-                  </ul>
+                <div className="animate-checklist-drop space-y-2 rounded-md border border-border/60 bg-neutral-900/40 p-3">
+                  <p className="text-xs font-medium text-muted-foreground">Password requirements</p>
+                  <PasswordPolicyChecklist password={password} />
                 </div>
               )}
 
               <button
-                disabled={busy || (mode === "signin" && !captchaVerified)}
+                disabled={
+                  busy ||
+                  (mode === "signin" && !captchaVerified) ||
+                  (mode === "signup" && !passwordMeetsPolicy(password))
+                }
                 className="w-full rounded bg-primary py-3 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
               >
                 {busy ? "Please wait…" : mode === "signin" ? "Sign In" : "Create Account"}

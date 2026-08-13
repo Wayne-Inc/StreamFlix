@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { WifiOff, RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/offline")({
@@ -8,10 +8,11 @@ export const Route = createFileRoute("/offline")({
 });
 
 function OfflinePage() {
+  const router = useRouter();
   const handleTryAgain = () => {
     const returnUrl = sessionStorage.getItem("sf:returnUrl");
     sessionStorage.removeItem("sf:returnUrl");
-    window.location.href = returnUrl || "/browse";
+    router.navigate({ to: returnUrl || "/browse" });
   };
 
   return (

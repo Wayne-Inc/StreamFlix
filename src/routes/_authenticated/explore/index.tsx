@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getGenres } from "@/lib/streamflix-data";
 import { fetchPopular } from "@/lib/api/tmdb";
 import type { Movie } from "@/lib/types";
-import { isKidsProfile, filterKidsContent, filterKidsGenres } from "@/lib/kids-mode";
+import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
 
 export const Route = createFileRoute("/_authenticated/explore/")({
   loader: async () => {
@@ -53,7 +53,7 @@ function ExplorePage() {
   const navigate = useNavigate();
 
   const kidsMode = isKidsProfile();
-  const safeGenres = kidsMode ? filterKidsGenres(genres) : genres;
+  const safeGenres = genres;
   const safeItems: Movie[] = kidsMode ? filterKidsContent(items) : items;
   const pageCount = Math.max(1, Math.ceil(safeItems.length / 24));
   const visible = safeItems.slice((page - 1) * 24, page * 24);
@@ -78,21 +78,19 @@ function ExplorePage() {
       </section>
 
       <main className="mx-auto max-w-[1800px] px-4 pb-16 sm:px-8">
-        {!kidsMode && (
-          <div className="mt-8 flex flex-wrap gap-2">
-            {safeGenres.map((g) => (
-              <Link
-                key={g.id}
-                to="/explore/$genreId"
-                params={{ genreId: String(g.id) }}
-                search={{ q: g.name }}
-                className="flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm text-muted-foreground transition hover:border-primary hover:text-foreground"
-              >
-                <Sparkles className="size-3.5 text-primary" /> {g.name}
-              </Link>
-            ))}
-          </div>
-        )}
+        <div className="mt-8 flex flex-wrap gap-2">
+          {safeGenres.map((g) => (
+            <Link
+              key={g.id}
+              to="/explore/$genreId"
+              params={{ genreId: String(g.id) }}
+              search={{ q: g.name }}
+              className="flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm text-muted-foreground transition hover:border-primary hover:text-foreground"
+            >
+              <Sparkles className="size-3.5 text-primary" /> {g.name}
+            </Link>
+          ))}
+        </div>
 
         {safeItems.length > 0 && (
           <div className="mt-10">

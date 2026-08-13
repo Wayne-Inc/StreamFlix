@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Play, Info } from "lucide-react";
 import type { Movie } from "@/lib/types";
+import { AgeRatingBadge } from "./AgeRatingBadge";
 
 export function HeroBanner({ slides }: { slides: Movie[] }) {
   const [i, setI] = useState(0);
@@ -54,9 +55,7 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
           <div className="mx-auto flex max-w-full flex-wrap items-center justify-center gap-2 text-xs sm:text-sm md:justify-start md:text-sm">
             <span className="font-semibold text-emerald-400">{s.match}% Match</span>
             <span className="text-muted-foreground">{s.year}</span>
-            <span className="rounded border border-border px-2 text-muted-foreground">
-              {s.rating}
-            </span>
+            <AgeRatingBadge rating={s.rating} />
             <span className="text-muted-foreground">{s.runtime}</span>
             <span className="text-muted-foreground">{s.genres.join(" · ")}</span>
           </div>
@@ -67,14 +66,14 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
             <Link
               to="/watch/$id"
               params={{ id: s.id }}
-              className="inline-flex items-center gap-2 rounded-md bg-foreground px-3 py-2 text-xs font-semibold text-background transition-all duration-300 ease-in-out transform hover:scale-105 hover:bg-foreground/85 sm:px-5 sm:py-3 sm:text-sm"
+              className="inline-flex items-center gap-2 rounded-md bg-foreground px-3 py-2 text-xs font-semibold text-background transition hover:bg-foreground/85 sm:px-5 sm:py-3 sm:text-sm"
             >
               <Play className="size-4 fill-current sm:size-5" /> Play
             </Link>
             <Link
               to="/movie/$id"
               params={{ id: s.id }}
-              className="inline-flex items-center gap-2 rounded-md bg-foreground/20 px-3 py-2 text-xs font-semibold text-foreground backdrop-blur transition-all duration-300 ease-in-out transform hover:scale-105 hover:bg-foreground/30 sm:px-5 sm:py-3 sm:text-sm"
+              className="inline-flex items-center gap-2 rounded-md bg-foreground/20 px-3 py-2 text-xs font-semibold text-foreground backdrop-blur transition hover:bg-foreground/30 sm:px-5 sm:py-3 sm:text-sm"
             >
               <Info className="size-4 sm:size-5" /> More Info
             </Link>
@@ -87,7 +86,7 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
           <button
             key={idx}
             onClick={() => setI(idx)}
-            className={`h-[4px] rounded-full transition-all duration-300 ease-in-out transform hover:scale-125 ${idx === i ? "w-8 bg-primary scale-110" : "w-2 bg-foreground/40 hover:w-4"}`}
+            className={`h-[4px] rounded-full transition-all ${idx === i ? "w-6 bg-primary" : "w-2 bg-foreground/40"}`}
             aria-label={`Slide ${idx + 1}`}
             type="button"
           />

@@ -1,8 +1,5 @@
 {
   "name": "streamflix",
-  "version": "1.0.0",
-  "description": "StreamFlix Desktop App",
-  "author": "Samwel Wayne",
   "private": true,
   "main": "electron/main.cjs",
   "sideEffects": false,
@@ -16,20 +13,9 @@
     "format": "prettier --write .",
     "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:8080 && electron .\"",
     "desktop": "concurrently \"npm run dev\" \"wait-on http://localhost:8080 && start msedge --app=http://localhost:8080\"",
-    "electron:build": "vite build && electron-builder",
-    "mobile:add": "cap add android",
-    "mobile:sync": "cap sync android",
-    "mobile:open": "cap open android",
-    "mobile:build": "cap build android",
-    "mobile:doctor": "cap doctor android"
+    "electron:build": "vite build && electron-builder"
   },
   "dependencies": {
-    "@capacitor/android": "^8.5.0",
-    "@capacitor/app": "^8.1.1",
-    "@capacitor/browser": "^8.0.4",
-    "@capacitor/cli": "^8.5.0",
-    "@capacitor/core": "^8.5.0",
-    "@capacitor/status-bar": "^8.0.3",
     "@hookform/resolvers": "^5.2.2",
     "@lovable.dev/cloud-auth-js": "^1.1.2",
     "@radix-ui/react-accordion": "^1.2.12",
@@ -88,7 +74,6 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@capacitor/assets": "^3.0.5",
     "@eslint/js": "^9.32.0",
     "@lovable.dev/vite-tanstack-config": "2.5.3",
     "@types/node": "^22.16.5",
@@ -97,7 +82,6 @@
     "@vitejs/plugin-react": "^5.0.4",
     "concurrently": "^10.0.4",
     "electron": "^43.2.0",
-    "electron-builder": "^26.15.3",
     "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.6",
@@ -113,48 +97,14 @@
   },
   "build": {
     "appId": "com.itiswayneee.streamflix",
-    "productName": "StreamFlix",
-    "executableName": "StreamFlix",
+    "productName": "Streamflix",
     "directories": {
       "output": "release"
     },
-    "protocols": [
-      {
-        "name": "StreamFlix",
-        "schemes": [
-          "streamflix"
-        ]
-      }
-    ],
     "files": [
       "dist/**/*",
       "electron/**/*",
-      "package.json",
-      "!node_modules/**"
-    ],
-    "win": {
-      "target": "nsis",
-      "icon": "electron/icon.png"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "installerIcon": "electron/icon.ico",
-      "uninstallerIcon": "electron/icon.ico",
-      "artifactName": "${productName}-Setup-${version}.${ext}",
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "StreamFlix"
-    },
-    "linux": {
-      "target": [
-        "AppImage",
-        "deb"
-      ],
-      "icon": "electron/icon.png",
-      "category": "Video",
-      "maintainer": "Samwel Wayne <samwel@streamflix.app>",
-      "artifactName": "${productName}-${version}-${arch}.${ext}"
-    }
+      "package.json"
+    ]
   }
 }

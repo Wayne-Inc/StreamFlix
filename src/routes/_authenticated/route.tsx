@@ -13,10 +13,17 @@ function waitForUser(): Promise<typeof auth.currentUser> {
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     const user = await waitForUser();
     if (!user) {
       throw redirect({ to: "/auth" });
+    }
+    let pending = false;
+    try {
+      pending = localStorage.getItem("sf:upgrade_password") === "1";
+    } catch {}
+    if (pending && location.pathname !== "/force-password") {
+      throw redirect({ to: "/force-password" });
     }
     return { user };
   },
