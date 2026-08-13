@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
 import { auth } from "@/lib/firebase";
+import { requestActionEmail } from "@/lib/email-api";
 import { passwordMeetsPolicy } from "@/lib/password";
 import { PasswordPolicyChecklist } from "@/components/streamflix/PasswordPolicyChecklist";
 import {
@@ -15,8 +16,6 @@ import {
   getRedirectResult,
   onAuthStateChanged,
   updateProfile as updateFirebaseProfile,
-  sendEmailVerification,
-  sendPasswordResetEmail,
 } from "firebase/auth";
 import heroImg from "@/assets/hero-1.jpg";
 
@@ -178,7 +177,8 @@ function AuthPage() {
         if (name.trim()) {
           await updateFirebaseProfile(cred.user, { displayName: name.trim() });
         }
-        await sendEmailVerification(cred.user);
+        const idToken = await cred.user.getIdToken();
+        await requestActionEmail("verifyEmail", { idToken });
         setVerifyMsg(
           `Verification email sent to ${email}. Please check your inbox and then sign in.`,
         );
@@ -199,7 +199,8 @@ function AuthPage() {
     if (!user) return;
     setBusy(true);
     try {
-      await sendEmailVerification(user);
+      const idToken = await user.getIdToken();
+      await requestActionEmail("verifyEmail", { idToken });
       toast.success("Verification email resent.");
     } catch (err: any) {
       toast.error(err?.message ?? "Failed to resend");
@@ -212,7 +213,7 @@ function AuthPage() {
     if (!email.trim()) return;
     setBusy(true);
     try {
-      await sendPasswordResetEmail(auth, email.trim());
+      await requestActionEmail("resetPassword", { email: email.trim() });
       setResetSent(true);
       toast.success("Password reset email sent.");
     } catch (err: any) {

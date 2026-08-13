@@ -19,11 +19,8 @@ import {
   KeyRound,
 } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
-import {
-  signOut as firebaseSignOut,
-  sendEmailVerification,
-  sendPasswordResetEmail,
-} from "firebase/auth";
+import { requestActionEmail } from "@/lib/email-api";
+import { signOut as firebaseSignOut } from "firebase/auth";
 import {
   collection,
   query,
@@ -95,7 +92,7 @@ function SettingsPage() {
     if (!user?.email) return;
     setSendingReset(true);
     try {
-      await sendPasswordResetEmail(auth, user.email);
+      await requestActionEmail("resetPassword", { email: user.email });
       toast.success(`Password reset email sent to ${user.email}.`);
     } catch (e: any) {
       if (e?.code === "auth/too-many-requests") {
@@ -461,7 +458,8 @@ function SettingsPage() {
                         onClick={async () => {
                           if (!user) return;
                           try {
-                            await sendEmailVerification(user);
+                            const idToken = await user.getIdToken();
+                            await requestActionEmail("verifyEmail", { idToken });
                             toast.success("Verification email sent.");
                           } catch (e: any) {
                             toast.error(e.message);

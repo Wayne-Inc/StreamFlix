@@ -28,6 +28,7 @@ import { Route as AuthenticatedExploreRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedBrowseRouteImport } from './routes/_authenticated/browse'
 import { Route as AuthenticatedExploreIndexRouteImport } from './routes/_authenticated/explore/index'
+import { Route as ApiEmailActionRouteImport } from './routes/api/email/action'
 import { Route as AuthenticatedWatchIdRouteImport } from './routes/_authenticated/watch.$id'
 import { Route as AuthenticatedPersonIdRouteImport } from './routes/_authenticated/person.$id'
 import { Route as AuthenticatedMovieIdRouteImport } from './routes/_authenticated/movie.$id'
@@ -129,6 +130,11 @@ const AuthenticatedExploreIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedExploreRoute,
   } as any)
+const ApiEmailActionRoute = ApiEmailActionRouteImport.update({
+  id: '/api/email/action',
+  path: '/api/email/action',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedWatchIdRoute = AuthenticatedWatchIdRouteImport.update({
   id: '/watch/$id',
   path: '/watch/$id',
@@ -173,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/movie/$id': typeof AuthenticatedMovieIdRoute
   '/person/$id': typeof AuthenticatedPersonIdRoute
   '/watch/$id': typeof AuthenticatedWatchIdRoute
+  '/api/email/action': typeof ApiEmailActionRoute
   '/explore/': typeof AuthenticatedExploreIndexRoute
 }
 export interface FileRoutesByTo {
@@ -196,6 +203,7 @@ export interface FileRoutesByTo {
   '/movie/$id': typeof AuthenticatedMovieIdRoute
   '/person/$id': typeof AuthenticatedPersonIdRoute
   '/watch/$id': typeof AuthenticatedWatchIdRoute
+  '/api/email/action': typeof ApiEmailActionRoute
   '/explore': typeof AuthenticatedExploreIndexRoute
 }
 export interface FileRoutesById {
@@ -222,6 +230,7 @@ export interface FileRoutesById {
   '/_authenticated/movie/$id': typeof AuthenticatedMovieIdRoute
   '/_authenticated/person/$id': typeof AuthenticatedPersonIdRoute
   '/_authenticated/watch/$id': typeof AuthenticatedWatchIdRoute
+  '/api/email/action': typeof ApiEmailActionRoute
   '/_authenticated/explore/': typeof AuthenticatedExploreIndexRoute
 }
 export interface FileRouteTypes {
@@ -248,6 +257,7 @@ export interface FileRouteTypes {
     | '/movie/$id'
     | '/person/$id'
     | '/watch/$id'
+    | '/api/email/action'
     | '/explore/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -271,6 +281,7 @@ export interface FileRouteTypes {
     | '/movie/$id'
     | '/person/$id'
     | '/watch/$id'
+    | '/api/email/action'
     | '/explore'
   id:
     | '__root__'
@@ -296,6 +307,7 @@ export interface FileRouteTypes {
     | '/_authenticated/movie/$id'
     | '/_authenticated/person/$id'
     | '/_authenticated/watch/$id'
+    | '/api/email/action'
     | '/_authenticated/explore/'
   fileRoutesById: FileRoutesById
 }
@@ -308,6 +320,7 @@ export interface RootRouteChildren {
   TosRoute: typeof TosRoute
   ApiArchiveRoute: typeof ApiArchiveRoute
   ApiClientIpRoute: typeof ApiClientIpRoute
+  ApiEmailActionRoute: typeof ApiEmailActionRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -445,6 +458,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedExploreIndexRouteImport
       parentRoute: typeof AuthenticatedExploreRoute
     }
+    '/api/email/action': {
+      id: '/api/email/action'
+      path: '/api/email/action'
+      fullPath: '/api/email/action'
+      preLoaderRoute: typeof ApiEmailActionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/watch/$id': {
       id: '/_authenticated/watch/$id'
       path: '/watch/$id'
@@ -541,6 +561,7 @@ const rootRouteChildren: RootRouteChildren = {
   TosRoute: TosRoute,
   ApiArchiveRoute: ApiArchiveRoute,
   ApiClientIpRoute: ApiClientIpRoute,
+  ApiEmailActionRoute: ApiEmailActionRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
