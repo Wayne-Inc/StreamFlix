@@ -118,18 +118,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://www.googletagmanager.com" },
       { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
     ],
-    scripts: [
-      {
-        async: true,
-        src: "https://www.googletagmanager.com/gtag/js?id=G-V9783E9S0W",
-      },
-      {
-        children: `window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', 'G-V9783E9S0W');`,
-      },
-    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -142,6 +130,45 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
+        <script
+          data-cf-sync="false"
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('consent', 'default', {
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+  ad_storage: 'denied',
+  analytics_storage: 'denied',
+  wait_for_update: 500
+});
+(function () {
+  var c = null;
+  try { c = localStorage.getItem('streamflix:cookieConsent') || null; } catch (e) {}
+  if (!c) {
+    try {
+      var m = document.cookie.match(/(?:^|; )streamflix_cookie_consent=([^;]+)/);
+      c = m ? m[1] : null;
+    } catch (e) {}
+  }
+  if (c === 'accepted') {
+    gtag('consent', 'update', {
+      ad_user_data: 'granted',
+      ad_personalization: 'granted',
+      ad_storage: 'granted',
+      analytics_storage: 'granted'
+    });
+  }
+})();
+gtag('js', new Date());
+gtag('config', 'G-V9783E9S0W');`,
+          }}
+        />
+        <script
+          async
+          data-cf-sync="false"
+          src="https://www.googletagmanager.com/gtag/js?id=G-V9783E9S0W"
+        />
       </head>
       <body>
         {children}
