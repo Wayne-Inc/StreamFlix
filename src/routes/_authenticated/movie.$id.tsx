@@ -48,9 +48,9 @@ function MovieSkeleton() {
               </div>
               <Skeleton className="h-16 w-full max-w-xl rounded" />
               <div className="flex flex-wrap gap-3 pt-2">
+                <Skeleton className="h-12 w-28 rounded-md" />
                 <Skeleton className="h-12 w-24 rounded-md" />
-                <Skeleton className="h-12 w-24 rounded-md" />
-                <Skeleton className="size-12 rounded-full" />
+                <Skeleton className="h-12 w-32 rounded-md" />
                 <Skeleton className="size-12 rounded-full" />
                 <Skeleton className="size-12 rounded-full" />
               </div>
