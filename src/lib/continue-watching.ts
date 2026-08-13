@@ -33,7 +33,7 @@ export type WatchHistoryItem = ContinueItem & {
   watchedAt: number;
 };
 
-function getSelectedProfileId(): string | null {
+export function getSelectedProfileId(): string | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = window.localStorage.getItem("sf:selectedProfile");
@@ -169,6 +169,37 @@ export function recordProgress(
   }
 
   window.localStorage.setItem(getKey(), JSON.stringify(list.slice(0, MAX)));
+}
+
+export function markAsWatched(movie: Movie) {
+  if (typeof window === "undefined") return;
+  const continueList = getContinueWatching().filter(
+    (x) => x.id !== movie.id && !x.id.startsWith(`${movie.id}:`),
+  );
+  window.localStorage.setItem(getKey(), JSON.stringify(continueList));
+
+  const now = Date.now();
+  saveHistoryItem({
+    id: movie.id,
+    title: movie.title,
+    poster: movie.poster,
+    backdrop: movie.backdrop,
+    rating: movie.rating,
+    runtime: movie.runtime,
+    genres: movie.genres,
+    genreIds: movie.genreIds,
+    match: movie.match,
+    description: movie.description,
+    year: movie.year,
+    cast: movie.cast,
+    castPfp: movie.castPfp,
+    director: movie.director,
+    directorId: movie.directorId,
+    progress: 1,
+    duration: 1,
+    updatedAt: now,
+    watchedAt: now,
+  });
 }
 
 export function removeContinue(id: string) {

@@ -6,13 +6,15 @@ import {
   useNavigate,
   useRouter,
 } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { Play, Share2, Clapperboard, ArrowLeft, ShieldOff } from "lucide-react";
+import { useMemo, useState, useEffect } from "react";
+import { Play, Share2, Clapperboard, ArrowLeft, ShieldOff, Check, Bookmark } from "lucide-react";
 import { isKidsProfile, isRatingBlockedForKids, isGenreBlockedForKids, filterKidsContent } from "@/lib/kids-mode";
 import { toast } from "sonner";
 import { shareContent } from "@/lib/share";
 import { seoMetaFor, siteUrl } from "@/lib/seo";
 import { stepsToUsefulBackTarget } from "@/lib/nav-history";
+import { getWatchHistory, markAsWatched } from "@/lib/continue-watching";
+import { isInMyList, toggleMyList } from "@/lib/my-list";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { Row } from "@/components/streamflix/Row";
@@ -140,6 +142,15 @@ function MoviePage() {
 
   const [trailerOpen, setTrailerOpen] = useState(false);
 
+  const [inList, setInList] = useState(false);
+  const [watched, setWatched] = useState(false);
+  useEffect(() => {
+    setInList(isInMyList(movie.id));
+    setWatched(
+      getWatchHistory().some((x) => x.id === movie.id || x.id.startsWith(`${movie.id}:`)),
+    );
+  }, [movie.id]);
+
   const navigate = useNavigate();
   const router = useRouter();
   const location = useLocation();
@@ -248,6 +259,31 @@ function MoviePage() {
                     <Clapperboard className="size-5" /> Trailer
                   </button>
                 )}
+                <button
+                  onClick={() => {
+                    markAsWatched(movie);
+                    setWatched(true);
+                    toast.success(`${movie.title} marked as watched`);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-3 font-semibold text-foreground hover:bg-white/10"
+                >
+                  <Check className="size-5" /> {watched ? "Watched" : "Mark as watched"}
+                </button>
+                <button
+                  onClick={() => {
+                    const added = toggleMyList(movie);
+                    setInList(added);
+                    toast.success(added ? "Added to My List" : "Removed from My List");
+                  }}
+                  className={`grid size-11 sm:size-12 place-items-center rounded-full border ${
+                    inList
+                      ? "border-primary bg-primary/20 text-primary"
+                      : "border-border hover:border-foreground"
+                  }`}
+                  aria-label={inList ? "Remove from My List" : "Add to My List"}
+                >
+                  <Bookmark className={`size-4 sm:size-5 ${inList ? "fill-current" : ""}`} />
+                </button>
                 <button
                   onClick={() => {
                     const base = siteUrl();

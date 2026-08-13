@@ -20,6 +20,7 @@ import {
   toMovie as continueToMovie,
   type ContinueItem,
 } from "@/lib/continue-watching";
+import { getMyList, MY_LIST_EVENT } from "@/lib/my-list";
 import {
   getContinueWatchingFromFirestore,
   toMovie as fsToMovie,
@@ -85,6 +86,7 @@ function BrowsePage() {
     items: { movie: Movie; progress: number }[];
   } | null>(null);
   const [continueLoading, setContinueLoading] = useState(true);
+  const [listRow, setListRow] = useState<Movie[] | null>(null);
   const [watchedRow, setWatchedRow] = useState<{
     title: string;
     items: Movie[];
@@ -136,6 +138,23 @@ function BrowsePage() {
       window.removeEventListener("focus", update);
     };
   }, []);
+
+  useEffect(() => {
+    if (kind !== "home" || typeof window === "undefined") {
+      setListRow(null);
+      return;
+    }
+    const update = () => setListRow(getMyList().map((e) => e.movie));
+    update();
+    window.addEventListener("storage", update);
+    window.addEventListener("focus", update);
+    window.addEventListener(MY_LIST_EVENT, update);
+    return () => {
+      window.removeEventListener("storage", update);
+      window.removeEventListener("focus", update);
+      window.removeEventListener(MY_LIST_EVENT, update);
+    };
+  }, [kind]);
 
   useEffect(() => {
     if (kind !== "home" || typeof window === "undefined") return;
@@ -338,6 +357,12 @@ function BrowsePage() {
                 ))}
             </div>
           </section>
+        )}
+        {kind === "home" && listRow && listRow.length > 0 && (
+          <Row
+            title="My List"
+            items={kidsMode ? fillRow(filterKidsContent(listRow)) : listRow}
+          />
         )}
         {kind === "home" && (watchedLoading || pickedLoading) && <RowSkeleton />}
         {watchedRow && kind === "home" && (
