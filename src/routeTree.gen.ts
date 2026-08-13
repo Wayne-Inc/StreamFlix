@@ -16,19 +16,15 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthActionRouteImport } from './routes/auth/action'
-import { Route as ApiClientIpRouteImport } from './routes/api/client-ip'
 import { Route as ApiArchiveRouteImport } from './routes/api/archive'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
 import { Route as AuthenticatedProfilesRouteImport } from './routes/_authenticated/profiles'
-import { Route as AuthenticatedMylistRouteImport } from './routes/_authenticated/mylist'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
-import { Route as AuthenticatedForcePasswordRouteImport } from './routes/_authenticated/force-password'
 import { Route as AuthenticatedExploreRouteImport } from './routes/_authenticated/explore'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedBrowseRouteImport } from './routes/_authenticated/browse'
 import { Route as AuthenticatedExploreIndexRouteImport } from './routes/_authenticated/explore/index'
-import { Route as ApiEmailActionRouteImport } from './routes/api/email/action'
 import { Route as AuthenticatedWatchIdRouteImport } from './routes/_authenticated/watch.$id'
 import { Route as AuthenticatedPersonIdRouteImport } from './routes/_authenticated/person.$id'
 import { Route as AuthenticatedMovieIdRouteImport } from './routes/_authenticated/movie.$id'
@@ -68,11 +64,6 @@ const AuthActionRoute = AuthActionRouteImport.update({
   path: '/action',
   getParentRoute: () => AuthRoute,
 } as any)
-const ApiClientIpRoute = ApiClientIpRouteImport.update({
-  id: '/api/client-ip',
-  path: '/api/client-ip',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiArchiveRoute = ApiArchiveRouteImport.update({
   id: '/api/archive',
   path: '/api/archive',
@@ -93,22 +84,11 @@ const AuthenticatedProfilesRoute = AuthenticatedProfilesRouteImport.update({
   path: '/profiles',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedMylistRoute = AuthenticatedMylistRouteImport.update({
-  id: '/mylist',
-  path: '/mylist',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
   id: '/history',
   path: '/history',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedForcePasswordRoute =
-  AuthenticatedForcePasswordRouteImport.update({
-    id: '/force-password',
-    path: '/force-password',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedExploreRoute = AuthenticatedExploreRouteImport.update({
   id: '/explore',
   path: '/explore',
@@ -130,11 +110,6 @@ const AuthenticatedExploreIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedExploreRoute,
   } as any)
-const ApiEmailActionRoute = ApiEmailActionRouteImport.update({
-  id: '/api/email/action',
-  path: '/api/email/action',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedWatchIdRoute = AuthenticatedWatchIdRouteImport.update({
   id: '/watch/$id',
   path: '/watch/$id',
@@ -166,20 +141,16 @@ export interface FileRoutesByFullPath {
   '/browse': typeof AuthenticatedBrowseRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/explore': typeof AuthenticatedExploreRouteWithChildren
-  '/force-password': typeof AuthenticatedForcePasswordRoute
   '/history': typeof AuthenticatedHistoryRoute
-  '/mylist': typeof AuthenticatedMylistRoute
   '/profiles': typeof AuthenticatedProfilesRoute
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/archive': typeof ApiArchiveRoute
-  '/api/client-ip': typeof ApiClientIpRoute
   '/auth/action': typeof AuthActionRoute
   '/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
   '/movie/$id': typeof AuthenticatedMovieIdRoute
   '/person/$id': typeof AuthenticatedPersonIdRoute
   '/watch/$id': typeof AuthenticatedWatchIdRoute
-  '/api/email/action': typeof ApiEmailActionRoute
   '/explore/': typeof AuthenticatedExploreIndexRoute
 }
 export interface FileRoutesByTo {
@@ -190,20 +161,16 @@ export interface FileRoutesByTo {
   '/tos': typeof TosRoute
   '/browse': typeof AuthenticatedBrowseRoute
   '/calendar': typeof AuthenticatedCalendarRoute
-  '/force-password': typeof AuthenticatedForcePasswordRoute
   '/history': typeof AuthenticatedHistoryRoute
-  '/mylist': typeof AuthenticatedMylistRoute
   '/profiles': typeof AuthenticatedProfilesRoute
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/archive': typeof ApiArchiveRoute
-  '/api/client-ip': typeof ApiClientIpRoute
   '/auth/action': typeof AuthActionRoute
   '/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
   '/movie/$id': typeof AuthenticatedMovieIdRoute
   '/person/$id': typeof AuthenticatedPersonIdRoute
   '/watch/$id': typeof AuthenticatedWatchIdRoute
-  '/api/email/action': typeof ApiEmailActionRoute
   '/explore': typeof AuthenticatedExploreIndexRoute
 }
 export interface FileRoutesById {
@@ -217,20 +184,16 @@ export interface FileRoutesById {
   '/_authenticated/browse': typeof AuthenticatedBrowseRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/explore': typeof AuthenticatedExploreRouteWithChildren
-  '/_authenticated/force-password': typeof AuthenticatedForcePasswordRoute
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
-  '/_authenticated/mylist': typeof AuthenticatedMylistRoute
   '/_authenticated/profiles': typeof AuthenticatedProfilesRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/api/archive': typeof ApiArchiveRoute
-  '/api/client-ip': typeof ApiClientIpRoute
   '/auth/action': typeof AuthActionRoute
   '/_authenticated/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
   '/_authenticated/movie/$id': typeof AuthenticatedMovieIdRoute
   '/_authenticated/person/$id': typeof AuthenticatedPersonIdRoute
   '/_authenticated/watch/$id': typeof AuthenticatedWatchIdRoute
-  '/api/email/action': typeof ApiEmailActionRoute
   '/_authenticated/explore/': typeof AuthenticatedExploreIndexRoute
 }
 export interface FileRouteTypes {
@@ -244,20 +207,16 @@ export interface FileRouteTypes {
     | '/browse'
     | '/calendar'
     | '/explore'
-    | '/force-password'
     | '/history'
-    | '/mylist'
     | '/profiles'
     | '/search'
     | '/settings'
     | '/api/archive'
-    | '/api/client-ip'
     | '/auth/action'
     | '/explore/$genreId'
     | '/movie/$id'
     | '/person/$id'
     | '/watch/$id'
-    | '/api/email/action'
     | '/explore/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -268,20 +227,16 @@ export interface FileRouteTypes {
     | '/tos'
     | '/browse'
     | '/calendar'
-    | '/force-password'
     | '/history'
-    | '/mylist'
     | '/profiles'
     | '/search'
     | '/settings'
     | '/api/archive'
-    | '/api/client-ip'
     | '/auth/action'
     | '/explore/$genreId'
     | '/movie/$id'
     | '/person/$id'
     | '/watch/$id'
-    | '/api/email/action'
     | '/explore'
   id:
     | '__root__'
@@ -294,20 +249,16 @@ export interface FileRouteTypes {
     | '/_authenticated/browse'
     | '/_authenticated/calendar'
     | '/_authenticated/explore'
-    | '/_authenticated/force-password'
     | '/_authenticated/history'
-    | '/_authenticated/mylist'
     | '/_authenticated/profiles'
     | '/_authenticated/search'
     | '/_authenticated/settings'
     | '/api/archive'
-    | '/api/client-ip'
     | '/auth/action'
     | '/_authenticated/explore/$genreId'
     | '/_authenticated/movie/$id'
     | '/_authenticated/person/$id'
     | '/_authenticated/watch/$id'
-    | '/api/email/action'
     | '/_authenticated/explore/'
   fileRoutesById: FileRoutesById
 }
@@ -319,8 +270,6 @@ export interface RootRouteChildren {
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   TosRoute: typeof TosRoute
   ApiArchiveRoute: typeof ApiArchiveRoute
-  ApiClientIpRoute: typeof ApiClientIpRoute
-  ApiEmailActionRoute: typeof ApiEmailActionRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -374,13 +323,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthActionRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/api/client-ip': {
-      id: '/api/client-ip'
-      path: '/api/client-ip'
-      fullPath: '/api/client-ip'
-      preLoaderRoute: typeof ApiClientIpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/archive': {
       id: '/api/archive'
       path: '/api/archive'
@@ -409,25 +351,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfilesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/mylist': {
-      id: '/_authenticated/mylist'
-      path: '/mylist'
-      fullPath: '/mylist'
-      preLoaderRoute: typeof AuthenticatedMylistRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/history': {
       id: '/_authenticated/history'
       path: '/history'
       fullPath: '/history'
       preLoaderRoute: typeof AuthenticatedHistoryRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/force-password': {
-      id: '/_authenticated/force-password'
-      path: '/force-password'
-      fullPath: '/force-password'
-      preLoaderRoute: typeof AuthenticatedForcePasswordRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/explore': {
@@ -457,13 +385,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/explore/'
       preLoaderRoute: typeof AuthenticatedExploreIndexRouteImport
       parentRoute: typeof AuthenticatedExploreRoute
-    }
-    '/api/email/action': {
-      id: '/api/email/action'
-      path: '/api/email/action'
-      fullPath: '/api/email/action'
-      preLoaderRoute: typeof ApiEmailActionRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/watch/$id': {
       id: '/_authenticated/watch/$id'
@@ -513,9 +434,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBrowseRoute: typeof AuthenticatedBrowseRoute
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedExploreRoute: typeof AuthenticatedExploreRouteWithChildren
-  AuthenticatedForcePasswordRoute: typeof AuthenticatedForcePasswordRoute
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
-  AuthenticatedMylistRoute: typeof AuthenticatedMylistRoute
   AuthenticatedProfilesRoute: typeof AuthenticatedProfilesRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -528,9 +447,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBrowseRoute: AuthenticatedBrowseRoute,
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedExploreRoute: AuthenticatedExploreRouteWithChildren,
-  AuthenticatedForcePasswordRoute: AuthenticatedForcePasswordRoute,
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
-  AuthenticatedMylistRoute: AuthenticatedMylistRoute,
   AuthenticatedProfilesRoute: AuthenticatedProfilesRoute,
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
@@ -560,8 +477,6 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   TosRoute: TosRoute,
   ApiArchiveRoute: ApiArchiveRoute,
-  ApiClientIpRoute: ApiClientIpRoute,
-  ApiEmailActionRoute: ApiEmailActionRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

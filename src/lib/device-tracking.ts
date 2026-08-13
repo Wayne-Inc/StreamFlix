@@ -47,7 +47,6 @@ export async function recordCurrentDevice(): Promise<void> {
   const ua = navigator.userAgent;
   const { browser, os, label } = parseUserAgent(ua);
   const device_id = getDeviceId();
-  const ip_address = await fetchClientIp();
 
   const deviceRef = doc(db, "user_devices", device_id);
   await setDoc(
@@ -59,24 +58,9 @@ export async function recordCurrentDevice(): Promise<void> {
       browser,
       os,
       user_agent: ua,
-      ip_address,
       last_seen_at: serverTimestamp(),
       created_at: serverTimestamp(),
     },
     { merge: true },
   );
-}
-
-async function fetchClientIp(): Promise<string | null> {
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 4000);
-    const res = await fetch("/api/client-ip", { signal: controller.signal });
-    clearTimeout(timer);
-    if (!res.ok) return null;
-    const data = (await res.json()) as { ip?: unknown };
-    return typeof data.ip === "string" && data.ip ? data.ip : null;
-  } catch {
-    return null;
-  }
 }

@@ -16,13 +16,12 @@ import {
   Tv,
   Film,
   Sparkles,
-  Bookmark,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Logo } from "./Logo";
 import { auth, db } from "@/lib/firebase";
 import { signOut as firebaseSignOut } from "firebase/auth";
-import { doc, onSnapshot, collection, query, where, limit, getDocs } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import { profileHasPin, verifyProfilePin } from "@/lib/profiles";
 
 const links = [
@@ -47,9 +46,6 @@ export function Navbar() {
     email: u?.email ?? null,
     photoURL: u?.photoURL ?? null,
   });
-  const [joinOpen, setJoinOpen] = useState(false);
-  const [joinCode, setJoinCode] = useState("");
-  const [joinBusy, setJoinBusy] = useState(false);
   const [exitKidsOpen, setExitKidsOpen] = useState(false);
   const [exitKidsPin, setExitKidsPin] = useState("");
   const [exitKidsBusy, setExitKidsBusy] = useState(false);
@@ -119,11 +115,9 @@ export function Navbar() {
         setExitKidsPin("");
         setExitKidsOpen(true);
       } else {
-        localStorage.removeItem("sf:selectedProfile");
         router.navigate({ to: "/profiles" });
       }
     } catch {
-      localStorage.removeItem("sf:selectedProfile");
       router.navigate({ to: "/profiles" });
     }
   };
@@ -138,7 +132,6 @@ export function Navbar() {
       if (ok) {
         setExitKidsOpen(false);
         setExitKidsPin("");
-        localStorage.removeItem("sf:selectedProfile");
         router.navigate({ to: "/profiles" });
       } else {
         toast.error("Incorrect PIN");
@@ -218,76 +211,6 @@ export function Navbar() {
           >
             {mobileNavOpen ? <X className="size-6" /> : <Menu className="size-6" />}
           </button>
-          <div className="relative">
-            <button
-              onClick={() => setJoinOpen((v) => !v)}
-              className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
-              aria-label="Join Watch Party"
-            >
-              <Users className="size-5" />
-            </button>
-            {joinOpen && (
-              <div
-                className="fixed sm:absolute right-4 left-4 sm:left-auto sm:right-0 top-16 sm:top-12 z-50 sm:w-80 rounded-lg border border-border bg-card/95 p-4 shadow-xl backdrop-blur"
-                onMouseLeave={() => setJoinOpen(false)}
-              >
-                <p className="mb-2 text-xs font-medium text-muted-foreground">
-                  Enter Watch Party code
-                </p>
-                <form
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    let code = joinCode.trim().toUpperCase();
-                    const paramMatch = code.match(/[?&]PARTY=([A-Z0-9]{1,8})/);
-                    if (paramMatch) code = paramMatch[1];
-                    code = code.replace(/[^A-Z0-9]/g, "").slice(0, 8);
-                    if (!code || joinBusy) return;
-                    setJoinBusy(true);
-                    try {
-                      const q = query(
-                        collection(db, "watch_party_rooms"),
-                        where("code", "==", code),
-                        limit(1),
-                      );
-                      const snap = await getDocs(q);
-                      if (snap.empty) {
-                        toast.error("Room not found");
-                        setJoinBusy(false);
-                        return;
-                      }
-                      const room = snap.docs[0].data();
-                      setJoinOpen(false);
-                      setJoinCode("");
-                      router.navigate({
-                        to: "/watch/$id",
-                        params: { id: room.movie_id },
-                        search: { party: code },
-                      });
-                    } catch {
-                      toast.error("Failed to join");
-                    }
-                    setJoinBusy(false);
-                  }}
-                  className="flex gap-2"
-                >
-                  <input
-                    value={joinCode}
-                    onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                    placeholder="CODE or invite link"
-                    maxLength={120}
-                    className="flex-1 rounded bg-surface px-3 py-2 text-sm font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <button
-                    type="submit"
-                    disabled={joinBusy || !joinCode.trim()}
-                    className="rounded bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
-                  >
-                    Join
-                  </button>
-                </form>
-              </div>
-            )}
-          </div>
           <Link
             to="/search"
             className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
@@ -318,7 +241,9 @@ export function Navbar() {
                       {selectedProfile?.name ?? userData.email ?? "Account"}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {selectedProfile?.kids ? "Kids profile" : (userData.email ?? "Signed in")}
+                      {selectedProfile?.kids
+                        ? "Kids profile"
+                        : userData.email ?? "Signed in"}
                     </p>
                   </div>
                 </div>
@@ -350,12 +275,6 @@ export function Navbar() {
                     className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-accent"
                   >
                     <Clock className="size-4 text-muted-foreground" /> Watch History
-                  </Link>
-                  <Link
-                    to="/mylist"
-                    className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-accent"
-                  >
-                    <Bookmark className="size-4 text-muted-foreground" /> My List
                   </Link>
                 </div>
                 <div className="border-t border-border py-1">

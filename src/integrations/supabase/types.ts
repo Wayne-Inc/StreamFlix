@@ -71,77 +71,7 @@ export type Database = {
         };
         Relationships: [];
       };
-      watch_party_messages: {
-        Row: {
-          content: string;
-          created_at: string;
-          id: string;
-          kind: string;
-          room_id: string;
-          user_id: string;
-          user_name: string;
-        };
-        Insert: {
-          content: string;
-          created_at?: string;
-          id?: string;
-          kind?: string;
-          room_id: string;
-          user_id: string;
-          user_name: string;
-        };
-        Update: {
-          content?: string;
-          created_at?: string;
-          id?: string;
-          kind?: string;
-          room_id?: string;
-          user_id?: string;
-          user_name?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "watch_party_messages_room_id_fkey";
-            columns: ["room_id"];
-            isOneToOne: false;
-            referencedRelation: "watch_party_rooms";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      watch_party_rooms: {
-        Row: {
-          code: string;
-          created_at: string;
-          host_id: string;
-          id: string;
-          is_playing: boolean;
-          movie_id: string;
-          position_seconds: number;
-          updated_at: string;
-        };
-        Insert: {
-          code: string;
-          created_at?: string;
-          host_id: string;
-          id?: string;
-          is_playing?: boolean;
-          movie_id: string;
-          position_seconds?: number;
-          updated_at?: string;
-        };
-        Update: {
-          code?: string;
-          created_at?: string;
-          host_id?: string;
-          id?: string;
-          is_playing?: boolean;
-          movie_id?: string;
-          position_seconds?: number;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
+
     };
     Views: {
       [_ in never]: never;

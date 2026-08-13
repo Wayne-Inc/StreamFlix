@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { useEffect, useRef, useState, useCallback, type MouseEvent, type TouchEvent } from "react";
-import { ArrowLeft, Settings, Wifi, Loader, RotateCw, Users, ShieldOff } from "lucide-react";
+import { ArrowLeft, Settings, Wifi, Loader, RotateCw } from "lucide-react";
 import { movieById } from "@/lib/streamflix-data";
 import { getContinueWatching, recordProgress } from "@/lib/continue-watching";
 import { saveProgressToFirestore } from "@/lib/continue-watching-firestore";
@@ -10,11 +10,9 @@ import { probeEmbedUrl, fetchTvSeason } from "@/lib/api/tmdb";
 import { auth } from "@/lib/firebase";
 import { startSession, endSession } from "@/lib/session-tracking";
 import { toast } from "sonner";
-import { WatchPartyPanel, WatchPartyButton } from "@/components/streamflix/WatchParty";
 import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
 import { seoMetaFor } from "@/lib/seo";
 import { MAIN_VIDEO_URL } from "@/lib/constants";
-import { isKidsProfile, isRatingBlockedForKids, isGenreBlockedForKids } from "@/lib/kids-mode";
 
 interface NetworkInformation {
   effectiveType: "slow-2g" | "2g" | "3g" | "4g";
@@ -31,7 +29,6 @@ const watchSearchSchema = z.object({
   season: z.number().optional(),
   episode: z.number().optional(),
   autoplay: z.boolean().optional(),
-  party: z.string().optional(),
 });
 
 function fmt(t: number) {
@@ -41,31 +38,6 @@ function fmt(t: number) {
     .toString()
     .padStart(2, "0");
   return `${m}:${s}`;
-}
-
-function compensatePartyTime(time: number, isPlaying: boolean, updatedAtMs: number | null) {
-  if (!isPlaying || updatedAtMs == null) return time;
-  const elapsed = (Date.now() - updatedAtMs) / 1000;
-  if (elapsed <= 0 || elapsed > 3) return time;
-  return time + elapsed;
-}
-
-function applyPartyPlayback(
-  video: HTMLVideoElement,
-  seekTime: number,
-  isPlaying: boolean,
-  pendingSeekRef: React.MutableRefObject<number | null>,
-) {
-  const targetTime = seekTime;
-  if (video.readyState >= 1) {
-    if (Math.abs(video.currentTime - targetTime) > 0.75) {
-      video.currentTime = targetTime;
-    }
-  } else {
-    pendingSeekRef.current = targetTime;
-  }
-  if (isPlaying && video.paused) video.play().catch(() => {});
-  if (!isPlaying && !video.paused) video.pause();
 }
 
 interface EmbedServer {
@@ -302,10 +274,18 @@ function sendEmbedPlaybackCommand(
 function PlayerPage() {
   const data = Route.useLoaderData();
   const movie = data?.movie;
-  const { season, episode, autoplay, party } = Route.useSearch();
-  const isPartyMode = Boolean(party);
+  const { season, episode, autoplay } = Route.useSearch();
 
-  const kidsMode = isKidsProfile();
+  if (!movie) {
+    return (
+      <div className="grid min-h-dvh place-items-center gap-4 bg-black text-white">
+        <p className="text-red-400">Movie not available</p>
+        <Link to="/" className="text-sm text-white/60 hover:text-white underline">
+          Go home
+        </Link>
+      </div>
+    );
+  }
 
   const [videoUrl, setVideoUrl] = useState<string>("");
   const mainVideoUrlRef = useRef<string>("");
@@ -321,21 +301,18 @@ function PlayerPage() {
   const selectedServer =
     availableEmbedServers.find((server) => server.id === selectedServerId) ??
     availableEmbedServers[0];
-  const [partyRoomSource, setPartyRoomSource] = useState<string | null>(null);
+
   const [currentTime, setCurrentTime] = useState(0);
   const [mainSourceReady, setMainSourceReady] = useState(false);
   const resumedRef = useRef(false);
   const pendingSeekRef = useRef<number | null>(null);
-  const pendingPartySeekRef = useRef<number | null>(null);
-  const partyIsPlayingRef = useRef<boolean | null>(null);
-  const isPartyGuestRef = useRef(false);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [embedSyncSupported, setEmbedSyncSupported] = useState(false);
   const lastEmbedProgressRef = useRef(0);
   const [savedPosition, setSavedPosition] = useState<number | null>(null);
-  const [partySeason, setPartySeason] = useState<number | null>(null);
-  const [partyEpisode, setPartyEpisode] = useState<number | null>(null);
+
 
   const navigate = useNavigate();
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
@@ -350,8 +327,7 @@ function PlayerPage() {
   const [duration, setDuration] = useState(0);
   const [showControls, setShowControls] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
-  const [partyOpen, setPartyOpen] = useState(false);
-  const [partyViewerCount, setPartyViewerCount] = useState(0);
+
   const [ended, setEnded] = useState(false);
   const [subtitles, setSubtitles] = useState<{ lang: string; label: string; url: string }[]>([]);
   const [buffering, setBuffering] = useState(false);
@@ -606,10 +582,6 @@ function PlayerPage() {
     return () => conn.removeEventListener("change", update);
   }, []);
 
-  // auto-open watch party from URL param
-  useEffect(() => {
-    if (party && !partyOpen) setPartyOpen(true);
-  }, [party]);
 
   // server fallback: probe all embed servers once on load; if the default
   // server is unreachable, switch to the first responding one.
@@ -644,7 +616,6 @@ function PlayerPage() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    // probedRef guard ensures this runs once regardless of deps
   }, [movie.id]);
 
   useEffect(() => {
@@ -658,53 +629,6 @@ function PlayerPage() {
     };
   }, [movie.id]);
 
-  const handleWatchPartyRoomUpdate = useCallback(
-    (roomState: any) => {
-      const video = videoRef.current;
-      const iframe = iframeRef.current;
-      const isEmbed = isEmbedUrl(videoUrl) && iframe;
-
-      if (roomState.video_url) {
-        setVideoUrl(roomState.video_url);
-        setMainVideoUrl(roomState.video_url);
-        mainVideoUrlRef.current = roomState.video_url;
-      }
-
-      if (isEmbed && embedSyncSupported) {
-        if (typeof roomState.position_seconds === "number") {
-          const seekTime = compensatePartyTime(
-            roomState.position_seconds,
-            roomState.is_playing,
-            roomState.updated_at,
-          );
-          sendEmbedPlaybackCommand(iframe, "seek", seekTime);
-        }
-        if (typeof roomState.is_playing === "boolean") {
-          sendEmbedPlaybackCommand(iframe, roomState.is_playing ? "play" : "pause");
-        }
-        return;
-      }
-
-      if (!video) return;
-
-      if (typeof roomState.position_seconds === "number") {
-        const targetTime = roomState.position_seconds;
-        if (Math.abs(video.currentTime - targetTime) > 1) {
-          video.currentTime = targetTime;
-        }
-      }
-
-      if (typeof roomState.is_playing === "boolean") {
-        if (roomState.is_playing && video.paused) {
-          video.play().catch(() => {});
-        }
-        if (!roomState.is_playing && !video.paused) {
-          video.pause();
-        }
-      }
-    },
-    [videoUrl, embedSyncSupported],
-  );
 
   useEffect(() => {
     const url = buildEmbedUrl(selectedServerId, movie.id, season, episode);
@@ -782,36 +706,6 @@ function PlayerPage() {
     sendEmbedPlaybackCommand(iframe, "requestProgress");
   };
 
-  if (!movie) {
-    return (
-      <div className="grid min-h-dvh place-items-center gap-4 bg-black text-white">
-        <p className="text-red-400">Movie not available</p>
-        <Link to="/" className="text-sm text-white/60 hover:text-white underline">
-          Go home
-        </Link>
-      </div>
-    );
-  }
-
-  if (kidsMode && (isRatingBlockedForKids(movie.rating) || isGenreBlockedForKids(movie.genreIds ?? []))) {
-    return (
-      <div className="grid min-h-dvh place-items-center gap-4 bg-black px-4 text-center">
-        <div className="grid size-24 place-items-center rounded-full bg-amber-500/15">
-          <ShieldOff className="size-12 text-amber-400" />
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-xl font-semibold text-white">Content not available for kids</h2>
-          <p className="max-w-sm text-sm text-white/50">
-            This title isn't suitable for kids profiles. Switch to a regular profile to watch it.
-          </p>
-        </div>
-        <Link to="/browse" className="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
-          Back to Browse
-        </Link>
-      </div>
-    );
-  }
-
   return (
     <div
       ref={containerRef}
@@ -849,7 +743,7 @@ function PlayerPage() {
               setCurrentTime(cur);
               if (Math.floor(cur) % 5 === 0) doRecord(cur, dur);
             }}
-            onLoadedMetadata={(e) => {
+             onLoadedMetadata={(e) => {
               const dur = e.currentTarget.duration;
               setDuration(dur);
               if (pendingSeekRef.current != null) {
@@ -857,21 +751,9 @@ function PlayerPage() {
                 pendingSeekRef.current = null;
                 e.currentTarget.currentTime = t;
               }
-              if (partyIsPlayingRef.current != null && isPartyGuestRef.current) {
-                const shouldPlay = partyIsPlayingRef.current;
-                if (shouldPlay) {
-                  e.currentTarget.play().catch(() => {});
-                } else {
-                  e.currentTarget.pause();
-                }
-              }
             }}
             onCanPlay={(e) => {
               setBuffering(false);
-              if (!isPartyGuestRef.current || partyIsPlayingRef.current == null) return;
-              const shouldPlay = partyIsPlayingRef.current;
-              if (shouldPlay && e.currentTarget.paused) e.currentTarget.play().catch(() => {});
-              if (!shouldPlay && !e.currentTarget.paused) e.currentTarget.pause();
             }}
             onVolumeChange={(e) => {
               setVolume(e.currentTarget.volume);
@@ -912,11 +794,6 @@ function PlayerPage() {
         }`}
       >
         <div className="pointer-events-auto flex flex-col gap-2 px-2 sm:px-6">
-          {isPartyMode && (
-            <div className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/90 backdrop-blur-sm">
-              Watch party mode — host controls playback
-            </div>
-          )}
           <div className="flex items-center justify-between">
             <div className="group/topbtn rounded-lg transition-colors duration-200 hover:bg-white/10 hover:backdrop-blur-sm -ml-1 sm:-ml-2 px-1 sm:px-2 py-2 sm:py-1">
               <button
@@ -936,12 +813,6 @@ function PlayerPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <WatchPartyButton onClick={() => setPartyOpen((v) => !v)} />
-              {partyViewerCount > 0 && (
-                <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-white/90 backdrop-blur-sm">
-                  <Users className="size-3.5" /> {partyViewerCount} watching
-                </span>
-              )}
               <div className="relative">
                 <button
                   onClick={() => setShowSettings((v) => !v)}
@@ -1113,18 +984,7 @@ function PlayerPage() {
         </div>
       )}
 
-      <WatchPartyPanel
-        movieId={movie.id}
-        open={partyOpen}
-        onClose={() => setPartyOpen(false)}
-        videoRef={videoRef}
-        defaultCode={party}
-        mainVideoUrl={mainVideoUrl}
-        season={season}
-        episode={episode}
-        onRoomStateUpdate={handleWatchPartyRoomUpdate}
-        onViewerCountChange={setPartyViewerCount}
-      />
+
     </div>
   );
 }

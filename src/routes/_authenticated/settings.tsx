@@ -13,14 +13,18 @@ import {
   User as UserIcon,
   ShieldCheck,
   CheckCircle2,
+  Camera,
   Upload,
   Check,
   Crown,
   KeyRound,
 } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
-import { requestActionEmail } from "@/lib/email-api";
-import { signOut as firebaseSignOut } from "firebase/auth";
+import {
+  signOut as firebaseSignOut,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+} from "firebase/auth";
 import {
   collection,
   query,
@@ -38,7 +42,6 @@ import { Footer } from "@/components/streamflix/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AvatarCropModal } from "@/components/streamflix/AvatarCropModal";
 import { getDeviceId, recordCurrentDevice } from "@/lib/device-tracking";
-import { isKidsProfile } from "@/lib/kids-mode";
 import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -76,6 +79,7 @@ function SettingsPage() {
   const user = auth.currentUser;
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [avatarInput, setAvatarInput] = useState("");
   const [savingName, setSavingName] = useState(false);
   const currentDeviceId = typeof window !== "undefined" ? getDeviceId() : "";
   const [cropSrc, setCropSrc] = useState<string | null>(null);
@@ -92,7 +96,7 @@ function SettingsPage() {
     if (!user?.email) return;
     setSendingReset(true);
     try {
-      await requestActionEmail("resetPassword", { email: user.email });
+      await sendPasswordResetEmail(auth, user.email);
       toast.success(`Password reset email sent to ${user.email}.`);
     } catch (e: any) {
       if (e?.code === "auth/too-many-requests") {
@@ -158,7 +162,29 @@ function SettingsPage() {
         { merge: true },
       );
       setAvatarUrl(googlePhotoURL);
+      setAvatarInput("");
       toast.success("Avatar updated to Google profile picture");
+      qc.invalidateQueries({ queryKey: ["profile"] });
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+    setSavingName(false);
+  };
+
+  const saveAvatarUrl = async () => {
+    if (!user || !avatarInput.trim()) return;
+    setSavingName(true);
+    try {
+      await setDoc(
+        doc(db, "profiles", user.uid),
+        {
+          avatar_url: avatarInput.trim(),
+          updated_at: serverTimestamp(),
+        },
+        { merge: true },
+      );
+      setAvatarUrl(avatarInput.trim());
+      toast.success("Avatar updated");
       qc.invalidateQueries({ queryKey: ["profile"] });
     } catch (err: any) {
       toast.error(err.message);
@@ -180,6 +206,7 @@ function SettingsPage() {
         { merge: true },
       );
       setAvatarUrl("");
+      setAvatarInput("");
       toast.success("Avatar removed");
       qc.invalidateQueries({ queryKey: ["profile"] });
     } catch (err: any) {
@@ -210,6 +237,7 @@ function SettingsPage() {
         { merge: true },
       );
       setAvatarUrl(dataUrl);
+      setAvatarInput("");
       setCropSrc(null);
       toast.success("Avatar updated");
       qc.invalidateQueries({ queryKey: ["profile"] });
@@ -458,8 +486,7 @@ function SettingsPage() {
                         onClick={async () => {
                           if (!user) return;
                           try {
-                            const idToken = await user.getIdToken();
-                            await requestActionEmail("verifyEmail", { idToken });
+                            await sendEmailVerification(user);
                             toast.success("Verification email sent.");
                           } catch (e: any) {
                             toast.error(e.message);
@@ -511,6 +538,30 @@ function SettingsPage() {
                   </label>
                   <div className="mt-1 truncate sm:truncate sm:rounded-md border border-border bg-background/60 px-3 py-2 text-xs font-mono text-muted-foreground break-all">
                     {user?.uid ?? "—"}
+                  </div>
+                </div>
+                <div className="sm:col-span-2">
+                  <label
+                    htmlFor="avatarUrl"
+                    className="text-xs uppercase tracking-wider text-muted-foreground"
+                  >
+                    Custom avatar URL
+                  </label>
+                  <div className="mt-1 flex gap-2">
+                    <input
+                      id="avatarUrl"
+                      value={avatarInput}
+                      onChange={(e) => setAvatarInput(e.target.value)}
+                      placeholder="https://example.com/avatar.jpg"
+                      className="flex-1 rounded-md border border-border bg-background/60 px-3 py-2 text-sm outline-none focus:border-primary"
+                    />
+                    <button
+                      onClick={saveAvatarUrl}
+                      disabled={savingName || !avatarInput.trim()}
+                      className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm hover:bg-accent disabled:opacity-50"
+                    >
+                      <Camera className="size-4" /> Set
+                    </button>
                   </div>
                 </div>
               </div>

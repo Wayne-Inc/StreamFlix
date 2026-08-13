@@ -6,20 +6,13 @@ import {
   useNavigate,
   useRouter,
 } from "@tanstack/react-router";
-import { useMemo, useState, useEffect } from "react";
-import { Play, Share2, Clapperboard, ArrowLeft, ShieldOff, Check, Bookmark } from "lucide-react";
-import {
-  isKidsProfile,
-  isRatingBlockedForKids,
-  isGenreBlockedForKids,
-  filterKidsContent,
-} from "@/lib/kids-mode";
+import { useMemo, useState } from "react";
+import { Play, Share2, Clapperboard, ArrowLeft } from "lucide-react";
+import { isKidsProfile, filterKidsContent, isBlockedKidsGenre } from "@/lib/kids-mode";
 import { toast } from "sonner";
 import { shareContent } from "@/lib/share";
 import { seoMetaFor, siteUrl } from "@/lib/seo";
 import { stepsToUsefulBackTarget } from "@/lib/nav-history";
-import { getWatchHistory, markAsWatched, unmarkWatched } from "@/lib/continue-watching";
-import { isInMyList, toggleMyList } from "@/lib/my-list";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { Row } from "@/components/streamflix/Row";
@@ -28,7 +21,6 @@ import { movieById, loadSimilar, loadRecommendations } from "@/lib/streamflix-da
 import { discoverByGenre } from "@/lib/api/tmdb";
 import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
 import { TrailerModal } from "@/components/streamflix/TrailerModal";
-import { AgeRatingBadge } from "@/components/streamflix/AgeRatingBadge";
 
 function MovieSkeleton() {
   return (
@@ -48,9 +40,9 @@ function MovieSkeleton() {
               </div>
               <Skeleton className="h-16 w-full max-w-xl rounded" />
               <div className="flex flex-wrap gap-3 pt-2">
-                <Skeleton className="h-12 w-28 rounded-md" />
                 <Skeleton className="h-12 w-24 rounded-md" />
-                <Skeleton className="h-12 w-32 rounded-md" />
+                <Skeleton className="h-12 w-24 rounded-md" />
+                <Skeleton className="size-12 rounded-full" />
                 <Skeleton className="size-12 rounded-full" />
                 <Skeleton className="size-12 rounded-full" />
               </div>
@@ -109,16 +101,8 @@ export const Route = createFileRoute("/_authenticated/movie/$id")({
       meta: [
         { title },
         { name: "description", content: description },
-        ...(movie && movie.genres.length
-          ? [{ name: "keywords", content: movie.genres.join(", ") }]
-          : []),
-        ...seoMetaFor(
-          title,
-          description,
-          image,
-          movie?.id?.startsWith("tv-") ? "video.tv_show" : "video.movie",
-          url,
-        ),
+        ...(movie && movie.genres.length ? [{ name: "keywords", content: movie.genres.join(", ") }] : []),
+        ...seoMetaFor(title, description, image, movie?.id?.startsWith("tv-") ? "video.tv_show" : "video.movie", url),
       ],
       links: [...(url ? [{ rel: "canonical", href: url }] : [])],
     };
@@ -155,13 +139,6 @@ function MoviePage() {
 
   const [trailerOpen, setTrailerOpen] = useState(false);
 
-  const [inList, setInList] = useState(false);
-  const [watched, setWatched] = useState(false);
-  useEffect(() => {
-    setInList(isInMyList(movie.id));
-    setWatched(getWatchHistory().some((x) => x.id === movie.id || x.id.startsWith(`${movie.id}:`)));
-  }, [movie.id]);
-
   const navigate = useNavigate();
   const router = useRouter();
   const location = useLocation();
@@ -175,44 +152,18 @@ function MoviePage() {
   };
 
   const kidsMode = useMemo(() => isKidsProfile(), []);
-  const blocked =
-    kidsMode &&
-    (isRatingBlockedForKids(movie.rating) || isGenreBlockedForKids(movie.genreIds ?? []));
   const filteredSimilar = kidsMode ? filterKidsContent(similar) : similar;
-  const filteredRecommendations = kidsMode ? filterKidsContent(recommendations) : recommendations;
+  const filteredRecommendations = kidsMode
+    ? filterKidsContent(recommendations)
+    : recommendations;
   const filteredGenreRows = kidsMode
     ? genreRows
-        .filter((gr) => filterKidsContent(gr.items).length > 0)
+        .filter(
+          (gr) =>
+            !isBlockedKidsGenre(Number(gr.genreId)) && filterKidsContent(gr.items).length > 0,
+        )
         .map((gr) => ({ ...gr, items: filterKidsContent(gr.items) }))
     : genreRows;
-
-  if (blocked) {
-    return (
-      <div className="min-h-dvh bg-background">
-        <Navbar />
-        <div className="grid min-h-[70vh] place-items-center gap-4 px-4">
-          <div className="grid size-24 place-items-center rounded-full bg-amber-500/15">
-            <ShieldOff className="size-12 text-amber-400" />
-          </div>
-          <div className="text-center space-y-2">
-            <h2 className="text-xl font-semibold text-foreground">
-              Content not available for kids
-            </h2>
-            <p className="max-w-sm text-sm text-muted-foreground">
-              This title isn't suitable for kids profiles. Try switching to a regular profile to
-              watch it.
-            </p>
-          </div>
-          <Link
-            to="/browse"
-            className="inline-flex items-center rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-          >
-            Back to Browse
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-dvh bg-background">
@@ -239,7 +190,9 @@ function MoviePage() {
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 <span className="font-semibold text-emerald-400">{movie.match}% Match</span>
                 <span className="text-muted-foreground">{movie.year}</span>
-                <AgeRatingBadge rating={movie.rating} />
+                <span className="rounded border border-border px-1.5 text-muted-foreground">
+                  {movie.rating}
+                </span>
                 <span className="text-muted-foreground">{movie.runtime}</span>
               </div>
               <div>
@@ -277,43 +230,14 @@ function MoviePage() {
                 )}
                 <button
                   onClick={() => {
-                    if (watched) {
-                      unmarkWatched(movie.id);
-                      setWatched(false);
-                      toast.success(`${movie.title} marked as not watched`);
-                    } else {
-                      markAsWatched(movie);
-                      setWatched(true);
-                      toast.success(`${movie.title} marked as watched`);
-                    }
-                  }}
-                  className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-3 font-semibold text-foreground hover:bg-white/10"
-                >
-                  <Check className="size-5" /> {watched ? "Watched" : "Unwatched"}
-                </button>
-                <button
-                  onClick={() => {
-                    const added = toggleMyList(movie);
-                    setInList(added);
-                    toast.success(added ? "Added to My List" : "Removed from My List");
-                  }}
-                  className={`grid size-11 sm:size-12 place-items-center rounded-full border ${
-                    inList
-                      ? "border-primary bg-primary/20 text-primary"
-                      : "border-border hover:border-foreground"
-                  }`}
-                  aria-label={inList ? "Remove from My List" : "Add to My List"}
-                >
-                  <Bookmark className={`size-4 sm:size-5 ${inList ? "fill-current" : ""}`} />
-                </button>
-                <button
-                  onClick={() => {
                     const base = siteUrl();
                     shareContent({
                       title: `${movie.title} (${movie.year}) — StreamFlix`,
                       text: movie.description.slice(0, 140),
                       url: base ? `${base}/movie/${movie.id}` : window.location.href,
-                    }).then((mode) => toast.success(mode === "shared" ? "Shared" : "Link copied"));
+                    }).then((mode) =>
+                      toast.success(mode === "shared" ? "Shared" : "Link copied"),
+                    );
                   }}
                   className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground"
                   aria-label="Share"
@@ -348,8 +272,8 @@ function MoviePage() {
                     )}
                   </p>
                   <p>
-                    <span className="font-medium text-foreground">Cast:</span> {movie.cast.length}{" "}
-                    actors
+                    <span className="font-medium text-foreground">Cast:</span>{" "}
+                    {movie.cast.length} actors
                   </p>
                   <p>
                     <span className="font-medium text-foreground">Released:</span> {movie.year}
@@ -358,8 +282,7 @@ function MoviePage() {
                     <span className="font-medium text-foreground">Runtime:</span> {movie.runtime}
                   </p>
                   <p>
-                    <span className="font-medium text-foreground">Rating:</span>{" "}
-                    <AgeRatingBadge rating={movie.rating} />
+                    <span className="font-medium text-foreground">Rating:</span> {movie.rating}
                   </p>
                 </div>
               </div>
@@ -432,7 +355,10 @@ function MoviePage() {
               </div>
 
               {isTv && movie.numberOfSeasons && movie.numberOfSeasons > 0 && (
-                <SeasonEpisodePicker movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} />
+                <SeasonEpisodePicker
+                  movieId={movie.id}
+                  numberOfSeasons={movie.numberOfSeasons}
+                />
               )}
             </aside>
           </div>

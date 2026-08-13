@@ -22,7 +22,6 @@ import {
   type SearchSort,
   fetchUpcomingCalendar,
   fetchAiringCalendar,
-  enrichCertifications as enrichCertificationsFn,
 } from "./api/tmdb";
 
 export type { Movie };
@@ -54,7 +53,7 @@ async function loadHome() {
   } catch {}
 
   return {
-    heroSlides: await enrichCertificationsFn({ data: { items: trending.slice(0, 5) } }),
+    heroSlides: trending.slice(0, 5),
     rows: [
       { title: "Trending Now", items: trending.slice(0, 10) },
       ...(recommendations.length ? [{ title: "Recommended for You", items: recommendations }] : []),
@@ -78,7 +77,7 @@ async function loadMovies() {
     discoverByGenre({ data: { genreId: "27" } }),
   ]);
   return {
-    heroSlides: await enrichCertificationsFn({ data: { items: popular.slice(0, 3) } }),
+    heroSlides: popular.slice(0, 3),
     rows: [
       { title: "Trending Movies", items: trending },
       { title: "Popular Movies", items: popular },
@@ -99,7 +98,7 @@ async function loadTv() {
     fetchAiringTv(),
   ]);
   return {
-    heroSlides: await enrichCertificationsFn({ data: { items: trending.slice(0, 3) } }),
+    heroSlides: trending.slice(0, 3),
     rows: [
       { title: "Trending TV", items: trending },
       { title: "Popular Shows", items: popular },
@@ -117,7 +116,7 @@ async function loadNew() {
     fetchAiringTv(),
   ]);
   return {
-    heroSlides: await enrichCertificationsFn({ data: { items: upcoming.slice(0, 3) } }),
+    heroSlides: upcoming.slice(0, 3),
     rows: [
       { title: "New Releases", items: nowPlaying },
       { title: "Coming Soon", items: upcoming },

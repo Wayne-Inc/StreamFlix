@@ -54,9 +54,9 @@ export function SeasonEpisodePicker({
           <button
             key={s}
             onClick={() => setSelectedSeason(s)}
-            className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
+            className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-300 ease-in-out transform hover:scale-105 ${
               s === selectedSeason
-                ? "bg-primary text-primary-foreground"
+                ? "bg-primary text-primary-foreground shadow-md scale-105"
                 : "border border-border text-muted-foreground hover:text-foreground hover:border-foreground"
             }`}
           >
@@ -77,9 +77,9 @@ export function SeasonEpisodePicker({
           {episodes.map((ep) => (
             <div
               key={ep.episode_number}
-              className={`flex items-center gap-2 rounded-md border p-1.5 transition ${
+              className={`flex items-center gap-2 rounded-md border p-1.5 transition-all duration-300 ease-in-out transform hover:scale-[1.01] ${
                 currentEpisode === ep.episode_number && currentSeason === selectedSeason
-                  ? "border-primary bg-card"
+                  ? "border-primary bg-card shadow-md scale-[1.01]"
                   : "border-border hover:bg-card/80"
               }`}
             >

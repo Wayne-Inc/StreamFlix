@@ -115,7 +115,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://identitytoolkit.googleapis.com" },
       { rel: "preconnect", href: "https://securetoken.googleapis.com" },
       { rel: "preconnect", href: "https://image.tmdb.org" },
-      { rel: "preconnect", href: "https://www.googletagmanager.com" },
       { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
     ],
   }),
@@ -130,45 +129,6 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
-        <script
-          data-cf-sync="false"
-          dangerouslySetInnerHTML={{
-            __html: `window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('consent', 'default', {
-  ad_user_data: 'denied',
-  ad_personalization: 'denied',
-  ad_storage: 'denied',
-  analytics_storage: 'denied',
-  wait_for_update: 500
-});
-(function () {
-  var c = null;
-  try { c = localStorage.getItem('streamflix:cookieConsent') || null; } catch (e) {}
-  if (!c) {
-    try {
-      var m = document.cookie.match(/(?:^|; )streamflix_cookie_consent=([^;]+)/);
-      c = m ? m[1] : null;
-    } catch (e) {}
-  }
-  if (c === 'accepted') {
-    gtag('consent', 'update', {
-      ad_user_data: 'granted',
-      ad_personalization: 'granted',
-      ad_storage: 'granted',
-      analytics_storage: 'granted'
-    });
-  }
-})();
-gtag('js', new Date());
-gtag('config', 'G-V9783E9S0W');`,
-          }}
-        />
-        <script
-          async
-          data-cf-sync="false"
-          src="https://www.googletagmanager.com/gtag/js?id=G-V9783E9S0W"
-        />
       </head>
       <body>
         {children}
@@ -197,6 +157,9 @@ function RootComponent() {
     if (typeof window !== "undefined" && window.electronAPI) {
       document.body.classList.add("electron-app");
     }
+    import("@/lib/mobile").then(({ initMobileApp }) => {
+      initMobileApp().catch(() => {});
+    });
     registerSW();
     const unsub = onAuthStateChanged(auth, (user) => {
       if (initial.current) {
@@ -225,14 +188,14 @@ function RootComponent() {
     const handleOffline = () => {
       if (window.location.pathname !== offlineRoute) {
         sessionStorage.setItem("sf:returnUrl", window.location.pathname + window.location.search);
-        window.location.replace(offlineRoute);
+        router.navigate({ to: offlineRoute, replace: true });
       }
     };
     const handleOnline = () => {
       if (window.location.pathname === offlineRoute) {
         const returnUrl = sessionStorage.getItem("sf:returnUrl");
         sessionStorage.removeItem("sf:returnUrl");
-        window.location.replace(returnUrl || "/browse");
+        window.location.href = returnUrl || "/browse";
       }
     };
 
@@ -252,7 +215,7 @@ function RootComponent() {
       <GlobalContextMenu>
         <CustomTitleBar />
         <div>
-          <Toaster />
+          <Toaster richColors theme="dark" position="top-center" />
           <Outlet />
           <CookieConsent />
           <ScreenSaver />

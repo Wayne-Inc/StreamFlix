@@ -20,12 +20,11 @@ import {
   toMovie as continueToMovie,
   type ContinueItem,
 } from "@/lib/continue-watching";
-import { getMyList, MY_LIST_EVENT } from "@/lib/my-list";
 import {
   getContinueWatchingFromFirestore,
   toMovie as fsToMovie,
 } from "@/lib/continue-watching-firestore";
-import { isKidsProfile, filterKidsContent, filterKidsHeroSlides } from "@/lib/kids-mode";
+import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
 import { getPersonalizedRecommendations, type RecommendSeed } from "@/lib/recommendations";
 
 const searchSchema = z.object({
@@ -86,7 +85,6 @@ function BrowsePage() {
     items: { movie: Movie; progress: number }[];
   } | null>(null);
   const [continueLoading, setContinueLoading] = useState(true);
-  const [listRow, setListRow] = useState<Movie[] | null>(null);
   const [watchedRow, setWatchedRow] = useState<{
     title: string;
     items: Movie[];
@@ -138,23 +136,6 @@ function BrowsePage() {
       window.removeEventListener("focus", update);
     };
   }, []);
-
-  useEffect(() => {
-    if (kind !== "home" || typeof window === "undefined") {
-      setListRow(null);
-      return;
-    }
-    const update = () => setListRow(getMyList().map((e) => e.movie));
-    update();
-    window.addEventListener("storage", update);
-    window.addEventListener("focus", update);
-    window.addEventListener(MY_LIST_EVENT, update);
-    return () => {
-      window.removeEventListener("storage", update);
-      window.removeEventListener("focus", update);
-      window.removeEventListener(MY_LIST_EVENT, update);
-    };
-  }, [kind]);
 
   useEffect(() => {
     if (kind !== "home" || typeof window === "undefined") return;
@@ -252,7 +233,9 @@ function BrowsePage() {
         }
         if (!cancelled) {
           setPickedRow(
-            items.length ? { title: "Picked for You", items, reasons, reasonLinks: {} } : null,
+            items.length
+              ? { title: "Picked for You", items, reasons, reasonLinks: {} }
+              : null,
           );
         }
       } catch {
@@ -318,12 +301,17 @@ function BrowsePage() {
 
   const filteredHeroSlides = useMemo(() => {
     if (!kidsMode) return heroSlides;
-    return filterKidsHeroSlides(heroSlides);
+    return filterKidsContent(heroSlides);
   }, [kidsMode, heroSlides]);
 
   const filteredRows = useMemo(() => {
     if (!kidsMode) return rows;
-    return rows.map((r) => ({ ...r, items: fillRow(filterKidsContent(r.items)) }));
+    return rows
+      .filter((r) => r.title !== "Award-Winning Dramas")
+      .map((r) => ({
+        ...r,
+        items: fillRow(filterKidsContent(r.items)),
+      }));
   }, [kidsMode, rows, fillRow]);
 
   return (
@@ -355,9 +343,6 @@ function BrowsePage() {
                 ))}
             </div>
           </section>
-        )}
-        {kind === "home" && listRow && listRow.length > 0 && (
-          <Row title="My List" items={kidsMode ? fillRow(filterKidsContent(listRow)) : listRow} />
         )}
         {kind === "home" && (watchedLoading || pickedLoading) && <RowSkeleton />}
         {watchedRow && kind === "home" && (
@@ -397,14 +382,14 @@ function BrowsePage() {
                   to="/explore/$genreId"
                   params={{ genreId: m.id }}
                   search={{ q: m.name }}
-                  className={`min-w-0 shrink overflow-hidden whitespace-nowrap rounded-full border border-border bg-card/60 px-3 py-2 text-sm text-foreground transition hover:border-primary hover:bg-card ${i >= 2 ? "hidden sm:inline-flex" : ""}`}
+                  className={`min-w-0 shrink overflow-hidden whitespace-nowrap rounded-full border border-border bg-card/60 px-3 py-2 text-sm text-foreground transition-all duration-300 ease-in-out transform hover:scale-105 hover:border-primary hover:bg-card ${i >= 2 ? "hidden sm:inline-flex" : ""}`}
                 >
                   {m.name}
                 </Link>
               ))}
               <Link
                 to="/explore"
-                className="min-w-0 shrink overflow-hidden whitespace-nowrap rounded-full border border-primary/60 px-3 py-2 text-sm font-medium text-primary transition hover:bg-primary/10"
+                className="min-w-0 shrink overflow-hidden whitespace-nowrap rounded-full border border-primary/60 px-3 py-2 text-sm font-medium text-primary transition-all duration-300 ease-in-out transform hover:scale-105 hover:bg-primary/10"
               >
                 All moods →
               </Link>
