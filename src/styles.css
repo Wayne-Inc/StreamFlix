@@ -193,45 +193,60 @@ input[type="range"]::-moz-range-progress {
   background: rgba(255, 255, 255, 0.3);
 }
 /* Avatar crop zoom slider */
+.zoom-slider {
+  height: 22px;
+}
 .zoom-slider::-webkit-slider-runnable-track {
-  height: 4px;
-  border-radius: 2px;
+  height: 6px;
+  border-radius: 9999px;
   background: linear-gradient(
     to right,
     #dc2626 0%,
     #dc2626 var(--fill, 0%),
-    rgba(255, 255, 255, 0.15) var(--fill, 0%),
-    rgba(255, 255, 255, 0.15) 100%
+    rgba(255, 255, 255, 0.14) var(--fill, 0%),
+    rgba(255, 255, 255, 0.14) 100%
   );
 }
 .zoom-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   margin-top: -6px;
-  border-radius: 50%;
+  border-radius: 9999px;
   background: #fff;
   border: 2px solid #dc2626;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.25), 0 2px 6px rgba(0, 0, 0, 0.45);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.zoom-slider:hover::-webkit-slider-thumb {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.3), 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+.zoom-slider:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.4), 0 2px 6px rgba(0, 0, 0, 0.45);
 }
 .zoom-slider::-moz-range-track {
-  height: 4px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.15);
+  height: 6px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.14);
 }
 .zoom-slider::-moz-range-progress {
-  height: 4px;
-  border-radius: 2px;
+  height: 6px;
+  border-radius: 9999px;
   background: #dc2626;
 }
 .zoom-slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
   background: #fff;
   border: 2px solid #dc2626;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.25), 0 2px 6px rgba(0, 0, 0, 0.45);
+  transition: transform 0.15s ease;
+}
+.zoom-slider:hover::-moz-range-thumb {
+  transform: scale(1.12);
 }
 .volume-slider::-moz-range-track {
   height: 4px;

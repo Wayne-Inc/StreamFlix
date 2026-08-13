@@ -221,6 +221,7 @@ export function AvatarCropModal({
               className="zoom-slider flex-1"
               style={{ ["--fill" as string]: `${((zoom - 1) / 2) * 100}%` } as React.CSSProperties}
             />
+            <span className="w-11 shrink-0 text-right tabular-nums">{Math.round(zoom * 100)}%</span>
           </label>
         </div>
 
