@@ -218,6 +218,12 @@ export function AvatarCropModal({
               step={0.01}
               value={zoom}
               onChange={(e) => handleZoom(parseFloat(e.target.value))}
+              onPointerDown={(e) => {
+                const el = e.currentTarget;
+                const rect = el.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / rect.width;
+                handleZoom(Math.min(3, Math.max(1, 1 + x * 2)));
+              }}
               className="zoom-slider flex-1"
               style={{ ["--fill" as string]: `${((zoom - 1) / 2) * 100}%` } as React.CSSProperties}
             />

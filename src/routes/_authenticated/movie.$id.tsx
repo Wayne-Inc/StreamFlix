@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { shareContent } from "@/lib/share";
 import { seoMetaFor, siteUrl } from "@/lib/seo";
 import { stepsToUsefulBackTarget } from "@/lib/nav-history";
-import { getWatchHistory, markAsWatched } from "@/lib/continue-watching";
+import { getWatchHistory, markAsWatched, unmarkWatched } from "@/lib/continue-watching";
 import { isInMyList, toggleMyList } from "@/lib/my-list";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
@@ -277,13 +277,19 @@ function MoviePage() {
                 )}
                 <button
                   onClick={() => {
-                    markAsWatched(movie);
-                    setWatched(true);
-                    toast.success(`${movie.title} marked as watched`);
+                    if (watched) {
+                      unmarkWatched(movie.id);
+                      setWatched(false);
+                      toast.success(`${movie.title} marked as not watched`);
+                    } else {
+                      markAsWatched(movie);
+                      setWatched(true);
+                      toast.success(`${movie.title} marked as watched`);
+                    }
                   }}
                   className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-3 font-semibold text-foreground hover:bg-white/10"
                 >
-                  <Check className="size-5" /> {watched ? "Watched" : "Mark as watched"}
+                  <Check className="size-5" /> {watched ? "Unwatched" : "Watched"}
                 </button>
                 <button
                   onClick={() => {

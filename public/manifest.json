@@ -32,19 +32,5 @@
       "purpose": "maskable"
     }
   ],
-  "screenshots": [
-    {
-      "src": "/screenshots/desktop.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "StreamFlix on desktop — browse and watch"
-    },
-    {
-      "src": "/screenshots/mobile.png",
-      "sizes": "720x1280",
-      "type": "image/png",
-      "label": "StreamFlix on mobile"
-    }
-  ]
+  "screenshots": []
 }

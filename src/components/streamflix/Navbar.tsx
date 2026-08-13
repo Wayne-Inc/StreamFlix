@@ -16,6 +16,7 @@ import {
   Tv,
   Film,
   Sparkles,
+  Bookmark,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Logo } from "./Logo";
@@ -208,6 +209,14 @@ export function Navbar() {
           >
             Calendar
           </Link>
+          <Link
+            to="/mylist"
+            className={`hover:text-foreground transition-colors ${
+              pathname === "/mylist" ? "text-foreground font-semibold" : ""
+            }`}
+          >
+            My List
+          </Link>
         </nav>
         <div className="ml-auto flex items-center gap-3">
           <button
@@ -317,9 +326,7 @@ export function Navbar() {
                       {selectedProfile?.name ?? userData.email ?? "Account"}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {selectedProfile?.kids
-                        ? "Kids profile"
-                        : userData.email ?? "Signed in"}
+                      {selectedProfile?.kids ? "Kids profile" : (userData.email ?? "Signed in")}
                     </p>
                   </div>
                 </div>
@@ -351,6 +358,12 @@ export function Navbar() {
                     className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-accent"
                   >
                     <Clock className="size-4 text-muted-foreground" /> Watch History
+                  </Link>
+                  <Link
+                    to="/mylist"
+                    className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-accent"
+                  >
+                    <Bookmark className="size-4 text-muted-foreground" /> My List
                   </Link>
                 </div>
                 <div className="border-t border-border py-1">
@@ -397,6 +410,13 @@ export function Navbar() {
               className="flex items-center gap-3 rounded-md px-2 py-2.5 text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground transition-colors"
             >
               <CalendarDays className="size-4" /> Calendar
+            </Link>
+            <Link
+              to="/mylist"
+              onClick={() => setMobileNavOpen(false)}
+              className="flex items-center gap-3 rounded-md px-2 py-2.5 text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground transition-colors"
+            >
+              <Bookmark className="size-4" /> My List
             </Link>
           </div>
         </div>

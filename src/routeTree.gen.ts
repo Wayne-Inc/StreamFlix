@@ -21,6 +21,7 @@ import { Route as ApiArchiveRouteImport } from './routes/api/archive'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
 import { Route as AuthenticatedProfilesRouteImport } from './routes/_authenticated/profiles'
+import { Route as AuthenticatedMylistRouteImport } from './routes/_authenticated/mylist'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedExploreRouteImport } from './routes/_authenticated/explore'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
@@ -90,6 +91,11 @@ const AuthenticatedProfilesRoute = AuthenticatedProfilesRouteImport.update({
   path: '/profiles',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMylistRoute = AuthenticatedMylistRouteImport.update({
+  id: '/mylist',
+  path: '/mylist',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
   id: '/history',
   path: '/history',
@@ -148,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/calendar': typeof AuthenticatedCalendarRoute
   '/explore': typeof AuthenticatedExploreRouteWithChildren
   '/history': typeof AuthenticatedHistoryRoute
+  '/mylist': typeof AuthenticatedMylistRoute
   '/profiles': typeof AuthenticatedProfilesRoute
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -169,6 +176,7 @@ export interface FileRoutesByTo {
   '/browse': typeof AuthenticatedBrowseRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/history': typeof AuthenticatedHistoryRoute
+  '/mylist': typeof AuthenticatedMylistRoute
   '/profiles': typeof AuthenticatedProfilesRoute
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -193,6 +201,7 @@ export interface FileRoutesById {
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/explore': typeof AuthenticatedExploreRouteWithChildren
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
+  '/_authenticated/mylist': typeof AuthenticatedMylistRoute
   '/_authenticated/profiles': typeof AuthenticatedProfilesRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -217,6 +226,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/explore'
     | '/history'
+    | '/mylist'
     | '/profiles'
     | '/search'
     | '/settings'
@@ -238,6 +248,7 @@ export interface FileRouteTypes {
     | '/browse'
     | '/calendar'
     | '/history'
+    | '/mylist'
     | '/profiles'
     | '/search'
     | '/settings'
@@ -261,6 +272,7 @@ export interface FileRouteTypes {
     | '/_authenticated/calendar'
     | '/_authenticated/explore'
     | '/_authenticated/history'
+    | '/_authenticated/mylist'
     | '/_authenticated/profiles'
     | '/_authenticated/search'
     | '/_authenticated/settings'
@@ -371,6 +383,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfilesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/mylist': {
+      id: '/_authenticated/mylist'
+      path: '/mylist'
+      fullPath: '/mylist'
+      preLoaderRoute: typeof AuthenticatedMylistRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/history': {
       id: '/_authenticated/history'
       path: '/history'
@@ -455,6 +474,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedExploreRoute: typeof AuthenticatedExploreRouteWithChildren
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
+  AuthenticatedMylistRoute: typeof AuthenticatedMylistRoute
   AuthenticatedProfilesRoute: typeof AuthenticatedProfilesRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -468,6 +488,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedExploreRoute: AuthenticatedExploreRouteWithChildren,
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
+  AuthenticatedMylistRoute: AuthenticatedMylistRoute,
   AuthenticatedProfilesRoute: AuthenticatedProfilesRoute,
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,

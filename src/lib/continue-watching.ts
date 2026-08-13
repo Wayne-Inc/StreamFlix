@@ -202,6 +202,13 @@ export function markAsWatched(movie: Movie) {
   });
 }
 
+export function unmarkWatched(id: string) {
+  if (typeof window === "undefined") return;
+  const key = getHistoryKey();
+  const list = getWatchHistory().filter((x) => x.id !== id && !x.id.startsWith(`${id}:`));
+  window.localStorage.setItem(key, JSON.stringify(list));
+}
+
 export function removeContinue(id: string) {
   if (typeof window === "undefined") return;
   const list = getContinueWatching().filter((x) => x.id !== id);

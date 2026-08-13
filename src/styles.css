@@ -194,7 +194,8 @@ input[type="range"]::-moz-range-progress {
 }
 /* Avatar crop zoom slider */
 .zoom-slider {
-  height: 22px;
+  height: 28px;
+  cursor: pointer;
 }
 .zoom-slider::-webkit-slider-runnable-track {
   height: 6px;
@@ -203,8 +204,8 @@ input[type="range"]::-moz-range-progress {
     to right,
     #dc2626 0%,
     #dc2626 var(--fill, 0%),
-    rgba(255, 255, 255, 0.14) var(--fill, 0%),
-    rgba(255, 255, 255, 0.14) 100%
+    rgba(255, 255, 255, 0.2) var(--fill, 0%),
+    rgba(255, 255, 255, 0.2) 100%
   );
 }
 .zoom-slider::-webkit-slider-thumb {
@@ -229,7 +230,7 @@ input[type="range"]::-moz-range-progress {
 .zoom-slider::-moz-range-track {
   height: 6px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.2);
 }
 .zoom-slider::-moz-range-progress {
   height: 6px;
