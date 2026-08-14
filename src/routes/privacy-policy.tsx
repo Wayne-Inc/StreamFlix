@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Logo } from "@/components/streamflix/Logo";
+import { ContactEmail } from "@/components/streamflix/ContactEmail";
 
 export const Route = createFileRoute("/privacy-policy")({
   head: () => ({
@@ -106,9 +107,7 @@ function PrivacyPolicyPage() {
             Depending on your jurisdiction, you may have the right to access, correct, delete, or
             port your personal data. You can manage your cookie preferences through your browser
             settings. To exercise your rights, please email us at{" "}
-            <a href="mailto:hello@samway.dpdns.org" className="text-primary hover:underline">
-              hello@samway.dpdns.org
-            </a>
+            <ContactEmail className="text-primary hover:underline" />
             .
           </p>
         </section>
@@ -154,9 +153,7 @@ function PrivacyPolicyPage() {
           <p className="text-sm leading-relaxed text-muted-foreground">
             If you have questions or concerns about this Privacy Policy or your data, please reach
             out to{" "}
-            <a href="mailto:hello@samway.dpdns.org" className="text-primary hover:underline">
-              hello@samway.dpdns.org
-            </a>
+            <ContactEmail className="text-primary hover:underline" />
             .
           </p>
         </section>

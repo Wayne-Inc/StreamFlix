@@ -2,6 +2,7 @@ import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { ChevronRight, Play, ChevronDown, Mail, Instagram } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
+import { ContactEmail } from "@/components/streamflix/ContactEmail";
 import { DownloadApp } from "@/components/streamflix/DownloadApp";
 import { tmdbFetch, toMovie } from "@/lib/api/tmdb.server";
 import type { Movie } from "@/lib/types";
@@ -174,12 +175,9 @@ function Landing() {
         <div className="mx-auto max-w-6xl text-center">
           <p className="font-medium text-foreground">StreamFlix — Free for everyone.</p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-            <a
-              href="mailto:hello@samway.dpdns.org"
-              className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
-            >
-              <Mail className="size-4" /> hello@samway.dpdns.org
-            </a>
+            <ContactEmail className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors">
+              <Mail className="size-4" />
+            </ContactEmail>
             <a
               href="https://instagram.com/itiswayneee"
               target="_blank"
