@@ -237,7 +237,7 @@ function MoviePage() {
           <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
         </div>
 
-        <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-10 sm:px-8 md:px-16 md:py-16">
+        <div className="relative z-10 mx-auto w-full min-w-0 max-w-6xl px-4 py-10 sm:px-8 md:px-16 md:py-16">
           <button
             type="button"
             onClick={goBack}
@@ -246,8 +246,8 @@ function MoviePage() {
           >
             <ArrowLeft className="size-4" /> Back
           </button>
-          <div className="grid w-full gap-10 md:grid-cols-3 md:items-center md:gap-8">
-            <div className={`space-y-4 ${isTv ? "md:col-span-2" : "md:col-span-3"}`}>
+          <div className="grid w-full min-w-0 gap-10 md:grid-cols-3 md:items-center md:gap-8">
+            <div className={`min-w-0 space-y-4 ${isTv ? "md:col-span-2" : "md:col-span-3"}`}>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">{movie.title}</h1>
               <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
                 {movie.score != null && (
@@ -363,9 +363,9 @@ function MoviePage() {
                 </button>
               </div>
 
-              <div className="pt-4">
+              <div className="min-w-0 pt-4">
                 <p className="mb-3 text-sm font-semibold text-foreground sm:text-base">Cast</p>
-                <div className="relative">
+                <div className="relative min-w-0 max-w-full">
                   {movie.cast.length > 7 && (
                     <button
                       type="button"
@@ -395,7 +395,7 @@ function MoviePage() {
                         to={movie.directorId ? "/person/$id" : "/search"}
                         params={movie.directorId ? { id: movie.directorId } : {}}
                         search={movie.directorId ? undefined : { q: movie.director, tab: "people" }}
-                        className="group w-16 shrink-0 text-center sm:w-20"
+                        className="group w-14 shrink-0 text-center sm:w-20"
                       >
                         <div className="aspect-[2/3] w-full overflow-hidden rounded-xl bg-surface ring-1 ring-red-500/70">
                           {movie.directorPfp ? (
@@ -434,7 +434,7 @@ function MoviePage() {
                           {...(link.to === "/search"
                             ? { search: (link as any).search }
                             : { params: (link as any).params })}
-                          className="group w-16 shrink-0 text-center sm:w-20"
+                          className="group w-14 shrink-0 text-center sm:w-20"
                         >
                           <div className="aspect-[2/3] w-full overflow-hidden rounded-xl bg-surface ring-1 ring-border">
                             {movie.castPfp[i] ? (
