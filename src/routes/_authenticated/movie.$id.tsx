@@ -6,8 +6,21 @@ import {
   useNavigate,
   useRouter,
 } from "@tanstack/react-router";
-import { useMemo, useState, useEffect } from "react";
-import { Play, Share2, Clapperboard, ArrowLeft, ShieldOff, Check, Bookmark } from "lucide-react";
+import { useMemo, useState, useEffect, useRef } from "react";
+import {
+  Play,
+  Share2,
+  Clapperboard,
+  ArrowLeft,
+  ShieldOff,
+  Check,
+  Bookmark,
+  Star,
+  Calendar,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import {
   isKidsProfile,
   isRatingBlockedForKids,
@@ -38,13 +51,17 @@ function MovieSkeleton() {
       <section className="relative min-h-[70vh] overflow-hidden bg-surface/50 pt-16 md:pt-20">
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-8 md:px-16 md:py-16">
           <div className="grid w-full gap-10 md:grid-cols-3 md:gap-8">
-            <div className="space-y-4 md:col-span-2">
+            <div className="space-y-4 md:col-span-3">
               <Skeleton className="h-12 sm:h-14 w-full max-w-md rounded" />
-              <div className="flex gap-2">
-                <Skeleton className="h-4 w-16 rounded" />
-                <Skeleton className="h-4 w-12 rounded" />
-                <Skeleton className="h-4 w-10 rounded" />
-                <Skeleton className="h-4 w-14 rounded" />
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-8 w-full rounded-full" />
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-7 w-20 rounded-full" />
+                ))}
               </div>
               <Skeleton className="h-16 w-full max-w-xl rounded" />
               <div className="flex flex-wrap gap-3 pt-2">
@@ -54,25 +71,15 @@ function MovieSkeleton() {
                 <Skeleton className="size-12 rounded-full" />
                 <Skeleton className="size-12 rounded-full" />
               </div>
+              <div className="pt-4">
+                <Skeleton className="h-5 w-16 rounded" />
+                <div className="mt-3 flex gap-3 overflow-hidden py-2">
+                  {Array.from({ length: 7 }).map((_, i) => (
+                    <Skeleton key={i} className="size-16 sm:size-20 shrink-0 rounded-xl" />
+                  ))}
+                </div>
+              </div>
             </div>
-
-            <aside className="space-y-5 rounded-lg border border-border bg-surface p-4 sm:p-5">
-              <Skeleton className="h-5 w-32 rounded" />
-              <div className="grid grid-cols-2 gap-3">
-                <Skeleton className="h-4 w-full rounded" />
-                <Skeleton className="h-4 w-full rounded" />
-                <Skeleton className="h-4 w-3/4 rounded" />
-                <Skeleton className="h-4 w-2/3 rounded" />
-                <Skeleton className="h-4 w-1/2 rounded" />
-                <Skeleton className="h-4 w-3/5 rounded" />
-              </div>
-              <Skeleton className="h-5 w-16 rounded" />
-              <div className="space-y-2">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-8 w-full rounded" />
-                ))}
-              </div>
-            </aside>
           </div>
         </div>
       </section>
@@ -152,6 +159,7 @@ function MoviePage() {
   };
   const isTv = movie.id.startsWith("tv-");
   const [descExpanded, setDescExpanded] = useState(false);
+  const castScrollerRef = useRef<HTMLDivElement | null>(null);
 
   const [trailerOpen, setTrailerOpen] = useState(false);
 
@@ -174,8 +182,13 @@ function MoviePage() {
     }
   };
 
-  const kidsMode = useMemo(() => isKidsProfile(), []);
-  const blocked =
+  const scrollCast = (dir: 1 | -1) => {
+    const el = castScrollerRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * (7 * 96), behavior: "smooth" });
+  };
+
+  const kidsMode = useMemo(() => isKidsProfile(), []);  const blocked =
     kidsMode &&
     (isRatingBlockedForKids(movie.rating) || isGenreBlockedForKids(movie.genreIds ?? []));
   const filteredSimilar = kidsMode ? filterKidsContent(similar) : similar;
@@ -236,21 +249,21 @@ function MoviePage() {
           <div className="grid w-full gap-10 md:grid-cols-3 md:items-center md:gap-8">
             <div className={`space-y-4 ${isTv ? "md:col-span-2" : "md:col-span-3"}`}>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">{movie.title}</h1>
-              <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 text-xs sm:text-sm">
                 {movie.score != null && (
-                  <span className="min-w-24 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-center font-semibold text-emerald-400 backdrop-blur-lg">
-                    {movie.score.toFixed(1)}
+                  <span className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1.5 font-semibold text-emerald-400 backdrop-blur-lg">
+                    <Star className="size-3.5 fill-current" /> {movie.score.toFixed(1)}
                   </span>
                 )}
-                <span className="min-w-24 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-center text-muted-foreground backdrop-blur-lg">
-                  {movie.year}
+                <span className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-muted-foreground backdrop-blur-lg">
+                  <Calendar className="size-3.5" /> {movie.year}
                 </span>
                 <AgeRatingBadge
                   rating={movie.rating}
-                  className="min-w-24 rounded-full px-3 py-1 backdrop-blur-lg"
+                  className="min-w-0 rounded-full px-3 py-1.5 backdrop-blur-lg"
                 />
-                <span className="min-w-24 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-center text-muted-foreground backdrop-blur-lg">
-                  {movie.runtime}
+                <span className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-muted-foreground backdrop-blur-lg">
+                  <Clock className="size-3.5" /> {movie.runtime}
                 </span>
               </div>
 
@@ -352,77 +365,102 @@ function MoviePage() {
 
               <div className="pt-4">
                 <p className="mb-3 text-sm font-semibold text-foreground sm:text-base">Cast</p>
-                <div className="flex flex-wrap gap-3">
-                  {movie.director && (
-                    <Link
-                      to={movie.directorId ? "/person/$id" : "/search"}
-                      params={movie.directorId ? { id: movie.directorId } : {}}
-                      search={movie.directorId ? undefined : { q: movie.director, tab: "people" }}
-                      className="group w-20 shrink-0 text-center"
+                <div className="relative">
+                  {movie.cast.length > 7 && (
+                    <button
+                      type="button"
+                      onClick={() => scrollCast(-1)}
+                      aria-label="Scroll cast left"
+                      className="absolute -left-2 top-1/2 z-10 grid size-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
                     >
-                      <div className="mx-auto size-16 sm:size-20 overflow-hidden rounded-xl bg-surface ring-1 ring-border">
-                        {movie.directorPfp ? (
-                          <img
-                            src={movie.directorPfp}
-                            alt={movie.director}
-                            className="size-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex size-full items-center justify-center text-sm font-bold text-muted-foreground">
-                            {movie.director.charAt(0)}
-                          </div>
-                        )}
-                      </div>
-                      <span className="mt-1.5 block truncate text-[11px] font-semibold text-foreground group-hover:text-primary">
-                        {movie.director}
-                      </span>
-                      <span className="block truncate text-[10px] text-muted-foreground">
-                        Director
-                      </span>
-                    </Link>
+                      <ChevronLeft className="size-5" />
+                    </button>
                   )}
-                  {movie.cast.slice(0, 15).map((name: string, i: number) => {
-                    const personId = movie.castIds?.[i];
-                    const link = personId
-                      ? { to: "/person/$id" as const, params: { id: personId } }
-                      : {
-                          to: "/search" as const,
-                          search: { q: name, tab: "people" as const },
-                          params: {},
-                        };
-                    return (
+                  {movie.cast.length > 7 && (
+                    <button
+                      type="button"
+                      onClick={() => scrollCast(1)}
+                      aria-label="Scroll cast right"
+                      className="absolute -right-2 top-1/2 z-10 grid size-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
+                    >
+                      <ChevronRight className="size-5" />
+                    </button>
+                  )}
+                  <div
+                    ref={castScrollerRef}
+                    className="scrollbar-hide flex gap-3 overflow-x-auto py-2"
+                  >
+                    {movie.director && (
                       <Link
-                        key={`${name}-${i}`}
-                        to={link.to}
-                        {...(link.to === "/search"
-                          ? { search: (link as any).search }
-                          : { params: (link as any).params })}
+                        to={movie.directorId ? "/person/$id" : "/search"}
+                        params={movie.directorId ? { id: movie.directorId } : {}}
+                        search={movie.directorId ? undefined : { q: movie.director, tab: "people" }}
                         className="group w-20 shrink-0 text-center"
                       >
-                        <div className="mx-auto size-16 sm:size-20 overflow-hidden rounded-xl bg-surface ring-1 ring-border">
-                          {movie.castPfp[i] ? (
+                        <div className="mx-auto size-16 sm:size-20 overflow-hidden rounded-xl bg-surface ring-1 ring-red-500/70">
+                          {movie.directorPfp ? (
                             <img
-                              src={movie.castPfp[i]}
-                              alt={name}
+                              src={movie.directorPfp}
+                              alt={movie.director}
                               className="size-full object-cover"
                             />
                           ) : (
                             <div className="flex size-full items-center justify-center text-sm font-bold text-muted-foreground">
-                              {name.charAt(0)}
+                              {movie.director.charAt(0)}
                             </div>
                           )}
                         </div>
                         <span className="mt-1.5 block truncate text-[11px] font-semibold text-foreground group-hover:text-primary">
-                          {name}
+                          {movie.director}
                         </span>
-                        {movie.castRoles?.[i] && (
-                          <span className="block truncate text-[10px] text-muted-foreground">
-                            {movie.castRoles[i]}
-                          </span>
-                        )}
+                        <span className="block truncate text-[10px] text-red-400">
+                          Director
+                        </span>
                       </Link>
-                    );
-                  })}
+                    )}
+                    {movie.cast.slice(0, 15).map((name: string, i: number) => {
+                      const personId = movie.castIds?.[i];
+                      const link = personId
+                        ? { to: "/person/$id" as const, params: { id: personId } }
+                        : {
+                            to: "/search" as const,
+                            search: { q: name, tab: "people" as const },
+                            params: {},
+                          };
+                      return (
+                        <Link
+                          key={`${name}-${i}`}
+                          to={link.to}
+                          {...(link.to === "/search"
+                            ? { search: (link as any).search }
+                            : { params: (link as any).params })}
+                          className="group w-20 shrink-0 text-center"
+                        >
+                          <div className="mx-auto size-16 sm:size-20 overflow-hidden rounded-xl bg-surface ring-1 ring-border">
+                            {movie.castPfp[i] ? (
+                              <img
+                                src={movie.castPfp[i]}
+                                alt={name}
+                                className="size-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex size-full items-center justify-center text-sm font-bold text-muted-foreground">
+                                {name.charAt(0)}
+                              </div>
+                            )}
+                          </div>
+                          <span className="mt-1.5 block truncate text-[11px] font-semibold text-foreground group-hover:text-primary">
+                            {name}
+                          </span>
+                          {movie.castRoles?.[i] && (
+                            <span className="block truncate text-[10px] text-muted-foreground">
+                              {movie.castRoles[i]}
+                            </span>
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>

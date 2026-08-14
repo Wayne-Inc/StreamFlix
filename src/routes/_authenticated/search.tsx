@@ -378,7 +378,7 @@ function SearchPage() {
               {loading && (
                 <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
                   {Array.from({ length: 12 }).map((_, i) => (
-                    <Skeleton key={i} className="w-full aspect-[2/3] rounded-md" />
+                    <Skeleton key={i} className="w-full aspect-[2/3] rounded-xl" />
                   ))}
                 </div>
               )}
