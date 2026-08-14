@@ -18,12 +18,12 @@ export function MovieCard({
 }) {
   return (
     <div
-      className={`group relative ${fluid ? "w-full" : "w-[150px] sm:w-[190px] shrink-0"}`}
+      className={`group relative ${fluid ? "w-full" : "w-[175px] sm:w-[220px] shrink-0"}`}
       data-context="movie"
       data-title={movie.title}
       data-url={`/movie/${movie.id}`}
     >
-      <div className="relative aspect-[2/3] overflow-hidden rounded-md bg-surface shadow-md transition-shadow duration-300 group-hover:shadow-2xl">
+      <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-surface shadow-md transition-shadow duration-300 group-hover:shadow-2xl">
         <Link
           to={progress != null ? "/watch/$id" : "/movie/$id"}
           params={{ id: movie.id }}

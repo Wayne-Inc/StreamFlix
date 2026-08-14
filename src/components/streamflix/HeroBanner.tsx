@@ -14,9 +14,10 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
   if (slides.length === 0) return null;
   const s = slides[i];
   if (!s) return null;
+  const MAX_DESC_CHARS = 150;
   const description =
-    s.description && s.description.length > 220
-      ? `${s.description.slice(0, 217).trimEnd()}...`
+    s.description && s.description.length > MAX_DESC_CHARS
+      ? `${s.description.slice(0, MAX_DESC_CHARS - 3).trimEnd()}...`
       : s.description;
 
   return (
@@ -59,7 +60,7 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
             <span className="text-muted-foreground/40">•</span>
             <span className="text-muted-foreground">{s.runtime}</span>
           </div>
-          <p className="hidden md:block mx-auto md:mx-0 text-lg lg:text-xl text-gray-200 leading-relaxed line-clamp-3 max-w-xl">
+          <p className="hidden md:block mx-auto md:mx-0 text-lg lg:text-xl text-gray-200 leading-relaxed max-w-xl">
             {description}
           </p>
           <div className="mx-auto md:mx-0 flex flex-wrap items-center justify-center gap-2 md:justify-start">
