@@ -75,7 +75,7 @@ function MovieSkeleton() {
                 <Skeleton className="h-5 w-16 rounded" />
                 <div className="mt-3 flex gap-3 overflow-hidden py-2">
                   {Array.from({ length: 7 }).map((_, i) => (
-                    <Skeleton key={i} className="w-16 sm:w-20 shrink-0 aspect-square rounded-xl" />
+                    <Skeleton key={i} className="w-20 sm:w-24 shrink-0 aspect-square rounded-xl" />
                   ))}
                 </div>
               </div>
@@ -185,7 +185,7 @@ function MoviePage() {
   const scrollCast = (dir: 1 | -1) => {
     const el = castScrollerRef.current;
     if (!el) return;
-    el.scrollBy({ left: dir * (7 * 96), behavior: "smooth" });
+    el.scrollBy({ left: dir * (7 * 104), behavior: "smooth" });
   };
 
   const kidsMode = useMemo(() => isKidsProfile(), []);  const blocked =
@@ -395,9 +395,9 @@ function MoviePage() {
                         to={movie.directorId ? "/person/$id" : "/search"}
                         params={movie.directorId ? { id: movie.directorId } : {}}
                         search={movie.directorId ? undefined : { q: movie.director, tab: "people" }}
-                        className="group w-14 shrink-0 text-center sm:w-20"
+                        className="group z-10 w-20 shrink-0 text-center transition-transform duration-300 ease-out hover:z-20 hover:scale-110 sm:w-24"
                       >
-                        <div className="aspect-square w-full overflow-hidden rounded-xl bg-surface ring-1 ring-red-500/70">
+                        <div className="aspect-square w-full overflow-hidden rounded-xl bg-surface ring-1 ring-red-500/70 transition-shadow duration-300 group-hover:shadow-2xl group-hover:ring-2">
                           {movie.directorPfp ? (
                             <img
                               src={movie.directorPfp}
@@ -434,9 +434,9 @@ function MoviePage() {
                           {...(link.to === "/search"
                             ? { search: (link as any).search }
                             : { params: (link as any).params })}
-                          className="group w-14 shrink-0 text-center sm:w-20"
+                          className="group z-10 w-20 shrink-0 text-center transition-transform duration-300 ease-out hover:z-20 hover:scale-110 sm:w-24"
                         >
-                          <div className="aspect-square w-full overflow-hidden rounded-xl bg-surface ring-1 ring-border">
+                          <div className="aspect-square w-full overflow-hidden rounded-xl bg-surface ring-1 ring-border transition-shadow duration-300 group-hover:shadow-2xl group-hover:ring-2">
                             {movie.castPfp[i] ? (
                               <img
                                 src={movie.castPfp[i]}
