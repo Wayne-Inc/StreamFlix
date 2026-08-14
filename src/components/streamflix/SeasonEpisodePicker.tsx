@@ -54,9 +54,9 @@ export function SeasonEpisodePicker({
           <button
             key={s}
             onClick={() => setSelectedSeason(s)}
-            className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
+            className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${
               s === selectedSeason
-                ? "bg-primary text-primary-foreground"
+                ? "bg-primary text-primary-foreground scale-105"
                 : "border border-border text-muted-foreground hover:text-foreground hover:border-foreground"
             }`}
           >

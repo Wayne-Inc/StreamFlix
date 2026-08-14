@@ -335,7 +335,7 @@ function BrowsePage() {
           <div className="px-4 sm:px-8 pt-2">
             <Link
               to="/calendar"
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-4 py-2 text-sm text-foreground transition hover:border-primary"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-4 py-2 text-sm text-foreground transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:border-primary"
             >
               <span aria-hidden>📅</span> Release Calendar — get notified when titles arrive
             </Link>
@@ -397,14 +397,14 @@ function BrowsePage() {
                   to="/explore/$genreId"
                   params={{ genreId: m.id }}
                   search={{ q: m.name }}
-                  className={`min-w-0 shrink overflow-hidden whitespace-nowrap rounded-full border border-border bg-card/60 px-3 py-2 text-sm text-foreground transition hover:border-primary hover:bg-card ${i >= 2 ? "hidden sm:inline-flex" : ""}`}
+                  className={`min-w-0 shrink overflow-hidden whitespace-nowrap rounded-full border border-border bg-card/60 px-3 py-2 text-sm text-foreground transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:border-primary hover:bg-card ${i >= 2 ? "hidden sm:inline-flex" : ""}`}
                 >
                   {m.name}
                 </Link>
               ))}
               <Link
                 to="/explore"
-                className="min-w-0 shrink overflow-hidden whitespace-nowrap rounded-full border border-primary/60 px-3 py-2 text-sm font-medium text-primary transition hover:bg-primary/10"
+                className="min-w-0 shrink overflow-hidden whitespace-nowrap rounded-full border border-primary/60 px-3 py-2 text-sm font-medium text-primary transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:bg-primary/10"
               >
                 All moods →
               </Link>

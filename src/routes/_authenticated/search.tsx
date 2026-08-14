@@ -233,7 +233,7 @@ function SearchPage() {
                   setPeople([]);
                   setPage(1);
                 }}
-                className={`flex items-center gap-1.5 px-4 py-2.5 sm:py-2 text-sm font-medium transition border-b-2 -mb-px ${tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                className={`flex items-center gap-1.5 px-4 py-2.5 sm:py-2 text-sm font-medium transition-all duration-300 ease-in-out border-b-2 -mb-px ${tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
               >
                 {t === "titles" && <Film className="size-4" />}
                 {t === "people" && <User className="size-4" />}
@@ -256,7 +256,7 @@ function SearchPage() {
                       to="/explore/$genreId"
                       params={{ genreId: String(match.id) }}
                       search={{ q: match.name }}
-                      className="rounded-full border border-border px-3 py-1.5 text-sm hover:border-foreground"
+                      className="rounded-full border border-border px-3 py-1.5 text-sm transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:border-foreground"
                     >
                       {t}
                     </Link>
@@ -264,7 +264,7 @@ function SearchPage() {
                     <button
                       key={t}
                       onClick={() => setQ(t)}
-                      className="rounded-full border border-border px-3 py-1.5 text-sm hover:border-foreground"
+                      className="rounded-full border border-border px-3 py-1.5 text-sm transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:border-foreground"
                     >
                       {t}
                     </button>
@@ -361,7 +361,7 @@ function SearchPage() {
                 {hasFilters && (
                   <button
                     onClick={clearFilters}
-                    className="rounded-md border border-border px-3 py-2 text-sm text-muted-foreground transition hover:border-destructive hover:text-destructive"
+                    className="rounded-md border border-border px-3 py-2 text-sm text-muted-foreground transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:border-destructive hover:text-destructive"
                   >
                     Clear
                   </button>
@@ -405,7 +405,7 @@ function SearchPage() {
                       <button
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page === 1}
-                        className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-default"
+                        className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:text-foreground disabled:opacity-40 disabled:cursor-default"
                       >
                         <ChevronLeft className="size-4" /> Previous
                       </button>
@@ -413,7 +413,7 @@ function SearchPage() {
                         <button
                           key={p}
                           onClick={() => setPage(p)}
-                          className={`rounded-md px-3 py-2 text-sm ${p === page ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground hover:text-foreground"}`}
+                          className={`rounded-md px-3 py-2 text-sm transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 ${p === page ? "bg-primary text-primary-foreground scale-105" : "border border-border text-muted-foreground hover:text-foreground"}`}
                         >
                           {p}
                         </button>
@@ -421,7 +421,7 @@ function SearchPage() {
                       <button
                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                         disabled={page === totalPages}
-                        className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-default"
+                        className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:text-foreground disabled:opacity-40 disabled:cursor-default"
                       >
                         Next <ChevronRight className="size-4" />
                       </button>

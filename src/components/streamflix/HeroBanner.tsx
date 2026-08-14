@@ -66,14 +66,14 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
             <Link
               to="/watch/$id"
               params={{ id: s.id }}
-              className="inline-flex items-center gap-2 rounded-md bg-foreground px-3 py-2 text-xs font-semibold text-background transition hover:bg-foreground/85 sm:px-5 sm:py-3 sm:text-sm"
+              className="inline-flex items-center gap-2 rounded-md bg-foreground px-3 py-2 text-xs font-semibold text-background transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:bg-foreground/85 sm:px-5 sm:py-3 sm:text-sm"
             >
               <Play className="size-4 fill-current sm:size-5" /> Play
             </Link>
             <Link
               to="/movie/$id"
               params={{ id: s.id }}
-              className="inline-flex items-center gap-2 rounded-md bg-foreground/20 px-3 py-2 text-xs font-semibold text-foreground backdrop-blur transition hover:bg-foreground/30 sm:px-5 sm:py-3 sm:text-sm"
+              className="inline-flex items-center gap-2 rounded-md bg-foreground/20 px-3 py-2 text-xs font-semibold text-foreground backdrop-blur transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:bg-foreground/30 sm:px-5 sm:py-3 sm:text-sm"
             >
               <Info className="size-4 sm:size-5" /> More Info
             </Link>
