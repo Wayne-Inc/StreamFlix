@@ -23,16 +23,10 @@ export function Footer() {
             </Link>
           )}
         </nav>
-        <div className="max-w-2xl space-y-2 rounded-lg border border-yellow-500/10 bg-yellow-500/5 px-4 py-3 text-[10px] sm:text-xs leading-relaxed text-yellow-400/80">
-          <p>
-            This is a project created by{" "}
-            <strong className="text-yellow-400/90">Samwel Wayne</strong>.
-          </p>
-          <p>
-            Redistribution, reproduction, or public display of any part of this platform without the
-            express written consent of Samwel Wayne is strictly prohibited. This includes, but is
-            not limited to, copying, modifying, or re-uploading the software, design, or any content
-            accessed through it.
+        <div className="max-w-2xl">
+          <p className="text-xs sm:text-sm">
+            Built by <strong className="text-foreground">Samwel Wayne</strong>. Open source, free to
+            use, modify, and share.
           </p>
         </div>
       </div>

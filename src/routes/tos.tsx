@@ -61,9 +61,9 @@ function TermsOfServicePage() {
         <section className="space-y-2 sm:space-y-4">
           <h2 className="text-base sm:text-2xl font-semibold">Use of the Service</h2>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            StreamFlix is provided for personal, non-commercial use only. You may not copy,
-            distribute, sublicense, sell, or otherwise exploit any portion of the service without
-            express written permission. You agree not to:
+            StreamFlix is provided for personal, non-commercial use. The software is open source and
+            licensed under the MIT License, so you're free to use, copy, modify, and share the code.
+            When using the service, you agree not to:
           </p>
           <ul className="list-disc pl-6 text-sm leading-relaxed text-muted-foreground space-y-1">
             <li>
@@ -86,12 +86,12 @@ function TermsOfServicePage() {
         </section>
 
         <section className="space-y-2 sm:space-y-4">
-          <h2 className="text-base sm:text-2xl font-semibold">Intellectual Property</h2>
+          <h2 className="text-base sm:text-2xl font-semibold">Open Source License</h2>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            The StreamFlix platform, including its software, design, logos, and branding, is owned
-            by Samwel Wayne and is protected by copyright, trademark, and other intellectual
-            property laws. You may not reproduce, modify, distribute, or publicly display any part
-            of the platform without prior written consent.
+            The StreamFlix software is distributed under the MIT License. You are permitted to use,
+            copy, modify, merge, publish, and distribute the software, free of charge and without
+            restriction, provided that the original copyright notice and license text are included
+            in copies or substantial portions of the software.
           </p>
         </section>
 
