@@ -53,9 +53,9 @@ function MovieSkeleton() {
           <div className="grid w-full gap-10 md:grid-cols-3 md:gap-8">
             <div className="space-y-4 md:col-span-3">
               <Skeleton className="h-12 sm:h-14 w-full max-w-md rounded" />
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="flex flex-wrap gap-2">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-8 w-full rounded-full" />
+                  <Skeleton key={i} className="h-8 w-20 rounded-full" />
                 ))}
               </div>
               <div className="flex flex-wrap gap-2">
@@ -249,21 +249,21 @@ function MoviePage() {
           <div className="grid w-full gap-10 md:grid-cols-3 md:items-center md:gap-8">
             <div className={`space-y-4 ${isTv ? "md:col-span-2" : "md:col-span-3"}`}>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">{movie.title}</h1>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 text-xs sm:text-sm">
+              <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
                 {movie.score != null && (
-                  <span className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1.5 font-semibold text-emerald-400 backdrop-blur-lg">
-                    <Star className="size-3.5 fill-current" /> {movie.score.toFixed(1)}
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-xs font-semibold text-emerald-400 backdrop-blur-lg sm:px-3 sm:py-1.5">
+                    <Star className="size-3 fill-current" /> {movie.score.toFixed(1)}
                   </span>
                 )}
-                <span className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-muted-foreground backdrop-blur-lg">
-                  <Calendar className="size-3.5" /> {movie.year}
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur-lg sm:px-3 sm:py-1.5">
+                  <Calendar className="size-3" /> {movie.year}
                 </span>
                 <AgeRatingBadge
                   rating={movie.rating}
-                  className="min-w-0 rounded-full px-3 py-1.5 backdrop-blur-lg"
+                  className="rounded-full px-2.5 py-1 text-xs backdrop-blur-lg sm:px-3 sm:py-1.5"
                 />
-                <span className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-muted-foreground backdrop-blur-lg">
-                  <Clock className="size-3.5" /> {movie.runtime}
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur-lg sm:px-3 sm:py-1.5">
+                  <Clock className="size-3" /> {movie.runtime}
                 </span>
               </div>
 
