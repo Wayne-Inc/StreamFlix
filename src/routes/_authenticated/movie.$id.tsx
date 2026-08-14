@@ -75,7 +75,7 @@ function MovieSkeleton() {
                 <Skeleton className="h-5 w-16 rounded" />
                 <div className="mt-3 flex gap-3 overflow-hidden py-2">
                   {Array.from({ length: 7 }).map((_, i) => (
-                    <Skeleton key={i} className="w-16 sm:w-20 shrink-0 aspect-[2/3] rounded-xl" />
+                    <Skeleton key={i} className="w-16 sm:w-20 shrink-0 aspect-square rounded-xl" />
                   ))}
                 </div>
               </div>
@@ -283,9 +283,9 @@ function MoviePage() {
                   );
                 })}
               </div>
-              <div>
+              <div className="min-w-0">
                 <p
-                  className={`max-w-xl text-base md:text-lg text-gray-300 leading-relaxed ${
+                  className={`max-w-xl break-words text-base md:text-lg text-gray-300 leading-relaxed ${
                     descExpanded ? "" : "line-clamp-3"
                   }`}
                 >
@@ -397,7 +397,7 @@ function MoviePage() {
                         search={movie.directorId ? undefined : { q: movie.director, tab: "people" }}
                         className="group w-14 shrink-0 text-center sm:w-20"
                       >
-                        <div className="aspect-[2/3] w-full overflow-hidden rounded-xl bg-surface ring-1 ring-red-500/70">
+                        <div className="aspect-square w-full overflow-hidden rounded-xl bg-surface ring-1 ring-red-500/70">
                           {movie.directorPfp ? (
                             <img
                               src={movie.directorPfp}
@@ -436,7 +436,7 @@ function MoviePage() {
                             : { params: (link as any).params })}
                           className="group w-14 shrink-0 text-center sm:w-20"
                         >
-                          <div className="aspect-[2/3] w-full overflow-hidden rounded-xl bg-surface ring-1 ring-border">
+                          <div className="aspect-square w-full overflow-hidden rounded-xl bg-surface ring-1 ring-border">
                             {movie.castPfp[i] ? (
                               <img
                                 src={movie.castPfp[i]}
