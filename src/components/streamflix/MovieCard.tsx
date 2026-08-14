@@ -48,10 +48,14 @@ export function MovieCard({
         {/* Quick action overlay on hover */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 flex flex-col justify-end p-3 pointer-events-none group-hover:pointer-events-auto">
           <p className="text-xs sm:text-sm font-bold text-white line-clamp-1 mb-1">{movie.title}</p>
-          <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-emerald-400 mb-2">
-            <span>{movie.match}% Match</span>
-            <span>·</span>
+          <div className="flex items-center gap-1.5 text-[10px] sm:text-xs mb-2">
+            <span className="text-emerald-400">
+              {movie.score != null ? movie.score.toFixed(1) : (movie.match ? `${(movie.match / 10).toFixed(1)}` : "")}
+            </span>
+            <span className="text-muted-foreground/40">·</span>
             <span className="text-muted-foreground">{movie.year}</span>
+            <span className="text-muted-foreground/40">·</span>
+            <span className="text-muted-foreground">{movie.id.startsWith("tv-") ? "Show" : "Movie"}</span>
           </div>
           {reason && (
             <p className="mb-2 flex items-center gap-1 text-[10px] sm:text-[11px] text-purple-300">

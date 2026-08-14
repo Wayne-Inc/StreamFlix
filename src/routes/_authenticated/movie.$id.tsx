@@ -237,7 +237,9 @@ function MoviePage() {
             <div className="space-y-4 md:col-span-2">
               <h1 className="text-4xl font-black tracking-tight sm:text-6xl">{movie.title}</h1>
               <div className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="font-semibold text-emerald-400">{movie.match}% Match</span>
+                <span className="font-semibold text-emerald-400">
+                  {movie.score != null ? movie.score.toFixed(1) : (movie.match ? `${(movie.match / 10).toFixed(1)}` : "")}
+                </span>
                 <span className="text-muted-foreground">{movie.year}</span>
                 <AgeRatingBadge rating={movie.rating} />
                 <span className="text-muted-foreground">{movie.runtime}</span>

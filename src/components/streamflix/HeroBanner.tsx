@@ -20,7 +20,7 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
       : s.description;
 
   return (
-    <section className="relative min-h-[60vh] h-[70vh] w-full overflow-hidden sm:min-h-[520px] sm:h-[85vh] lg:min-h-[620px] lg:h-[92vh]">
+    <section className="relative min-h-[38vh] h-[46vh] w-full overflow-hidden sm:min-h-[360px] sm:h-[52vh] lg:min-h-[420px] lg:h-[58vh]">
       {slides.map((slide, idx) => {
         const near = Math.abs(idx - i) <= 1;
         return (
@@ -41,22 +41,23 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
       <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background via-background/70 to-transparent md:h-72" />
 
       <div className="relative z-10 flex h-full items-end justify-center px-4 pb-8 pt-10 text-center md:items-end md:justify-start">
-        <div
-          key={s.id}
-          className="animate-fade-in w-full max-w-none space-y-3 text-center md:max-w-3xl md:text-left"
-        >
-          <div className="hidden sm:inline-flex items-center gap-2 rounded-full border border-primary/30 bg-background/40 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary">
-            <span className="inline-block h-px w-6 bg-primary" />
-            StreamFlix Original
-          </div>
+          <div
+            key={s.id}
+            className="animate-fade-in w-full max-w-none space-y-3 text-center md:max-w-3xl md:text-left"
+          >
           <h1 className="text-shadow-hero text-4xl md:text-6xl lg:text-7xl font-black leading-tight tracking-tight">
             {s.title}
           </h1>
           <div className="mx-auto flex max-w-full flex-wrap items-center justify-center gap-2 text-xs sm:text-sm md:justify-start md:text-sm">
             <span className="text-muted-foreground">{s.year}</span>
+            <span className="text-muted-foreground/40">•</span>
+            <span className="font-semibold text-emerald-400">
+              {s.score != null ? s.score.toFixed(1) : (s.match ? `${(s.match / 10).toFixed(1)}` : "")}
+            </span>
+            <span className="text-muted-foreground/40">•</span>
             <AgeRatingBadge rating={s.rating} />
+            <span className="text-muted-foreground/40">•</span>
             <span className="text-muted-foreground">{s.runtime}</span>
-            <span className="text-muted-foreground">{s.genres.join(" · ")}</span>
           </div>
           <p className="hidden md:block mx-auto md:mx-0 text-lg lg:text-xl text-gray-200 leading-relaxed line-clamp-3 max-w-xl">
             {description}

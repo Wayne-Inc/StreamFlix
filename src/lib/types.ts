@@ -18,6 +18,7 @@ export type Movie = {
   director: string;
   directorId: string;
   match: number;
+  score?: number;
   numberOfSeasons?: number;
   numberOfEpisodes?: number;
 };
