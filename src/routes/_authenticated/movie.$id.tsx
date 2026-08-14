@@ -75,7 +75,7 @@ function MovieSkeleton() {
                 <Skeleton className="h-5 w-16 rounded" />
                 <div className="mt-3 flex gap-3 overflow-hidden py-2">
                   {Array.from({ length: 7 }).map((_, i) => (
-                    <Skeleton key={i} className="size-16 sm:size-20 shrink-0 rounded-xl" />
+                    <Skeleton key={i} className="w-16 sm:w-20 shrink-0 aspect-[2/3] rounded-xl" />
                   ))}
                 </div>
               </div>
@@ -230,8 +230,8 @@ function MoviePage() {
   return (
     <div className="min-h-dvh bg-background">
       <Navbar />
-      <section className="relative overflow-hidden pt-16 md:flex md:min-h-[85vh] md:items-center md:pt-20">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-[52vh] sm:h-[58vh] md:inset-y-0 md:h-auto">
+      <section className="relative pt-16 md:flex md:min-h-[85vh] md:items-center md:pt-20">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[52vh] overflow-hidden sm:h-[58vh] md:inset-y-0 md:h-auto">
           <img src={movie.backdrop} alt="" className="absolute inset-0 size-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
@@ -299,21 +299,21 @@ function MoviePage() {
                 </button>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 pt-2">
+              <div className="flex flex-wrap items-center gap-2 pt-2 sm:gap-3">
                 <Link
                   to="/watch/$id"
                   params={{ id: movie.id }}
                   search={{ autoplay: true }}
-                  className="inline-flex items-center gap-2 rounded-md bg-foreground px-6 py-3 font-semibold text-background hover:bg-foreground/85"
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md bg-foreground px-5 py-2.5 text-sm font-semibold text-background hover:bg-foreground/85 sm:px-6 sm:py-3"
                 >
-                  <Play className="size-5 fill-current" /> Play
+                  <Play className="size-4 fill-current sm:size-5" /> Play
                 </Link>
                 {movie.trailer && (
                   <button
                     onClick={() => setTrailerOpen(true)}
-                    className="inline-flex items-center gap-2 rounded-md border border-border px-6 py-3 font-semibold text-foreground hover:bg-white/10"
+                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-white/10 sm:px-6 sm:py-3"
                   >
-                    <Clapperboard className="size-5" /> Trailer
+                    <Clapperboard className="size-4 sm:size-5" /> Trailer
                   </button>
                 )}
                 <button
@@ -328,9 +328,9 @@ function MoviePage() {
                       toast.success(`${movie.title} marked as watched`);
                     }
                   }}
-                  className="inline-flex items-center gap-2 rounded-md border border-border px-4 py-3 font-semibold text-foreground hover:bg-white/10"
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-white/10 sm:px-4 sm:py-3"
                 >
-                  <Check className="size-5" /> {watched ? "Watched" : "Unwatched"}
+                  <Check className="size-4 sm:size-5" /> {watched ? "Watched" : "Unwatched"}
                 </button>
                 <button
                   onClick={() => {
@@ -371,9 +371,9 @@ function MoviePage() {
                       type="button"
                       onClick={() => scrollCast(-1)}
                       aria-label="Scroll cast left"
-                      className="absolute -left-2 top-1/2 z-10 grid size-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
+                      className="absolute left-1 top-1/2 z-10 grid size-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:size-9"
                     >
-                      <ChevronLeft className="size-5" />
+                      <ChevronLeft className="size-4 sm:size-5" />
                     </button>
                   )}
                   {movie.cast.length > 7 && (
@@ -381,9 +381,9 @@ function MoviePage() {
                       type="button"
                       onClick={() => scrollCast(1)}
                       aria-label="Scroll cast right"
-                      className="absolute -right-2 top-1/2 z-10 grid size-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
+                      className="absolute right-1 top-1/2 z-10 grid size-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:size-9"
                     >
-                      <ChevronRight className="size-5" />
+                      <ChevronRight className="size-4 sm:size-5" />
                     </button>
                   )}
                   <div
@@ -395,9 +395,9 @@ function MoviePage() {
                         to={movie.directorId ? "/person/$id" : "/search"}
                         params={movie.directorId ? { id: movie.directorId } : {}}
                         search={movie.directorId ? undefined : { q: movie.director, tab: "people" }}
-                        className="group w-20 shrink-0 text-center"
+                        className="group w-16 shrink-0 text-center sm:w-20"
                       >
-                        <div className="mx-auto size-16 sm:size-20 overflow-hidden rounded-xl bg-surface ring-1 ring-red-500/70">
+                        <div className="aspect-[2/3] w-full overflow-hidden rounded-xl bg-surface ring-1 ring-red-500/70">
                           {movie.directorPfp ? (
                             <img
                               src={movie.directorPfp}
@@ -434,9 +434,9 @@ function MoviePage() {
                           {...(link.to === "/search"
                             ? { search: (link as any).search }
                             : { params: (link as any).params })}
-                          className="group w-20 shrink-0 text-center"
+                          className="group w-16 shrink-0 text-center sm:w-20"
                         >
-                          <div className="mx-auto size-16 sm:size-20 overflow-hidden rounded-xl bg-surface ring-1 ring-border">
+                          <div className="aspect-[2/3] w-full overflow-hidden rounded-xl bg-surface ring-1 ring-border">
                             {movie.castPfp[i] ? (
                               <img
                                 src={movie.castPfp[i]}
