@@ -20,6 +20,7 @@ export function GlobalContextMenu({ children }: { children: ReactNode }) {
   );
   const [nav, setNav] = useState({ canBack: false, canForward: false });
   const [cardContext, setCardContext] = useState<{ title: string; url: string } | null>(null);
+  const [menuKey, setMenuKey] = useState(0);
 
   useEffect(() => {
     const update = () => {
@@ -58,12 +59,13 @@ export function GlobalContextMenu({ children }: { children: ReactNode }) {
             setCardContext(
               el ? { title: el.dataset.title ?? "", url: el.dataset.url ?? "" } : null,
             );
+            setMenuKey((k) => k + 1);
           }}
         >
           {children}
         </div>
       </ContextMenuTrigger>
-      <ContextMenuContent className="w-56 border-border/60 bg-background/75 backdrop-blur-xl">
+      <ContextMenuContent key={menuKey} className="w-56 border-border/60 bg-background/75 backdrop-blur-xl">
         <ContextMenuItem onClick={() => window.location.reload()}>
           <RotateCw className="mr-2 h-4 w-4" />
           Reload

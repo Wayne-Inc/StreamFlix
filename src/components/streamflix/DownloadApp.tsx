@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Download, Monitor, Smartphone } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
   APP_DOWNLOADS,
@@ -81,9 +82,9 @@ function InstallCard({
         {info.file} · {info.size}
       </p>
       <Button asChild className="mt-6 w-full">
-        <a href={info.url} target="_blank" rel="noopener noreferrer">
+        <Link to="/download">
           <Download /> Download for {info.label}
-        </a>
+        </Link>
       </Button>
     </div>
   );
