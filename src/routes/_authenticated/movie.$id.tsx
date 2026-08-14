@@ -234,23 +234,56 @@ function MoviePage() {
             <ArrowLeft className="size-4" /> Back
           </button>
           <div className="grid w-full gap-10 md:grid-cols-3 md:items-center md:gap-8">
-            <div className="space-y-4 md:col-span-2">
+            <div className={`space-y-4 ${isTv ? "md:col-span-2" : "md:col-span-3"}`}>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">{movie.title}</h1>
               <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
                 {movie.score != null && (
-                  <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 font-semibold text-emerald-400 backdrop-blur-sm">
+                  <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 font-semibold text-emerald-400 backdrop-blur-lg">
                     {movie.score.toFixed(1)}
                   </span>
                 )}
-                <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-muted-foreground backdrop-blur-sm">
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-muted-foreground backdrop-blur-lg">
                   {movie.year}
                 </span>
-                <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 backdrop-blur-sm">
-                  <AgeRatingBadge rating={movie.rating} />
-                </span>
-                <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-muted-foreground backdrop-blur-sm">
+                <AgeRatingBadge
+                  rating={movie.rating}
+                  className="rounded-full px-3 py-1 backdrop-blur-lg"
+                />
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-muted-foreground backdrop-blur-lg">
                   {movie.runtime}
                 </span>
+                {movie.director && (
+                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-muted-foreground backdrop-blur-lg">
+                    {movie.directorId ? (
+                      <Link
+                        to="/person/$id"
+                        params={{ id: movie.directorId }}
+                        className="font-medium text-foreground hover:text-primary hover:underline"
+                      >
+                        {movie.director}
+                      </Link>
+                    ) : (
+                      movie.director
+                    )}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {movie.genreIds.map((gid: number, i: number) => {
+                  const label = genreLabels[String(gid)] || movie.genres[i] || "Explore";
+                  return (
+                    <Link
+                      key={`${gid}-${i}`}
+                      to="/explore/$genreId"
+                      params={{ genreId: String(gid) }}
+                      search={{ q: label }}
+                      className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-foreground backdrop-blur-lg transition hover:bg-white/10 hover:border-primary/50"
+                    >
+                      {label}
+                    </Link>
+                  );
+                })}
               </div>
               <div>
                 <p
@@ -331,34 +364,10 @@ function MoviePage() {
                   <Share2 className="size-4 sm:size-5" />
                 </button>
               </div>
-            </div>
 
-            <aside className="space-y-5 rounded-lg border border-border bg-background/70 p-4 backdrop-blur-md sm:p-5 md:col-span-1">
-              <div>
-                <p className="text-sm font-semibold text-foreground sm:text-base">
-                  About this title
-                </p>
-                <div className="mt-2 grid grid-cols-1 gap-x-4 gap-y-1.5 text-xs text-muted-foreground sm:text-sm">
-                  <p>
-                    <span className="font-medium text-foreground">Director:</span>{" "}
-                    {movie.directorId ? (
-                      <Link
-                        to="/person/$id"
-                        params={{ id: movie.directorId }}
-                        className="font-normal text-foreground hover:text-primary hover:underline"
-                      >
-                        {movie.director}
-                      </Link>
-                    ) : (
-                      movie.director
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <p className="mb-2 text-sm font-semibold text-foreground sm:text-base">Cast</p>
-                <div className="max-h-44 space-y-1.5 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+              <div className="pt-4">
+                <p className="mb-3 text-sm font-semibold text-foreground sm:text-base">Cast</p>
+                <div className="flex flex-wrap gap-2">
                   {movie.cast.slice(0, 15).map((name: string, i: number) => {
                     const personId = movie.castIds?.[i];
                     const link = personId
@@ -375,9 +384,9 @@ function MoviePage() {
                         {...(link.to === "/search"
                           ? { search: (link as any).search }
                           : { params: (link as any).params })}
-                        className="flex items-center gap-2 transition hover:opacity-80"
+                        className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2.5 py-1.5 backdrop-blur-lg transition hover:bg-white/10"
                       >
-                        <div className="size-8 shrink-0 overflow-hidden rounded-lg bg-surface ring-1 ring-border">
+                        <div className="size-8 shrink-0 overflow-hidden rounded-full bg-surface ring-1 ring-border">
                           {movie.castPfp[i] ? (
                             <img
                               src={movie.castPfp[i]}
@@ -405,28 +414,13 @@ function MoviePage() {
                   })}
                 </div>
               </div>
+            </div>
 
-              <div className="flex flex-wrap gap-1.5">
-                {movie.genreIds.map((gid: number, i: number) => {
-                  const label = genreLabels[String(gid)] || movie.genres[i] || "Explore";
-                  return (
-                    <Link
-                      key={`${gid}-${i}`}
-                      to="/explore/$genreId"
-                      params={{ genreId: String(gid) }}
-                      search={{ q: label }}
-                      className="rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-foreground transition hover:bg-card hover:border-primary/50"
-                    >
-                      {label}
-                    </Link>
-                  );
-                })}
-              </div>
-
-              {isTv && movie.numberOfSeasons && movie.numberOfSeasons > 0 && (
+            {isTv && movie.numberOfSeasons && movie.numberOfSeasons > 0 && (
+              <aside className="rounded-lg border border-border bg-background/70 p-4 backdrop-blur-md sm:p-5 md:col-span-1">
                 <SeasonEpisodePicker movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} />
-              )}
-            </aside>
+              </aside>
+            )}
           </div>
         </div>
       </section>
