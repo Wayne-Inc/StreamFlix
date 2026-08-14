@@ -7,12 +7,22 @@ const IMG_BASE = "https://image.tmdb.org/t/p/";
 export async function tmdbFetch(path: string, params: Record<string, string> = {}) {
   const { tmdbApiKey } = getServerConfig();
   const url = new URL(`${TMDB_BASE}${path}`);
-  url.searchParams.set("api_key", tmdbApiKey);
+  if (tmdbApiKey) {
+    url.searchParams.set("api_key", tmdbApiKey);
+  }
   url.searchParams.set("language", "en-US");
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-  const res = await fetch(url.toString());
-  if (!res.ok) throw new Error(`TMDB error ${res.status}`);
-  return res.json();
+  try {
+    const res = await fetch(url.toString());
+    if (!res.ok) {
+      console.warn(`TMDB error ${res.status} for ${path}`);
+      return { results: [], genres: [] };
+    }
+    return res.json();
+  } catch (err) {
+    console.warn(`TMDB fetch failed for ${path}:`, err);
+    return { results: [], genres: [] };
+  }
 }
 
 export async function fetchMovieVideosData(id: string): Promise<string | null> {
