@@ -26,6 +26,28 @@ function DownloadPage() {
     setPlatform(detectInstallPlatform());
   }, []);
 
+  if (isInApp()) {
+    return (
+      <main className="min-h-dvh bg-background text-foreground px-4 py-8 sm:px-8">
+        <div className="mx-auto max-w-4xl space-y-8 text-center">
+          <div className="flex items-center justify-center">
+            <Logo className="text-lg sm:text-xl" />
+          </div>
+          <h1 className="text-3xl font-black sm:text-4xl">You're already in the StreamFlix app</h1>
+          <p className="mx-auto max-w-xl text-lg text-muted-foreground">
+            No download needed — you're running the full StreamFlix experience right now.
+          </p>
+          <Link
+            to="/browse"
+            className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90"
+          >
+            Start watching
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-dvh bg-background text-foreground px-4 py-8 sm:px-8">
       <header className="mx-auto mb-10 flex max-w-4xl items-center justify-between gap-4">
