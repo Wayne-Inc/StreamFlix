@@ -75,7 +75,7 @@ export function toMovie(m: any): Movie {
     castIds: castIds,
     director,
     directorId,
-    match: m.vote_average ? Math.round(m.vote_average * 10) : 85,
+    match: m.vote_average ? Math.round(m.vote_average * 10) : 0,
     score: m.vote_average ? Number(m.vote_average.toFixed(1)) : undefined,
   };
 }
@@ -142,7 +142,7 @@ export function toTv(m: any): Movie {
     castIds: castIds,
     director: creator,
     directorId,
-    match: m.vote_average ? Math.round(m.vote_average * 10) : 85,
+    match: m.vote_average ? Math.round(m.vote_average * 10) : 0,
     score: m.vote_average ? Number(m.vote_average.toFixed(1)) : undefined,
     numberOfSeasons: m.number_of_seasons ?? undefined,
     numberOfEpisodes: m.number_of_episodes ?? undefined,

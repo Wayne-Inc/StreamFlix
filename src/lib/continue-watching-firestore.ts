@@ -27,6 +27,7 @@ export type FirestoreContinueItem = {
   genres: string[];
   genreIds: number[];
   match: number;
+  score?: number;
   description: string;
   year: number;
   cast: string[];
@@ -87,6 +88,7 @@ export async function saveProgressToFirestore(
     genres: movie.genres,
     genreIds: movie.genreIds,
     match: movie.match,
+    score: movie.score,
     description: movie.description,
     year: movie.year,
     cast: movie.cast,
@@ -136,5 +138,6 @@ export function toMovie(item: FirestoreContinueItem): Movie {
     director: item.director,
     directorId: item.directorId,
     match: item.match,
+    score: item.score,
   };
 }

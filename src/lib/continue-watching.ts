@@ -19,6 +19,7 @@ export type ContinueItem = {
   genres: string[];
   genreIds: number[];
   match: number;
+  score?: number;
   description: string;
   year: number;
   cast: string[];
@@ -116,6 +117,7 @@ export function recordWatchHistory(
     genres: movie.genres,
     genreIds: movie.genreIds,
     match: movie.match,
+    score: movie.score,
     description: movie.description,
     year: movie.year,
     cast: movie.cast,
@@ -160,6 +162,7 @@ export function recordProgress(
       genres: movie.genres,
       genreIds: movie.genreIds,
       match: movie.match,
+      score: movie.score,
       description: movie.description,
       year: movie.year,
       cast: movie.cast,
@@ -198,6 +201,7 @@ export function markAsWatched(movie: Movie) {
     genres: movie.genres,
     genreIds: movie.genreIds,
     match: movie.match,
+    score: movie.score,
     description: movie.description,
     year: movie.year,
     cast: movie.cast,
@@ -243,5 +247,6 @@ export function toMovie(item: ContinueItem): Movie {
     director: item.director,
     directorId: item.directorId,
     match: item.match,
+    score: item.score,
   };
 }
