@@ -18,7 +18,7 @@ export function MovieCard({
 }) {
   return (
     <div
-      className={`group relative ${fluid ? "w-full" : "w-[200px] sm:w-[260px] shrink-0"}`}
+      className={`group relative ${fluid ? "w-full" : "w-[150px] sm:w-[190px] shrink-0"}`}
       data-context="movie"
       data-title={movie.title}
       data-url={`/movie/${movie.id}`}

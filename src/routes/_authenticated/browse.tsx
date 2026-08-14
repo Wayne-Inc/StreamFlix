@@ -43,7 +43,7 @@ function BrowseSkeleton() {
   return (
     <div className="min-h-dvh bg-background">
       <Navbar />
-      <div className="relative min-h-[40vh] h-[48vh] w-full overflow-hidden bg-surface/60 sm:min-h-[340px] sm:h-[50vh] lg:min-h-[400px] lg:h-[56vh] xl:h-[60vh]">
+      <div className="relative min-h-[58vh] h-[70vh] w-full overflow-hidden bg-surface/60 sm:min-h-[480px] sm:h-[75vh] lg:min-h-[580px] lg:h-[85vh] xl:h-[88vh]">
         <Skeleton className="absolute inset-0 h-full w-full rounded-none opacity-60" />
         <div className="relative flex h-full items-end justify-center px-4 pb-8 pt-10 text-center md:items-end md:justify-start md:px-16 lg:px-24">
           <div className="max-w-2xl space-y-3 w-full text-center md:text-left">
@@ -226,19 +226,29 @@ function BrowsePage() {
       return seeds;
     };
 
-    const fingerprintOf = (seeds: Map<string, RecommendSeed>) =>
-      Array.from(seeds.entries())
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([id, s]) => `${id}:${s.watchedAt}:${(s.genreIds || []).join(",")}`)
-        .join("|");
+    // Fingerprint only the stable watch history (completed titles). Continue-watching
+    // progress updates its updatedAt on every tick, so it must not trigger a reload.
+    const fingerprintOfHistory = async () => {
+      const parts = getWatchHistory().map(
+        (h) => `${h.id}:${h.watchedAt}:${(h.genreIds || []).join(",")}`,
+      );
+      try {
+        const fsHistory = await getWatchHistoryFromFirestore();
+        for (const h of fsHistory) {
+          parts.push(`${h.id}:${h.watchedAt}:${(h.genreIds || []).join(",")}`);
+        }
+      } catch {}
+      return parts.sort().join("|");
+    };
 
     const loadWatchedRow = async () => {
       try {
-        const seeds = await buildSeeds();
+        const fingerprint = await fingerprintOfHistory();
         if (cancelled) return;
-        const fingerprint = fingerprintOf(seeds);
         if (fingerprint === lastFingerprint) return;
         lastFingerprint = fingerprint;
+        const seeds = await buildSeeds();
+        if (cancelled) return;
         if (seeds.size === 0) {
           setWatchedRow(null);
           setWatchedLoading(false);
@@ -276,13 +286,11 @@ function BrowsePage() {
 
     loadWatchedRow();
     window.addEventListener("storage", scheduleReload);
-    window.addEventListener("focus", scheduleReload);
     window.addEventListener("sf:watchedUpdated", scheduleReload);
     return () => {
       cancelled = true;
       if (timer) clearTimeout(timer);
       window.removeEventListener("storage", scheduleReload);
-      window.removeEventListener("focus", scheduleReload);
       window.removeEventListener("sf:watchedUpdated", scheduleReload);
     };
   }, [kind]);

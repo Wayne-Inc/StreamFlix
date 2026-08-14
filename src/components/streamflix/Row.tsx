@@ -3,8 +3,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Movie } from "@/lib/types";
 import { MovieCard } from "./MovieCard";
 
-const BASE_CARD_W = 200;
-const SM_CARD_W = 260;
+const BASE_CARD_W = 150;
+const SM_CARD_W = 190;
 const BASE_GAP = 8;
 const SM_GAP = 12;
 const OVERSCAN = 3;

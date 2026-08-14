@@ -8,7 +8,7 @@ export function RowSkeleton() {
       </div>
       <div className="flex gap-2 sm:gap-3 overflow-hidden px-4 sm:px-8 pb-4 sm:pb-10">
         {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-          <Skeleton key={i} className="w-[200px] sm:w-[260px] aspect-[2/3] rounded-md shrink-0" />
+          <Skeleton key={i} className="w-[150px] sm:w-[190px] aspect-[2/3] rounded-md shrink-0" />
         ))}
       </div>
     </div>
