@@ -96,7 +96,7 @@ export function Row({
           <button
             onClick={() => scrollBy(-1)}
             aria-label={`Scroll ${title} back`}
-            className="absolute left-1 sm:left-2 top-1/2 z-50 hidden sm:grid size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
+            className="absolute left-1 sm:left-2 top-1/2 z-30 hidden sm:grid size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
           >
             <ChevronLeft className="size-5" />
           </button>
@@ -105,14 +105,14 @@ export function Row({
           <button
             onClick={() => scrollBy(1)}
             aria-label={`Scroll ${title} forward`}
-            className="absolute right-1 sm:right-2 top-1/2 z-50 hidden sm:grid size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
+            className="absolute right-1 sm:right-2 top-1/2 z-30 hidden sm:grid size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
           >
             <ChevronRight className="size-5" />
           </button>
         )}
         <div
           ref={scrollerRef}
-          className="scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth px-4 sm:px-8 pb-4 sm:pb-10"
+          className="scrollbar-thin flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth px-4 sm:px-8 pb-4 sm:pb-10"
         >
           {padStart > 0 && <div aria-hidden style={{ width: padStart }} className="shrink-0" />}
           {visible.map((m) => (

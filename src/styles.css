@@ -95,6 +95,23 @@
   scrollbar-width: none;
 }
 
+@utility scrollbar-thin {
+  &::-webkit-scrollbar {
+    display: block;
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.25);
+  }
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
 *::-webkit-scrollbar {
   display: none;
 }
