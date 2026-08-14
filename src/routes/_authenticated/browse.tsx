@@ -43,7 +43,7 @@ function BrowseSkeleton() {
   return (
     <div className="min-h-dvh bg-background">
       <Navbar />
-      <div className="relative min-h-[38vh] h-[46vh] w-full overflow-hidden bg-surface/60 sm:min-h-[360px] sm:h-[52vh] lg:min-h-[420px] lg:h-[58vh]">
+      <div className="relative min-h-[50vh] h-[60vh] w-full overflow-hidden bg-surface/60 sm:min-h-[420px] sm:h-[65vh] lg:min-h-[480px] lg:h-[72vh]">
         <Skeleton className="absolute inset-0 h-full w-full rounded-none opacity-60" />
         <div className="relative flex h-full items-end justify-center px-4 pb-8 pt-10 text-center md:items-end md:justify-start md:px-16 lg:px-24">
           <div className="max-w-2xl space-y-3 w-full text-center md:text-left">
