@@ -371,7 +371,7 @@ function MoviePage() {
                       type="button"
                       onClick={() => scrollCast(-1)}
                       aria-label="Scroll cast left"
-                      className="absolute left-1 top-1/2 z-10 grid size-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:size-9"
+                      className="absolute left-1 top-1/2 z-10 hidden size-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid sm:size-9"
                     >
                       <ChevronLeft className="size-4 sm:size-5" />
                     </button>
@@ -381,14 +381,14 @@ function MoviePage() {
                       type="button"
                       onClick={() => scrollCast(1)}
                       aria-label="Scroll cast right"
-                      className="absolute right-1 top-1/2 z-10 grid size-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:size-9"
+                      className="absolute right-1 top-1/2 z-10 hidden size-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid sm:size-9"
                     >
                       <ChevronRight className="size-4 sm:size-5" />
                     </button>
                   )}
                   <div
                     ref={castScrollerRef}
-                    className="scrollbar-hide flex gap-3 overflow-x-auto py-2"
+                    className="scrollbar-thin scrollbar-thumb-white/25 scrollbar-track-transparent flex gap-3 overflow-x-auto py-2 backdrop-blur-sm"
                   >
                     {movie.director && (
                       <Link
