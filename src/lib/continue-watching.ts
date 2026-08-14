@@ -130,7 +130,10 @@ export function recordWatchHistory(
     episode,
     episodeLabel: season != null && episode != null ? `S${season}E${episode}` : undefined,
   });
-  if (item) saveHistoryToFirestore(item).catch(() => {});
+  if (item) {
+    saveHistoryToFirestore(item).catch(() => {});
+    window.dispatchEvent(new Event("sf:watchedUpdated"));
+  }
 }
 
 export function recordProgress(

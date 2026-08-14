@@ -185,49 +185,66 @@ function BrowsePage() {
   useEffect(() => {
     if (kind !== "home" || typeof window === "undefined") return;
     let cancelled = false;
+    let lastFingerprint = "";
+    let timer: ReturnType<typeof setTimeout> | undefined;
 
-    const loadWatchedRow = async () => {
-      setWatchedLoading(true);
+    const buildSeeds = async () => {
+      const history = getWatchHistory();
+      const seeds = new Map<string, RecommendSeed>();
+      for (const item of history) {
+        seeds.set(item.id, {
+          id: item.id,
+          title: item.title,
+          watchedAt: item.watchedAt,
+          genreIds: item.genreIds,
+        });
+      }
       try {
-        const history = getWatchHistory();
-        const seeds = new Map<string, RecommendSeed>();
-        for (const item of history) {
-          seeds.set(item.id, {
-            id: item.id,
-            title: item.title,
-            watchedAt: item.watchedAt,
-            genreIds: item.genreIds,
+        const fsItems = await getContinueWatchingFromFirestore();
+        for (const fs of fsItems) {
+          const existing = seeds.get(fs.movieId);
+          seeds.set(fs.movieId, {
+            id: fs.movieId,
+            title: fs.title,
+            watchedAt: Math.max(existing?.watchedAt ?? 0, fs.updatedAt),
+            genreIds: fs.genreIds,
           });
         }
-        try {
-          const fsItems = await getContinueWatchingFromFirestore();
-          for (const fs of fsItems) {
-            const existing = seeds.get(fs.movieId);
-            seeds.set(fs.movieId, {
-              id: fs.movieId,
-              title: fs.title,
-              watchedAt: Math.max(existing?.watchedAt ?? 0, fs.updatedAt),
-              genreIds: fs.genreIds,
-            });
-          }
-        } catch {}
-        try {
-          const fsHistory = await getWatchHistoryFromFirestore();
-          for (const h of fsHistory) {
-            const existing = seeds.get(h.id);
-            seeds.set(h.id, {
-              id: h.id,
-              title: h.title,
-              watchedAt: Math.max(existing?.watchedAt ?? 0, h.watchedAt),
-              genreIds: h.genreIds,
-            });
-          }
-        } catch {}
+      } catch {}
+      try {
+        const fsHistory = await getWatchHistoryFromFirestore();
+        for (const h of fsHistory) {
+          const existing = seeds.get(h.id);
+          seeds.set(h.id, {
+            id: h.id,
+            title: h.title,
+            watchedAt: Math.max(existing?.watchedAt ?? 0, h.watchedAt),
+            genreIds: h.genreIds,
+          });
+        }
+      } catch {}
+      return seeds;
+    };
+
+    const fingerprintOf = (seeds: Map<string, RecommendSeed>) =>
+      Array.from(seeds.entries())
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([id, s]) => `${id}:${s.watchedAt}:${(s.genreIds || []).join(",")}`)
+        .join("|");
+
+    const loadWatchedRow = async () => {
+      try {
+        const seeds = await buildSeeds();
+        if (cancelled) return;
+        const fingerprint = fingerprintOf(seeds);
+        if (fingerprint === lastFingerprint) return;
+        lastFingerprint = fingerprint;
         if (seeds.size === 0) {
-          if (!cancelled) setWatchedRow(null);
+          setWatchedRow(null);
+          setWatchedLoading(false);
           return;
         }
-
+        setWatchedLoading(true);
         const result = await getPersonalizedRecommendations(Array.from(seeds.values()));
         if (!cancelled) {
           setWatchedRow(
@@ -250,13 +267,23 @@ function BrowsePage() {
       }
     };
 
+    const scheduleReload = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        if (!cancelled) loadWatchedRow();
+      }, 600);
+    };
+
     loadWatchedRow();
-    window.addEventListener("storage", loadWatchedRow);
-    window.addEventListener("focus", loadWatchedRow);
+    window.addEventListener("storage", scheduleReload);
+    window.addEventListener("focus", scheduleReload);
+    window.addEventListener("sf:watchedUpdated", scheduleReload);
     return () => {
       cancelled = true;
-      window.removeEventListener("storage", loadWatchedRow);
-      window.removeEventListener("focus", loadWatchedRow);
+      if (timer) clearTimeout(timer);
+      window.removeEventListener("storage", scheduleReload);
+      window.removeEventListener("focus", scheduleReload);
+      window.removeEventListener("sf:watchedUpdated", scheduleReload);
     };
   }, [kind]);
 

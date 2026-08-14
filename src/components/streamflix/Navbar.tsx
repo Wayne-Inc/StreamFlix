@@ -1,5 +1,5 @@
 import { Link, useRouter, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Search,
   ChevronDown,
@@ -24,6 +24,7 @@ import { auth, db } from "@/lib/firebase";
 import { signOut as firebaseSignOut } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
 import { profileHasPin, verifyProfilePin } from "@/lib/profiles";
+import { suggestTitles } from "@/lib/streamflix-data";
 
 const links = [
   { kind: "tv", label: "TV Shows" },
@@ -55,6 +56,57 @@ export function Navbar() {
     select: (s) => (s.location.search as { kind?: string } | undefined)?.kind ?? "home",
   });
   const router = useRouter();
+
+  const [searchQ, setSearchQ] = useState("");
+  const [searchSuggestions, setSearchSuggestions] = useState<
+    { id: string; title: string; year: number | null; poster: string; mediaType: string }[]
+  >([]);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const searchBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchBoxRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const q = searchQ.trim();
+    if (q.length < 2) {
+      setSearchSuggestions([]);
+      return;
+    }
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      const res = await suggestTitles(q);
+      if (!cancelled) setSearchSuggestions(res.slice(0, 5));
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [searchQ]);
+
+  const submitSearch = (value?: string) => {
+    const q = (value ?? searchQ).trim();
+    setSearchFocused(false);
+    setSearchQ("");
+    setSearchSuggestions([]);
+    if (!q) return;
+    router.navigate({ to: "/search", search: { q } });
+  };
+
+  const openSearch = () => {
+    if (searchBlurTimer.current) clearTimeout(searchBlurTimer.current);
+    setSearchFocused(true);
+  };
+
+  const closeSearchSoon = () => {
+    if (searchBlurTimer.current) clearTimeout(searchBlurTimer.current);
+    searchBlurTimer.current = setTimeout(() => setSearchFocused(false), 150);
+  };
+
+  useEffect(
+    () => () => {
+      if (searchBlurTimer.current) clearTimeout(searchBlurTimer.current);
+    },
+    [],
+  );
 
   const loadProfile = () => {
     try {
@@ -215,9 +267,71 @@ export function Navbar() {
           >
             {mobileNavOpen ? <X className="size-6" /> : <Menu className="size-6" />}
           </button>
+          <div className="relative hidden md:block" ref={searchBoxRef}>
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              value={searchQ}
+              onChange={(e) => setSearchQ(e.target.value)}
+              onFocus={openSearch}
+              onBlur={closeSearchSoon}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") submitSearch();
+                if (e.key === "Escape") {
+                  setSearchFocused(false);
+                  setSearchQ("");
+                  setSearchSuggestions([]);
+                }
+              }}
+              placeholder="Search…"
+              aria-label="Search"
+              className="h-9 w-44 rounded-full border border-border bg-background/40 pl-9 pr-4 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all duration-200 focus:w-60 focus:border-primary/60 focus:bg-background/70"
+            />
+            {searchFocused && searchQ.trim().length >= 2 && (
+              <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-border bg-card/95 shadow-2xl backdrop-blur animate-fade-in">
+                <ul className="max-h-72 overflow-y-auto py-1">
+                  {searchSuggestions.length === 0 ? (
+                    <li className="px-3 py-2 text-sm text-muted-foreground">Searching…</li>
+                  ) : (
+                    searchSuggestions.map((s) => (
+                      <li key={s.id}>
+                        <button
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            submitSearch(s.title);
+                          }}
+                          className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-accent"
+                        >
+                          {s.poster ? (
+                            <img src={s.poster} alt="" className="size-8 shrink-0 rounded object-cover" />
+                          ) : (
+                            <span className="grid size-8 shrink-0 place-items-center rounded bg-muted text-[10px] font-semibold text-muted-foreground">
+                              {s.mediaType === "tv" ? "TV" : "MOV"}
+                            </span>
+                          )}
+                          <span className="truncate">{s.title}</span>
+                        </button>
+                      </li>
+                    ))
+                  )}
+                </ul>
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    submitSearch();
+                  }}
+                  className="flex w-full items-center justify-center gap-2 border-t border-border px-3 py-2 text-sm font-semibold text-primary hover:bg-accent"
+                >
+                  <Search className="size-4" /> See all results
+                </button>
+              </div>
+            )}
+          </div>
           <Link
             to="/search"
-            className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
+            className="md:hidden inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
             aria-label="Search"
           >
             <Search className="size-5" />
