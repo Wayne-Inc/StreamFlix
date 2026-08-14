@@ -20,7 +20,7 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
       : s.description;
 
   return (
-    <section className="relative min-h-[50vh] h-[60vh] w-full overflow-hidden sm:min-h-[420px] sm:h-[65vh] lg:min-h-[480px] lg:h-[72vh]">
+    <section className="relative min-h-[58vh] h-[70vh] w-full overflow-hidden sm:min-h-[480px] sm:h-[75vh] lg:min-h-[540px] lg:h-[82vh]">
       {slides.map((slide, idx) => {
         const near = Math.abs(idx - i) <= 1;
         return (
@@ -73,7 +73,7 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
             <Link
               to="/movie/$id"
               params={{ id: s.id }}
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border hover:text-accent-foreground h-11 bg-gray-600/30 backdrop-blur-sm border-gray-400 text-white hover:bg-gray-600/50 font-semibold px-8 py-4 text-lg rounded-lg transition-all duration-200"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border hover:text-accent-foreground h-9 bg-gray-600/30 backdrop-blur-sm border-gray-400 text-white hover:bg-gray-600/50 font-semibold px-4 py-2 text-sm rounded-lg transition-all duration-200 sm:h-10 sm:px-6 sm:py-3 sm:text-base lg:h-11 lg:px-8 lg:py-4 lg:text-lg"
             >
               <Info /> More Info
             </Link>
