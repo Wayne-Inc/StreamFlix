@@ -235,7 +235,7 @@ function MoviePage() {
           </button>
           <div className="grid w-full gap-10 md:grid-cols-3 md:items-center md:gap-8">
             <div className="space-y-4 md:col-span-2">
-              <h1 className="text-4xl font-black tracking-tight sm:text-6xl">{movie.title}</h1>
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">{movie.title}</h1>
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 <span className="font-semibold text-emerald-400">
                   {movie.score != null ? movie.score.toFixed(1) : (movie.match ? `${(movie.match / 10).toFixed(1)}` : "")}
@@ -246,7 +246,7 @@ function MoviePage() {
               </div>
               <div>
                 <p
-                  className={`max-w-xl text-sm text-foreground/90 sm:text-base ${
+                  className={`max-w-xl text-base md:text-lg text-gray-300 leading-relaxed ${
                     descExpanded ? "" : "line-clamp-3"
                   }`}
                 >
