@@ -20,7 +20,7 @@ export const Route = createFileRoute("/")({
       });
     });
     if (user) {
-      throw redirect({ to: "/browse" });
+      throw redirect({ to: "/profiles" });
     }
   },
   loader: async () => {

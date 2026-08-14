@@ -19,9 +19,11 @@ export function ContactEmail({
   return (
     <a href="#" onClick={handleClick} className={className}>
       {children}
-      <span>{EMAIL_LOCAL}</span>
-      {"@"}
-      <span>{EMAIL_DOMAIN}</span>
+      <span className="inline">
+        <span>{EMAIL_LOCAL}</span>
+        {"@"}
+        <span>{EMAIL_DOMAIN}</span>
+      </span>
     </a>
   );
 }
