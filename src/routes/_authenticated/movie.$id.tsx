@@ -236,13 +236,21 @@ function MoviePage() {
           <div className="grid w-full gap-10 md:grid-cols-3 md:items-center md:gap-8">
             <div className="space-y-4 md:col-span-2">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">{movie.title}</h1>
-              <div className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="font-semibold text-emerald-400">
-                  {movie.score != null ? movie.score.toFixed(1) : (movie.match ? `${(movie.match / 10).toFixed(1)}` : "")}
+              <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+                {movie.score != null && (
+                  <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 font-semibold text-emerald-400 backdrop-blur-sm">
+                    {movie.score.toFixed(1)}
+                  </span>
+                )}
+                <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-muted-foreground backdrop-blur-sm">
+                  {movie.year}
                 </span>
-                <span className="text-muted-foreground">{movie.year}</span>
-                <AgeRatingBadge rating={movie.rating} />
-                <span className="text-muted-foreground">{movie.runtime}</span>
+                <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 backdrop-blur-sm">
+                  <AgeRatingBadge rating={movie.rating} />
+                </span>
+                <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-muted-foreground backdrop-blur-sm">
+                  {movie.runtime}
+                </span>
               </div>
               <div>
                 <p
@@ -330,11 +338,7 @@ function MoviePage() {
                 <p className="text-sm font-semibold text-foreground sm:text-base">
                   About this title
                 </p>
-                <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs text-muted-foreground sm:text-sm">
-                  <p>
-                    <span className="font-medium text-foreground">Genres:</span>{" "}
-                    {movie.genres.join(", ")}
-                  </p>
+                <div className="mt-2 grid grid-cols-1 gap-x-4 gap-y-1.5 text-xs text-muted-foreground sm:text-sm">
                   <p>
                     <span className="font-medium text-foreground">Director:</span>{" "}
                     {movie.directorId ? (
@@ -348,20 +352,6 @@ function MoviePage() {
                     ) : (
                       movie.director
                     )}
-                  </p>
-                  <p>
-                    <span className="font-medium text-foreground">Cast:</span> {movie.cast.length}{" "}
-                    actors
-                  </p>
-                  <p>
-                    <span className="font-medium text-foreground">Released:</span> {movie.year}
-                  </p>
-                  <p>
-                    <span className="font-medium text-foreground">Runtime:</span> {movie.runtime}
-                  </p>
-                  <p>
-                    <span className="font-medium text-foreground">Rating:</span>{" "}
-                    <AgeRatingBadge rating={movie.rating} />
                   </p>
                 </div>
               </div>
