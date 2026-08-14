@@ -5,8 +5,8 @@ import { MovieCard } from "./MovieCard";
 
 const BASE_CARD_W = 150;
 const SM_CARD_W = 190;
-const BASE_GAP = 8;
-const SM_GAP = 12;
+const BASE_GAP = 16;
+const SM_GAP = 24;
 const OVERSCAN = 3;
 
 export function Row({
@@ -87,7 +87,9 @@ export function Row({
 
   return (
     <section className="relative space-y-0 py-0 sm:space-y-0 sm:py-0">
-      <h2 className="px-4 sm:px-8 text-2xl sm:text-3xl font-bold tracking-tight">{title}</h2>
+      <h2 className="px-4 sm:px-8 mb-4 sm:mb-6 text-2xl sm:text-3xl font-bold tracking-tight">
+        {title}
+      </h2>
 
       <div className="relative">
         {isSm && canScrollLeft && (
@@ -110,7 +112,7 @@ export function Row({
         )}
         <div
           ref={scrollerRef}
-          className="scrollbar-hide flex gap-2 sm:gap-3 overflow-x-auto scroll-smooth px-4 sm:px-8 pb-4 sm:pb-10"
+          className="scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth px-4 sm:px-8 pb-4 sm:pb-10"
         >
           {padStart > 0 && <div aria-hidden style={{ width: padStart }} className="shrink-0" />}
           {visible.map((m) => (

@@ -403,7 +403,7 @@ function BrowsePage() {
     <div className="min-h-dvh bg-background">
       <Navbar />
       <HeroBanner slides={filteredHeroSlides} />
-      <div className="relative z-10 mt-0 md:mt-12 space-y-4 md:space-y-8">
+      <div className="relative z-10 mt-0 md:mt-12 space-y-6 md:space-y-12">
         {kind === "new" && (
           <div className="px-4 sm:px-8 pt-2">
             <Link
@@ -416,11 +416,11 @@ function BrowsePage() {
         )}
         {kind === "home" && continueLoading && <RowSkeleton />}
         {continueRow && kind === "home" && (
-          <section className="space-y-3 py-4">
-            <h2 className="px-4 sm:px-8 text-lg sm:text-xl font-semibold tracking-tight">
+          <section className="space-y-4 py-4">
+            <h2 className="px-4 sm:px-8 mb-4 sm:mb-6 text-lg sm:text-xl font-semibold tracking-tight">
               Continue Watching
             </h2>
-            <div className="scrollbar-hide flex gap-2 overflow-x-auto px-4 sm:px-8">
+            <div className="scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-8">
               {continueRow.items
                 .filter((item) => !kidsMode || filterKidsContent([item.movie]).length > 0)
                 .map((item) => (

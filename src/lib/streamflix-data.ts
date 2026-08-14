@@ -37,13 +37,30 @@ export const defaultProfiles = [
 ];
 
 async function loadHome() {
-  const [trending, popular, nowPlaying, topRated, sciFi, dramas] = await Promise.all([
+  const [
+    trending,
+    popular,
+    nowPlaying,
+    topRated,
+    sciFi,
+    dramas,
+    action,
+    comedy,
+    animation,
+    horror,
+    trendingTv,
+  ] = await Promise.all([
     fetchTrending(),
     fetchPopular(),
     fetchNowPlaying(),
     fetchTopRated(),
     discoverByGenre({ data: { genreId: "878" } }),
     discoverByGenre({ data: { genreId: "18" } }),
+    discoverByGenre({ data: { genreId: "28" } }),
+    discoverByGenre({ data: { genreId: "35" } }),
+    discoverByGenre({ data: { genreId: "16" } }),
+    discoverByGenre({ data: { genreId: "27" } }),
+    fetchTrendingTv(),
   ]);
 
   let recommendations: Movie[] = [];
@@ -60,15 +77,30 @@ async function loadHome() {
       ...(recommendations.length ? [{ title: "Recommended for You", items: recommendations }] : []),
       { title: "Top Rated", items: topRated.slice(0, 10) },
       { title: "Popular on StreamFlix", items: popular.slice(0, 10) },
+      { title: "Trending TV", items: trendingTv.slice(0, 10) },
       { title: "Sci-Fi & Beyond", items: sciFi },
+      { title: "Action & Adventure", items: action },
+      { title: "Laugh Out Loud", items: comedy },
+      { title: "Animation & Family", items: animation },
       { title: "Award-Winning Dramas", items: dramas.slice(0, 10) },
+      { title: "Horror & Thrills", items: horror },
       { title: "New Releases", items: nowPlaying },
     ],
   };
 }
 
 async function loadMovies() {
-  const [trending, popular, topRated, action, comedy, romance, horror] = await Promise.all([
+  const [
+    trending,
+    popular,
+    topRated,
+    action,
+    comedy,
+    romance,
+    horror,
+    animation,
+    documentary,
+  ] = await Promise.all([
     fetchTrending(),
     fetchPopular(),
     fetchTopRated(),
@@ -76,6 +108,8 @@ async function loadMovies() {
     discoverByGenre({ data: { genreId: "35" } }),
     discoverByGenre({ data: { genreId: "10749" } }),
     discoverByGenre({ data: { genreId: "27" } }),
+    discoverByGenre({ data: { genreId: "16" } }),
+    discoverByGenre({ data: { genreId: "99" } }),
   ]);
   return {
     heroSlides: await enrichCertificationsFn({ data: { items: popular.slice(0, 3) } }),
@@ -86,7 +120,9 @@ async function loadMovies() {
       { title: "Action & Adventure", items: action },
       { title: "Laugh Out Loud", items: comedy },
       { title: "Romance", items: romance },
+      { title: "Animation & Family", items: animation },
       { title: "Horror", items: horror },
+      { title: "Documentaries", items: documentary },
     ],
   };
 }
