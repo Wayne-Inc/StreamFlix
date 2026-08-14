@@ -238,35 +238,20 @@ function MoviePage() {
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">{movie.title}</h1>
               <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
                 {movie.score != null && (
-                  <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 font-semibold text-emerald-400 backdrop-blur-lg">
+                  <span className="min-w-24 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-center font-semibold text-emerald-400 backdrop-blur-lg">
                     {movie.score.toFixed(1)}
                   </span>
                 )}
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-muted-foreground backdrop-blur-lg">
+                <span className="min-w-24 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-center text-muted-foreground backdrop-blur-lg">
                   {movie.year}
                 </span>
                 <AgeRatingBadge
                   rating={movie.rating}
-                  className="rounded-full px-3 py-1 backdrop-blur-lg"
+                  className="min-w-24 rounded-full px-3 py-1 backdrop-blur-lg"
                 />
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-muted-foreground backdrop-blur-lg">
+                <span className="min-w-24 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-center text-muted-foreground backdrop-blur-lg">
                   {movie.runtime}
                 </span>
-                {movie.director && (
-                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-muted-foreground backdrop-blur-lg">
-                    {movie.directorId ? (
-                      <Link
-                        to="/person/$id"
-                        params={{ id: movie.directorId }}
-                        className="font-medium text-foreground hover:text-primary hover:underline"
-                      >
-                        {movie.director}
-                      </Link>
-                    ) : (
-                      movie.director
-                    )}
-                  </span>
-                )}
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -367,7 +352,35 @@ function MoviePage() {
 
               <div className="pt-4">
                 <p className="mb-3 text-sm font-semibold text-foreground sm:text-base">Cast</p>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-3">
+                  {movie.director && (
+                    <Link
+                      to={movie.directorId ? "/person/$id" : "/search"}
+                      params={movie.directorId ? { id: movie.directorId } : {}}
+                      search={movie.directorId ? undefined : { q: movie.director, tab: "people" }}
+                      className="group w-20 shrink-0 text-center"
+                    >
+                      <div className="mx-auto size-16 sm:size-20 overflow-hidden rounded-xl bg-surface ring-1 ring-border">
+                        {movie.directorPfp ? (
+                          <img
+                            src={movie.directorPfp}
+                            alt={movie.director}
+                            className="size-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex size-full items-center justify-center text-sm font-bold text-muted-foreground">
+                            {movie.director.charAt(0)}
+                          </div>
+                        )}
+                      </div>
+                      <span className="mt-1.5 block truncate text-[11px] font-semibold text-foreground group-hover:text-primary">
+                        {movie.director}
+                      </span>
+                      <span className="block truncate text-[10px] text-muted-foreground">
+                        Director
+                      </span>
+                    </Link>
+                  )}
                   {movie.cast.slice(0, 15).map((name: string, i: number) => {
                     const personId = movie.castIds?.[i];
                     const link = personId
@@ -384,9 +397,9 @@ function MoviePage() {
                         {...(link.to === "/search"
                           ? { search: (link as any).search }
                           : { params: (link as any).params })}
-                        className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2.5 py-1.5 backdrop-blur-lg transition hover:bg-white/10"
+                        className="group w-20 shrink-0 text-center"
                       >
-                        <div className="size-8 shrink-0 overflow-hidden rounded-full bg-surface ring-1 ring-border">
+                        <div className="mx-auto size-16 sm:size-20 overflow-hidden rounded-xl bg-surface ring-1 ring-border">
                           {movie.castPfp[i] ? (
                             <img
                               src={movie.castPfp[i]}
@@ -394,21 +407,19 @@ function MoviePage() {
                               className="size-full object-cover"
                             />
                           ) : (
-                            <div className="flex size-full items-center justify-center text-xs font-bold text-muted-foreground">
+                            <div className="flex size-full items-center justify-center text-sm font-bold text-muted-foreground">
                               {name.charAt(0)}
                             </div>
                           )}
                         </div>
-                        <span className="min-w-0">
-                          <span className="block truncate text-xs font-medium text-foreground">
-                            {name}
-                          </span>
-                          {movie.castRoles?.[i] && (
-                            <span className="block truncate text-[11px] text-muted-foreground">
-                              {movie.castRoles[i]}
-                            </span>
-                          )}
+                        <span className="mt-1.5 block truncate text-[11px] font-semibold text-foreground group-hover:text-primary">
+                          {name}
                         </span>
+                        {movie.castRoles?.[i] && (
+                          <span className="block truncate text-[10px] text-muted-foreground">
+                            {movie.castRoles[i]}
+                          </span>
+                        )}
                       </Link>
                     );
                   })}

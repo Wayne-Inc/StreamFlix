@@ -15,6 +15,8 @@ import {
 
 export function GlobalContextMenu({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const isWatchPage =
+    typeof window !== "undefined" && router.state.location.pathname.startsWith("/watch");
   const maxIndex = useRef(
     typeof window !== "undefined" ? (window.history.state?.__TSR_index ?? 0) : 0,
   );
@@ -48,6 +50,8 @@ export function GlobalContextMenu({ children }: { children: ReactNode }) {
       toast.error("Could not copy");
     }
   };
+
+  if (isWatchPage) return <>{children}</>;
 
   return (
     <ContextMenu modal={false}>

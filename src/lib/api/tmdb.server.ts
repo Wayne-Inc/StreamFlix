@@ -52,6 +52,9 @@ export function toMovie(m: any): Movie {
   const dirCredit = (credits?.crew || []).find((c: any) => c.job === "Director");
   const director = dirCredit?.name || "Unknown";
   const directorId = dirCredit ? String(dirCredit.id) : "";
+  const directorPfp = dirCredit?.profile_path
+    ? `https://image.tmdb.org/t/p/w185${dirCredit.profile_path}`
+    : "";
   const trailer = (m.videos?.results || []).find(
     (v: any) => v.type === "Trailer" && v.site === "YouTube",
   );
@@ -75,6 +78,7 @@ export function toMovie(m: any): Movie {
     castIds: castIds,
     director,
     directorId,
+    directorPfp,
     match: m.vote_average ? Math.round(m.vote_average * 10) : 0,
     score: m.vote_average ? Number(m.vote_average.toFixed(1)) : undefined,
   };
@@ -115,6 +119,9 @@ export function toTv(m: any): Movie {
   const tvDir = m.created_by?.[0] || (credits?.crew || []).find((c: any) => c.job === "Director");
   const creator = tvDir?.name || "Unknown";
   const directorId = tvDir ? String(tvDir.id) : "";
+  const directorPfp = tvDir?.profile_path
+    ? `https://image.tmdb.org/t/p/w185${tvDir.profile_path}`
+    : "";
   const trailer = (m.videos?.results || []).find(
     (v: any) => v.type === "Trailer" && v.site === "YouTube",
   );
@@ -142,6 +149,7 @@ export function toTv(m: any): Movie {
     castIds: castIds,
     director: creator,
     directorId,
+    directorPfp,
     match: m.vote_average ? Math.round(m.vote_average * 10) : 0,
     score: m.vote_average ? Number(m.vote_average.toFixed(1)) : undefined,
     numberOfSeasons: m.number_of_seasons ?? undefined,
