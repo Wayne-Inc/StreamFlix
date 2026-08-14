@@ -622,54 +622,6 @@ function PlayerPage() {
     };
   }, [movie.id]);
 
-  const handleWatchPartyRoomUpdate = useCallback(
-    (roomState: any) => {
-      const video = videoRef.current;
-      const iframe = iframeRef.current;
-      const isEmbed = isEmbedUrl(videoUrl) && iframe;
-
-      if (roomState.video_url) {
-        setVideoUrl(roomState.video_url);
-        setMainVideoUrl(roomState.video_url);
-        mainVideoUrlRef.current = roomState.video_url;
-      }
-
-      if (isEmbed && embedSyncSupported) {
-        if (typeof roomState.position_seconds === "number") {
-          const seekTime = compensatePartyTime(
-            roomState.position_seconds,
-            roomState.is_playing,
-            roomState.updated_at,
-          );
-          sendEmbedPlaybackCommand(iframe, "seek", seekTime);
-        }
-        if (typeof roomState.is_playing === "boolean") {
-          sendEmbedPlaybackCommand(iframe, roomState.is_playing ? "play" : "pause");
-        }
-        return;
-      }
-
-      if (!video) return;
-
-      if (typeof roomState.position_seconds === "number") {
-        const targetTime = roomState.position_seconds;
-        if (Math.abs(video.currentTime - targetTime) > 1) {
-          video.currentTime = targetTime;
-        }
-      }
-
-      if (typeof roomState.is_playing === "boolean") {
-        if (roomState.is_playing && video.paused) {
-          video.play().catch(() => {});
-        }
-        if (!roomState.is_playing && !video.paused) {
-          video.pause();
-        }
-      }
-    },
-    [videoUrl, embedSyncSupported],
-  );
-
   useEffect(() => {
     const url = buildEmbedUrl(selectedServerId, movie.id, season, episode);
     setVideoUrl(url);
@@ -864,11 +816,6 @@ function PlayerPage() {
         }`}
       >
         <div className="pointer-events-auto flex flex-col gap-2 px-2 sm:px-6">
-          {isPartyMode && (
-            <div className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/90 backdrop-blur-sm">
-              Watch party mode — host controls playback
-            </div>
-          )}
           <div className="flex items-center justify-between">
             <div className="group/topbtn rounded-lg transition-colors duration-200 hover:bg-white/10 hover:backdrop-blur-sm -ml-1 sm:-ml-2 px-1 sm:px-2 py-2 sm:py-1">
               <button

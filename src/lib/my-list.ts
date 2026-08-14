@@ -1,5 +1,6 @@
 import type { Movie } from "./types";
 import { getSelectedProfileId } from "./continue-watching";
+import { setMyListInFirestore, removeMyListFromFirestore } from "./my-list-firestore";
 
 export type MyListEntry = {
   id: string;
@@ -39,6 +40,7 @@ export function toggleMyList(movie: Movie): boolean {
     : [{ id: movie.id, addedAt: Date.now(), movie }, ...current];
   window.localStorage.setItem(key, JSON.stringify(list));
   window.dispatchEvent(new Event(MY_LIST_EVENT));
+  setMyListInFirestore(movie, !exists).catch(() => {});
   return !exists;
 }
 
@@ -47,4 +49,5 @@ export function removeFromMyList(id: string) {
   const list = getMyList().filter((e) => e.id !== id);
   window.localStorage.setItem(key, JSON.stringify(list));
   window.dispatchEvent(new Event(MY_LIST_EVENT));
+  removeMyListFromFirestore(id).catch(() => {});
 }

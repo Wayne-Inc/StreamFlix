@@ -13,29 +13,12 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 
-function getSelectedText() {
-  const el = document.activeElement as HTMLInputElement | HTMLTextAreaElement | null;
-  const start = el?.selectionStart;
-  const end = el?.selectionEnd;
-  if (
-    el &&
-    (el.tagName === "INPUT" || el.tagName === "TEXTAREA") &&
-    typeof start === "number" &&
-    typeof end === "number" &&
-    start !== end
-  ) {
-    return el.value.slice(start, end).trim();
-  }
-  return window.getSelection()?.toString().trim() ?? "";
-}
-
 export function GlobalContextMenu({ children }: { children: ReactNode }) {
   const router = useRouter();
   const maxIndex = useRef(
     typeof window !== "undefined" ? (window.history.state?.__TSR_index ?? 0) : 0,
   );
   const [nav, setNav] = useState({ canBack: false, canForward: false });
-  const [hasSelection, setHasSelection] = useState(false);
   const [cardContext, setCardContext] = useState<{ title: string; url: string } | null>(null);
 
   useEffect(() => {
@@ -66,10 +49,7 @@ export function GlobalContextMenu({ children }: { children: ReactNode }) {
   };
 
   return (
-    <ContextMenu
-      modal={false}
-      onOpenChange={(open) => setHasSelection(open && !!getSelectedText())}
-    >
+    <ContextMenu modal={false}>
       <ContextMenuTrigger asChild>
         <div
           className="min-h-dvh"
@@ -83,7 +63,7 @@ export function GlobalContextMenu({ children }: { children: ReactNode }) {
           {children}
         </div>
       </ContextMenuTrigger>
-      <ContextMenuContent className="w-56">
+      <ContextMenuContent className="w-56 border-border/60 bg-background/75 backdrop-blur-xl">
         <ContextMenuItem onClick={() => window.location.reload()}>
           <RotateCw className="mr-2 h-4 w-4" />
           Reload
@@ -117,16 +97,6 @@ export function GlobalContextMenu({ children }: { children: ReactNode }) {
             </ContextMenuItem>
           </>
         )}
-        <ContextMenuItem
-          disabled={!hasSelection}
-          onClick={() => {
-            const text = getSelectedText();
-            if (text) copyToClipboard(text, "Selection copied");
-          }}
-        >
-          <Copy className="mr-2 h-4 w-4" />
-          Copy selected text
-        </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
   );

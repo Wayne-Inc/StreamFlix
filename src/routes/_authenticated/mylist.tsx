@@ -6,6 +6,7 @@ import { Footer } from "@/components/streamflix/Footer";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getMyList, MY_LIST_EVENT, type MyListEntry } from "@/lib/my-list";
+import { getMyListFromFirestore } from "@/lib/my-list-firestore";
 import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
 
 export const Route = createFileRoute("/_authenticated/mylist")({
@@ -18,15 +19,31 @@ function MyListPage() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    const update = () => {
-      setList(getMyList());
-      setLoaded(true);
+    let cancelled = false;
+    const update = async () => {
+      const local = getMyList();
+      const merged = new Map<string, MyListEntry>();
+      for (const e of local) merged.set(e.id, e);
+      try {
+        const fs = await getMyListFromFirestore();
+        for (const e of fs) {
+          const existing = merged.get(e.id);
+          if (!existing || e.addedAt > existing.addedAt) merged.set(e.id, e);
+        }
+      } catch {}
+      if (!cancelled) {
+        setList(
+          Array.from(merged.values()).sort((a, b) => b.addedAt - a.addedAt),
+        );
+        setLoaded(true);
+      }
     };
     update();
     window.addEventListener(MY_LIST_EVENT, update);
     window.addEventListener("storage", update);
     window.addEventListener("focus", update);
     return () => {
+      cancelled = true;
       window.removeEventListener(MY_LIST_EVENT, update);
       window.removeEventListener("storage", update);
       window.removeEventListener("focus", update);

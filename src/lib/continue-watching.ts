@@ -1,4 +1,8 @@
 import type { Movie } from "./types";
+import {
+  saveHistoryToFirestore,
+  removeHistoryFromFirestore,
+} from "./history-firestore";
 
 const KEY = "streamflix:continue-watching";
 const HISTORY_KEY = "streamflix:watch-history";
@@ -82,11 +86,12 @@ export function getWatchHistory(): WatchHistoryItem[] {
   }
 }
 
-function saveHistoryItem(item: WatchHistoryItem) {
-  if (typeof window === "undefined") return;
+function saveHistoryItem(item: WatchHistoryItem): WatchHistoryItem | null {
+  if (typeof window === "undefined") return null;
   const list = getWatchHistory().filter((x) => x.id !== item.id);
   list.unshift(item);
   window.localStorage.setItem(getHistoryKey(), JSON.stringify(list.slice(0, HISTORY_MAX)));
+  return item;
 }
 
 export function recordWatchHistory(
@@ -101,7 +106,7 @@ export function recordWatchHistory(
   const ratio = progress / duration;
   if (ratio < 0.95 || progress <= 5) return;
 
-  saveHistoryItem({
+  const item = saveHistoryItem({
     id: makeContinueId(movie.id, season, episode),
     title: movie.title,
     poster: movie.poster,
@@ -125,6 +130,7 @@ export function recordWatchHistory(
     episode,
     episodeLabel: season != null && episode != null ? `S${season}E${episode}` : undefined,
   });
+  if (item) saveHistoryToFirestore(item).catch(() => {});
 }
 
 export function recordProgress(
@@ -179,7 +185,7 @@ export function markAsWatched(movie: Movie) {
   window.localStorage.setItem(getKey(), JSON.stringify(continueList));
 
   const now = Date.now();
-  saveHistoryItem({
+  const item = saveHistoryItem({
     id: movie.id,
     title: movie.title,
     poster: movie.poster,
@@ -200,6 +206,7 @@ export function markAsWatched(movie: Movie) {
     updatedAt: now,
     watchedAt: now,
   });
+  if (item) saveHistoryToFirestore(item).catch(() => {});
 }
 
 export function unmarkWatched(id: string) {
@@ -207,6 +214,7 @@ export function unmarkWatched(id: string) {
   const key = getHistoryKey();
   const list = getWatchHistory().filter((x) => x.id !== id && !x.id.startsWith(`${id}:`));
   window.localStorage.setItem(key, JSON.stringify(list));
+  removeHistoryFromFirestore(id).catch(() => {});
 }
 
 export function removeContinue(id: string) {

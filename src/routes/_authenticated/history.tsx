@@ -7,6 +7,11 @@ import { Footer } from "@/components/streamflix/Footer";
 import { LazyImage } from "@/components/streamflix/LazyImage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getWatchHistory, type WatchHistoryItem } from "@/lib/continue-watching";
+import {
+  getWatchHistoryFromFirestore,
+  removeHistoryFromFirestore,
+  clearHistoryFromFirestore,
+} from "@/lib/history-firestore";
 
 export const Route = createFileRoute("/_authenticated/history")({
   head: () => ({ meta: [{ title: "Watch History — StreamFlix" }] }),
@@ -18,8 +23,29 @@ function HistoryPage() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    setHistory(getWatchHistory());
-    setLoaded(true);
+    let cancelled = false;
+    const load = async () => {
+      const local = getWatchHistory();
+      const merged = new Map<string, WatchHistoryItem>();
+      for (const item of local) merged.set(item.id, item);
+      try {
+        const fs = await getWatchHistoryFromFirestore();
+        for (const item of fs) {
+          const existing = merged.get(item.id);
+          if (!existing || item.watchedAt > existing.watchedAt) merged.set(item.id, item);
+        }
+      } catch {}
+      if (!cancelled) {
+        setHistory(
+          Array.from(merged.values()).sort((a, b) => b.watchedAt - a.watchedAt),
+        );
+        setLoaded(true);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const clearAll = () => {
@@ -29,6 +55,7 @@ function HistoryPage() {
       );
       keys.forEach((k) => localStorage.removeItem(k));
       setHistory([]);
+      clearHistoryFromFirestore().catch(() => {});
     } catch {}
   };
 
@@ -42,6 +69,7 @@ function HistoryPage() {
       const filtered = list.filter((x) => x.id !== id);
       localStorage.setItem(key, JSON.stringify(filtered));
       setHistory(filtered);
+      removeHistoryFromFirestore(id).catch(() => {});
     } catch {}
   };
 

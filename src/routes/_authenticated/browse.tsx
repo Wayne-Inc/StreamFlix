@@ -20,11 +20,13 @@ import {
   toMovie as continueToMovie,
   type ContinueItem,
 } from "@/lib/continue-watching";
-import { getMyList, MY_LIST_EVENT } from "@/lib/my-list";
+import { getMyList, MY_LIST_EVENT, type MyListEntry } from "@/lib/my-list";
+import { getMyListFromFirestore } from "@/lib/my-list-firestore";
 import {
   getContinueWatchingFromFirestore,
   toMovie as fsToMovie,
 } from "@/lib/continue-watching-firestore";
+import { getWatchHistoryFromFirestore } from "@/lib/history-firestore";
 import { isKidsProfile, filterKidsContent, filterKidsHeroSlides } from "@/lib/kids-mode";
 import { getPersonalizedRecommendations, type RecommendSeed } from "@/lib/recommendations";
 
@@ -144,12 +146,36 @@ function BrowsePage() {
       setListRow(null);
       return;
     }
-    const update = () => setListRow(getMyList().map((e) => e.movie));
+    let cancelled = false;
+    const update = async () => {
+      try {
+        const local = getMyList();
+        const merged = new Map<string, MyListEntry>();
+        for (const e of local) merged.set(e.id, e);
+        try {
+          const fs = await getMyListFromFirestore();
+          for (const e of fs) {
+            const existing = merged.get(e.id);
+            if (!existing || e.addedAt > existing.addedAt) merged.set(e.id, e);
+          }
+        } catch {}
+        if (!cancelled) {
+          setListRow(
+            Array.from(merged.values())
+              .sort((a, b) => b.addedAt - a.addedAt)
+              .map((e) => e.movie),
+          );
+        }
+      } catch {
+        if (!cancelled) setListRow(getMyList().map((e) => e.movie));
+      }
+    };
     update();
     window.addEventListener("storage", update);
     window.addEventListener("focus", update);
     window.addEventListener(MY_LIST_EVENT, update);
     return () => {
+      cancelled = true;
       window.removeEventListener("storage", update);
       window.removeEventListener("focus", update);
       window.removeEventListener(MY_LIST_EVENT, update);
@@ -182,6 +208,18 @@ function BrowsePage() {
               title: fs.title,
               watchedAt: Math.max(existing?.watchedAt ?? 0, fs.updatedAt),
               genreIds: fs.genreIds,
+            });
+          }
+        } catch {}
+        try {
+          const fsHistory = await getWatchHistoryFromFirestore();
+          for (const h of fsHistory) {
+            const existing = seeds.get(h.id);
+            seeds.set(h.id, {
+              id: h.id,
+              title: h.title,
+              watchedAt: Math.max(existing?.watchedAt ?? 0, h.watchedAt),
+              genreIds: h.genreIds,
             });
           }
         } catch {}
