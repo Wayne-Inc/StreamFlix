@@ -20,8 +20,6 @@ import {
   Clock,
   ChevronLeft,
   ChevronRight,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react";
 import {
   isKidsProfile,
@@ -172,7 +170,7 @@ function MoviePage() {
   const isTv = movie.id.startsWith("tv-");
   const [descExpanded, setDescExpanded] = useState(false);
   const castScrollerRef = useRef<HTMLDivElement | null>(null);
-  const [portraitDown, setPortraitDown] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
 
   const [trailerOpen, setTrailerOpen] = useState(false);
 
@@ -481,48 +479,52 @@ function MoviePage() {
             <div className="min-w-0 md:col-span-1">
               {isTv && movie.numberOfSeasons && movie.numberOfSeasons > 0 ? (
                 <>
-                  <div className="relative hidden w-full md:block">
-                    <aside className="relative z-20 rounded-lg border border-border bg-background/85 p-4 shadow-2xl backdrop-blur-md sm:p-5">
-                      <SeasonEpisodePicker movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} />
-                    </aside>
+                  <div className="relative hidden w-full overflow-hidden md:block md:w-80">
                     <div
-                      className={`absolute left-0 right-0 top-0 z-10 w-full transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                        portraitDown ? "translate-y-3/4" : "translate-y-0"
+                      className={`flex w-max transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                        showPicker ? "-translate-x-[224px]" : "translate-x-0"
                       }`}
                     >
-                      <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-surface shadow-2xl ring-1 ring-white/15">
-                        {movie.poster ? (
-                          <img
-                            src={movie.poster}
-                            alt={movie.title}
-                            className="size-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex size-full items-center justify-center text-2xl font-bold text-muted-foreground">
-                            {movie.title.charAt(0)}
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                      <div className="w-80 shrink-0">
+                        <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-surface shadow-2xl ring-1 ring-white/15">
+                          {movie.poster ? (
+                            <img
+                              src={movie.poster}
+                              alt={movie.title}
+                              className="size-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex size-full items-center justify-center text-2xl font-bold text-muted-foreground">
+                              {movie.title.charAt(0)}
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                        </div>
                       </div>
+                      <aside className="-ml-24 w-80 shrink-0 self-center rounded-lg border border-border bg-background/85 p-4 shadow-2xl backdrop-blur-md sm:p-5">
+                        <SeasonEpisodePicker movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} />
+                      </aside>
                     </div>
-                    <div className="absolute right-2 top-2 z-30 hidden flex-col gap-1.5 md:flex">
+                    <div className="absolute inset-y-0 left-2 z-30 hidden items-center md:flex">
                       <button
                         type="button"
-                        onClick={() => setPortraitDown(false)}
-                        disabled={!portraitDown}
-                        aria-label="Move portrait up"
+                        onClick={() => setShowPicker(false)}
+                        disabled={!showPicker}
+                        aria-label="Show portrait"
                         className="grid size-8 place-items-center rounded-full border border-border bg-background/80 text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground disabled:opacity-30"
                       >
-                        <ChevronUp className="size-4" />
+                        <ChevronLeft className="size-4" />
                       </button>
+                    </div>
+                    <div className="absolute inset-y-0 right-2 z-30 hidden items-center md:flex">
                       <button
                         type="button"
-                        onClick={() => setPortraitDown(true)}
-                        disabled={portraitDown}
-                        aria-label="Move portrait down"
+                        onClick={() => setShowPicker(true)}
+                        disabled={showPicker}
+                        aria-label="Show season picker"
                         className="grid size-8 place-items-center rounded-full border border-border bg-background/80 text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground disabled:opacity-30"
                       >
-                        <ChevronDown className="size-4" />
+                        <ChevronRight className="size-4" />
                       </button>
                     </div>
                   </div>
