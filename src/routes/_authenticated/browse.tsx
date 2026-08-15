@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowUp } from "lucide-react";
+import { ArrowUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { z } from "zod";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { HeroBanner } from "@/components/streamflix/HeroBanner";
@@ -82,8 +82,15 @@ export const Route = createFileRoute("/_authenticated/browse")({
 });
 
 function BrowsePage() {
-  const { heroSlides, top10Today, rows } = Route.useLoaderData();
+  const data = Route.useLoaderData();
+  const heroSlides: Movie[] = data.heroSlides;
+  const top10Today: Movie[] = data.top10Today;
+  const genreGroups: { id: string; name: string; items: Movie[] }[] = data.genreGroups;
+  const rows: { title: string; items: Movie[] }[] = data.rows;
   const { kind } = Route.useSearch();
+  const [activeGenreId, setActiveGenreId] = useState(genreGroups[0]?.id ?? "");
+  const [top10Ref, setTop10Ref] = useState<HTMLDivElement | null>(null);
+  const [top10Scroll, setTop10Scroll] = useState({ left: 0, viewport: 0, width: 0 });
   const [continueRow, setContinueRow] = useState<{
     title: string;
     items: { movie: Movie; progress: number }[];
@@ -343,6 +350,30 @@ function BrowsePage() {
 
   const kidsMode = useMemo(() => isKidsProfile(), []);
 
+  useEffect(() => {
+    const el = top10Ref;
+    if (!el) return;
+    const measure = () =>
+      setTop10Scroll({ left: el.scrollLeft, viewport: el.clientWidth, width: el.scrollWidth });
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    const onScroll = () =>
+      setTop10Scroll({ left: el.scrollLeft, viewport: el.clientWidth, width: el.scrollWidth });
+    el.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      el.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", measure);
+    };
+  }, [top10Ref, top10Today.length]);
+
+  const scrollTop10 = (dir: 1 | -1) => {
+    if (!top10Ref) return;
+    top10Ref.scrollBy({ left: dir * (top10Ref.clientWidth * 0.9), behavior: "smooth" });
+  };
+
   const [kidsPool, setKidsPool] = useState<Movie[]>([]);
   useEffect(() => {
     if (!kidsMode) {
@@ -490,11 +521,71 @@ function BrowsePage() {
             <h2 className="px-4 sm:px-8 mb-4 sm:mb-6 text-2xl sm:text-3xl font-bold tracking-tight">
               Top 10 Today
             </h2>
-            <div className="scrollbar-hide flex gap-3 sm:gap-5 overflow-x-auto px-4 sm:px-8">
-              {(kidsMode ? filterKidsContent(top10Today) : top10Today).map((m, i) => (
-                <MovieCard key={m.id} movie={m} rank={i + 1} />
-              ))}
+            <div className="relative">
+              {top10Scroll.left > 2 && (
+                <button
+                  type="button"
+                  onClick={() => scrollTop10(-1)}
+                  aria-label="Scroll top 10 left"
+                  className="absolute left-1 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
+                >
+                  <ChevronLeft className="size-5" />
+                </button>
+              )}
+              {top10Scroll.viewport > 0 &&
+                top10Scroll.left + top10Scroll.viewport < top10Scroll.width - 2 && (
+                <button
+                  type="button"
+                  onClick={() => scrollTop10(1)}
+                  aria-label="Scroll top 10 right"
+                  className="absolute right-1 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
+                >
+                  <ChevronRight className="size-5" />
+                </button>
+              )}
+              <div
+                ref={setTop10Ref}
+                className="scrollbar-hide flex gap-3 sm:gap-5 overflow-x-auto scroll-smooth px-4 sm:px-8"
+              >
+                {(kidsMode ? filterKidsContent(top10Today) : top10Today).map((m, i) => (
+                  <MovieCard key={m.id} movie={m} rank={i + 1} />
+                ))}
+              </div>
             </div>
+          </section>
+        )}
+        {kind === "home" && genreGroups.length > 0 && (
+          <section className="space-y-4 py-4">
+            <div className="px-4 sm:px-8 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Explore by Genre</h2>
+              <label className="sr-only" htmlFor="genre-select">
+                Choose a genre
+              </label>
+              <select
+                id="genre-select"
+                value={activeGenreId}
+                onChange={(e) => setActiveGenreId(e.target.value)}
+                className="rounded-lg border border-border bg-card/80 px-3 py-2 text-sm font-medium text-foreground backdrop-blur transition hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                {genreGroups.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {(() => {
+              const active =
+                genreGroups.find((g) => g.id === activeGenreId) ?? genreGroups[0];
+              if (!active) return null;
+              return (
+                <Row
+                  key={active.id}
+                  title={active.name}
+                  items={kidsMode ? fillRow(filterKidsContent(active.items)) : active.items}
+                />
+              );
+            })()}
           </section>
         )}
         {filteredRows.map((r: { title: string; items: Movie[] }) => (

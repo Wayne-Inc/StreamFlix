@@ -1,21 +1,22 @@
 import type { Movie } from "./types";
 import {
   fetchTrending,
-  fetchTrendingDay,
+  fetchTrendingAllWeek,
+  fetchTrendingAllDay,
   fetchPopular,
   fetchNowPlaying,
   fetchTopRated,
+  fetchTopRatedTv,
   fetchUpcoming,
   fetchTrendingTv,
-  fetchTrendingTvDay,
   fetchPopularTv,
-  fetchTopRatedTv,
   fetchAiringTv,
   fetchMovie,
   fetchSimilar,
   fetchRecommendations,
   searchMovies,
   discoverByGenre,
+  discoverByGenreMixed,
   searchPeople,
   fetchGenres,
   searchFiltered as searchFilteredFn,
@@ -40,64 +41,57 @@ export const defaultProfiles = [
 
 async function loadHome() {
   const [
-    trending,
-    popular,
+    trendingAllWeek,
     nowPlaying,
     topRated,
-    sciFi,
-    dramas,
+    topRatedTv,
+    trendingAllDay,
     action,
     comedy,
+    sciFi,
     animation,
     horror,
-    trendingTv,
-    trendingDay,
-    trendingTvDay,
+    drama,
   ] = await Promise.all([
-    fetchTrending(),
-    fetchPopular(),
+    fetchTrendingAllWeek(),
     fetchNowPlaying(),
     fetchTopRated(),
-    discoverByGenre({ data: { genreId: "878" } }),
-    discoverByGenre({ data: { genreId: "18" } }),
-    discoverByGenre({ data: { genreId: "28" } }),
-    discoverByGenre({ data: { genreId: "35" } }),
-    discoverByGenre({ data: { genreId: "16" } }),
-    discoverByGenre({ data: { genreId: "27" } }),
-    fetchTrendingTv(),
-    fetchTrendingDay(),
-    fetchTrendingTvDay(),
+    fetchTopRatedTv(),
+    fetchTrendingAllDay(),
+    discoverByGenreMixed({ data: { genreId: "28" } }),
+    discoverByGenreMixed({ data: { genreId: "35" } }),
+    discoverByGenreMixed({ data: { genreId: "878" } }),
+    discoverByGenreMixed({ data: { genreId: "16" } }),
+    discoverByGenreMixed({ data: { genreId: "27" } }),
+    discoverByGenreMixed({ data: { genreId: "18" } }),
   ]);
 
   let recommendations: Movie[] = [];
   try {
-    if (trending.length > 0) {
-      recommendations = await fetchRecommendations({ data: { id: trending[0].id } });
+    if (trendingAllWeek.length > 0) {
+      recommendations = await fetchRecommendations({ data: { id: trendingAllWeek[0].id } });
     }
   } catch {}
 
-  const seenTop10 = new Set<string>();
-  const top10Today = [...trendingDay, ...trendingTvDay].filter((m) => {
-    if (seenTop10.has(m.id)) return false;
-    seenTop10.add(m.id);
-    return true;
-  }).slice(0, 10);
+  const top10Today = trendingAllDay.slice(0, 10);
+
+  const genreGroups = [
+    { id: "28", name: "Action & Adventure", items: action },
+    { id: "35", name: "Laugh Out Loud", items: comedy },
+    { id: "878", name: "Sci-Fi & Beyond", items: sciFi },
+    { id: "16", name: "Animation & Family", items: animation },
+    { id: "27", name: "Horror & Thrills", items: horror },
+    { id: "18", name: "Award-Winning Dramas", items: drama },
+  ];
 
   return {
-    heroSlides: await enrichCertificationsFn({ data: { items: trending.slice(0, 5) } }),
+    heroSlides: await enrichCertificationsFn({ data: { items: trendingAllWeek.slice(0, 5) } }),
     top10Today,
+    genreGroups,
     rows: [
-      { title: "Trending Now", items: trending.slice(0, 10) },
+      { title: "Trending Now", items: trendingAllWeek },
       ...(recommendations.length ? [{ title: "Recommended for You", items: recommendations }] : []),
-      { title: "Top Rated", items: topRated.slice(0, 10) },
-      { title: "Popular on StreamFlix", items: popular.slice(0, 10) },
-      { title: "Trending TV", items: trendingTv.slice(0, 10) },
-      { title: "Sci-Fi & Beyond", items: sciFi },
-      { title: "Action & Adventure", items: action },
-      { title: "Laugh Out Loud", items: comedy },
-      { title: "Animation & Family", items: animation },
-      { title: "Award-Winning Dramas", items: dramas.slice(0, 10) },
-      { title: "Horror & Thrills", items: horror },
+      { title: "Top Rated", items: [...topRated, ...topRatedTv].slice(0, 10) },
       { title: "New Releases", items: nowPlaying },
     ],
   };
@@ -128,6 +122,7 @@ async function loadMovies() {
   return {
     heroSlides: await enrichCertificationsFn({ data: { items: popular.slice(0, 3) } }),
     top10Today: [],
+    genreGroups: [],
     rows: [
       { title: "Trending Movies", items: trending },
       { title: "Popular Movies", items: popular },
@@ -152,6 +147,7 @@ async function loadTv() {
   return {
     heroSlides: await enrichCertificationsFn({ data: { items: trending.slice(0, 3) } }),
     top10Today: [],
+    genreGroups: [],
     rows: [
       { title: "Trending TV", items: trending },
       { title: "Popular Shows", items: popular },
@@ -171,6 +167,7 @@ async function loadNew() {
   return {
     heroSlides: await enrichCertificationsFn({ data: { items: upcoming.slice(0, 3) } }),
     top10Today: [],
+    genreGroups: [],
     rows: [
       { title: "New Releases", items: nowPlaying },
       { title: "Coming Soon", items: upcoming },

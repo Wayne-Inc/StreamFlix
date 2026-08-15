@@ -13,6 +13,18 @@ export const fetchTrendingDay = createServerFn({ method: "POST" }).handler(async
   return (data.results || []).map((m: any) => toMovie(m));
 });
 
+export const fetchTrendingAllDay = createServerFn({ method: "POST" }).handler(async () => {
+  const { tmdbFetch, toMovie, toTv } = await import("./tmdb.server");
+  const data = await tmdbFetch("/trending/all/day");
+  return (data.results || []).map((m: any) => (m.media_type === "tv" ? toTv(m) : toMovie(m)));
+});
+
+export const fetchTrendingAllWeek = createServerFn({ method: "POST" }).handler(async () => {
+  const { tmdbFetch, toMovie, toTv } = await import("./tmdb.server");
+  const data = await tmdbFetch("/trending/all/week");
+  return (data.results || []).map((m: any) => (m.media_type === "tv" ? toTv(m) : toMovie(m)));
+});
+
 export const fetchPopular = createServerFn({ method: "POST" }).handler(async () => {
   const { tmdbFetch, toMovie } = await import("./tmdb.server");
   const data = await tmdbFetch("/movie/popular");
@@ -328,6 +340,30 @@ export const discoverByGenre = createServerFn({ method: "POST" })
       ...(res3.results || []),
     ];
     return combined.map((m: any) => toMovie(m));
+  });
+
+export const discoverByGenreMixed = createServerFn({ method: "POST" })
+  .validator(z.object({ genreId: z.string() }))
+  .handler(async ({ data }) => {
+    const { tmdbFetch, toMovie, toTv } = await import("./tmdb.server");
+    const [movieRes, tvRes] = await Promise.all([
+      tmdbFetch("/discover/movie", {
+        with_genres: data.genreId,
+        sort_by: "popularity.desc",
+        page: "1",
+      }),
+      tmdbFetch("/discover/tv", {
+        with_genres: data.genreId,
+        sort_by: "popularity.desc",
+        page: "1",
+      }),
+    ]);
+    const seen = new Set<string>();
+    return [...(movieRes.results || []).map((m: any) => toMovie(m)), ...(tvRes.results || []).map((m: any) => toTv(m))].filter((m) => {
+      if (seen.has(m.id)) return false;
+      seen.add(m.id);
+      return true;
+    });
   });
 
 export const fetchMoviesByIds = createServerFn({ method: "POST" })
