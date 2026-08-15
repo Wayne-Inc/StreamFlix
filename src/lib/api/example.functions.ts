@@ -8,8 +8,7 @@ import { getServerConfig } from "../config.server";
 // The .handler body runs server-only — imports used only inside it (like
 // .server.ts modules) are tree-shaken from the client bundle. Module-level
 // code here still ships to the client; for truly server-only helpers, put
-// them in a .server.ts file. Use this pattern instead of Supabase Edge
-// Functions for server logic.
+// them in a .server.ts file. Use this pattern for server logic.
 
 export const getGreeting = createServerFn({ method: "POST" })
   .inputValidator(z.object({ name: z.string().min(1) }))

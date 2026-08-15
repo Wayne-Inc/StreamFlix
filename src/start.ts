@@ -1,7 +1,7 @@
 import { createStart, createMiddleware, createCsrfMiddleware } from "@tanstack/react-start";
 
 import { renderErrorPage } from "./lib/error-page";
-import { attachFirebaseAuth } from "@/integrations/supabase/auth-attacher";
+import { attachFirebaseAuth } from "@/lib/auth-attacher";
 
 const errorMiddleware = createMiddleware().server(async ({ next }) => {
   try {

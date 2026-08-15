@@ -25,7 +25,7 @@ A free, Netflix-style streaming web app. Browse an ever-changing catalog of movi
 | Framework | [TanStack Start](https://tanstack.com/start) (SSR) + [TanStack Router](https://tanstack.com/router) |
 | UI | React 19, Tailwind CSS 4, shadcn/ui-style components, Lucide icons |
 | Build | Vite 7, TypeScript 5, Nitro (Vercel preset) |
-| Auth & data | Firebase Auth, Firebase Firestore, Supabase |
+| Auth & data | Firebase Auth, Firebase Firestore |
 | Content API | TMDB (The Movie Database) |
 | Desktop | Electron |
 | Mobile | Capacitor (Android) |
@@ -36,7 +36,7 @@ A free, Netflix-style streaming web app. Browse an ever-changing catalog of movi
 ### Prerequisites
 
 - Node.js 20+ and npm (or bun)
-- Accounts/keys for Firebase, Supabase, and TMDB
+- Accounts/keys for Firebase and TMDB
 
 ### Installation
 
@@ -65,13 +65,6 @@ Copy `.env.example` to `.env` and fill in your credentials:
 | `VITE_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket |
 | `FIREBASE_CLIENT_EMAIL` | Firebase Admin service account email (server-side only) |
 | `FIREBASE_PRIVATE_KEY` | Firebase Admin service account private key (server-side only) |
-| `VITE_SUPABASE_URL` | Client-side Supabase URL |
-| `VITE_SUPABASE_PROJECT_ID` | Client-side Supabase project ID |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Client-side Supabase publishable key |
-| `SUPABASE_URL` | Server-side Supabase URL |
-| `SUPABASE_PROJECT_ID` | Server-side Supabase project ID |
-| `SUPABASE_PUBLISHABLE_KEY` | Server-side Supabase publishable key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service-role key (server-side only) |
 | `TMDB_API_KEY` | TMDB API key (server-side) |
 | `VITE_TMDB_API_KEY` | TMDB API key (also accepted client-side, falls back to `TMDB_API_KEY`) |
 | `VITE_SITE_URL` | Public site URL (e.g. `https://streamflix.dpdns.org`) |
@@ -121,12 +114,11 @@ src/
 │   ├── index.tsx        # Landing page
 │   ├── auth.tsx         # Sign in / sign up
 │   └── _authenticated/  # Authenticated pages (browse, search, watch, ...)
-├── lib/                 # Firebase, Supabase, TMDB API, data helpers
+├── lib/                 # Firebase, TMDB API, data helpers
 ├── integrations/        # Third-party service adapters
 └── styles.css           # Global styles
 electron/                # Electron desktop shell
 android/                 # Capacitor Android project
-supabase/                # Supabase migrations/configuration
 ```
 
 ## License
