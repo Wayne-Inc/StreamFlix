@@ -541,11 +541,11 @@ function BrowsePage() {
                   onClick={() => setGenreMenuOpen((v) => !v)}
                   aria-expanded={genreMenuOpen}
                   aria-haspopup="listbox"
-                  className="inline-flex items-center gap-2 rounded-lg border border-border bg-card/80 px-4 py-2 text-lg font-bold tracking-tight text-foreground shadow-lg backdrop-blur transition hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="group inline-flex items-center gap-1.5 text-lg font-bold tracking-tight text-foreground underline decoration-red-500 decoration-2 underline-offset-4 transition-colors hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   {activeGenre.name}
                   <ChevronDown
-                    className={`size-4 text-muted-foreground transition-transform duration-200 ${
+                    className={`size-4 text-red-500 transition-transform duration-200 ${
                       genreMenuOpen ? "rotate-180" : ""
                     }`}
                   />
