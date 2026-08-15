@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { ArrowUp, ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowUp, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { z } from "zod";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { HeroBanner } from "@/components/streamflix/HeroBanner";
@@ -60,7 +60,7 @@ function BrowseSkeleton() {
           </div>
         </div>
       </div>
-      <div className="relative z-10 space-y-6 px-4 sm:px-8 md:mt-12">
+      <div className="relative z-10 space-y-6 md:mt-12">
         {isHome && <RowSkeleton />}
         {[1, 2, 3, 4, 5].map((i) => (
           <RowSkeleton key={i} />
@@ -89,6 +89,19 @@ function BrowsePage() {
   const rows: { title: string; items: Movie[] }[] = data.rows;
   const { kind } = Route.useSearch();
   const [activeGenreId, setActiveGenreId] = useState(genreGroups[0]?.id ?? "");
+  const [genreMenuOpen, setGenreMenuOpen] = useState(false);
+  const genreMenuRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!genreMenuOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (genreMenuRef.current && !genreMenuRef.current.contains(e.target as Node)) {
+        setGenreMenuOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [genreMenuOpen]);
+  const activeGenre = genreGroups.find((g) => g.id === activeGenreId) ?? genreGroups[0];
   const [top10Ref, setTop10Ref] = useState<HTMLDivElement | null>(null);
   const [top10Scroll, setTop10Scroll] = useState({ left: 0, viewport: 0, width: 0 });
   const [continueRow, setContinueRow] = useState<{
@@ -481,41 +494,6 @@ function BrowsePage() {
             reasonLinks={pickedRow.reasonLinks}
           />
         )}
-        {!kidsMode && kind === "home" && (
-          <section className="space-y-3 py-4">
-            <h2 className="px-4 sm:px-8 text-lg sm:text-xl font-semibold tracking-tight">
-              Explore moods
-            </h2>
-            <div className="flex flex-nowrap items-center gap-1.5 overflow-hidden px-3 sm:flex-wrap sm:gap-2 sm:overflow-visible sm:px-8">
-              {[
-                { id: "28", name: "Action" },
-                { id: "35", name: "Comedy" },
-                { id: "878", name: "Sci-Fi" },
-                { id: "27", name: "Horror" },
-                { id: "10749", name: "Romance" },
-                { id: "18", name: "Drama" },
-                { id: "16", name: "Animation" },
-                { id: "53", name: "Thriller" },
-              ].map((m, i) => (
-                <Link
-                  key={m.id}
-                  to="/explore/$genreId"
-                  params={{ genreId: m.id }}
-                  search={{ q: m.name }}
-                  className={`min-w-0 shrink overflow-hidden whitespace-nowrap rounded-full border border-border bg-card/60 px-3 py-2 text-sm text-foreground transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:border-primary hover:bg-card ${i >= 2 ? "hidden sm:inline-flex" : ""}`}
-                >
-                  {m.name}
-                </Link>
-              ))}
-              <Link
-                to="/explore"
-                className="min-w-0 shrink overflow-hidden whitespace-nowrap rounded-full border border-primary/60 px-3 py-2 text-sm font-medium text-primary transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:bg-primary/10"
-              >
-                All moods →
-              </Link>
-            </div>
-          </section>
-        )}
         {kind === "home" && top10Today.length > 0 && (
           <section className="space-y-4 py-4">
             <h2 className="px-4 sm:px-8 mb-4 sm:mb-6 text-2xl sm:text-3xl font-bold tracking-tight">
@@ -554,38 +532,59 @@ function BrowsePage() {
             </div>
           </section>
         )}
-        {kind === "home" && genreGroups.length > 0 && (
+        {kind === "home" && genreGroups.length > 0 && activeGenre && (
           <section className="space-y-4 py-4">
-            <div className="px-4 sm:px-8 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Explore by Genre</h2>
-              <label className="sr-only" htmlFor="genre-select">
-                Choose a genre
-              </label>
-              <select
-                id="genre-select"
-                value={activeGenreId}
-                onChange={(e) => setActiveGenreId(e.target.value)}
-                className="rounded-lg border border-border bg-card/80 px-3 py-2 text-sm font-medium text-foreground backdrop-blur transition hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                {genreGroups.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name}
-                  </option>
-                ))}
-              </select>
+            <div className="px-4 sm:px-8">
+              <div ref={genreMenuRef} className="relative inline-block">
+                <button
+                  type="button"
+                  onClick={() => setGenreMenuOpen((v) => !v)}
+                  aria-expanded={genreMenuOpen}
+                  aria-haspopup="listbox"
+                  className="inline-flex items-center gap-2 rounded-lg border border-border bg-card/80 px-4 py-2 text-lg font-bold tracking-tight text-foreground shadow-lg backdrop-blur transition hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  {activeGenre.name}
+                  <ChevronDown
+                    className={`size-4 text-muted-foreground transition-transform duration-200 ${
+                      genreMenuOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                {genreMenuOpen && (
+                  <ul
+                    role="listbox"
+                    className="absolute left-0 top-full z-50 mt-2 w-60 max-h-80 overflow-y-auto rounded-xl border border-border bg-popover p-1.5 shadow-2xl backdrop-blur-xl"
+                  >
+                    {genreGroups.map((g) => (
+                      <li key={g.id} role="option" aria-selected={g.id === activeGenre.id}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveGenreId(g.id);
+                            setGenreMenuOpen(false);
+                          }}
+                          className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                            g.id === activeGenre.id
+                              ? "bg-primary/15 font-semibold text-primary"
+                              : "text-foreground hover:bg-accent"
+                          }`}
+                        >
+                          {g.name}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
-            {(() => {
-              const active =
-                genreGroups.find((g) => g.id === activeGenreId) ?? genreGroups[0];
-              if (!active) return null;
-              return (
-                <Row
-                  key={active.id}
-                  title={active.name}
-                  items={kidsMode ? fillRow(filterKidsContent(active.items)) : active.items}
-                />
-              );
-            })()}
+            <Row
+              key={activeGenre.id}
+              hideTitle
+              title={activeGenre.name}
+              items={
+                kidsMode ? fillRow(filterKidsContent(activeGenre.items)) : activeGenre.items
+              }
+            />
           </section>
         )}
         {filteredRows.map((r: { title: string; items: Movie[] }) => (

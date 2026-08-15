@@ -14,11 +14,13 @@ export function Row({
   items,
   reasons,
   reasonLinks,
+  hideTitle = false,
 }: {
   title: string;
   items: Movie[];
   reasons?: Record<string, string>;
   reasonLinks?: Record<string, string>;
+  hideTitle?: boolean;
 }) {
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const [scrollLeft, setScrollLeft] = useState(0);
@@ -87,9 +89,11 @@ export function Row({
 
   return (
     <section className="relative space-y-0 py-0 sm:space-y-0 sm:py-0">
-      <h2 className="px-4 sm:px-8 mb-4 sm:mb-6 text-2xl sm:text-3xl font-bold tracking-tight">
-        {title}
-      </h2>
+      {!hideTitle && (
+        <h2 className="px-4 sm:px-8 mb-4 sm:mb-6 text-2xl sm:text-3xl font-bold tracking-tight">
+          {title}
+        </h2>
+      )}
 
       <div className="relative">
         {isSm && canScrollLeft && (
