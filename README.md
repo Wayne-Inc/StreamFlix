@@ -57,21 +57,25 @@ Copy `.env.example` to `.env` and fill in your credentials:
 
 | Variable | Description |
 | --- | --- |
-| `FIREBASE_API_KEY` | Firebase web app API key |
-| `FIREBASE_APP_ID` | Firebase app ID |
-| `FIREBASE_AUTH_DOMAIN` | Firebase auth domain |
-| `FIREBASE_MESSAGING_SENDER_ID` | Firebase sender ID |
-| `FIREBASE_PROJECT_ID` | Firebase project ID |
-| `FIREBASE_STORAGE_BUCKET` | Firebase storage bucket |
-| `SUPABASE_URL` | Supabase project URL |
-| `SUPABASE_PROJECT_ID` | Supabase project ID |
-| `SUPABASE_PUBLISHABLE_KEY` | Supabase publishable (anon) key |
-| `TMDB_API_KEY` | TMDB API key (server-side) |
+| `VITE_FIREBASE_API_KEY` | Firebase web app API key |
+| `VITE_FIREBASE_APP_ID` | Firebase app ID |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase auth domain |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase sender ID |
+| `VITE_FIREBASE_PROJECT_ID` | Firebase project ID |
+| `VITE_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket |
+| `FIREBASE_CLIENT_EMAIL` | Firebase Admin service account email (server-side only) |
+| `FIREBASE_PRIVATE_KEY` | Firebase Admin service account private key (server-side only) |
 | `VITE_SUPABASE_URL` | Client-side Supabase URL |
 | `VITE_SUPABASE_PROJECT_ID` | Client-side Supabase project ID |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Client-side Supabase publishable key |
-| `VITE_TMDB_API_KEY` | Client-side TMDB API key |
+| `SUPABASE_URL` | Server-side Supabase URL |
+| `SUPABASE_PROJECT_ID` | Server-side Supabase project ID |
+| `SUPABASE_PUBLISHABLE_KEY` | Server-side Supabase publishable key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service-role key (server-side only) |
+| `TMDB_API_KEY` | TMDB API key (server-side) |
+| `VITE_TMDB_API_KEY` | TMDB API key (also accepted client-side, falls back to `TMDB_API_KEY`) |
 | `VITE_SITE_URL` | Public site URL (e.g. `https://streamflix.dpdns.org`) |
+| `WAYBACK_ARCHIVE_KEY` | Optional Wayback Machine archive key for the archive API route |
 
 ## Scripts
 

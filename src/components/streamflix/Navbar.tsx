@@ -299,7 +299,10 @@ export function Navbar() {
                           type="button"
                           onMouseDown={(e) => {
                             e.preventDefault();
-                            submitSearch(s.title);
+                            setSearchFocused(false);
+                            setSearchQ("");
+                            setSearchSuggestions([]);
+                            router.navigate({ to: "/movie/$id", params: { id: s.id } });
                           }}
                           className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-accent"
                         >

@@ -152,8 +152,7 @@
     background-position: 800px 0;
   }
 }
-@keyframes checklist-drop {
-  from {
+@keyframes checklist-drop {  from {
     opacity: 0;
     transform: translateY(-8px);
   }

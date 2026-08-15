@@ -47,7 +47,6 @@ function MovieSkeleton() {
   return (
     <div className="min-h-dvh bg-background">
       <Navbar />
-      {/* Hero skeleton */}
       <section className="relative min-h-[70vh] overflow-hidden bg-surface/50 pt-16 md:pt-20">
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-8 md:px-16 md:py-16">
           <div className="grid w-full gap-10 md:grid-cols-3 md:gap-8">
