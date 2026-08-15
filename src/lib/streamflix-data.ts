@@ -39,6 +39,27 @@ export const defaultProfiles = [
   { id: "p4", name: "Kids", color: "from-emerald-400 to-teal-600", kids: true },
 ];
 
+const HOME_GENRES = [
+  { id: "28", name: "Action" },
+  { id: "12", name: "Adventure" },
+  { id: "16", name: "Animation" },
+  { id: "35", name: "Comedy" },
+  { id: "80", name: "Crime" },
+  { id: "99", name: "Documentary" },
+  { id: "18", name: "Drama" },
+  { id: "10751", name: "Family" },
+  { id: "14", name: "Fantasy" },
+  { id: "36", name: "History" },
+  { id: "27", name: "Horror" },
+  { id: "10402", name: "Music" },
+  { id: "9648", name: "Mystery" },
+  { id: "10749", name: "Romance" },
+  { id: "878", name: "Sci-Fi" },
+  { id: "53", name: "Thriller" },
+  { id: "10752", name: "War" },
+  { id: "37", name: "Western" },
+];
+
 async function loadHome() {
   const [
     trendingAllWeek,
@@ -46,24 +67,14 @@ async function loadHome() {
     topRated,
     topRatedTv,
     trendingAllDay,
-    action,
-    comedy,
-    sciFi,
-    animation,
-    horror,
-    drama,
+    ...genreItems
   ] = await Promise.all([
     fetchTrendingAllWeek(),
     fetchNowPlaying(),
     fetchTopRated(),
     fetchTopRatedTv(),
     fetchTrendingAllDay(),
-    discoverByGenreMixed({ data: { genreId: "28" } }),
-    discoverByGenreMixed({ data: { genreId: "35" } }),
-    discoverByGenreMixed({ data: { genreId: "878" } }),
-    discoverByGenreMixed({ data: { genreId: "16" } }),
-    discoverByGenreMixed({ data: { genreId: "27" } }),
-    discoverByGenreMixed({ data: { genreId: "18" } }),
+    ...HOME_GENRES.map((g) => discoverByGenreMixed({ data: { genreId: g.id } })),
   ]);
 
   let recommendations: Movie[] = [];
@@ -75,14 +86,7 @@ async function loadHome() {
 
   const top10Today = trendingAllDay.slice(0, 10);
 
-  const genreGroups = [
-    { id: "28", name: "Action & Adventure", items: action },
-    { id: "35", name: "Laugh Out Loud", items: comedy },
-    { id: "878", name: "Sci-Fi & Beyond", items: sciFi },
-    { id: "16", name: "Animation & Family", items: animation },
-    { id: "27", name: "Horror & Thrills", items: horror },
-    { id: "18", name: "Award-Winning Dramas", items: drama },
-  ];
+  const genreGroups = HOME_GENRES.map((g, i) => ({ id: g.id, name: g.name, items: genreItems[i] }));
 
   return {
     heroSlides: await enrichCertificationsFn({ data: { items: trendingAllWeek.slice(0, 5) } }),

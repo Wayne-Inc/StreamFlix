@@ -541,7 +541,7 @@ function BrowsePage() {
                   onClick={() => setGenreMenuOpen((v) => !v)}
                   aria-expanded={genreMenuOpen}
                   aria-haspopup="listbox"
-                  className="group inline-flex items-center gap-1.5 text-lg font-bold tracking-tight text-foreground underline decoration-red-500 decoration-2 underline-offset-4 transition-colors hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  className="group inline-flex items-center gap-1.5 text-2xl sm:text-3xl font-bold tracking-tight text-foreground underline decoration-red-500 decoration-2 underline-offset-4 transition-colors hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   {activeGenre.name}
                   <ChevronDown
