@@ -20,6 +20,8 @@ import {
   Clock,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import {
   isKidsProfile,
@@ -170,16 +172,7 @@ function MoviePage() {
   const isTv = movie.id.startsWith("tv-");
   const [descExpanded, setDescExpanded] = useState(false);
   const castScrollerRef = useRef<HTMLDivElement | null>(null);
-  const sideScrollerRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const el = sideScrollerRef.current;
-    if (!el || !isTv) return;
-    const t = setTimeout(() => {
-      el.scrollLeft = el.scrollWidth;
-    }, 50);
-    return () => clearTimeout(t);
-  }, [isTv]);
+  const [portraitDown, setPortraitDown] = useState(false);
 
   const [trailerOpen, setTrailerOpen] = useState(false);
 
@@ -486,11 +479,59 @@ function MoviePage() {
             </div>
 
             <div className="min-w-0 md:col-span-1">
-              <div
-                ref={sideScrollerRef}
-                className="scrollbar-thin scrollbar-thumb-white/25 scrollbar-track-transparent flex gap-4 overflow-x-auto pb-2"
-              >
-                <div className="hidden w-full shrink-0 md:block md:w-80">
+              {isTv && movie.numberOfSeasons && movie.numberOfSeasons > 0 ? (
+                <>
+                  <div className="relative hidden w-full md:block">
+                    <aside className="relative z-20 rounded-lg border border-border bg-background/85 p-4 shadow-2xl backdrop-blur-md sm:p-5">
+                      <SeasonEpisodePicker movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} />
+                    </aside>
+                    <div
+                      className={`absolute left-0 right-0 top-0 z-10 w-full transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                        portraitDown ? "translate-y-3/4" : "translate-y-0"
+                      }`}
+                    >
+                      <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-surface shadow-2xl ring-1 ring-white/15">
+                        {movie.poster ? (
+                          <img
+                            src={movie.poster}
+                            alt={movie.title}
+                            className="size-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex size-full items-center justify-center text-2xl font-bold text-muted-foreground">
+                            {movie.title.charAt(0)}
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                      </div>
+                    </div>
+                    <div className="absolute right-2 top-2 z-30 hidden flex-col gap-1.5 md:flex">
+                      <button
+                        type="button"
+                        onClick={() => setPortraitDown(false)}
+                        disabled={!portraitDown}
+                        aria-label="Move portrait up"
+                        className="grid size-8 place-items-center rounded-full border border-border bg-background/80 text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground disabled:opacity-30"
+                      >
+                        <ChevronUp className="size-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPortraitDown(true)}
+                        disabled={portraitDown}
+                        aria-label="Move portrait down"
+                        className="grid size-8 place-items-center rounded-full border border-border bg-background/80 text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground disabled:opacity-30"
+                      >
+                        <ChevronDown className="size-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <aside className="w-full rounded-lg border border-border bg-background/70 p-4 backdrop-blur-md sm:p-5 md:hidden">
+                    <SeasonEpisodePicker movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} />
+                  </aside>
+                </>
+              ) : (
+                <div className="hidden w-full md:block md:w-80">
                   <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-surface shadow-2xl ring-1 ring-white/15">
                     {movie.poster ? (
                       <img
@@ -506,12 +547,7 @@ function MoviePage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   </div>
                 </div>
-                {isTv && movie.numberOfSeasons && movie.numberOfSeasons > 0 && (
-                  <aside className="w-full shrink-0 rounded-lg border border-border bg-background/70 p-4 backdrop-blur-md sm:p-5 md:w-80">
-                    <SeasonEpisodePicker movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} />
-                  </aside>
-                )}
-              </div>
+              )}
             </div>
           </div>
         </div>
