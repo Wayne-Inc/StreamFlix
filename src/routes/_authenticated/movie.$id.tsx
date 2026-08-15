@@ -334,10 +334,15 @@ function MoviePage() {
                 <Link
                   to="/watch/$id"
                   params={{ id: movie.id }}
-                  search={{ autoplay: true }}
+                  search={
+                    isTv
+                      ? { autoplay: true, season: 1, episode: 1 }
+                      : { autoplay: true }
+                  }
                   className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md bg-foreground px-5 py-2.5 text-sm font-semibold text-background hover:bg-foreground/85 sm:px-6 sm:py-3"
                 >
-                  <Play className="size-4 fill-current sm:size-5" /> Play
+                  <Play className="size-4 fill-current sm:size-5" />{" "}
+                  {isTv ? "Play S1 E1" : "Play"}
                 </Link>
                 {movie.trailer && (
                   <button

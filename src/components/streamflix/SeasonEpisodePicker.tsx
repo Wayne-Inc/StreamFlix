@@ -73,7 +73,7 @@ export function SeasonEpisodePicker({
       ) : episodes.length === 0 ? (
         <div className="text-xs text-muted-foreground">No episodes found.</div>
       ) : (
-        <div className="max-h-64 space-y-1.5 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+        <div className="space-y-1.5">
           {episodes.map((ep) => (
             <div
               key={ep.episode_number}
