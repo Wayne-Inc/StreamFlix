@@ -23,6 +23,8 @@ import { ScreenSaver } from "@/components/streamflix/ScreenSaver";
 import { auth, db } from "@/lib/firebase";
 import { metaImageUrl } from "@/lib/seo";
 import { useNavTracker } from "@/lib/nav-history";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 function NotFoundComponent() {
   return (
@@ -256,6 +258,8 @@ function RootComponent() {
           <Outlet />
           <CookieConsent />
           <ScreenSaver />
+          <Analytics />
+          <SpeedInsights />
         </div>
       </GlobalContextMenu>
     </QueryClientProvider>
