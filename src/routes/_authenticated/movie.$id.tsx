@@ -171,6 +171,26 @@ function MoviePage() {
   const [descExpanded, setDescExpanded] = useState(false);
   const castScrollerRef = useRef<HTMLDivElement | null>(null);
   const [showPicker, setShowPicker] = useState(true);
+  const [castScroll, setCastScroll] = useState({ left: 0, viewport: 0, width: 0 });
+
+  useEffect(() => {
+    const el = castScrollerRef.current;
+    if (!el) return;
+    const measure = () =>
+      setCastScroll({ left: el.scrollLeft, viewport: el.clientWidth, width: el.scrollWidth });
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    const onScroll = () =>
+      setCastScroll({ left: el.scrollLeft, viewport: el.clientWidth, width: el.scrollWidth });
+    el.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      el.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", measure);
+    };
+  }, [movie.id]);
 
   const [trailerOpen, setTrailerOpen] = useState(false);
 
@@ -377,7 +397,7 @@ function MoviePage() {
               <div className="min-w-0 pt-4">
                 <p className="mb-3 text-sm font-semibold text-foreground sm:text-base">Cast</p>
                 <div className="relative min-w-0 max-w-full">
-                  {movie.cast.length > 7 && (
+                  {movie.cast.length > 7 && castScroll.left > 2 && (
                     <button
                       type="button"
                       onClick={() => scrollCast(-1)}
@@ -387,7 +407,9 @@ function MoviePage() {
                       <ChevronLeft className="size-4 sm:size-5" />
                     </button>
                   )}
-                  {movie.cast.length > 7 && (
+                  {movie.cast.length > 7 &&
+                    castScroll.viewport > 0 &&
+                    castScroll.left + castScroll.viewport < castScroll.width - 2 && (
                     <button
                       type="button"
                       onClick={() => scrollCast(1)}
@@ -509,28 +531,30 @@ function MoviePage() {
                         <SeasonEpisodePicker movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} />
                       </div>
                     </aside>
-                    <div className="absolute inset-y-0 left-2 z-30 hidden items-center md:flex">
-                      <button
-                        type="button"
-                        onClick={() => setShowPicker(false)}
-                        disabled={!showPicker}
-                        aria-label="Show portrait"
-                        className="grid size-8 place-items-center rounded-full border border-border bg-background/80 text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground disabled:opacity-30"
-                      >
-                        <ChevronLeft className="size-4" />
-                      </button>
-                    </div>
-                    <div className="absolute inset-y-0 right-2 z-30 hidden items-center md:flex">
-                      <button
-                        type="button"
-                        onClick={() => setShowPicker(true)}
-                        disabled={showPicker}
-                        aria-label="Show season picker"
-                        className="grid size-8 place-items-center rounded-full border border-border bg-background/80 text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground disabled:opacity-30"
-                      >
-                        <ChevronRight className="size-4" />
-                      </button>
-                    </div>
+                    {showPicker && (
+                      <div className="absolute inset-y-0 left-2 z-30 hidden items-center md:flex">
+                        <button
+                          type="button"
+                          onClick={() => setShowPicker(false)}
+                          aria-label="Show portrait"
+                          className="grid size-8 place-items-center rounded-full border border-border bg-background/80 text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
+                        >
+                          <ChevronLeft className="size-4" />
+                        </button>
+                      </div>
+                    )}
+                    {!showPicker && (
+                      <div className="absolute inset-y-0 right-2 z-30 hidden items-center md:flex">
+                        <button
+                          type="button"
+                          onClick={() => setShowPicker(true)}
+                          aria-label="Show season picker"
+                          className="grid size-8 place-items-center rounded-full border border-border bg-background/80 text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
+                        >
+                          <ChevronRight className="size-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <aside className="w-full rounded-lg border border-border bg-background/70 p-4 backdrop-blur-md sm:p-5 md:hidden">
                     <SeasonEpisodePicker movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} />
