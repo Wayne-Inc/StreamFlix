@@ -481,8 +481,8 @@ function MoviePage() {
                 <>
                   <div className="relative hidden aspect-[2/3] w-full overflow-hidden rounded-xl md:block md:w-80">
                     <div
-                      className={`absolute inset-0 transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                        showPicker ? "-translate-x-[calc(100%-4rem)]" : "translate-x-0"
+                      className={`absolute inset-0 z-0 transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                        showPicker ? "-translate-x-[20%]" : "translate-x-0"
                       }`}
                     >
                       <div className="relative size-full overflow-hidden rounded-xl bg-surface shadow-2xl ring-1 ring-white/15">
@@ -501,8 +501,8 @@ function MoviePage() {
                       </div>
                     </div>
                     <aside
-                      className={`absolute inset-0 overflow-y-auto scrollbar-thin transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                        showPicker ? "translate-x-0" : "translate-x-[calc(100%-4rem)]"
+                      className={`absolute inset-0 z-10 overflow-y-auto scrollbar-thin transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                        showPicker ? "translate-x-0" : "translate-x-[20%]"
                       }`}
                     >
                       <div className="min-h-full rounded-lg border border-border bg-background/85 p-4 shadow-2xl backdrop-blur-md sm:p-5">
