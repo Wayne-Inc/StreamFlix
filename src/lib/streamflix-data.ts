@@ -1,11 +1,13 @@
 import type { Movie } from "./types";
 import {
   fetchTrending,
+  fetchTrendingDay,
   fetchPopular,
   fetchNowPlaying,
   fetchTopRated,
   fetchUpcoming,
   fetchTrendingTv,
+  fetchTrendingTvDay,
   fetchPopularTv,
   fetchTopRatedTv,
   fetchAiringTv,
@@ -49,6 +51,8 @@ async function loadHome() {
     animation,
     horror,
     trendingTv,
+    trendingDay,
+    trendingTvDay,
   ] = await Promise.all([
     fetchTrending(),
     fetchPopular(),
@@ -61,6 +65,8 @@ async function loadHome() {
     discoverByGenre({ data: { genreId: "16" } }),
     discoverByGenre({ data: { genreId: "27" } }),
     fetchTrendingTv(),
+    fetchTrendingDay(),
+    fetchTrendingTvDay(),
   ]);
 
   let recommendations: Movie[] = [];
@@ -70,8 +76,16 @@ async function loadHome() {
     }
   } catch {}
 
+  const seenTop10 = new Set<string>();
+  const top10Today = [...trendingDay, ...trendingTvDay].filter((m) => {
+    if (seenTop10.has(m.id)) return false;
+    seenTop10.add(m.id);
+    return true;
+  }).slice(0, 10);
+
   return {
     heroSlides: await enrichCertificationsFn({ data: { items: trending.slice(0, 5) } }),
+    top10Today,
     rows: [
       { title: "Trending Now", items: trending.slice(0, 10) },
       ...(recommendations.length ? [{ title: "Recommended for You", items: recommendations }] : []),
@@ -113,6 +127,7 @@ async function loadMovies() {
   ]);
   return {
     heroSlides: await enrichCertificationsFn({ data: { items: popular.slice(0, 3) } }),
+    top10Today: [],
     rows: [
       { title: "Trending Movies", items: trending },
       { title: "Popular Movies", items: popular },
@@ -136,6 +151,7 @@ async function loadTv() {
   ]);
   return {
     heroSlides: await enrichCertificationsFn({ data: { items: trending.slice(0, 3) } }),
+    top10Today: [],
     rows: [
       { title: "Trending TV", items: trending },
       { title: "Popular Shows", items: popular },
@@ -154,6 +170,7 @@ async function loadNew() {
   ]);
   return {
     heroSlides: await enrichCertificationsFn({ data: { items: upcoming.slice(0, 3) } }),
+    top10Today: [],
     rows: [
       { title: "New Releases", items: nowPlaying },
       { title: "Coming Soon", items: upcoming },

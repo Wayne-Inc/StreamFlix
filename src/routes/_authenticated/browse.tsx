@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { ArrowUp } from "lucide-react";
 import { z } from "zod";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { HeroBanner } from "@/components/streamflix/HeroBanner";
@@ -81,7 +82,7 @@ export const Route = createFileRoute("/_authenticated/browse")({
 });
 
 function BrowsePage() {
-  const { heroSlides, rows } = Route.useLoaderData();
+  const { heroSlides, top10Today, rows } = Route.useLoaderData();
   const { kind } = Route.useSearch();
   const [continueRow, setContinueRow] = useState<{
     title: string;
@@ -484,9 +485,32 @@ function BrowsePage() {
             </div>
           </section>
         )}
+        {kind === "home" && top10Today.length > 0 && (
+          <section className="space-y-4 py-4">
+            <h2 className="px-4 sm:px-8 mb-4 sm:mb-6 text-2xl sm:text-3xl font-bold tracking-tight">
+              Top 10 Today
+            </h2>
+            <div className="scrollbar-hide flex gap-3 sm:gap-5 overflow-x-auto px-4 sm:px-8">
+              {(kidsMode ? filterKidsContent(top10Today) : top10Today).map((m, i) => (
+                <MovieCard key={m.id} movie={m} rank={i + 1} />
+              ))}
+            </div>
+          </section>
+        )}
         {filteredRows.map((r: { title: string; items: Movie[] }) => (
           <Row key={r.title} title={r.title} items={r.items} />
         ))}
+      </div>
+      <div className="flex justify-center px-4 pb-10 pt-2">
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          aria-label="Back to top"
+          title="Back to top"
+          className="grid size-12 place-items-center rounded-full border border-border bg-card/70 text-muted-foreground shadow-lg backdrop-blur transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:border-primary hover:bg-card hover:text-foreground"
+        >
+          <ArrowUp className="size-5" />
+        </button>
       </div>
       <ReleaseReminderBanner />
       <Footer />

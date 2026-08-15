@@ -9,12 +9,14 @@ export function MovieCard({
   reason,
   reasonLink,
   fluid = false,
+  rank,
 }: {
   movie: Movie;
   progress?: number;
   reason?: string;
   reasonLink?: string;
   fluid?: boolean;
+  rank?: number;
 }) {
   return (
     <div
@@ -94,6 +96,26 @@ export function MovieCard({
             </Link>
           </div>
         </div>
+
+        {rank != null && (
+          <div
+            aria-hidden="true"
+            className="absolute left-0 top-0 z-[5] flex flex-col items-center justify-center overflow-hidden font-bold text-white"
+            style={{
+              width: 30,
+              height: 38,
+              padding: "5px 2px 7px",
+              clipPath: "polygon(0px 0px, 100% 0px, 100% 100%, 50% 85%, 0px 100%)",
+              background: "var(--primary)",
+              boxShadow: "0 4px 10px rgb(0 0 0 / 0.45)",
+            }}
+          >
+            <span className="text-[9px] leading-tight uppercase tracking-wide">Top</span>
+            <span className="text-[11px] leading-none -mt-0.5 tabular-nums">
+              {String(rank).padStart(2, "0")}
+            </span>
+          </div>
+        )}
 
         {progress != null && (
           <>

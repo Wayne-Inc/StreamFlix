@@ -7,6 +7,12 @@ export const fetchTrending = createServerFn({ method: "POST" }).handler(async ()
   return (data.results || []).map((m: any) => toMovie(m));
 });
 
+export const fetchTrendingDay = createServerFn({ method: "POST" }).handler(async () => {
+  const { tmdbFetch, toMovie } = await import("./tmdb.server");
+  const data = await tmdbFetch("/trending/movie/day");
+  return (data.results || []).map((m: any) => toMovie(m));
+});
+
 export const fetchPopular = createServerFn({ method: "POST" }).handler(async () => {
   const { tmdbFetch, toMovie } = await import("./tmdb.server");
   const data = await tmdbFetch("/movie/popular");
@@ -91,6 +97,12 @@ export const probeEmbedUrl = createServerFn({ method: "POST" })
 export const fetchTrendingTv = createServerFn({ method: "POST" }).handler(async () => {
   const { tmdbFetch, toTv } = await import("./tmdb.server");
   const data = await tmdbFetch("/trending/tv/week");
+  return (data.results || []).map((m: any) => toTv(m));
+});
+
+export const fetchTrendingTvDay = createServerFn({ method: "POST" }).handler(async () => {
+  const { tmdbFetch, toTv } = await import("./tmdb.server");
+  const data = await tmdbFetch("/trending/tv/day");
   return (data.results || []).map((m: any) => toTv(m));
 });
 
