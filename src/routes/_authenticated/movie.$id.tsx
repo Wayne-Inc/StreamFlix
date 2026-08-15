@@ -479,32 +479,36 @@ function MoviePage() {
             <div className="min-w-0 md:col-span-1">
               {isTv && movie.numberOfSeasons && movie.numberOfSeasons > 0 ? (
                 <>
-                  <div className="relative hidden w-full overflow-hidden md:block md:w-80">
+                  <div className="relative hidden aspect-[2/3] w-full overflow-hidden rounded-xl md:block md:w-80">
                     <div
-                      className={`flex w-max transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                        showPicker ? "-translate-x-[224px]" : "translate-x-0"
+                      className={`absolute inset-0 transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                        showPicker ? "-translate-x-[calc(100%-4rem)]" : "translate-x-0"
                       }`}
                     >
-                      <div className="w-80 shrink-0">
-                        <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-surface shadow-2xl ring-1 ring-white/15">
-                          {movie.poster ? (
-                            <img
-                              src={movie.poster}
-                              alt={movie.title}
-                              className="size-full object-cover"
-                            />
-                          ) : (
-                            <div className="flex size-full items-center justify-center text-2xl font-bold text-muted-foreground">
-                              {movie.title.charAt(0)}
-                            </div>
-                          )}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                        </div>
+                      <div className="relative size-full overflow-hidden rounded-xl bg-surface shadow-2xl ring-1 ring-white/15">
+                        {movie.poster ? (
+                          <img
+                            src={movie.poster}
+                            alt={movie.title}
+                            className="size-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex size-full items-center justify-center text-2xl font-bold text-muted-foreground">
+                            {movie.title.charAt(0)}
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                       </div>
-                      <aside className="-ml-24 w-80 shrink-0 self-center rounded-lg border border-border bg-background/85 p-4 shadow-2xl backdrop-blur-md sm:p-5">
-                        <SeasonEpisodePicker movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} />
-                      </aside>
                     </div>
+                    <aside
+                      className={`absolute inset-0 overflow-y-auto scrollbar-thin transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                        showPicker ? "translate-x-0" : "translate-x-[calc(100%-4rem)]"
+                      }`}
+                    >
+                      <div className="min-h-full rounded-lg border border-border bg-background/85 p-4 shadow-2xl backdrop-blur-md sm:p-5">
+                        <SeasonEpisodePicker movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} />
+                      </div>
+                    </aside>
                     <div className="absolute inset-y-0 left-2 z-30 hidden items-center md:flex">
                       <button
                         type="button"
