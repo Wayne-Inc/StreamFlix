@@ -170,7 +170,7 @@ function MoviePage() {
   const isTv = movie.id.startsWith("tv-");
   const [descExpanded, setDescExpanded] = useState(false);
   const castScrollerRef = useRef<HTMLDivElement | null>(null);
-  const [showPicker, setShowPicker] = useState(false);
+  const [showPicker, setShowPicker] = useState(true);
 
   const [trailerOpen, setTrailerOpen] = useState(false);
 
@@ -482,7 +482,7 @@ function MoviePage() {
                   <div className="relative hidden aspect-[2/3] w-full overflow-hidden rounded-xl md:block md:w-80">
                     <div
                       className={`absolute inset-0 z-0 transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                        showPicker ? "-translate-x-[20%]" : "translate-x-0"
+                        showPicker ? "-translate-x-[25%]" : "translate-x-0"
                       }`}
                     >
                       <div className="relative size-full overflow-hidden rounded-xl bg-surface shadow-2xl ring-1 ring-white/15">
@@ -502,10 +502,10 @@ function MoviePage() {
                     </div>
                     <aside
                       className={`absolute inset-0 z-10 overflow-y-auto scrollbar-thin transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-                        showPicker ? "translate-x-0" : "translate-x-[20%]"
+                        showPicker ? "translate-x-0" : "translate-x-full"
                       }`}
                     >
-                      <div className="min-h-full rounded-lg border border-border bg-background/85 p-4 shadow-2xl backdrop-blur-md sm:p-5">
+                      <div className="min-h-full rounded-lg border border-border bg-background p-4 shadow-2xl sm:p-5">
                         <SeasonEpisodePicker movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} />
                       </div>
                     </aside>
