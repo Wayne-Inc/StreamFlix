@@ -51,7 +51,7 @@ function MovieSkeleton() {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[52vh] overflow-hidden sm:h-[58vh] md:inset-y-0 md:h-auto">
           <Skeleton className="absolute inset-0 size-full rounded-none bg-surface/60" />
         </div>
-        <div className="relative z-10 mx-auto w-full min-w-0 max-w-6xl px-4 py-10 sm:px-8 md:px-16 md:py-16">
+        <div className="relative z-10 w-full min-w-0 px-4 py-10 sm:px-8 md:px-12 md:py-16 lg:px-16">
           <Skeleton className="mb-6 h-9 w-24 rounded-full" />
           <div className="grid w-full min-w-0 gap-10 md:grid-cols-3 md:items-center md:gap-8">
             <div className="min-w-0 space-y-4 md:col-span-2">
@@ -88,7 +88,7 @@ function MovieSkeleton() {
               </div>
             </div>
             <div className="hidden min-w-0 md:col-span-1 md:block">
-              <Skeleton className="w-56 aspect-[2/3] rounded-xl" />
+              <Skeleton className="w-full max-w-80 aspect-[2/3] rounded-xl" />
             </div>
           </div>
         </div>
@@ -257,7 +257,7 @@ function MoviePage() {
           <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
         </div>
 
-        <div className="relative z-10 mx-auto w-full min-w-0 max-w-6xl px-4 py-10 sm:px-8 md:px-16 md:py-16">
+        <div className="relative z-10 w-full min-w-0 px-4 py-10 sm:px-8 md:px-12 md:py-16 lg:px-16">
           <button
             type="button"
             onClick={goBack}
@@ -490,7 +490,7 @@ function MoviePage() {
                 ref={sideScrollerRef}
                 className="scrollbar-thin scrollbar-thumb-white/25 scrollbar-track-transparent flex gap-4 overflow-x-auto pb-2"
               >
-                <div className="hidden w-52 sm:w-56 shrink-0 md:block">
+                <div className="hidden w-full shrink-0 md:block md:w-80">
                   <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-surface shadow-2xl ring-1 ring-white/15">
                     {movie.poster ? (
                       <img
