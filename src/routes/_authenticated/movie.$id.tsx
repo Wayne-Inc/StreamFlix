@@ -54,7 +54,7 @@ function MovieSkeleton() {
         <div className="relative z-10 mx-auto w-full min-w-0 max-w-6xl px-4 py-10 sm:px-8 md:px-16 md:py-16">
           <Skeleton className="mb-6 h-9 w-24 rounded-full" />
           <div className="grid w-full min-w-0 gap-10 md:grid-cols-3 md:items-center md:gap-8">
-            <div className="min-w-0 space-y-4 md:col-span-3">
+            <div className="min-w-0 space-y-4 md:col-span-2">
               <Skeleton className="mb-4 h-9 w-3/4 max-w-md rounded sm:h-12" />
               <div className="flex flex-wrap items-center gap-2">
                 {Array.from({ length: 4 }).map((_, i) => (
@@ -86,6 +86,9 @@ function MovieSkeleton() {
                   ))}
                 </div>
               </div>
+            </div>
+            <div className="hidden min-w-0 md:col-span-1 md:block">
+              <Skeleton className="w-56 aspect-[2/3] rounded-xl" />
             </div>
           </div>
         </div>
@@ -167,6 +170,16 @@ function MoviePage() {
   const isTv = movie.id.startsWith("tv-");
   const [descExpanded, setDescExpanded] = useState(false);
   const castScrollerRef = useRef<HTMLDivElement | null>(null);
+  const sideScrollerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = sideScrollerRef.current;
+    if (!el || !isTv) return;
+    const t = setTimeout(() => {
+      el.scrollLeft = el.scrollWidth;
+    }, 50);
+    return () => clearTimeout(t);
+  }, [isTv]);
 
   const [trailerOpen, setTrailerOpen] = useState(false);
 
@@ -254,7 +267,7 @@ function MoviePage() {
             <ArrowLeft className="size-4" /> Back
           </button>
           <div className="grid w-full min-w-0 gap-10 md:grid-cols-3 md:items-center md:gap-8">
-            <div className={`min-w-0 space-y-4 ${isTv ? "md:col-span-2" : "md:col-span-3"}`}>
+            <div className="min-w-0 space-y-4 md:col-span-2">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">{movie.title}</h1>
               <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
                 {movie.score != null && (
@@ -472,11 +485,34 @@ function MoviePage() {
               </div>
             </div>
 
-            {isTv && movie.numberOfSeasons && movie.numberOfSeasons > 0 && (
-              <aside className="rounded-lg border border-border bg-background/70 p-4 backdrop-blur-md sm:p-5 md:col-span-1">
-                <SeasonEpisodePicker movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} />
-              </aside>
-            )}
+            <div className="min-w-0 md:col-span-1">
+              <div
+                ref={sideScrollerRef}
+                className="scrollbar-thin scrollbar-thumb-white/25 scrollbar-track-transparent flex gap-4 overflow-x-auto pb-2"
+              >
+                <div className="hidden w-52 sm:w-56 shrink-0 md:block">
+                  <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-surface shadow-2xl ring-1 ring-white/15">
+                    {movie.poster ? (
+                      <img
+                        src={movie.poster}
+                        alt={movie.title}
+                        className="size-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex size-full items-center justify-center text-2xl font-bold text-muted-foreground">
+                        {movie.title.charAt(0)}
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  </div>
+                </div>
+                {isTv && movie.numberOfSeasons && movie.numberOfSeasons > 0 && (
+                  <aside className="w-full shrink-0 rounded-lg border border-border bg-background/70 p-4 backdrop-blur-md sm:p-5 md:w-80">
+                    <SeasonEpisodePicker movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} />
+                  </aside>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </section>
