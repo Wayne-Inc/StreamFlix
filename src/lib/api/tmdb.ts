@@ -49,6 +49,21 @@ export const fetchUpcoming = createServerFn({ method: "POST" }).handler(async ()
   return (data.results || []).map((m: any) => toMovie(m));
 });
 
+export const fetchNewMovies = createServerFn({ method: "POST" }).handler(async () => {
+  const { tmdbFetch, toMovie } = await import("./tmdb.server");
+  const today = new Date();
+  const start = new Date();
+  start.setDate(today.getDate() - 90);
+  const gte = start.toISOString().slice(0, 10);
+  const lte = today.toISOString().slice(0, 10);
+  const data = await tmdbFetch("/discover/movie", {
+    sort_by: "primary_release_date.desc",
+    "primary_release_date.gte": gte,
+    "primary_release_date.lte": lte,
+  });
+  return (data.results || []).map((m: any) => toMovie(m));
+});
+
 export type CalendarTitle = {
   id: string;
   title: string;

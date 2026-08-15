@@ -64,6 +64,7 @@ export function toMovie(m: any): Movie {
     title: m.title,
     description: m.overview || "No description available.",
     year: m.release_date ? new Date(m.release_date).getFullYear() : new Date().getFullYear(),
+    releaseDate: m.release_date ?? undefined,
     rating: extractCertification(m),
     runtime: m.runtime ? `${Math.floor(m.runtime / 60)}h ${m.runtime % 60}m` : "2h",
     genres: (m.genres || []).map((g: any) => g.name),
@@ -131,6 +132,7 @@ export function toTv(m: any): Movie {
     title: m.name || m.original_name || "Untitled",
     description: m.overview || "No description available.",
     year: m.first_air_date ? new Date(m.first_air_date).getFullYear() : new Date().getFullYear(),
+    releaseDate: m.first_air_date ?? undefined,
     rating: extractCertification(m),
     runtime: epRuntime
       ? `${epRuntime}m / ep`

@@ -53,6 +53,16 @@ function CalendarPage() {
     return map;
   }, [safeItems]);
 
+  const monthItems = useMemo(() => {
+    return safeItems
+      .filter((item) =>
+        item.releaseDate
+          ? isSameMonth(new Date(`${item.releaseDate}T00:00:00`), month)
+          : false,
+      )
+      .sort((a, b) => (a.releaseDate ?? "").localeCompare(b.releaseDate ?? ""));
+  }, [safeItems, month]);
+
   useEffect(() => {
     const user = auth.currentUser;
     if (!user) return;
@@ -146,7 +156,7 @@ function CalendarPage() {
           </div>
         </div>
 
-        <div className="mt-6 rounded-lg border border-border bg-card/40 p-3 sm:p-5">
+        <div className="mt-6 hidden rounded-lg border border-border bg-card/40 p-3 sm:p-5 lg:block">
           <div className="grid grid-cols-7 gap-1 sm:gap-2">
             {DAY_HEADERS.map((d) => (
               <div
@@ -227,6 +237,71 @@ function CalendarPage() {
               );
             })}
           </div>
+        </div>
+
+        <div className="mt-6 space-y-2 lg:hidden">
+          {monthItems.length === 0 ? (
+            <div className="rounded-lg border border-border bg-card/40 p-6 text-center text-sm text-muted-foreground">
+              No titles releasing in {format(month, "MMMM yyyy")}.
+            </div>
+          ) : (
+            monthItems.map((item) => {
+              const date = new Date(`${item.releaseDate}T00:00:00`);
+              return (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-3 rounded-lg border border-border bg-card/40 p-2.5"
+                >
+                  <div className="w-14 shrink-0 text-center">
+                    <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      {format(date, "MMM")}
+                    </div>
+                    <div className="text-xl font-bold text-foreground">{format(date, "d")}</div>
+                  </div>
+                  <Link
+                    to="/movie/$id"
+                    params={{ id: item.id }}
+                    className="flex min-w-0 flex-1 items-center gap-3"
+                  >
+                    {item.poster ? (
+                      <LazyImage
+                        src={item.poster}
+                        alt=""
+                        className="h-16 w-11 shrink-0 rounded-md object-cover"
+                      />
+                    ) : (
+                      <span className="grid h-16 w-11 shrink-0 place-items-center rounded-md bg-surface">
+                        {item.media === "tv" ? (
+                          <Tv className="size-4 text-muted-foreground" />
+                        ) : (
+                          <Film className="size-4 text-muted-foreground" />
+                        )}
+                      </span>
+                    )}
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-semibold text-foreground">
+                        {item.title}
+                      </div>
+                      <div className="mt-0.5 text-xs text-muted-foreground">
+                        {format(date, "EEEE, MMMM d")} · {item.media === "tv" ? "TV Show" : "Movie"}
+                      </div>
+                    </div>
+                  </Link>
+                  <button
+                    onClick={() => toggle(item)}
+                    aria-label={`Notify me: ${item.title}`}
+                    className={`grid size-8 shrink-0 place-items-center rounded-full border ${
+                      notified.has(item.id)
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-background text-muted-foreground"
+                    }`}
+                  >
+                    <Bell className="size-3.5" />
+                  </button>
+                </div>
+              );
+            })
+          )}
         </div>
 
         <p className="mt-4 text-xs text-muted-foreground">

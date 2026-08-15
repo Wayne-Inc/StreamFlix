@@ -3,6 +3,7 @@ export type Movie = {
   title: string;
   description: string;
   year: number;
+  releaseDate?: string;
   rating: string;
   runtime: string;
   genres: string[];

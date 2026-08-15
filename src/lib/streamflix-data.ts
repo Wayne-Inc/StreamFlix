@@ -8,6 +8,7 @@ import {
   fetchTopRated,
   fetchTopRatedTv,
   fetchUpcoming,
+  fetchNewMovies,
   fetchTrendingTv,
   fetchPopularTv,
   fetchAiringTv,
@@ -162,19 +163,26 @@ async function loadTv() {
 }
 
 async function loadNew() {
-  const [nowPlaying, upcoming, trending, airing] = await Promise.all([
+  const [nowPlaying, upcoming, trending, airing, newMovies] = await Promise.all([
     fetchNowPlaying(),
     fetchUpcoming(),
     fetchTrending(),
     fetchAiringTv(),
+    fetchNewMovies(),
   ]);
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const comingSoon = (upcoming as Movie[])
+    .filter((m) => m.releaseDate && m.releaseDate >= todayStr)
+    .sort((a, b) => (a.releaseDate ?? "").localeCompare(b.releaseDate ?? ""));
+
   return {
-    heroSlides: await enrichCertificationsFn({ data: { items: upcoming.slice(0, 3) } }),
+    heroSlides: await enrichCertificationsFn({ data: { items: comingSoon.slice(0, 3) } }),
     top10Today: [],
     genreGroups: [],
     rows: [
-      { title: "New Releases", items: nowPlaying },
-      { title: "Coming Soon", items: upcoming },
+      { title: "New Movies", items: newMovies.length ? newMovies : nowPlaying },
+      { title: "Coming Soon", items: comingSoon },
       { title: "Trending This Week", items: trending },
       { title: "New TV Episodes", items: airing },
     ],

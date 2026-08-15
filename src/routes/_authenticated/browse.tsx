@@ -553,7 +553,7 @@ function BrowsePage() {
                 {genreMenuOpen && (
                   <ul
                     role="listbox"
-                    className="absolute left-0 top-full z-50 mt-2 w-60 max-h-80 overflow-y-auto rounded-xl border border-border bg-popover p-1.5 shadow-2xl backdrop-blur-xl"
+                    className="absolute left-0 top-full z-50 mt-2 w-60 max-h-80 overflow-y-auto rounded-xl border border-border bg-popover/80 p-1.5 shadow-2xl backdrop-blur-xl"
                   >
                     {genreGroups.map((g) => (
                       <li key={g.id} role="option" aria-selected={g.id === activeGenre.id}>
