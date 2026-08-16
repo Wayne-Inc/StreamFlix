@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
 import { auth } from "@/lib/firebase";
+import { isMobileApp } from "@/lib/mobile";
 import { passwordMeetsPolicy } from "@/lib/password";
 import { PasswordPolicyChecklist } from "@/components/streamflix/PasswordPolicyChecklist";
 import {
@@ -78,8 +79,14 @@ function AuthPage() {
     return () => unsub();
   }, [navigate]);
 
-  // Finish a Google redirect sign-in that was started in the desktop app.
+  // Finish a Google redirect sign-in that was started in the desktop/mobile
+  // app. When the return URL carries an OAuth result and we are running in an
+  // external browser (not the app), we bounce it back into the app first (see
+  // below), so skip getRedirectResult here in that case.
+  const bouncedRef = useRef(false);
+
   useEffect(() => {
+    if (bouncedRef.current) return;
     getRedirectResult(auth)
       .then((result) => {
         if (result?.user) {
@@ -94,15 +101,22 @@ function AuthPage() {
       });
   }, [navigate]);
 
-  // Desktop/mobile apps: the Google sign-in page was opened in the device's
-  // default browser, and its final step lands back here in that browser.
-  // Bounce the result back into the app through the platform deep link so the
-  // app can finish the sign-in with getRedirectResult.
+  // The Google sign-in page was opened in the device's default browser (the
+  // app WebView can't host Google's OAuth). When that browser lands back on the
+  // site with the Firebase OAuth result in the URL hash, bounce it through the
+  // platform deep link so the app itself can finish the sign-in.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if ("electronAPI" in window) return;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("mode") !== "signInIdp") return;
+    if ("electronAPI" in window) return; // already inside the Electron app
+    if (isMobileApp()) return; // already inside the Capacitor app
+    const hash = window.location.hash;
+    if (!hash || hash === "#" || hash === "#_=_") return;
+    const fragment = hash.slice(1);
+    const looksLikeOAuth =
+      /id_token|access_token|oauthIdToken|oauthAccessToken|providerId|firebase/i.test(fragment) ||
+      fragment.length > 30;
+    if (!looksLikeOAuth) return;
+    bouncedRef.current = true;
     const ua = navigator.userAgent;
     const scheme =
       /Android/i.test(ua) || /iPhone|iPad|iPod/i.test(ua)
