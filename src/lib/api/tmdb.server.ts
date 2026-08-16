@@ -82,6 +82,7 @@ export function toMovie(m: any): Movie {
     directorPfp,
     match: m.vote_average ? Math.round(m.vote_average * 10) : 0,
     score: m.vote_average ? Number(m.vote_average.toFixed(1)) : undefined,
+    popularity: typeof m.popularity === "number" ? m.popularity : undefined,
   };
 }
 
@@ -154,6 +155,7 @@ export function toTv(m: any): Movie {
     directorPfp,
     match: m.vote_average ? Math.round(m.vote_average * 10) : 0,
     score: m.vote_average ? Number(m.vote_average.toFixed(1)) : undefined,
+    popularity: typeof m.popularity === "number" ? m.popularity : undefined,
     numberOfSeasons: m.number_of_seasons ?? undefined,
     numberOfEpisodes: m.number_of_episodes ?? undefined,
   };

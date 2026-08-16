@@ -11,6 +11,7 @@ import {
   fetchUpcomingTv,
   fetchNewMovies,
   fetchPopularUpcoming,
+  fetchPopularUpcomingTv,
   fetchTrendingTv,
   fetchPopularTv,
   fetchAiringTv,
@@ -165,7 +166,7 @@ async function loadTv() {
 }
 
 async function loadNew() {
-  const [nowPlaying, upcoming, upcomingTv, trending, airing, newMovies, popularUpcoming] =
+  const [nowPlaying, upcoming, upcomingTv, trending, airing, newMovies, popularUpcoming, popularTv] =
     await Promise.all([
       fetchNowPlaying(),
       fetchUpcoming(),
@@ -174,14 +175,22 @@ async function loadNew() {
       fetchAiringTv(),
       fetchNewMovies(),
       fetchPopularUpcoming(),
+      fetchPopularUpcomingTv(),
     ]);
 
   const todayStr = new Date().toISOString().slice(0, 10);
-  const comingSoon = [
-    ...(upcoming as Movie[]).filter((m) => m.releaseDate && m.releaseDate >= todayStr),
-    ...(upcomingTv as Movie[]),
-  ]
-    .sort((a, b) => (a.releaseDate ?? "").localeCompare(b.releaseDate ?? ""))
+  const seen = new Set<string>();
+  const pool = [
+    ...((popularUpcoming as Movie[]).length ? popularUpcoming : (upcoming as Movie[])),
+    ...((popularTv as Movie[]).length ? popularTv : (upcomingTv as Movie[])),
+  ].filter((m) => {
+    if (!m.id || seen.has(String(m.id))) return false;
+    seen.add(String(m.id));
+    return true;
+  });
+  const comingSoon = pool
+    .filter((m) => m.releaseDate && m.releaseDate >= todayStr)
+    .sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0) || (a.releaseDate ?? "").localeCompare(b.releaseDate ?? ""))
     .slice(0, 24);
 
   const featured = (popularUpcoming as Movie[]).length

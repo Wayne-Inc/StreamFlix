@@ -21,6 +21,7 @@ export type Movie = {
   directorPfp?: string;
   match: number;
   score?: number;
+  popularity?: number;
   numberOfSeasons?: number;
   numberOfEpisodes?: number;
 };
