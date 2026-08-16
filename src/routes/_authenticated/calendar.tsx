@@ -103,7 +103,16 @@ function CalendarPage() {
         poster: item.poster,
         releaseDate: item.releaseDate,
       });
-      toast.success(added ? "We'll let you know when it releases" : "Notification removed");
+      if (added) {
+        const push = await import("@/lib/push").then((m) => m.ensurePushSubscription());
+        toast.success(
+          push === "granted"
+            ? "Reminder set — we'll push a notification on release day"
+            : "We'll let you know when it releases",
+        );
+      } else {
+        toast.success("Notification removed");
+      }
     } catch (err: unknown) {
       setNotified((prev) => {
         const next = new Set(prev);

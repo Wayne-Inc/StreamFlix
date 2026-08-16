@@ -210,6 +210,9 @@ function RootComponent() {
     import("@/lib/mobile").then(({ initMobileApp }) => {
       initMobileApp().catch(() => {});
     });
+    import("@/lib/push").then(({ setupForegroundPush }) => {
+      setupForegroundPush();
+    });
     const u = auth.currentUser;
     if (u?.photoURL && u.photoURL !== photoSaved.current) {
       photoSaved.current = u.photoURL;

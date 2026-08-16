@@ -61,6 +61,7 @@ Copy `.env.example` to `.env` and fill in your credentials:
 | `VITE_FIREBASE_APP_ID` | Firebase app ID |
 | `VITE_FIREBASE_AUTH_DOMAIN` | Firebase auth domain |
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase sender ID |
+| `VITE_FIREBASE_VAPID_KEY` | Firebase Cloud Messaging web push VAPID key (for release-day push notifications) |
 | `VITE_FIREBASE_PROJECT_ID` | Firebase project ID |
 | `VITE_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket |
 | `TMDB_API_KEY` | TMDB API key (server-side) |
@@ -118,3 +119,6 @@ electron/                # Electron desktop shell
 android/                 # Capacitor Android project
 ```
 
+## License
+
+[MIT](LICENSE)
