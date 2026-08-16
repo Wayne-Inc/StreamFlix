@@ -63,12 +63,9 @@ Copy `.env.example` to `.env` and fill in your credentials:
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase sender ID |
 | `VITE_FIREBASE_PROJECT_ID` | Firebase project ID |
 | `VITE_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket |
-| `FIREBASE_CLIENT_EMAIL` | Firebase Admin service account email (server-side only) |
-| `FIREBASE_PRIVATE_KEY` | Firebase Admin service account private key (server-side only) |
 | `TMDB_API_KEY` | TMDB API key (server-side) |
 | `VITE_TMDB_API_KEY` | TMDB API key (also accepted client-side, falls back to `TMDB_API_KEY`) |
 | `VITE_SITE_URL` | Public site URL (e.g. `https://streamflix.dpdns.org`) |
-| `WAYBACK_ARCHIVE_KEY` | Optional Wayback Machine archive key for the archive API route |
 
 ## Scripts
 
