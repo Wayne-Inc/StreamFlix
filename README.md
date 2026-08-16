@@ -118,6 +118,3 @@ electron/                # Electron desktop shell
 android/                 # Capacitor Android project
 ```
 
-## License
-
-[MIT](LICENSE)
