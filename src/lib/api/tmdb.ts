@@ -447,6 +447,30 @@ export const fetchMovieVideos = createServerFn({ method: "POST" })
     return fetchMovieVideosData(data.id);
   });
 
+export const fetchTitleLogo = createServerFn({ method: "POST" })
+  .validator(z.object({ id: z.string() }))
+  .handler(async ({ data }) => {
+    const { tmdbFetch } = await import("./tmdb.server");
+    const isTv = data.id.startsWith("tv-");
+    const tmdbId = isTv ? data.id.slice(3) : data.id;
+    const res = await tmdbFetch(`/${isTv ? "tv" : "movie"}/${tmdbId}/images`, {
+      include_image_language: "en,null",
+    });
+    const logos: any[] = Array.isArray(res.logos) ? res.logos : [];
+    if (!logos.length) return null;
+    const candidates = [...logos].sort((a, b) => (b.vote_average ?? 0) - (a.vote_average ?? 0));
+    const best =
+      candidates.find((l) => l.iso_639_1 === "en") ??
+      candidates.find((l) => l.iso_639_1 === null) ??
+      candidates[0];
+    if (!best?.file_path) return null;
+    return {
+      filePath: best.file_path,
+      width: best.width ?? 0,
+      height: best.height ?? 0,
+    };
+  });
+
 export const enrichCertifications = createServerFn({ method: "POST" })
   .validator(z.object({ items: z.array(z.any()) }))
   .handler(async ({ data }) => {

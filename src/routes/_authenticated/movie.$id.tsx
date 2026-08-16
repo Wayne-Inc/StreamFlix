@@ -38,7 +38,7 @@ import { Footer } from "@/components/streamflix/Footer";
 import { Row } from "@/components/streamflix/Row";
 import { Skeleton } from "@/components/ui/skeleton";
 import { movieById, loadSimilar, loadRecommendations } from "@/lib/streamflix-data";
-import { discoverByGenre } from "@/lib/api/tmdb";
+import { discoverByGenre, fetchTitleLogo } from "@/lib/api/tmdb";
 import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
 import { TrailerModal } from "@/components/streamflix/TrailerModal";
 import { AgeRatingBadge } from "@/components/streamflix/AgeRatingBadge";
@@ -100,10 +100,11 @@ function MovieSkeleton() {
 export const Route = createFileRoute("/_authenticated/movie/$id")({
   loader: async ({ params }) => {
     const extraGenres = ["27", "878", "35", "53"];
-    const [movie, similar, recommendations, ...genreResults] = await Promise.all([
+    const [movie, similar, recommendations, logo, ...genreResults] = await Promise.all([
       movieById(params.id),
       loadSimilar(params.id),
       loadRecommendations(params.id),
+      fetchTitleLogo({ data: { id: params.id } }).catch(() => null),
       ...extraGenres.map((g) => discoverByGenre({ data: { genreId: g } })),
     ]);
     if (!movie) throw notFound();
@@ -111,7 +112,7 @@ export const Route = createFileRoute("/_authenticated/movie/$id")({
       genreId: g,
       items: (genreResults[i] || []).filter((m: any) => m.id !== params.id).slice(0, 12),
     }));
-    return { movie, similar, genreRows, recommendations };
+    return { movie, similar, genreRows, recommendations, logo };
   },
   head: ({ loaderData }) => {
     const movie = loaderData?.movie;
@@ -155,7 +156,7 @@ export const Route = createFileRoute("/_authenticated/movie/$id")({
 });
 
 function MoviePage() {
-  const { movie, similar, genreRows, recommendations } = Route.useLoaderData();
+  const { movie, similar, genreRows, recommendations, logo } = Route.useLoaderData();
   const genreLabels: Record<string, string> = {
     "27": "Horror",
     "878": "Sci-Fi",
@@ -168,6 +169,11 @@ function MoviePage() {
     "9648": "Mystery",
   };
   const isTv = movie.id.startsWith("tv-");
+  const titleLogoUrl = logo?.filePath
+    ? `https://wsrv.nl/?url=${encodeURIComponent(
+        `https://image.tmdb.org/t/p/original${logo.filePath}`,
+      )}&output=webp&q=80&w=800`
+    : null;
   const [descExpanded, setDescExpanded] = useState(false);
   const castScrollerRef = useRef<HTMLDivElement | null>(null);
   const [showPicker, setShowPicker] = useState(true);
@@ -279,7 +285,15 @@ function MoviePage() {
           </button>
           <div className="grid w-full min-w-0 gap-10 md:grid-cols-3 md:items-center md:gap-8">
             <div className="min-w-0 space-y-4 md:col-span-2">
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">{movie.title}</h1>
+              {titleLogoUrl ? (
+                <img
+                  src={titleLogoUrl}
+                  alt={movie.title}
+                  className="mb-4 max-h-24 w-auto max-w-full object-contain sm:max-h-32 md:max-h-36"
+                />
+              ) : (
+                <h1 className="mb-4 text-3xl md:text-4xl lg:text-5xl font-bold">{movie.title}</h1>
+              )}
               <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
                 {movie.score != null && (
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-xs font-semibold text-emerald-400 backdrop-blur-lg sm:px-3 sm:py-1.5">
