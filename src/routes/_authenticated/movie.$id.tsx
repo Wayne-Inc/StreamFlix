@@ -55,7 +55,7 @@ function MovieSkeleton() {
           <Skeleton className="mb-6 h-9 w-24 rounded-full" />
           <div className="grid w-full min-w-0 gap-10 md:grid-cols-3 md:items-center md:gap-8">
             <div className="min-w-0 space-y-4 md:col-span-2">
-              <Skeleton className="mb-4 h-9 w-3/4 max-w-md rounded sm:h-12" />
+              <Skeleton className="mb-4 h-16 w-72 max-w-full rounded-md sm:h-20 md:h-24 md:w-80" />
               <div className="flex flex-wrap items-center gap-2">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <Skeleton key={i} className="h-7 w-20 rounded-full sm:h-8 sm:w-24" />
