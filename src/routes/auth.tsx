@@ -94,16 +94,21 @@ function AuthPage() {
       });
   }, [navigate]);
 
-  // Desktop app: the Google sign-in page was opened in the system's external
-  // browser, and its final step lands back here in that browser. Bounce the
-  // result back into the app through the streamflix:// deep link so the app can
-  // finish the sign-in with getRedirectResult.
+  // Desktop/mobile apps: the Google sign-in page was opened in the device's
+  // default browser, and its final step lands back here in that browser.
+  // Bounce the result back into the app through the platform deep link so the
+  // app can finish the sign-in with getRedirectResult.
   useEffect(() => {
     if (typeof window === "undefined") return;
     if ("electronAPI" in window) return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("mode") !== "signInIdp") return;
-    window.location.replace(`streamflix://auth${window.location.search}`);
+    const ua = navigator.userAgent;
+    const scheme =
+      /Android/i.test(ua) || /iPhone|iPad|iPod/i.test(ua)
+        ? "com.itiswayneee.streamflix"
+        : "streamflix";
+    window.location.replace(`${scheme}://auth${window.location.search}${window.location.hash}`);
   }, []);
 
   useEffect(() => {
@@ -230,12 +235,16 @@ function AuthPage() {
     setPopupBlocked(false);
     const provider = new GoogleAuthProvider();
     const inElectron = typeof window !== "undefined" && "electronAPI" in window;
+    const inNativeApp =
+      typeof window !== "undefined" &&
+      typeof (window as any).Capacitor?.isNativePlatform === "function" &&
+      (window as any).Capacitor.isNativePlatform();
     try {
-      if (inElectron) {
+      if (inElectron || inNativeApp) {
         // Google refuses the embedded window as an insecure browser, so in the
-        // desktop app we open Google's sign-in page in the system's default web
-        // browser instead. Electron intercepts the redirect navigation, the
-        // result comes back through the streamflix:// deep link, and the
+        // desktop and mobile apps we open Google's sign-in page in the device's
+        // default web browser instead. The app intercepts the redirect
+        // navigation, the result comes back through the deep link, and the
         // getRedirectResult effect above finishes the login.
         await signInWithRedirect(auth, provider);
         return;

@@ -211,6 +211,9 @@ function RootComponent() {
     import("@/lib/device-tracking").then(({ recordCurrentDevice }) => {
       recordCurrentDevice().catch(() => {});
     });
+    import("@/lib/mobile").then(({ initMobileApp }) => {
+      initMobileApp().catch(() => {});
+    });
     const u = auth.currentUser;
     if (u?.photoURL && u.photoURL !== photoSaved.current) {
       photoSaved.current = u.photoURL;
