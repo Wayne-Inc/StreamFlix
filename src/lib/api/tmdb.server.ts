@@ -86,6 +86,37 @@ export function toMovie(m: any): Movie {
   };
 }
 
+export async function fetchTitleLogoById(id: string) {
+  const isTv = id.startsWith("tv-");
+  const tmdbId = isTv ? id.slice(3) : id;
+  const res = await tmdbFetch(`/${isTv ? "tv" : "movie"}/${tmdbId}/images`, {
+    include_image_language: "en,null",
+  });
+  const logos: any[] = Array.isArray(res.logos) ? res.logos : [];
+  if (!logos.length) return null;
+  const candidates = [...logos].sort((a, b) => (b.vote_average ?? 0) - (a.vote_average ?? 0));
+  const best =
+    candidates.find((l) => l.iso_639_1 === "en") ??
+    candidates.find((l) => l.iso_639_1 === null) ??
+    candidates[0];
+  if (!best?.file_path) return null;
+  return {
+    filePath: best.file_path,
+    width: best.width ?? 0,
+    height: best.height ?? 0,
+  };
+}
+
+export async function fetchTitleLogosByIds(ids: string[]) {
+  const results = await Promise.allSettled(ids.map((id) => fetchTitleLogoById(id)));
+  const map: Record<string, string | null> = {};
+  ids.forEach((id, i) => {
+    const r = results[i];
+    map[id] = r.status === "fulfilled" && r.value ? r.value.filePath : null;
+  });
+  return map;
+}
+
 export async function enrichCertifications(items: Movie[]): Promise<Movie[]> {
   const needIds = items.filter(m => !m.rating && !m.id.startsWith("tv-")).map(m => m.id);
   if (!needIds.length) return items;

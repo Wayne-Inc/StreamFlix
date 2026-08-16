@@ -8,9 +8,21 @@ declare global {
       maximize: () => void;
       close: () => void;
       isMaximized: () => Promise<boolean>;
+      getOnlineStatus: () => Promise<boolean>;
+      retryLoad: () => Promise<boolean>;
+      getVersion: () => Promise<string>;
+      checkForUpdates: () => Promise<{ state: string; message: string }>;
+      installUpdate: () => Promise<boolean>;
+      onUpdaterStatus: (cb: (status: UpdateStatus) => void) => () => void;
     };
   }
 }
+
+export type UpdateStatus = {
+  state: string;
+  message: string;
+  percent?: number;
+};
 
 export function CustomTitleBar() {
   const [isElectron, setIsElectron] = useState(false);

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
-import { fetchTrending } from "@/lib/api/tmdb";
+import { fetchTrending, fetchTitleLogos } from "@/lib/api/tmdb";
 import type { Movie } from "@/lib/types";
 import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
+import { buildTitleLogoUrl } from "@/lib/title-logo";
 
 const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
@@ -10,6 +11,7 @@ export function ScreenSaver() {
   const [active, setActive] = useState(false);
   const [slides, setSlides] = useState<Movie[]>([]);
   const [slideIndex, setSlideIndex] = useState(0);
+  const [logoMap, setLogoMap] = useState<Record<string, string | null>>({});
   const routerState = useRouterState();
   const pathname = routerState.location.pathname;
   const isWatching = pathname.startsWith("/watch");
@@ -21,6 +23,9 @@ export function ScreenSaver() {
         if (data && data.length > 0) {
           const filtered = isKidsProfile() ? filterKidsContent(data) : data;
           setSlides(filtered);
+          fetchTitleLogos({ data: { ids: filtered.map((m: Movie) => m.id) } })
+            .then((map) => setLogoMap(map))
+            .catch(() => {});
         }
       })
       .catch(() => {});
@@ -70,6 +75,8 @@ export function ScreenSaver() {
   const currentMovie = slides[slideIndex] || slides[0];
   if (!currentMovie) return null;
 
+  const titleLogo = logoMap[currentMovie.id];
+
   return (
     <div
       onClick={() => setActive(false)}
@@ -98,9 +105,18 @@ export function ScreenSaver() {
 
       {/* Title at bottom left, genres below with dots */}
       <div className="absolute bottom-12 left-12 z-10 text-left max-w-2xl space-y-2">
-        <h1 className="text-3xl sm:text-5xl font-semibold text-white tracking-tight drop-shadow-lg">
-          {currentMovie.title}
-        </h1>
+        {titleLogo ? (
+          <img
+            src={buildTitleLogoUrl(titleLogo, 900)}
+            alt={currentMovie.title}
+            draggable={false}
+            className="max-h-24 w-auto max-w-full object-contain drop-shadow-lg select-none sm:max-h-32 md:max-h-40"
+          />
+        ) : (
+          <h1 className="text-3xl sm:text-5xl font-semibold text-white tracking-tight drop-shadow-lg">
+            {currentMovie.title}
+          </h1>
+        )}
         {currentMovie.genres && currentMovie.genres.length > 0 && (
           <p className="text-sm sm:text-base font-normal text-white/80 tracking-wide">
             {currentMovie.genres.join(" · ")}

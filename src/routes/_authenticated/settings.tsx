@@ -84,6 +84,51 @@ function SettingsPage() {
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [sendingReset, setSendingReset] = useState(false);
+  const [appVersion, setAppVersion] = useState<string | null>(null);
+  const [updateStatus, setUpdateStatus] = useState<{ state: string; message: string } | null>(null);
+  const [updateBusy, setUpdateBusy] = useState(false);
+
+  const isElectron = typeof window !== "undefined" && !!window.electronAPI;
+
+  useEffect(() => {
+    if (!window.electronAPI) return;
+    window.electronAPI.getVersion().then(setAppVersion).catch(() => {});
+    const unsubscribe = window.electronAPI.onUpdaterStatus((status) => {
+      setUpdateStatus(status);
+      setUpdateBusy(false);
+      if (status.state === "downloaded") {
+        toast.success("Update downloaded. Restart to install.", {
+          action: {
+            label: "Restart now",
+            onClick: () => window.electronAPI?.installUpdate(),
+          },
+        });
+      } else if (status.state === "uptodate") {
+        toast.success(status.message);
+      } else if (status.state === "error") {
+        toast.error(status.message);
+      }
+    });
+    return unsubscribe;
+  }, []);
+
+  const checkForUpdates = async () => {
+    if (!window.electronAPI) return;
+    setUpdateBusy(true);
+    try {
+      const res = await window.electronAPI.checkForUpdates();
+      setUpdateStatus(res);
+      if (res.state === "dev") {
+        setUpdateBusy(false);
+        toast.info(res.message);
+      } else if (res.state === "checking") {
+        setUpdateStatus(res);
+      }
+    } catch {
+      setUpdateBusy(false);
+      toast.error("Could not check for updates.");
+    }
+  };
 
   const providers = user?.providerData ?? [];
   const canChangePassword =
@@ -544,6 +589,52 @@ function SettingsPage() {
                 {sendingReset ? "Sending..." : "Send reset email"}
               </button>
             </div>
+          </section>
+        )}
+
+        {/* Desktop app (Electron only) */}
+        {isElectron && (
+          <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2 text-sm font-semibold">
+                  <Monitor className="size-4" /> Desktop app
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  StreamFlix Desktop · Version {appVersion ?? "—"}
+                </p>
+              </div>
+              <button
+                onClick={checkForUpdates}
+                disabled={updateBusy}
+                className="inline-flex items-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/20 disabled:opacity-40"
+              >
+                {updateBusy ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Check className="size-3.5" />
+                )}
+                Check for updates
+              </button>
+            </div>
+            {updateStatus && updateStatus.state !== "dev" && (
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-background/40 px-3 py-2.5">
+                <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                  {updateStatus.state === "downloading" && (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  )}
+                  {updateStatus.message}
+                </span>
+                {updateStatus.state === "downloaded" && (
+                  <button
+                    onClick={() => window.electronAPI?.installUpdate()}
+                    className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+                  >
+                    Restart &amp; install
+                  </button>
+                )}
+              </div>
+            )}
           </section>
         )}
 

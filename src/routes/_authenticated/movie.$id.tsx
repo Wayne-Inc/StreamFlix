@@ -29,6 +29,7 @@ import {
 } from "@/lib/kids-mode";
 import { toast } from "sonner";
 import { shareContent } from "@/lib/share";
+import { buildTitleLogoUrl } from "@/lib/title-logo";
 import { seoMetaFor, siteUrl } from "@/lib/seo";
 import { stepsToUsefulBackTarget } from "@/lib/nav-history";
 import { getWatchHistory, markAsWatched, unmarkWatched } from "@/lib/continue-watching";
@@ -169,11 +170,7 @@ function MoviePage() {
     "9648": "Mystery",
   };
   const isTv = movie.id.startsWith("tv-");
-  const titleLogoUrl = logo?.filePath
-    ? `https://wsrv.nl/?url=${encodeURIComponent(
-        `https://image.tmdb.org/t/p/original${logo.filePath}`,
-      )}&output=webp&q=80&w=800`
-    : null;
+  const titleLogoUrl = logo?.filePath ? buildTitleLogoUrl(logo.filePath) : null;
   const [descExpanded, setDescExpanded] = useState(false);
   const castScrollerRef = useRef<HTMLDivElement | null>(null);
   const [showPicker, setShowPicker] = useState(true);

@@ -55,6 +55,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
+    "electron-updater": "^6.8.9",
     "embla-carousel-react": "^8.6.0",
     "firebase": "^12.15.0",
     "firebase-admin": "^14.0.0",
@@ -106,6 +107,11 @@
       "dist/**/*",
       "electron/**/*",
       "package.json"
-    ]
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "itiswayneee",
+      "repo": "StreamFlix"
+    }
   }
 }
