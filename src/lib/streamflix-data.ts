@@ -8,6 +8,7 @@ import {
   fetchTopRated,
   fetchTopRatedTv,
   fetchUpcoming,
+  fetchUpcomingTv,
   fetchNewMovies,
   fetchTrendingTv,
   fetchPopularTv,
@@ -163,18 +164,22 @@ async function loadTv() {
 }
 
 async function loadNew() {
-  const [nowPlaying, upcoming, trending, airing, newMovies] = await Promise.all([
+  const [nowPlaying, upcoming, upcomingTv, trending, airing, newMovies] = await Promise.all([
     fetchNowPlaying(),
     fetchUpcoming(),
-    fetchTrending(),
+    fetchUpcomingTv(),
+    fetchTrendingAllWeek(),
     fetchAiringTv(),
     fetchNewMovies(),
   ]);
 
   const todayStr = new Date().toISOString().slice(0, 10);
-  const comingSoon = (upcoming as Movie[])
-    .filter((m) => m.releaseDate && m.releaseDate >= todayStr)
-    .sort((a, b) => (a.releaseDate ?? "").localeCompare(b.releaseDate ?? ""));
+  const comingSoon = [
+    ...(upcoming as Movie[]).filter((m) => m.releaseDate && m.releaseDate >= todayStr),
+    ...(upcomingTv as Movie[]),
+  ]
+    .sort((a, b) => (a.releaseDate ?? "").localeCompare(b.releaseDate ?? ""))
+    .slice(0, 24);
 
   return {
     heroSlides: await enrichCertificationsFn({ data: { items: comingSoon.slice(0, 3) } }),

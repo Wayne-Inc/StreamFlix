@@ -45,8 +45,27 @@ export const fetchTopRated = createServerFn({ method: "POST" }).handler(async ()
 
 export const fetchUpcoming = createServerFn({ method: "POST" }).handler(async () => {
   const { tmdbFetch, toMovie } = await import("./tmdb.server");
-  const data = await tmdbFetch("/movie/upcoming");
-  return (data.results || []).map((m: any) => toMovie(m));
+  const [page1, page2] = await Promise.all([
+    tmdbFetch("/movie/upcoming", { page: "1" }),
+    tmdbFetch("/movie/upcoming", { page: "2" }),
+  ]);
+  const seen = new Set<string>();
+  const all = [...(page1.results || []), ...(page2.results || [])].filter((m: any) => {
+    if (!m.id || seen.has(String(m.id))) return false;
+    seen.add(String(m.id));
+    return true;
+  });
+  return all.map((m: any) => toMovie(m));
+});
+
+export const fetchUpcomingTv = createServerFn({ method: "POST" }).handler(async () => {
+  const { tmdbFetch, toTv } = await import("./tmdb.server");
+  const today = new Date().toISOString().slice(0, 10);
+  const data = await tmdbFetch("/discover/tv", {
+    sort_by: "first_air_date.asc",
+    "first_air_date.gte": today,
+  });
+  return (data.results || []).map((m: any) => toTv(m));
 });
 
 export const fetchNewMovies = createServerFn({ method: "POST" }).handler(async () => {

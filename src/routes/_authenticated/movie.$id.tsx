@@ -289,7 +289,8 @@ function MoviePage() {
                 <img
                   src={titleLogoUrl}
                   alt={movie.title}
-                  className="mb-4 max-h-24 w-auto max-w-full object-contain sm:max-h-32 md:max-h-36"
+                  draggable={false}
+                  className="mb-4 max-h-24 w-auto max-w-full object-contain select-none sm:max-h-32 md:max-h-36"
                 />
               ) : (
                 <h1 className="mb-4 text-3xl md:text-4xl lg:text-5xl font-bold">{movie.title}</h1>
