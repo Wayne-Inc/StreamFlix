@@ -68,6 +68,17 @@ export const fetchUpcomingTv = createServerFn({ method: "POST" }).handler(async 
   return (data.results || []).map((m: any) => toTv(m));
 });
 
+export const fetchPopularUpcoming = createServerFn({ method: "POST" }).handler(async () => {
+  const { tmdbFetch, toMovie } = await import("./tmdb.server");
+  const today = new Date().toISOString().slice(0, 10);
+  const data = await tmdbFetch("/discover/movie", {
+    sort_by: "popularity.desc",
+    "release_date.gte": today,
+    "vote_count.gte": "10",
+  });
+  return (data.results || []).map((m: any) => toMovie(m));
+});
+
 export const fetchNewMovies = createServerFn({ method: "POST" }).handler(async () => {
   const { tmdbFetch, toMovie } = await import("./tmdb.server");
   const today = new Date();

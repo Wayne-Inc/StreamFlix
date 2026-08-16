@@ -10,6 +10,7 @@ import {
   fetchUpcoming,
   fetchUpcomingTv,
   fetchNewMovies,
+  fetchPopularUpcoming,
   fetchTrendingTv,
   fetchPopularTv,
   fetchAiringTv,
@@ -164,14 +165,16 @@ async function loadTv() {
 }
 
 async function loadNew() {
-  const [nowPlaying, upcoming, upcomingTv, trending, airing, newMovies] = await Promise.all([
-    fetchNowPlaying(),
-    fetchUpcoming(),
-    fetchUpcomingTv(),
-    fetchTrendingAllWeek(),
-    fetchAiringTv(),
-    fetchNewMovies(),
-  ]);
+  const [nowPlaying, upcoming, upcomingTv, trending, airing, newMovies, popularUpcoming] =
+    await Promise.all([
+      fetchNowPlaying(),
+      fetchUpcoming(),
+      fetchUpcomingTv(),
+      fetchTrendingAllWeek(),
+      fetchAiringTv(),
+      fetchNewMovies(),
+      fetchPopularUpcoming(),
+    ]);
 
   const todayStr = new Date().toISOString().slice(0, 10);
   const comingSoon = [
@@ -181,12 +184,23 @@ async function loadNew() {
     .sort((a, b) => (a.releaseDate ?? "").localeCompare(b.releaseDate ?? ""))
     .slice(0, 24);
 
+  const featured = (popularUpcoming as Movie[]).length
+    ? popularUpcoming
+    : comingSoon;
+
   return {
-    heroSlides: await enrichCertificationsFn({ data: { items: comingSoon.slice(0, 3) } }),
+    heroSlides: await enrichCertificationsFn({ data: { items: featured.slice(0, 3) } }),
     top10Today: [],
     genreGroups: [],
     rows: [
-      { title: "New Movies", items: newMovies.length ? newMovies : nowPlaying },
+      {
+        title: "New Movies",
+        items: featured.length
+          ? featured
+          : newMovies.length
+            ? newMovies
+            : nowPlaying,
+      },
       { title: "Coming Soon", items: comingSoon },
       { title: "Trending This Week", items: trending },
       { title: "New TV Episodes", items: airing },
