@@ -86,6 +86,9 @@ function CalendarPage() {
   const toggle = async (item: CalendarTitle) => {
     const user = auth.currentUser;
     if (!user) return toast.error("Sign in to get notified about releases");
+    if (item.releaseDate && item.releaseDate <= todayStr) {
+      return toast.info("This title is already released");
+    }
     const wasNotified = notified.has(item.id);
     setNotified((prev) => {
       const next = new Set(prev);
@@ -131,20 +134,22 @@ function CalendarPage() {
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
           <button
-            onClick={() => setMonth((m) => addMonths(m, -1))}
-            className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
-            aria-label="Previous month"
+            onClick={() => setMonth(startOfMonth(new Date()))}
+            disabled={isSameMonth(month, new Date())}
+            className="order-1 inline-flex items-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/20 disabled:cursor-default disabled:opacity-40 lg:order-3"
           >
-            <ChevronLeft className="size-4" /> Previous
+            Today
           </button>
-          <h2 className="text-lg font-semibold capitalize">{format(month, "MMMM yyyy")}</h2>
-          <div className="flex items-center gap-2">
+          <h2 className="order-2 flex-1 text-center text-lg font-semibold capitalize lg:flex-none">
+            {format(month, "MMMM yyyy")}
+          </h2>
+          <div className="order-3 flex items-center gap-2 lg:order-1">
             <button
-              onClick={() => setMonth(startOfMonth(new Date()))}
-              disabled={isSameMonth(month, new Date())}
-              className="inline-flex items-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/20 disabled:cursor-default disabled:opacity-40"
+              onClick={() => setMonth((m) => addMonths(m, -1))}
+              className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
+              aria-label="Previous month"
             >
-              Today
+              <ChevronLeft className="size-4" /> Previous
             </button>
             <button
               onClick={() => setMonth((m) => addMonths(m, 1))}
@@ -219,17 +224,19 @@ function CalendarPage() {
                             {item.title}
                           </span>
                         </Link>
-                        <button
-                          onClick={() => toggle(item)}
-                          aria-label={`Notify me: ${item.title}`}
-                          className={`absolute -top-1 -right-1 grid size-4 place-items-center rounded-full border ${
-                            notified.has(item.id)
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-border bg-background text-muted-foreground opacity-0 group-hover:opacity-100"
-                          }`}
-                        >
-                          <Bell className="size-2.5" />
-                        </button>
+                        {item.releaseDate && item.releaseDate <= todayStr ? null : (
+                          <button
+                            onClick={() => toggle(item)}
+                            aria-label={`Notify me: ${item.title}`}
+                            className={`absolute -top-1 -right-1 grid size-4 place-items-center rounded-full border ${
+                              notified.has(item.id)
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-border bg-background text-muted-foreground opacity-0 group-hover:opacity-100"
+                            }`}
+                          >
+                            <Bell className="size-2.5" />
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -287,17 +294,19 @@ function CalendarPage() {
                       </div>
                     </div>
                   </Link>
-                  <button
-                    onClick={() => toggle(item)}
-                    aria-label={`Notify me: ${item.title}`}
-                    className={`grid size-8 shrink-0 place-items-center rounded-full border ${
-                      notified.has(item.id)
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-background text-muted-foreground"
-                    }`}
-                  >
-                    <Bell className="size-3.5" />
-                  </button>
+                  {item.releaseDate && item.releaseDate <= todayStr ? null : (
+                    <button
+                      onClick={() => toggle(item)}
+                      aria-label={`Notify me: ${item.title}`}
+                      className={`grid size-8 shrink-0 place-items-center rounded-full border ${
+                        notified.has(item.id)
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-background text-muted-foreground"
+                      }`}
+                    >
+                      <Bell className="size-3.5" />
+                    </button>
+                  )}
                 </div>
               );
             })
