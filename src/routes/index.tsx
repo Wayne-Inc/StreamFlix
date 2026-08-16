@@ -186,6 +186,12 @@ function Landing() {
             >
               <Instagram className="size-4" /> @itiswayneee
             </a>
+            <Link to="/tos" className="hover:text-foreground transition-colors">
+              Terms of Service
+            </Link>
+            <Link to="/privacy-policy" className="hover:text-foreground transition-colors">
+              Privacy Policy
+            </Link>
           </div>
           <p className="mt-6 text-xs">© {new Date().getFullYear()} StreamFlix</p>
         </div>
