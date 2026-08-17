@@ -89,12 +89,14 @@ async function loadHome() {
   } catch {}
 
   const top10Today = trendingAllDay.slice(0, 10);
+  const top10TrendingWeek = trendingAllWeek.slice(0, 10);
 
   const genreGroups = HOME_GENRES.map((g, i) => ({ id: g.id, name: g.name, items: genreItems[i] }));
 
   return {
     heroSlides: await enrichCertificationsFn({ data: { items: trendingAllWeek.slice(0, 5) } }),
     top10Today,
+    top10TrendingWeek,
     genreGroups,
     rows: [
       { title: "Trending Now", items: trendingAllWeek },

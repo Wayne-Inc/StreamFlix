@@ -85,6 +85,7 @@ function BrowsePage() {
   const data = Route.useLoaderData();
   const heroSlides: Movie[] = data.heroSlides;
   const top10Today: Movie[] = data.top10Today;
+  const top10TrendingWeek: Movie[] = data.top10TrendingWeek;
   const genreGroups: { id: string; name: string; items: Movie[] }[] = data.genreGroups;
   const rows: { title: string; items: Movie[] }[] = data.rows;
   const { kind } = Route.useSearch();
@@ -104,6 +105,8 @@ function BrowsePage() {
   const activeGenre = genreGroups.find((g) => g.id === activeGenreId) ?? genreGroups[0];
   const [top10Ref, setTop10Ref] = useState<HTMLDivElement | null>(null);
   const [top10Scroll, setTop10Scroll] = useState({ left: 0, viewport: 0, width: 0 });
+  const [trendingWeekRef, setTrendingWeekRef] = useState<HTMLDivElement | null>(null);
+  const [trendingWeekScroll, setTrendingWeekScroll] = useState({ left: 0, viewport: 0, width: 0 });
   const [continueRow, setContinueRow] = useState<{
     title: string;
     items: { movie: Movie; progress: number }[];
@@ -382,9 +385,33 @@ function BrowsePage() {
     };
   }, [top10Ref, top10Today.length]);
 
+  useEffect(() => {
+    const el = trendingWeekRef;
+    if (!el) return;
+    const measure = () =>
+      setTrendingWeekScroll({ left: el.scrollLeft, viewport: el.clientWidth, width: el.scrollWidth });
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    const onScroll = () =>
+      setTrendingWeekScroll({ left: el.scrollLeft, viewport: el.clientWidth, width: el.scrollWidth });
+    el.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      el.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", measure);
+    };
+  }, [trendingWeekRef, top10TrendingWeek.length]);
+
   const scrollTop10 = (dir: 1 | -1) => {
     if (!top10Ref) return;
     top10Ref.scrollBy({ left: dir * (top10Ref.clientWidth * 0.9), behavior: "smooth" });
+  };
+
+  const scrollTrendingWeek = (dir: 1 | -1) => {
+    if (!trendingWeekRef) return;
+    trendingWeekRef.scrollBy({ left: dir * (trendingWeekRef.clientWidth * 0.9), behavior: "smooth" });
   };
 
   const [kidsPool, setKidsPool] = useState<Movie[]>([]);
@@ -494,41 +521,85 @@ function BrowsePage() {
             reasonLinks={pickedRow.reasonLinks}
           />
         )}
-        {kind === "home" && top10Today.length > 0 && (
+        {kind === "home" && (top10Today.length > 0 || top10TrendingWeek.length > 0) && (
           <section className="space-y-4 py-4">
-            <h2 className="px-4 sm:px-8 mb-4 sm:mb-6 text-2xl sm:text-3xl font-bold tracking-tight">
-              Top 10 Today
-            </h2>
-            <div className="relative">
-              {top10Scroll.left > 2 && (
-                <button
-                  type="button"
-                  onClick={() => scrollTop10(-1)}
-                  aria-label="Scroll top 10 left"
-                  className="absolute left-1 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
-                >
-                  <ChevronLeft className="size-5" />
-                </button>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+              {top10Today.length > 0 && (
+                <div className="space-y-4">
+                  <h2 className="px-4 sm:px-8 mb-4 sm:mb-6 text-2xl sm:text-3xl font-bold tracking-tight">
+                    Top 10 Today
+                  </h2>
+                  <div className="relative">
+                    {top10Scroll.left > 2 && (
+                      <button
+                        type="button"
+                        onClick={() => scrollTop10(-1)}
+                        aria-label="Scroll top 10 left"
+                        className="absolute left-1 sm:left-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
+                      >
+                        <ChevronLeft className="size-5" />
+                      </button>
+                    )}
+                    {top10Scroll.viewport > 0 &&
+                      top10Scroll.left + top10Scroll.viewport < top10Scroll.width - 2 && (
+                      <button
+                        type="button"
+                        onClick={() => scrollTop10(1)}
+                        aria-label="Scroll top 10 right"
+                        className="absolute right-1 sm:right-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
+                      >
+                        <ChevronRight className="size-5" />
+                      </button>
+                    )}
+                    <div
+                      ref={setTop10Ref}
+                      className="scrollbar-hide flex gap-3 sm:gap-5 overflow-x-auto scroll-smooth px-4 sm:px-8"
+                    >
+                      {(kidsMode ? filterKidsContent(top10Today) : top10Today).map((m, i) => (
+                        <MovieCard key={m.id} movie={m} rank={i + 1} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
               )}
-              {top10Scroll.viewport > 0 &&
-                top10Scroll.left + top10Scroll.viewport < top10Scroll.width - 2 && (
-                <button
-                  type="button"
-                  onClick={() => scrollTop10(1)}
-                  aria-label="Scroll top 10 right"
-                  className="absolute right-1 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
-                >
-                  <ChevronRight className="size-5" />
-                </button>
+              {top10TrendingWeek.length > 0 && (
+                <div className="space-y-4">
+                  <h2 className="px-4 sm:px-8 mb-4 sm:mb-6 text-2xl sm:text-3xl font-bold tracking-tight">
+                    Trending This Week
+                  </h2>
+                  <div className="relative">
+                    {trendingWeekScroll.left > 2 && (
+                      <button
+                        type="button"
+                        onClick={() => scrollTrendingWeek(-1)}
+                        aria-label="Scroll trending week left"
+                        className="absolute left-1 sm:left-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
+                      >
+                        <ChevronLeft className="size-5" />
+                      </button>
+                    )}
+                    {trendingWeekScroll.viewport > 0 &&
+                      trendingWeekScroll.left + trendingWeekScroll.viewport < trendingWeekScroll.width - 2 && (
+                      <button
+                        type="button"
+                        onClick={() => scrollTrendingWeek(1)}
+                        aria-label="Scroll trending week right"
+                        className="absolute right-1 sm:right-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
+                      >
+                        <ChevronRight className="size-5" />
+                      </button>
+                    )}
+                    <div
+                      ref={setTrendingWeekRef}
+                      className="scrollbar-hide flex gap-3 sm:gap-5 overflow-x-auto scroll-smooth px-4 sm:px-8"
+                    >
+                      {(kidsMode ? filterKidsContent(top10TrendingWeek) : top10TrendingWeek).map((m, i) => (
+                        <MovieCard key={m.id} movie={m} rank={i + 1} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
               )}
-              <div
-                ref={setTop10Ref}
-                className="scrollbar-hide flex gap-3 sm:gap-5 overflow-x-auto scroll-smooth px-4 sm:px-8"
-              >
-                {(kidsMode ? filterKidsContent(top10Today) : top10Today).map((m, i) => (
-                  <MovieCard key={m.id} movie={m} rank={i + 1} />
-                ))}
-              </div>
             </div>
           </section>
         )}
