@@ -28,6 +28,9 @@ dist-ssr
 .env.*
 !.env.example
 
+# Generated
+public/firebase-messaging-sw.js
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -38,5 +41,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-.env

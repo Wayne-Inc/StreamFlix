@@ -1,11 +1,83 @@
-import { defineConfig, type UserConfig } from "vite";
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { defineConfig, loadEnv, type UserConfig, type Plugin } from "vite";
 import { nitro } from "nitro/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 
-export default defineConfig(({ command }): UserConfig => {
+function firebaseMessagingSW(env: Record<string, string>): Plugin {
+  function generate() {
+    const get = (key: string) => env[key] || process.env[key] || "";
+    const config = {
+      apiKey: get("VITE_FIREBASE_API_KEY"),
+      authDomain: get("VITE_FIREBASE_AUTH_DOMAIN"),
+      projectId: get("VITE_FIREBASE_PROJECT_ID"),
+      storageBucket: get("VITE_FIREBASE_STORAGE_BUCKET"),
+      messagingSenderId: get("VITE_FIREBASE_MESSAGING_SENDER_ID"),
+      appId: get("VITE_FIREBASE_APP_ID"),
+    };
+    const sw = `importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js");
+
+firebase.initializeApp(${JSON.stringify(config, null, 2)});
+
+const messaging = firebase.messaging();
+
+function absUrl(path) {
+  return new URL(path, self.registration.scope).href;
+}
+
+messaging.onBackgroundMessage((payload) => {
+  const data = payload.data || {};
+  const title = (payload.notification && payload.notification.title) || data.title || "StreamFlix";
+  const body =
+    (payload.notification && payload.notification.body) || data.body || "Something new to watch.";
+  const icon = (payload.notification && payload.notification.icon) || absUrl("/icon.png");
+
+  self.registration.showNotification(title, {
+    body,
+    icon,
+    badge: absUrl("/icon.png"),
+    tag: data.movie_id ? \`release-\${data.movie_id}\` : "streamflix",
+    data: { url: data.url || "/", movie_id: data.movie_id || "" },
+  });
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = event.notification.data && event.notification.data.url;
+  const url = target && target.startsWith("/") ? absUrl(target) : target || absUrl("/");
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if (new URL(client.url).origin === new URL(url).origin) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(url);
+    }),
+  );
+});
+`;
+    writeFileSync(join(process.cwd(), "public", "firebase-messaging-sw.js"), sw);
+  }
+
+  return {
+    name: "firebase-messaging-sw",
+    buildStart() {
+      generate();
+    },
+    configureServer() {
+      generate();
+    },
+  };
+}
+
+export default defineConfig(({ command, mode }): UserConfig => {
+  const env = loadEnv(mode, process.cwd(), "");
   return {
     css: { transformer: "lightningcss" },
     resolve: {
@@ -31,11 +103,11 @@ export default defineConfig(({ command }): UserConfig => {
           behavior: "error",
           client: { files: ["**/server/**"], specifiers: ["server-only"] },
         },
-        // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
         server: { entry: "server" },
       }),
       ...(command === "build" ? [nitro({ preset: "vercel" })] : []),
       react(),
+      firebaseMessagingSW(env),
     ],
     server: {
       host: "::",
