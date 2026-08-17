@@ -67,6 +67,8 @@ Copy `.env.example` to `.env` and fill in your credentials:
 | `TMDB_API_KEY` | TMDB API key (server-side) |
 | `VITE_TMDB_API_KEY` | TMDB API key (also accepted client-side, falls back to `TMDB_API_KEY`) |
 | `VITE_SITE_URL` | Public site URL (e.g. `https://streamflix.dpdns.org`) |
+| `CRON_SECRET` | Bearer secret that authorizes the `/api/release-notifications-cron` endpoint (also a GitHub Actions secret) |
+| `WAYBACK_ARCHIVE_KEY` | `x-archive-key` header value that authorizes the `/api/archive` endpoint (also a GitHub Actions secret) |
 
 ## Scripts
 

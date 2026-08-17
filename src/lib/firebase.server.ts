@@ -1,6 +1,5 @@
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-import { getFirestore } from "firebase-admin/firestore";
 
 let app: ReturnType<typeof initializeApp>;
 
@@ -17,4 +16,13 @@ if (getApps().length === 0) {
 }
 
 export const adminAuth = getAuth(app);
-export const adminDb = getFirestore(app);
+
+let _adminDb: Awaited<ReturnType<typeof import("firebase-admin/firestore")["getFirestore"]>> | null = null;
+
+export async function getAdminDb() {
+  if (!_adminDb) {
+    const { getFirestore } = await import("firebase-admin/firestore");
+    _adminDb = getFirestore(app);
+  }
+  return _adminDb;
+}
