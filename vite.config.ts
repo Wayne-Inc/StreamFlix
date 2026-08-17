@@ -105,22 +105,7 @@ export default defineConfig(({ command, mode }): UserConfig => {
         },
         server: { entry: "server" },
       }),
-      ...(command === "build"
-        ? [
-            nitro({
-              preset: "vercel",
-              rollupConfig: {
-                external: [
-                  "@grpc/grpc-js",
-                  "@grpc/proto-loader",
-                  "firebase-admin/app",
-                  "firebase-admin/auth",
-                  "firebase-admin/firestore",
-                ],
-              },
-            }),
-          ]
-        : []),
+      ...(command === "build" ? [nitro({ preset: "vercel" })] : []),
       react(),
       firebaseMessagingSW(env),
     ],
