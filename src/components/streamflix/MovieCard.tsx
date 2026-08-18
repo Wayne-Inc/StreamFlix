@@ -31,14 +31,14 @@ export function MovieCard({
         className="block size-full focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
         aria-label={progress != null ? `Continue ${movie.title}` : `Details for ${movie.title}`}
       >
-        <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-surface shadow-md transition-all duration-300 group-hover:shadow-2xl group-hover:scale-[1.05]">
+        <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-surface shadow-md transition-shadow duration-300 group-hover:shadow-2xl">
           {movie.poster ? (
             <LazyImage
               src={movie.poster}
               alt={movie.title}
               width={400}
               height={600}
-              className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+              className="size-full object-cover"
             />
           ) : (
             <div className="grid size-full place-items-center bg-card p-2 text-center text-xs text-muted-foreground">
