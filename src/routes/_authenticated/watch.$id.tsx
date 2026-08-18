@@ -1102,7 +1102,10 @@ function PlayerPage() {
                       if (!v || !v.duration) return;
                       v.currentTime = (Number(e.target.value) / 100) * v.duration;
                     }}
-                    className="flex-1 h-1.5 rounded-full appearance-none bg-white/20 accent-primary cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
+                    className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:relative [&::-webkit-slider-thumb]:z-10"
+                    style={{
+                      background: `linear-gradient(to right, #dc2626 ${directProgress}%, rgba(255,255,255,0.2) ${directProgress}%)`,
+                    }}
                   />
                   <span className="text-[11px] tabular-nums text-white/60 min-w-[90px] text-right">
                     {fmt(directCurrentTime)} / {fmt(directDuration)}
