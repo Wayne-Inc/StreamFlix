@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
 import { auth } from "@/lib/firebase";
-import { isMobileApp } from "@/lib/mobile";
 import { passwordMeetsPolicy } from "@/lib/password";
 import { PasswordPolicyChecklist } from "@/components/streamflix/PasswordPolicyChecklist";
 import {
@@ -12,9 +11,7 @@ import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithRedirect,
   signInWithCredential,
-  getRedirectResult,
   onAuthStateChanged,
   updateProfile as updateFirebaseProfile,
   sendEmailVerification,
@@ -78,105 +75,6 @@ function AuthPage() {
       if (user && user.emailVerified && !pending && !onUpgrade) navigate({ to: "/profiles" });
     });
     return () => unsub();
-  }, [navigate]);
-
-  const bouncedRef = useRef(false);
-  const handledAuthRef = useRef(false);
-
-  function oauthHashLooksReal(fragment: string) {
-    return (
-      /id_token|access_token|oauthIdToken|oauthAccessToken|providerId|firebase/i.test(fragment) ||
-      fragment.length > 30
-    );
-  }
-
-  // Handle OAuth tokens arriving via deep link in Electron / Capacitor.
-  // signInWithRedirect opens the system browser; the result bounces back via
-  // streamflix://auth#id_token=... (Electron) or
-  // com.itiswayneee.streamflix://auth#id_token=... (Capacitor). The deep-link
-  // handler loads this page with the tokens in the hash, but getRedirectResult
-  // can't find the pending state (it was stored in the system browser). Extract
-  // the tokens and complete the sign-in with signInWithCredential instead.
-  // This MUST run before getRedirectResult to claim handledAuthRef first.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (handledAuthRef.current) return;
-    const inElectron = "electronAPI" in window;
-    const inNativeApp =
-      typeof (window as any).Capacitor?.isNativePlatform === "function" &&
-      (window as any).Capacitor.isNativePlatform();
-    if (!inElectron && !inNativeApp) return;
-
-    const hash = window.location.hash;
-    if (!hash || hash === "#" || hash === "#_=_") return;
-    const fragment = hash.slice(1);
-    if (!oauthHashLooksReal(fragment)) return;
-
-    const params = new URLSearchParams(fragment);
-    const idToken = params.get("id_token");
-    const accessToken = params.get("access_token");
-    if (!idToken && !accessToken) return;
-
-    handledAuthRef.current = true;
-    const credential = GoogleAuthProvider.credential(idToken, accessToken);
-    signInWithCredential(auth, credential)
-      .then(() => {
-        toast.success("Signed in with Google.");
-        window.history.replaceState(
-          null,
-          "",
-          window.location.pathname + window.location.search,
-        );
-        navigate({ to: "/profiles" });
-      })
-      .catch((err: any) => {
-        handledAuthRef.current = false;
-        if (err?.code !== "auth/popup-closed-by-user") {
-          toast.error(err?.message ?? "Google sign-in failed");
-        }
-      });
-  }, [navigate]);
-
-  // The Google sign-in page was opened in the device's default browser (the
-  // app WebView can't host Google's OAuth). When that browser lands back on the
-  // site with the Firebase OAuth result in the URL hash, bounce it through the
-  // platform deep link so the app itself can finish the sign-in.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if ("electronAPI" in window) return;
-    if (isMobileApp()) return;
-    const hash = window.location.hash;
-    if (!hash || hash === "#" || hash === "#_=_") return;
-    const fragment = hash.slice(1);
-    if (!oauthHashLooksReal(fragment)) return;
-    bouncedRef.current = true;
-    const ua = navigator.userAgent;
-    const scheme =
-      /Android/i.test(ua) || /iPhone|iPad|iPod/i.test(ua)
-        ? "com.itiswayneee.streamflix"
-        : "streamflix";
-    window.location.replace(`${scheme}://auth${window.location.search}${window.location.hash}`);
-  }, []);
-
-  // Finish a Google redirect sign-in that was started in the desktop/mobile
-  // app. When the return URL carries an OAuth result and we are running in an
-  // external browser (not the app), we bounce it back into the app first (see
-  // above), so skip getRedirectResult here in that case.
-  useEffect(() => {
-    if (bouncedRef.current || handledAuthRef.current) return;
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result?.user) {
-          handledAuthRef.current = true;
-          toast.success("Signed in with Google.");
-          navigate({ to: "/profiles" });
-        }
-      })
-      .catch((err: any) => {
-        if (err?.code && err.code !== "auth/popup-closed-by-user") {
-          toast.error(err?.message ?? "Google sign-in failed");
-        }
-      });
   }, [navigate]);
 
   useEffect(() => {
@@ -302,32 +200,56 @@ function AuthPage() {
     setBusy(true);
     setPopupBlocked(false);
     const provider = new GoogleAuthProvider();
-    const inElectron = typeof window !== "undefined" && "electronAPI" in window;
     const inNativeApp =
       typeof window !== "undefined" &&
       typeof (window as any).Capacitor?.isNativePlatform === "function" &&
       (window as any).Capacitor.isNativePlatform();
     try {
-      if (inElectron) {
-        await signInWithRedirect(auth, provider);
-        return;
-      }
-      if (inNativeApp) {
-        try {
-          await signInWithPopup(auth, provider);
-          toast.success("Signed in with Google.");
-          navigate({ to: "/profiles" });
-          return;
-        } catch {
-          await signInWithRedirect(auth, provider);
-          return;
-        }
-      }
       await signInWithPopup(auth, provider);
       toast.success("Signed in with Google.");
       navigate({ to: "/profiles" });
     } catch (err: any) {
-      if (err?.code === "auth/popup-blocked") {
+      if (inNativeApp) {
+        try {
+          const authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string;
+          const apiKey = import.meta.env.VITE_FIREBASE_API_KEY as string;
+          const appId = import.meta.env.VITE_FIREBASE_APP_ID as string;
+          const redirectUrl = import.meta.env.VITE_SITE_URL as string;
+          const authUrl =
+            `https://${authDomain}/__/auth/handler` +
+            `?apiKey=${encodeURIComponent(apiKey)}` +
+            `&appName=${encodeURIComponent(appId)}` +
+            `&authType=signInViaRedirect` +
+            `&redirectUrl=${encodeURIComponent(redirectUrl + "/auth")}` +
+            `&providerId=google.com` +
+            `&scopes=profile`;
+          const cap = (window as any).Capacitor?.Plugins?.GoogleAuth;
+          if (!cap) {
+            toast.error("Google Auth plugin not available.");
+            setBusy(false);
+            return;
+          }
+          let resultUrl: string | null = null;
+          const r = await cap.openUrl({ url: authUrl });
+          resultUrl = r?.url ?? null;
+          if (resultUrl) {
+            const hash = resultUrl.split("#")[1] || "";
+            const params = new URLSearchParams(hash);
+            const idToken = params.get("id_token");
+            const accessToken = params.get("access_token");
+            if (idToken || accessToken) {
+              const credential = GoogleAuthProvider.credential(idToken, accessToken);
+              await signInWithCredential(auth, credential);
+              toast.success("Signed in with Google.");
+              navigate({ to: "/profiles" });
+              return;
+            }
+          }
+          toast.error("Google sign-in failed: no tokens received.");
+        } catch (pluginErr: any) {
+          toast.error(pluginErr?.message ?? "Google sign-in failed");
+        }
+      } else if (err?.code === "auth/popup-blocked") {
         setPopupBlocked(true);
       } else if (err?.code !== "auth/popup-closed-by-user") {
         toast.error(err?.message ?? "Google sign-in failed");
