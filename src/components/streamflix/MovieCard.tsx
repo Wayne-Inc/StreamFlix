@@ -38,7 +38,7 @@ export function MovieCard({
               alt={movie.title}
               width={400}
               height={600}
-              className="size-full object-cover transition-transform duration-200 group-hover:scale-[1.04]"
+              className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
             />
           ) : (
             <div className="grid size-full place-items-center bg-card p-2 text-center text-xs text-muted-foreground">
@@ -47,10 +47,10 @@ export function MovieCard({
           )}
 
           {/* Hover overlay */}
-          <div className="absolute inset-0 bg-black/0 transition-colors duration-200 group-hover:bg-black/50" />
+          <div className="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/50" />
 
           {/* Centered play button on hover */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
             <Link
               to="/watch/$id"
               params={{ id: movie.id }}
@@ -64,7 +64,7 @@ export function MovieCard({
           </div>
 
           {/* Title + meta on hover */}
-          <div className="absolute inset-x-0 bottom-0 p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+          <div className="absolute inset-x-0 bottom-0 p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
             <p className="text-xs sm:text-sm font-bold text-white line-clamp-1 drop-shadow-lg">
               {movie.title}
             </p>
