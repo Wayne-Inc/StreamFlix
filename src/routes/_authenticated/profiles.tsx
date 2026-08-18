@@ -322,7 +322,7 @@ function ProfilesPage() {
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4">
           <div className="w-full max-w-sm rounded-md bg-card p-6 shadow-2xl text-center">
             <Lock className="mx-auto size-10 text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold mb-1">Parental Lock</h2>
+            <h2 className="text-xl font-semibold mb-1">Enter PIN for non-kids profile</h2>
             <p className="text-sm text-muted-foreground mb-6">
               Enter PIN for &quot;{pinTarget.name}&quot;
             </p>
@@ -643,7 +643,7 @@ function ProfileEditor({
             type="password"
             value={pin}
             onChange={(e) => setPin(e.target.value)}
-            placeholder={hasPin ? "Enter a new PIN to change it" : "Parental PIN (optional)"}
+            placeholder="Parental PIN (optional)"
             aria-label="Parental PIN"
             maxLength={6}
             className="w-full rounded bg-neutral-800 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"

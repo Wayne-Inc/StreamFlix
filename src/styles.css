@@ -229,13 +229,7 @@ input[type="range"]::-moz-range-progress {
 .zoom-slider::-webkit-slider-runnable-track {
   height: 6px;
   border-radius: 9999px;
-  background: linear-gradient(
-    to right,
-    #dc2626 0%,
-    #dc2626 var(--fill, 0%),
-    rgba(255, 255, 255, 0.2) var(--fill, 0%),
-    rgba(255, 255, 255, 0.2) 100%
-  );
+  background: transparent;
 }
 .zoom-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -259,12 +253,7 @@ input[type="range"]::-moz-range-progress {
 .zoom-slider::-moz-range-track {
   height: 6px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.2);
-}
-.zoom-slider::-moz-range-progress {
-  height: 6px;
-  border-radius: 9999px;
-  background: #dc2626;
+  background: transparent;
 }
 .zoom-slider::-moz-range-thumb {
   width: 18px;
