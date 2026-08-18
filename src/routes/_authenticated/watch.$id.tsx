@@ -1,12 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { useEffect, useRef, useState, useCallback, type MouseEvent, type TouchEvent } from "react";
-import { ArrowLeft, Settings, Wifi, Loader, RotateCw, Users, ShieldOff } from "lucide-react";
+import { ArrowLeft, Settings, Wifi, Loader, RotateCw, Users, ShieldOff, Play, Copy, Check, ChevronDown, ChevronUp, Zap } from "lucide-react";
 import { movieById } from "@/lib/streamflix-data";
 import { getContinueWatching, recordProgress } from "@/lib/continue-watching";
 import { saveProgressToFirestore } from "@/lib/continue-watching-firestore";
 import { getVideoSource } from "@/lib/video-sources";
 import { probeEmbedUrl, fetchTvSeason } from "@/lib/api/tmdb";
+import { resolveVidNestStreams, type VidNestStream } from "@/lib/api/vidnest";
 import { auth } from "@/lib/firebase";
 import { startSession, endSession } from "@/lib/session-tracking";
 import { toast } from "sonner";
@@ -205,6 +206,15 @@ const availableEmbedServers: EmbedServer[] = [
       tv: "https://moviesapi.club/tv/{id}-{season}-{episode}",
     },
   },
+  {
+    id: "direct",
+    name: "Direct",
+    isFrench: false,
+    urls: {
+      movie: "",
+      tv: "",
+    },
+  },
 ];
 
 const embedHostnames = new Set(
@@ -334,6 +344,28 @@ function PlayerPage() {
   const [connectionQuality, setConnectionQuality] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
+  // Direct stream (VidNest) state
+  const [directStreams, setDirectStreams] = useState<VidNestStream[]>([]);
+  const [directLoading, setDirectLoading] = useState(false);
+  const [directError, setDirectError] = useState<string | null>(null);
+  const [activeDirectStream, setActiveDirectStream] = useState<number>(0);
+  const [directPlaying, setDirectPlaying] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+  const hlsRef = useRef<any>(null);
+  const directVideoRef = useRef<HTMLVideoElement>(null);
+  const directContainerRef = useRef<HTMLDivElement>(null);
+  const [directCurrentTime, setDirectCurrentTime] = useState(0);
+  const [directDuration, setDirectDuration] = useState(0);
+  const [directProgress, setDirectProgress] = useState(0);
+  const [directPlayingState, setDirectPlayingState] = useState(false);
+  const [directBuffering, setDirectBuffering] = useState(false);
+  const [directEnded, setDirectEnded] = useState(false);
+  const [directShowControls, setDirectShowControls] = useState(true);
+  const directHideTimer = useRef<number | null>(null);
+  const [directVolume, setDirectVolume] = useState(1);
+  const [directMuted, setDirectMuted] = useState(false);
+  const triedDirectRef = useRef<Set<number>>(new Set());
+
   const isTv = movie.id.startsWith("tv-");
   const [autoplayNext, setAutoplayNext] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
@@ -346,12 +378,36 @@ function PlayerPage() {
   const [nextEp, setNextEp] = useState<{ season: number; episode: number } | null>(null);
   const embedEndedFiredRef = useRef(false);
 
+  const destroyHls = useCallback(() => {
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+  }, []);
+
+  const tryNextDirect = useCallback(() => {
+    const next = activeDirectStream + 1;
+    if (next < directStreams.length && !triedDirectRef.current.has(activeDirectStream)) {
+      triedDirectRef.current.add(activeDirectStream);
+      setActiveDirectStream(next);
+    } else {
+      setDirectEnded(true);
+      toast.error("All direct streams failed.");
+    }
+  }, [activeDirectStream, directStreams.length]);
+
   const handleServerSelect = useCallback((id: string) => {
     setSelectedServerId(id);
+    setDirectPlaying(false);
+    setDirectStreams([]);
+    setDirectEnded(false);
+    setActiveDirectStream(0);
+    triedDirectRef.current.clear();
+    destroyHls();
     try {
       localStorage.setItem("sf:embedServer", id);
     } catch {}
-  }, []);
+  }, [destroyHls]);
 
   const toggleAutoplayNext = useCallback(() => {
     setAutoplayNext((prev) => {
@@ -416,8 +472,9 @@ function PlayerPage() {
     try {
       screen.orientation?.unlock();
     } catch {}
+    destroyHls();
     navigate({ to: "/movie/$id", params: { id: movie.id } });
-  }, [navigate, movie.id]);
+  }, [navigate, movie.id, destroyHls]);
 
   const wake = useCallback(() => {
     setShowControls(true);
@@ -623,6 +680,7 @@ function PlayerPage() {
   }, [movie.id]);
 
   useEffect(() => {
+    if (selectedServerId === "direct") return;
     const url = buildEmbedUrl(selectedServerId, movie.id, season, episode);
     setVideoUrl(url);
     setMainVideoUrl(url);
@@ -698,6 +756,161 @@ function PlayerPage() {
     sendEmbedPlaybackCommand(iframe, "requestProgress");
   };
 
+  // === Direct stream (VidNest) effects ===
+  const isDirect = selectedServerId === "direct";
+
+  useEffect(() => {
+    if (!isDirect) {
+      setDirectStreams([]);
+      setDirectPlaying(false);
+      setActiveDirectStream(0);
+      setDirectError(null);
+      setDirectEnded(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setDirectLoading(true);
+      setDirectError(null);
+      setDirectStreams([]);
+      setDirectPlaying(false);
+      setActiveDirectStream(0);
+      triedDirectRef.current.clear();
+      try {
+        const tmdbId = movie.id.startsWith("tv-") ? movie.id.slice(3) : movie.id;
+        const type = movie.id.startsWith("tv-") ? "tv" : "movie";
+        const result = await resolveVidNestStreams({
+          data: { id: tmdbId, type, season, episode },
+        });
+        if (cancelled) return;
+        if (result.streams.length === 0) {
+          setDirectError("No direct streams found for this title.");
+        } else {
+          setDirectStreams(result.streams);
+        }
+      } catch (e: any) {
+        if (!cancelled) setDirectError(e?.message || "Failed to load streams.");
+      } finally {
+        if (!cancelled) setDirectLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isDirect, movie.id, season, episode]);
+
+  const playDirectStream = useCallback(
+    (stream: VidNestStream, index: number) => {
+      destroyHls();
+      setActiveDirectStream(index);
+      setDirectPlaying(true);
+      setDirectEnded(false);
+      setDirectBuffering(true);
+      triedDirectRef.current.clear();
+
+      const video = directVideoRef.current;
+      if (!video) return;
+
+      const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
+      const proxyBase = siteUrl + "/api/proxy";
+
+      if (stream.type === "hls") {
+        const proxiedUrl = proxyBase + "?url=" + encodeURIComponent(stream.url) + (stream.referer ? "&referer=" + encodeURIComponent(stream.referer) : "");
+
+        if (video.canPlayType("application/vnd.apple.mpegurl")) {
+          video.src = proxiedUrl;
+        } else {
+          import("hls.js").then(({ default: Hls }) => {
+            if (hlsRef.current) hlsRef.current.destroy();
+            if (!Hls.isSupported()) {
+              video.src = proxiedUrl;
+              return;
+            }
+            const hls = new Hls({
+              enableWorker: true,
+              lowLatencyMode: false,
+              maxBufferLength: 30,
+              maxMaxBufferLength: 60,
+              startFragPrefetch: true,
+              manifestLoadingTimeOut: 12000,
+              manifestLoadingMaxRetry: 3,
+              manifestLoadingRetryDelay: 1000,
+              levelLoadingTimeOut: 12000,
+              fragLoadingTimeOut: 12000,
+            });
+            hlsRef.current = hls;
+            hls.loadSource(proxiedUrl);
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+              setDirectBuffering(false);
+              video.play().catch(() => {});
+            });
+            hls.on(Hls.Events.ERROR, (_: any, data: any) => {
+              if (data.fatal) {
+                console.log("[direct] HLS fatal error, trying next stream");
+                destroyHls();
+                tryNextDirect();
+              }
+            });
+          });
+        }
+      } else {
+        const src = stream.url;
+        video.src = src;
+      }
+
+      let stallCount = 0;
+      let lastTime = 0;
+      const stallCheck = setInterval(() => {
+        if (!video || video.ended) {
+          clearInterval(stallCheck);
+          return;
+        }
+        if (video.paused || video.seeking) {
+          lastTime = video.currentTime;
+          return;
+        }
+        if (video.currentTime === lastTime && video.currentTime > 0) {
+          stallCount++;
+          if (stallCount >= 3) {
+            clearInterval(stallCheck);
+            console.log("[direct] Stream stalled, trying next");
+            tryNextDirect();
+          }
+        } else {
+          stallCount = 0;
+        }
+        lastTime = video.currentTime;
+      }, 5000);
+
+      const errorHandler = () => {
+        clearInterval(stallCheck);
+        video.removeEventListener("error", errorHandler);
+        console.log("[direct] Video error, trying next");
+        tryNextDirect();
+      };
+      video.addEventListener("error", errorHandler);
+    },
+    [destroyHls, tryNextDirect],
+  );
+
+  const copyStreamUrl = useCallback((url: string) => {
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedUrl(url);
+      setTimeout(() => setCopiedUrl(null), 2000);
+      toast.success("URL copied to clipboard");
+    }).catch(() => {
+      toast.error("Failed to copy URL");
+    });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      destroyHls();
+      if (directHideTimer.current) window.clearTimeout(directHideTimer.current);
+    };
+  }, [destroyHls]);
+
   if (!movie) {
     return (
       <div className="grid min-h-dvh place-items-center gap-4 bg-black text-white">
@@ -735,7 +948,7 @@ function PlayerPage() {
       onMouseMove={wake}
       onTouchEnd={onContainerTouch}
     >
-      {videoUrl ? (
+      {videoUrl && !isDirect ? (
         isEmbedUrl(videoUrl) ? (
           <iframe
             ref={iframeRef}
@@ -796,6 +1009,177 @@ function PlayerPage() {
               />
             ))}
           </video>
+        )
+      ) : isDirect ? (
+        directPlaying && directStreams[activeDirectStream] ? (
+          <div
+            ref={directContainerRef}
+            className="relative size-full"
+            onClick={() => {
+              const v = directVideoRef.current;
+              if (!v) return;
+              if (v.paused) { v.play().catch(() => {}); setDirectPlayingState(true); }
+              else { v.pause(); setDirectPlayingState(false); }
+            }}
+          >
+            <video
+              ref={directVideoRef}
+              playsInline
+              poster={movie.backdrop}
+              onTimeUpdate={(e) => {
+                const cur = e.currentTarget.currentTime;
+                const dur = e.currentTarget.duration || 1;
+                setDirectProgress(dur > 0 ? (cur / dur) * 100 : 0);
+                setDirectDuration(dur);
+                setDirectCurrentTime(cur);
+                setDirectPlayingState(!e.currentTarget.paused);
+              }}
+              onLoadedMetadata={(e) => {
+                setDirectDuration(e.currentTarget.duration);
+                setDirectBuffering(false);
+              }}
+              onCanPlay={() => setDirectBuffering(false)}
+              onWaiting={() => setDirectBuffering(true)}
+              onPlaying={() => {
+                setDirectBuffering(false);
+                setDirectPlayingState(true);
+              }}
+              onPause={() => setDirectPlayingState(false)}
+              onEnded={() => {
+                setDirectEnded(true);
+                if (autoplayNext && isTv && nextEp) goToNextEpisode();
+              }}
+              onVolumeChange={(e) => {
+                setDirectVolume(e.currentTarget.volume);
+                setDirectMuted(e.currentTarget.muted);
+              }}
+              className="size-full object-contain"
+            />
+            {directBuffering && (
+              <div className="absolute inset-0 z-15 flex items-center justify-center pointer-events-none">
+                <Loader className="size-10 text-white/60 animate-spin" />
+              </div>
+            )}
+            {/* Direct player controls */}
+            <div
+              className={`absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black via-black/60 to-transparent pt-8 pb-4 px-4 transition-opacity duration-300 ${directShowControls ? "opacity-100" : "opacity-0"}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 text-sm text-white/90">
+                <button
+                  onClick={() => {
+                    const v = directVideoRef.current;
+                    if (!v) return;
+                    if (v.paused) { v.play().catch(() => {}); setDirectPlayingState(true); }
+                    else { v.pause(); setDirectPlayingState(false); }
+                  }}
+                  className="min-h-11 min-w-11 flex items-center justify-center"
+                >
+                  {directPlayingState ? (
+                    <svg className="size-6" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
+                  ) : (
+                    <svg className="size-6" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21" /></svg>
+                  )}
+                </button>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={0.1}
+                  value={directProgress}
+                  onChange={(e) => {
+                    const v = directVideoRef.current;
+                    if (!v || !v.duration) return;
+                    v.currentTime = (Number(e.target.value) / 100) * v.duration;
+                  }}
+                  className="flex-1 h-1 accent-primary cursor-pointer"
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <span className="text-xs tabular-nums text-white/70 min-w-[80px] text-right">
+                  {fmt(directCurrentTime)} / {fmt(directDuration)}
+                </span>
+                <button
+                  onClick={() => {
+                    const v = directVideoRef.current;
+                    if (v) v.muted = !v.muted;
+                  }}
+                  className="min-h-11 min-w-11 flex items-center justify-center"
+                >
+                  {directMuted ? (
+                    <svg className="size-5" fill="currentColor" viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0021 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 003.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" /></svg>
+                  ) : (
+                    <svg className="size-5" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" /></svg>
+                  )}
+                </button>
+                <button
+                  onClick={goBack}
+                  className="text-xs text-white/60 hover:text-white min-h-11 px-2"
+                >
+                  Back
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center size-full bg-black p-4">
+            {directLoading ? (
+              <div className="flex flex-col items-center gap-4">
+                <Loader className="size-10 text-white/60 animate-spin" />
+                <p className="text-sm text-white/50">Loading direct streams...</p>
+              </div>
+            ) : directError ? (
+              <div className="flex flex-col items-center gap-4 text-center">
+                <Zap className="size-12 text-white/30" />
+                <p className="text-sm text-white/50">{directError}</p>
+                <p className="text-xs text-white/30">Try a different server above.</p>
+              </div>
+            ) : (
+              <div className="w-full max-w-lg space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wider text-white/40 mb-3">
+                  {directStreams.length} direct stream{directStreams.length !== 1 ? "s" : ""} found
+                </p>
+                {directStreams.map((stream, i) => (
+                  <div
+                    key={`${stream.resolver}-${i}`}
+                    className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 transition hover:bg-white/10"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-white/90 truncate">
+                          {stream.resolver}
+                        </span>
+                        <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                          stream.type === "mp4" ? "bg-emerald-500/20 text-emerald-300" : "bg-blue-500/20 text-blue-300"
+                        }`}>
+                          {stream.type.toUpperCase()}
+                        </span>
+                        {stream.language && (
+                          <span className="text-[10px] text-white/40">{stream.language}</span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => playDirectStream(stream, i)}
+                      className="flex items-center gap-1 rounded bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition"
+                    >
+                      <Play className="size-3" />
+                      Play
+                    </button>
+                    <button
+                      onClick={() => copyStreamUrl(stream.url)}
+                      className="flex items-center gap-1 rounded bg-white/10 px-2 py-1.5 text-xs text-white/70 hover:bg-white/20 transition"
+                    >
+                      {copiedUrl === stream.url ? (
+                        <Check className="size-3 text-emerald-400" />
+                      ) : (
+                        <Copy className="size-3" />
+                      )}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )
       ) : null}
 
@@ -964,7 +1348,7 @@ function PlayerPage() {
       )}
 
       {/* Post-play overlay */}
-      {ended && (
+      {(ended || (directEnded && isDirect && directPlaying)) && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/70">
           <div className="flex flex-col items-center gap-4 text-center">
             <p className="text-lg text-white/70">You've finished watching</p>
@@ -974,6 +1358,7 @@ function PlayerPage() {
                 <button
                   onClick={() => {
                     setEnded(false);
+                    setDirectEnded(false);
                     goToNextEpisode();
                   }}
                   className="rounded bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition"
@@ -983,12 +1368,22 @@ function PlayerPage() {
               )}
               <button
                 onClick={() => {
-                  const v = videoRef.current;
-                  if (v) {
-                    v.currentTime = 0;
-                    v.play().catch(() => {});
-                    setPlaying(true);
-                    setEnded(false);
+                  if (isDirect && directPlaying) {
+                    const v = directVideoRef.current;
+                    if (v) {
+                      v.currentTime = 0;
+                      v.play().catch(() => {});
+                      setDirectPlayingState(true);
+                      setDirectEnded(false);
+                    }
+                  } else {
+                    const v = videoRef.current;
+                    if (v) {
+                      v.currentTime = 0;
+                      v.play().catch(() => {});
+                      setPlaying(true);
+                      setEnded(false);
+                    }
                   }
                 }}
                 className="rounded bg-white px-6 py-2 text-sm font-semibold text-black hover:bg-white/90 transition"

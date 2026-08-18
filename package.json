@@ -59,6 +59,7 @@
     "embla-carousel-react": "^8.6.0",
     "firebase": "^12.15.0",
     "firebase-admin": "^14.0.0",
+    "hls.js": "^1.7.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.575.0",
     "react": "^19.2.0",

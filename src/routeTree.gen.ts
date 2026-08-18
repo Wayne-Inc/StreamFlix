@@ -18,6 +18,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthActionRouteImport } from './routes/auth/action'
 import { Route as ApiReleaseNotificationsCronRouteImport } from './routes/api/release-notifications-cron'
+import { Route as ApiProxyRouteImport } from './routes/api/proxy'
 import { Route as ApiClientIpRouteImport } from './routes/api/client-ip'
 import { Route as ApiArchiveRouteImport } from './routes/api/archive'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -80,6 +81,11 @@ const ApiReleaseNotificationsCronRoute =
     path: '/api/release-notifications-cron',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiProxyRoute = ApiProxyRouteImport.update({
+  id: '/api/proxy',
+  path: '/api/proxy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiClientIpRoute = ApiClientIpRouteImport.update({
   id: '/api/client-ip',
   path: '/api/client-ip',
@@ -182,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/archive': typeof ApiArchiveRoute
   '/api/client-ip': typeof ApiClientIpRoute
+  '/api/proxy': typeof ApiProxyRoute
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
   '/auth/action': typeof AuthActionRoute
   '/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
@@ -207,6 +214,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/archive': typeof ApiArchiveRoute
   '/api/client-ip': typeof ApiClientIpRoute
+  '/api/proxy': typeof ApiProxyRoute
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
   '/auth/action': typeof AuthActionRoute
   '/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
@@ -235,6 +243,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/api/archive': typeof ApiArchiveRoute
   '/api/client-ip': typeof ApiClientIpRoute
+  '/api/proxy': typeof ApiProxyRoute
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
   '/auth/action': typeof AuthActionRoute
   '/_authenticated/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
@@ -263,6 +272,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/api/archive'
     | '/api/client-ip'
+    | '/api/proxy'
     | '/api/release-notifications-cron'
     | '/auth/action'
     | '/explore/$genreId'
@@ -288,6 +298,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/api/archive'
     | '/api/client-ip'
+    | '/api/proxy'
     | '/api/release-notifications-cron'
     | '/auth/action'
     | '/explore/$genreId'
@@ -315,6 +326,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/api/archive'
     | '/api/client-ip'
+    | '/api/proxy'
     | '/api/release-notifications-cron'
     | '/auth/action'
     | '/_authenticated/explore/$genreId'
@@ -334,6 +346,7 @@ export interface RootRouteChildren {
   TosRoute: typeof TosRoute
   ApiArchiveRoute: typeof ApiArchiveRoute
   ApiClientIpRoute: typeof ApiClientIpRoute
+  ApiProxyRoute: typeof ApiProxyRoute
   ApiReleaseNotificationsCronRoute: typeof ApiReleaseNotificationsCronRoute
 }
 
@@ -400,6 +413,13 @@ declare module '@tanstack/react-router' {
       path: '/api/release-notifications-cron'
       fullPath: '/api/release-notifications-cron'
       preLoaderRoute: typeof ApiReleaseNotificationsCronRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/proxy': {
+      id: '/api/proxy'
+      path: '/api/proxy'
+      fullPath: '/api/proxy'
+      preLoaderRoute: typeof ApiProxyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/client-ip': {
@@ -583,6 +603,7 @@ const rootRouteChildren: RootRouteChildren = {
   TosRoute: TosRoute,
   ApiArchiveRoute: ApiArchiveRoute,
   ApiClientIpRoute: ApiClientIpRoute,
+  ApiProxyRoute: ApiProxyRoute,
   ApiReleaseNotificationsCronRoute: ApiReleaseNotificationsCronRoute,
 }
 export const routeTree = rootRouteImport
