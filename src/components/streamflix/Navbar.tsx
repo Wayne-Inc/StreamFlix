@@ -17,6 +17,7 @@ import {
   Film,
   Sparkles,
   Bookmark,
+  Home,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Logo } from "./Logo";
@@ -27,7 +28,8 @@ import { profileHasPin, verifyProfilePin } from "@/lib/profiles";
 import { suggestTitles } from "@/lib/streamflix-data";
 
 const links = [
-  { kind: "tv", label: "TV Shows" },
+  { kind: "home", label: "Home" },
+  { kind: "tv", label: "Shows" },
   { kind: "movies", label: "Movies" },
   { kind: "new", label: "New & Popular" },
 ] as const;
@@ -423,7 +425,7 @@ export function Navbar() {
           <div className="space-y-1">
             {links.map((l, i) => {
               const active = pathname === "/browse" && searchKind === l.kind;
-              const Icon = [Tv, Film, Sparkles][i] ?? Film;
+              const Icon = [Home, Tv, Film, Sparkles][i] ?? Film;
               return (
                 <Link
                   key={i}

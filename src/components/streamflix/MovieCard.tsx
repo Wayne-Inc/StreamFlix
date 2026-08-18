@@ -38,7 +38,7 @@ export function MovieCard({
               alt={movie.title}
               width={400}
               height={600}
-              className="size-full object-cover"
+              className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
             />
           ) : (
             <div className="grid size-full place-items-center bg-card p-2 text-center text-xs text-muted-foreground">
