@@ -254,14 +254,20 @@ function AuthPage() {
       typeof (window as any).Capacitor?.isNativePlatform === "function" &&
       (window as any).Capacitor.isNativePlatform();
     try {
-      if (inElectron || inNativeApp) {
-        // Google refuses the embedded window as an insecure browser, so in the
-        // desktop and mobile apps we open Google's sign-in page in the device's
-        // default web browser instead. The app intercepts the redirect
-        // navigation, the result comes back through the deep link, and the
-        // getRedirectResult effect above finishes the login.
+      if (inElectron) {
         await signInWithRedirect(auth, provider);
         return;
+      }
+      if (inNativeApp) {
+        try {
+          await signInWithPopup(auth, provider);
+          toast.success("Signed in with Google.");
+          navigate({ to: "/profiles" });
+          return;
+        } catch {
+          await signInWithRedirect(auth, provider);
+          return;
+        }
       }
       await signInWithPopup(auth, provider);
       toast.success("Signed in with Google.");
