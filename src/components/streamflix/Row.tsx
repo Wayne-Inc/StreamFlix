@@ -45,11 +45,17 @@ export function Row({
     const ro = new ResizeObserver(measure);
     ro.observe(el);
 
-    const onScroll = () => setScrollLeft(el.scrollLeft);
+    const onScroll = () => {
+      setScrollLeft(el.scrollLeft);
+      setScrollWidth(el.scrollWidth);
+    };
     el.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", measure);
 
+    const lateTimer = setTimeout(measure, 500);
+
     return () => {
+      clearTimeout(lateTimer);
       ro.disconnect();
       el.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", measure);
@@ -78,7 +84,9 @@ export function Row({
   const visible = items.slice(start, end);
 
   const canScrollLeft = scrollLeft > 2;
-  const canScrollRight = viewportW > 0 && scrollLeft + viewportW < scrollWidth - 2;
+  const canScrollRight =
+    (viewportW > 0 && scrollLeft + viewportW < scrollWidth - 2) ||
+    (viewportW > 0 && scrollWidth <= viewportW && items.length * step > viewportW);
 
   const scrollBy = (dir: 1 | -1) => {
     const el = scrollerRef.current;

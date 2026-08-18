@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Play, Info, Sparkles } from "lucide-react";
+import { Play, Sparkles } from "lucide-react";
 import type { Movie } from "@/lib/types";
 import { LazyImage } from "./LazyImage";
 
@@ -25,13 +25,13 @@ export function MovieCard({
       data-title={movie.title}
       data-url={`/movie/${movie.id}`}
     >
-      <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-surface shadow-md transition-shadow duration-300 group-hover:shadow-2xl">
-        <Link
-          to={progress != null ? "/watch/$id" : "/movie/$id"}
-          params={{ id: movie.id }}
-          className="block size-full focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
-          aria-label={progress != null ? `Continue ${movie.title}` : `Details for ${movie.title}`}
-        >
+      <Link
+        to={progress != null ? "/watch/$id" : "/movie/$id"}
+        params={{ id: movie.id }}
+        className="block size-full focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+        aria-label={progress != null ? `Continue ${movie.title}` : `Details for ${movie.title}`}
+      >
+        <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-surface shadow-md transition-all duration-300 group-hover:shadow-2xl group-hover:scale-[1.05]">
           {movie.poster ? (
             <LazyImage
               src={movie.poster}
@@ -45,92 +45,96 @@ export function MovieCard({
               {movie.title}
             </div>
           )}
-        </Link>
 
-        {/* Quick action overlay on hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 flex flex-col justify-end p-3 pointer-events-none group-hover:pointer-events-auto">
-          <p className="text-xs sm:text-sm font-bold text-white line-clamp-1 mb-1">{movie.title}</p>
-          <div className="flex items-center gap-1.5 text-[10px] sm:text-xs mb-2">
-            <span className="text-emerald-400">
-              {movie.score != null ? movie.score.toFixed(1) : (movie.match ? `${(movie.match / 10).toFixed(1)}` : "")}
-            </span>
-            <span className="text-muted-foreground/40">·</span>
-            <span className="text-muted-foreground">{movie.year}</span>
-            <span className="text-muted-foreground/40">·</span>
-            <span className="text-muted-foreground">{movie.id.startsWith("tv-") ? "Show" : "Movie"}</span>
-          </div>
-          {reason && (
-            <p className="mb-2 flex items-center gap-1 text-[10px] sm:text-[11px] text-purple-300">
-              <Sparkles className="size-3 shrink-0" />
-              {reasonLink ? (
-                <Link
-                  to="/movie/$id"
-                  params={{ id: reasonLink }}
-                  className="line-clamp-1 underline decoration-purple-300/40 underline-offset-2 hover:text-purple-200"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {reason}
-                </Link>
-              ) : (
-                <span className="line-clamp-1">{reason}</span>
-              )}
-            </p>
-          )}
-          <div className="flex items-center gap-2">
+          {/* Hover overlay */}
+          <div className="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/50" />
+
+          {/* Centered play button on hover */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
             <Link
               to="/watch/$id"
               params={{ id: movie.id }}
               search={{ autoplay: true }}
-              className="flex items-center justify-center gap-1 rounded bg-white text-black px-3 py-1.5 text-xs font-semibold hover:bg-white/85 transition"
+              className="flex size-12 items-center justify-center rounded-full bg-white/90 text-black shadow-lg backdrop-blur-sm transition-transform duration-200 hover:scale-110 hover:bg-white"
               title="Play"
+              onClick={(e) => e.stopPropagation()}
             >
-              <Play className="size-3.5 fill-current" /> Play
-            </Link>
-            <Link
-              to="/movie/$id"
-              params={{ id: movie.id }}
-              className="flex items-center justify-center gap-1 rounded bg-white/20 text-white backdrop-blur px-3 py-1.5 text-xs font-semibold hover:bg-white/30 transition"
-              title="More Info"
-            >
-              <Info className="size-3.5" /> Info
+              <Play className="size-5 fill-current" />
             </Link>
           </div>
+
+          {/* Title + meta on hover */}
+          <div className="absolute inset-x-0 bottom-0 p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+            <p className="text-xs sm:text-sm font-bold text-white line-clamp-1 drop-shadow-lg">
+              {movie.title}
+            </p>
+            <div className="flex items-center gap-1.5 text-[10px] sm:text-xs mt-0.5">
+              <span className="text-emerald-400">
+                {movie.score != null
+                  ? movie.score.toFixed(1)
+                  : movie.match
+                    ? `${(movie.match / 10).toFixed(1)}`
+                    : ""}
+              </span>
+              <span className="text-muted-foreground/40">&middot;</span>
+              <span className="text-muted-foreground">{movie.year}</span>
+            </div>
+            {reason && (
+              <p className="mt-1 flex items-center gap-1 text-[10px] sm:text-[11px] text-purple-300">
+                <Sparkles className="size-3 shrink-0" />
+                {reasonLink ? (
+                  <Link
+                    to="/movie/$id"
+                    params={{ id: reasonLink }}
+                    className="line-clamp-1 underline decoration-purple-300/40 underline-offset-2 hover:text-purple-200"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {reason}
+                  </Link>
+                ) : (
+                  <span className="line-clamp-1">{reason}</span>
+                )}
+              </p>
+            )}
+          </div>
+
+          {/* Rank badge */}
+          {rank != null && (
+            <div
+              aria-hidden="true"
+              className="absolute left-0 top-0 z-[5] flex flex-col items-center justify-center overflow-hidden font-bold text-white"
+              style={{
+                width: 30,
+                height: 38,
+                padding: "5px 2px 7px",
+                clipPath: "polygon(0px 0px, 100% 0px, 100% 100%, 50% 85%, 0px 100%)",
+                background: "var(--primary)",
+                boxShadow: "0 4px 10px rgb(0 0 0 / 0.45)",
+              }}
+            >
+              <span className="text-[9px] leading-tight uppercase tracking-wide">Top</span>
+              <span className="text-[11px] leading-none -mt-0.5 tabular-nums">
+                {String(rank).padStart(2, "0")}
+              </span>
+            </div>
+          )}
+
+          {/* Progress bar */}
+          {progress != null && (
+            <>
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-foreground/20">
+                <div
+                  className="h-full bg-primary transition-all"
+                  style={{ width: `${Math.min(progress, 100)}%` }}
+                />
+              </div>
+              <div className="absolute bottom-2 left-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                {progress >= 95 ? "Done" : `${Math.round(progress)}%`}
+              </div>
+            </>
+          )}
         </div>
-
-        {rank != null && (
-          <div
-            aria-hidden="true"
-            className="absolute left-0 top-0 z-[5] flex flex-col items-center justify-center overflow-hidden font-bold text-white"
-            style={{
-              width: 30,
-              height: 38,
-              padding: "5px 2px 7px",
-              clipPath: "polygon(0px 0px, 100% 0px, 100% 100%, 50% 85%, 0px 100%)",
-              background: "var(--primary)",
-              boxShadow: "0 4px 10px rgb(0 0 0 / 0.45)",
-            }}
-          >
-            <span className="text-[9px] leading-tight uppercase tracking-wide">Top</span>
-            <span className="text-[11px] leading-none -mt-0.5 tabular-nums">
-              {String(rank).padStart(2, "0")}
-            </span>
-          </div>
-        )}
-
-        {progress != null && (
-          <>
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-foreground/20">
-              <div
-                className="h-full bg-primary transition-all"
-                style={{ width: `${Math.min(progress, 100)}%` }}
-              />
-            </div>
-            <div className="absolute bottom-2 left-2 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white">
-              {progress >= 95 ? "Done" : `${Math.round(progress)}%`}
-            </div>
-          </>
-        )}
-      </div>
+      </Link>
     </div>
   );
 }
