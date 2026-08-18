@@ -18,6 +18,7 @@ import {
   Sparkles,
   Bookmark,
   Home,
+  Compass,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Logo } from "./Logo";
@@ -253,6 +254,14 @@ export function Navbar() {
             );
           })}
           <Link
+            to="/explore"
+            className={`hover:text-foreground transition-colors ${
+              pathname.startsWith("/explore") ? "text-foreground font-semibold" : ""
+            }`}
+          >
+            Genres
+          </Link>
+          <Link
             to="/calendar"
             className={`hover:text-foreground transition-colors ${
               pathname === "/calendar" ? "text-foreground font-semibold" : ""
@@ -442,6 +451,17 @@ export function Navbar() {
                 </Link>
               );
             })}
+            <Link
+              to="/explore"
+              onClick={() => setMobileNavOpen(false)}
+              className={`flex items-center gap-3 rounded-md px-2 py-2.5 text-sm transition-colors ${
+                pathname.startsWith("/explore")
+                  ? "bg-accent text-foreground font-semibold"
+                  : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+              }`}
+            >
+              <Compass className="size-4 text-muted-foreground" /> Genres
+            </Link>
             <Link
               to="/calendar"
               onClick={() => setMobileNavOpen(false)}
