@@ -13,6 +13,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signInWithRedirect,
+  signInWithCredential,
   getRedirectResult,
   onAuthStateChanged,
   updateProfile as updateFirebaseProfile,
@@ -84,12 +85,14 @@ function AuthPage() {
   // external browser (not the app), we bounce it back into the app first (see
   // below), so skip getRedirectResult here in that case.
   const bouncedRef = useRef(false);
+  const handledAuthRef = useRef(false);
 
   useEffect(() => {
-    if (bouncedRef.current) return;
+    if (bouncedRef.current || handledAuthRef.current) return;
     getRedirectResult(auth)
       .then((result) => {
         if (result?.user) {
+          handledAuthRef.current = true;
           toast.success("Signed in with Google.");
           navigate({ to: "/profiles" });
         }
@@ -124,6 +127,56 @@ function AuthPage() {
         : "streamflix";
     window.location.replace(`${scheme}://auth${window.location.search}${window.location.hash}`);
   }, []);
+
+  // Handle OAuth tokens arriving via deep link in Electron / Capacitor.
+  // signInWithRedirect opens the system browser; the result bounces back via
+  // streamflix://auth#id_token=... (Electron) or
+  // com.itiswayneee.streamflix://auth#id_token=... (Capacitor). The deep-link
+  // handler loads this page with the tokens in the hash, but getRedirectResult
+  // can't find the pending state (it was stored in the system browser). Extract
+  // the tokens and complete the sign-in with signInWithCredential instead.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (handledAuthRef.current) return;
+    const inElectron = "electronAPI" in window;
+    const inNativeApp =
+      typeof (window as any).Capacitor?.isNativePlatform === "function" &&
+      (window as any).Capacitor.isNativePlatform();
+    if (!inElectron && !inNativeApp) return;
+
+    const hash = window.location.hash;
+    if (!hash || hash === "#" || hash === "#_=_") return;
+    const fragment = hash.slice(1);
+    if (
+      !/id_token|access_token|oauthIdToken|oauthAccessToken|providerId|firebase/i.test(fragment) &&
+      fragment.length <= 30
+    )
+      return;
+
+    const params = new URLSearchParams(fragment);
+    const idToken = params.get("id_token");
+    const accessToken = params.get("access_token");
+    if (!idToken && !accessToken) return;
+
+    handledAuthRef.current = true;
+    const credential = GoogleAuthProvider.credential(idToken, accessToken);
+    signInWithCredential(auth, credential)
+      .then(() => {
+        toast.success("Signed in with Google.");
+        window.history.replaceState(
+          null,
+          "",
+          window.location.pathname + window.location.search,
+        );
+        navigate({ to: "/profiles" });
+      })
+      .catch((err: any) => {
+        handledAuthRef.current = false;
+        if (err?.code !== "auth/popup-closed-by-user") {
+          toast.error(err?.message ?? "Google sign-in failed");
+        }
+      });
+  }, [navigate]);
 
   useEffect(() => {
     if (mode !== "signin" || forgotPw) {
