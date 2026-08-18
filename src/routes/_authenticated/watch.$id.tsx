@@ -1073,19 +1073,8 @@ function PlayerPage() {
               onClick={(e) => e.stopPropagation()}
               onMouseMove={directWake}
             >
-              <div className="flex items-center gap-3 px-4 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] pb-3">
-                <button
-                  onClick={() => {
-                    destroyHls();
-                    setDirectPlaying(false);
-                  }}
-                  className="flex items-center gap-2 text-white/90 hover:text-white min-h-11"
-                >
-                  <ArrowLeft className="size-5" />
-                  <span className="text-sm font-medium">Back to streams</span>
-                </button>
-                <div className="flex-1" />
-                <span className="text-xs text-white/50 font-medium truncate max-w-[50%]">
+              <div className="flex items-center justify-end px-4 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] pb-3">
+                <span className="text-xs text-white/50 font-medium truncate max-w-[60%]">
                   {movie.title}
                 </span>
               </div>
@@ -1122,6 +1111,15 @@ function PlayerPage() {
                 {/* Control buttons */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => {
+                        destroyHls();
+                        setDirectPlaying(false);
+                      }}
+                      className="min-h-11 min-w-11 flex items-center justify-center rounded-full hover:bg-white/10 transition"
+                    >
+                      <ArrowLeft className="size-5" />
+                    </button>
                     <button
                       onClick={() => {
                         const v = directVideoRef.current;
@@ -1183,7 +1181,10 @@ function PlayerPage() {
                         v.volume = val;
                         v.muted = val === 0;
                       }}
-                      className="w-20 h-1 rounded-full appearance-none bg-white/20 accent-white cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+                      className="w-20 h-1.5 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:relative [&::-webkit-slider-thumb]:z-10"
+                      style={{
+                        background: `linear-gradient(to right, #dc2626 ${(directMuted ? 0 : directVolume) * 100}%, rgba(255,255,255,0.2) ${(directMuted ? 0 : directVolume) * 100}%)`,
+                      }}
                       onClick={(e) => e.stopPropagation()}
                     />
                     <button
