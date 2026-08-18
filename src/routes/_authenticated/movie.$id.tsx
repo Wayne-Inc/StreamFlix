@@ -545,7 +545,7 @@ function MoviePage() {
                       }`}
                     >
                       <div className="min-h-full rounded-lg border border-border bg-background p-4 shadow-2xl sm:p-5">
-                        <SeasonEpisodePicker movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} />
+                        <SeasonEpisodePicker movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} movie={movie} />
                       </div>
                     </aside>
                     {showPicker && (
@@ -574,7 +574,7 @@ function MoviePage() {
                     )}
                   </div>
                   <aside className="w-full rounded-lg border border-border bg-background/70 p-4 backdrop-blur-md sm:p-5 md:hidden">
-                    <SeasonEpisodePicker movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} />
+                    <SeasonEpisodePicker movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} movie={movie} />
                   </aside>
                 </>
               ) : (
