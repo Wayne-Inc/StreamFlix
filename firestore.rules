@@ -45,6 +45,12 @@ service cloud.firestore {
       allow write: if isAuth() && docId.startsWith(request.auth.uid);
     }
 
+    // Watch history: user can read/write only their own
+    match /watch_history/{docId} {
+      allow read: if isAuth() && docId.startsWith(request.auth.uid);
+      allow write: if isAuth() && docId.startsWith(request.auth.uid);
+    }
+
     // Episode progress: user can read/write only their own
     match /episode_progress/{docId} {
       allow read: if isAuth() && docId.startsWith(request.auth.uid);

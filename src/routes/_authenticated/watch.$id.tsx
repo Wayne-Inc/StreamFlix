@@ -511,10 +511,10 @@ function PlayerPage() {
 
   const doRecord = useCallback(
     (cur: number, dur: number) => {
-      recordProgress(movie, cur, dur);
-      saveProgressToFirestore(movie, cur, dur).catch(notifySaveError);
+      recordProgress(movie, cur, dur, season, episode);
+      saveProgressToFirestore(movie, cur, dur, season, episode).catch(notifySaveError);
     },
-    [movie, notifySaveError],
+    [movie, season, episode, notifySaveError],
   );
 
   const toggle = useCallback(() => {
