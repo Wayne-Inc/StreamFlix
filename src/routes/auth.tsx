@@ -80,53 +80,15 @@ function AuthPage() {
     return () => unsub();
   }, [navigate]);
 
-  // Finish a Google redirect sign-in that was started in the desktop/mobile
-  // app. When the return URL carries an OAuth result and we are running in an
-  // external browser (not the app), we bounce it back into the app first (see
-  // below), so skip getRedirectResult here in that case.
   const bouncedRef = useRef(false);
   const handledAuthRef = useRef(false);
 
-  useEffect(() => {
-    if (bouncedRef.current || handledAuthRef.current) return;
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result?.user) {
-          handledAuthRef.current = true;
-          toast.success("Signed in with Google.");
-          navigate({ to: "/profiles" });
-        }
-      })
-      .catch((err: any) => {
-        if (err?.code && err.code !== "auth/popup-closed-by-user") {
-          toast.error(err?.message ?? "Google sign-in failed");
-        }
-      });
-  }, [navigate]);
-
-  // The Google sign-in page was opened in the device's default browser (the
-  // app WebView can't host Google's OAuth). When that browser lands back on the
-  // site with the Firebase OAuth result in the URL hash, bounce it through the
-  // platform deep link so the app itself can finish the sign-in.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if ("electronAPI" in window) return; // already inside the Electron app
-    if (isMobileApp()) return; // already inside the Capacitor app
-    const hash = window.location.hash;
-    if (!hash || hash === "#" || hash === "#_=_") return;
-    const fragment = hash.slice(1);
-    const looksLikeOAuth =
+  function oauthHashLooksReal(fragment: string) {
+    return (
       /id_token|access_token|oauthIdToken|oauthAccessToken|providerId|firebase/i.test(fragment) ||
-      fragment.length > 30;
-    if (!looksLikeOAuth) return;
-    bouncedRef.current = true;
-    const ua = navigator.userAgent;
-    const scheme =
-      /Android/i.test(ua) || /iPhone|iPad|iPod/i.test(ua)
-        ? "com.itiswayneee.streamflix"
-        : "streamflix";
-    window.location.replace(`${scheme}://auth${window.location.search}${window.location.hash}`);
-  }, []);
+      fragment.length > 30
+    );
+  }
 
   // Handle OAuth tokens arriving via deep link in Electron / Capacitor.
   // signInWithRedirect opens the system browser; the result bounces back via
@@ -135,6 +97,7 @@ function AuthPage() {
   // handler loads this page with the tokens in the hash, but getRedirectResult
   // can't find the pending state (it was stored in the system browser). Extract
   // the tokens and complete the sign-in with signInWithCredential instead.
+  // This MUST run before getRedirectResult to claim handledAuthRef first.
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (handledAuthRef.current) return;
@@ -147,11 +110,7 @@ function AuthPage() {
     const hash = window.location.hash;
     if (!hash || hash === "#" || hash === "#_=_") return;
     const fragment = hash.slice(1);
-    if (
-      !/id_token|access_token|oauthIdToken|oauthAccessToken|providerId|firebase/i.test(fragment) &&
-      fragment.length <= 30
-    )
-      return;
+    if (!oauthHashLooksReal(fragment)) return;
 
     const params = new URLSearchParams(fragment);
     const idToken = params.get("id_token");
@@ -173,6 +132,48 @@ function AuthPage() {
       .catch((err: any) => {
         handledAuthRef.current = false;
         if (err?.code !== "auth/popup-closed-by-user") {
+          toast.error(err?.message ?? "Google sign-in failed");
+        }
+      });
+  }, [navigate]);
+
+  // The Google sign-in page was opened in the device's default browser (the
+  // app WebView can't host Google's OAuth). When that browser lands back on the
+  // site with the Firebase OAuth result in the URL hash, bounce it through the
+  // platform deep link so the app itself can finish the sign-in.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if ("electronAPI" in window) return;
+    if (isMobileApp()) return;
+    const hash = window.location.hash;
+    if (!hash || hash === "#" || hash === "#_=_") return;
+    const fragment = hash.slice(1);
+    if (!oauthHashLooksReal(fragment)) return;
+    bouncedRef.current = true;
+    const ua = navigator.userAgent;
+    const scheme =
+      /Android/i.test(ua) || /iPhone|iPad|iPod/i.test(ua)
+        ? "com.itiswayneee.streamflix"
+        : "streamflix";
+    window.location.replace(`${scheme}://auth${window.location.search}${window.location.hash}`);
+  }, []);
+
+  // Finish a Google redirect sign-in that was started in the desktop/mobile
+  // app. When the return URL carries an OAuth result and we are running in an
+  // external browser (not the app), we bounce it back into the app first (see
+  // above), so skip getRedirectResult here in that case.
+  useEffect(() => {
+    if (bouncedRef.current || handledAuthRef.current) return;
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) {
+          handledAuthRef.current = true;
+          toast.success("Signed in with Google.");
+          navigate({ to: "/profiles" });
+        }
+      })
+      .catch((err: any) => {
+        if (err?.code && err.code !== "auth/popup-closed-by-user") {
           toast.error(err?.message ?? "Google sign-in failed");
         }
       });
