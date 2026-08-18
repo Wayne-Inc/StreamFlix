@@ -430,6 +430,9 @@ function ProfileEditor({
   const [avatarUrl, setAvatarUrl] = useState(existing?.avatarUrl ?? "");
   const [pin, setPin] = useState("");
   const [hasPin, setHasPin] = useState(existing?.hasPin ?? false);
+  const [removePinOpen, setRemovePinOpen] = useState(false);
+  const [removePinValue, setRemovePinValue] = useState("");
+  const [removePinBusy, setRemovePinBusy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -492,16 +495,24 @@ function ProfileEditor({
     if (!existing) return;
     const u = auth.currentUser;
     if (!u) return;
-    setBusy(true);
+    setRemovePinBusy(true);
     try {
+      const ok = await verifyProfilePin(u.uid, existing.id, removePinValue);
+      if (!ok) {
+        toast.error("Incorrect PIN");
+        setRemovePinBusy(false);
+        return;
+      }
       await removeProfilePin(u.uid, existing.id);
       setHasPin(false);
       setPin("");
+      setRemovePinOpen(false);
+      setRemovePinValue("");
       toast.success("PIN removed");
     } catch {
       toast.error("Couldn't remove PIN");
     }
-    setBusy(false);
+    setRemovePinBusy(false);
   };
 
   const remove = async () => {
@@ -639,30 +650,77 @@ function ProfileEditor({
         </div>
 
         <div className="mt-4">
-          <input
-            type="password"
-            value={pin}
-            onChange={(e) => setPin(e.target.value)}
-            placeholder="Parental PIN (optional)"
-            aria-label="Parental PIN"
-            maxLength={6}
-            className="w-full rounded bg-neutral-800 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-          {hasPin && (
-            <div className="mt-2 flex items-center justify-between gap-3 rounded border border-border px-3 py-2">
+          {!hasPin ? (
+            <input
+              type="password"
+              value={pin}
+              onChange={(e) => setPin(e.target.value)}
+              placeholder="Parental PIN (optional)"
+              aria-label="Parental PIN"
+              maxLength={6}
+              className="w-full rounded bg-neutral-800 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          ) : (
+            <div className="flex items-center justify-between gap-3 rounded border border-border px-3 py-2">
               <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Lock className="size-3.5" /> A PIN is currently set
               </p>
               <button
-                onClick={removePin}
+                onClick={() => {
+                  setRemovePinValue("");
+                  setRemovePinOpen(true);
+                }}
                 disabled={busy}
                 className="shrink-0 rounded border border-border px-2.5 py-1 text-xs font-semibold text-muted-foreground hover:border-destructive hover:text-destructive disabled:opacity-60"
               >
-                {busy ? "Removing…" : "Remove PIN"}
+                Remove PIN
               </button>
             </div>
           )}
         </div>
+
+        {removePinOpen && (
+          <div className="fixed inset-0 z-[80] grid place-items-center bg-black/80 p-4">
+            <div className="w-full max-w-sm rounded-md bg-card p-6 shadow-2xl text-center">
+              <Lock className="mx-auto size-10 text-muted-foreground mb-4" />
+              <h2 className="text-xl font-semibold mb-1">Remove PIN</h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                Enter the current PIN for &quot;{existing?.name}&quot; to remove it
+              </p>
+              <input
+                type="password"
+                value={removePinValue}
+                onChange={(e) => setRemovePinValue(e.target.value)}
+                maxLength={6}
+                autoFocus
+                placeholder="Enter current PIN"
+                aria-label="Enter current PIN"
+                className="w-full rounded bg-neutral-800 px-4 py-3 text-center text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-primary mb-4"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && removePinValue.trim()) removePin();
+                }}
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setRemovePinOpen(false);
+                    setRemovePinValue("");
+                  }}
+                  className="flex-1 rounded border border-border px-4 py-2 text-sm hover:bg-accent"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={removePin}
+                  disabled={removePinBusy || !removePinValue.trim()}
+                  className="flex-1 rounded bg-destructive px-4 py-2 text-sm font-semibold text-white hover:bg-destructive/90 disabled:opacity-60"
+                >
+                  {removePinBusy ? "Removing…" : "Remove"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="mt-7 flex flex-wrap items-center justify-between gap-3">
           {!isNew ? (
