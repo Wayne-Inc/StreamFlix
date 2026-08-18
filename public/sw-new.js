@@ -1,7 +1,8 @@
 const CACHE_NAME = "streamflix-cache-v2";
 const ASSET_CACHE = "streamflix-assets-v2";
+const OFFLINE_URL = "/offline";
 
-const PRECACHE_URLS = ["/", "/offline", "/browse"];
+const PRECACHE_URLS = ["/", OFFLINE_URL, "/browse"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -33,6 +34,8 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  if (request.method !== "GET") return;
+
   if (url.hostname === "image.tmdb.org") {
     event.respondWith(cacheFirst(request));
     return;
@@ -52,6 +55,11 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  if (request.mode === "navigate") {
+    event.respondWith(navigationFallback(request));
+    return;
+  }
+
   if (url.pathname.startsWith("/api/") || url.pathname.includes("tmdb")) {
     event.respondWith(networkFirst(request));
     return;
@@ -59,6 +67,26 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith(networkFirst(request));
 });
+
+async function navigationFallback(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    const offlinePage = await caches.match(OFFLINE_URL);
+    if (offlinePage) return offlinePage;
+    return new Response("Offline", {
+      status: 503,
+      headers: { "Content-Type": "text/html" },
+    });
+  }
+}
 
 async function cacheFirst(request) {
   const cached = await caches.match(request);
@@ -71,7 +99,7 @@ async function cacheFirst(request) {
     }
     return res;
   } catch {
-    return caches.match("/offline");
+    return caches.match(OFFLINE_URL);
   }
 }
 
@@ -85,6 +113,6 @@ async function networkFirst(request) {
     return res;
   } catch {
     const cached = await caches.match(request);
-    return cached || caches.match("/offline");
+    return cached || caches.match(OFFLINE_URL);
   }
 }
