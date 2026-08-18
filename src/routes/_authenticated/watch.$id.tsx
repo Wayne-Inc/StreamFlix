@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { useEffect, useRef, useState, useCallback, type MouseEvent, type TouchEvent } from "react";
-import { ArrowLeft, Settings, Wifi, Loader, RotateCw, Users, ShieldOff, Play, Copy, Check, ChevronDown, ChevronUp, Zap } from "lucide-react";
+import { ArrowLeft, Settings, Wifi, Loader, RotateCw, Users, ShieldOff, Play, Zap, Maximize, Minimize } from "lucide-react";
 import { movieById } from "@/lib/streamflix-data";
 import { getContinueWatching, recordProgress } from "@/lib/continue-watching";
 import { saveProgressToFirestore } from "@/lib/continue-watching-firestore";
@@ -350,7 +350,6 @@ function PlayerPage() {
   const [directError, setDirectError] = useState<string | null>(null);
   const [activeDirectStream, setActiveDirectStream] = useState<number>(0);
   const [directPlaying, setDirectPlaying] = useState(false);
-  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const hlsRef = useRef<any>(null);
   const directVideoRef = useRef<HTMLVideoElement>(null);
   const directContainerRef = useRef<HTMLDivElement>(null);
@@ -894,14 +893,14 @@ function PlayerPage() {
     [destroyHls, tryNextDirect],
   );
 
-  const copyStreamUrl = useCallback((url: string) => {
-    navigator.clipboard.writeText(url).then(() => {
-      setCopiedUrl(url);
-      setTimeout(() => setCopiedUrl(null), 2000);
-      toast.success("URL copied to clipboard");
-    }).catch(() => {
-      toast.error("Failed to copy URL");
-    });
+  const directWake = useCallback(() => {
+    setDirectShowControls(true);
+    if (directHideTimer.current) window.clearTimeout(directHideTimer.current);
+    directHideTimer.current = window.setTimeout(() => {
+      if (directVideoRef.current && !directVideoRef.current.paused) {
+        setDirectShowControls(false);
+      }
+    }, 4000);
   }, []);
 
   useEffect(() => {
@@ -1018,7 +1017,11 @@ function PlayerPage() {
             onClick={() => {
               const v = directVideoRef.current;
               if (!v) return;
-              if (v.paused) { v.play().catch(() => {}); setDirectPlayingState(true); }
+              if (!directShowControls) {
+                directWake();
+                return;
+              }
+              if (v.paused) { v.play().catch(() => {}); setDirectPlayingState(true); directWake(); }
               else { v.pause(); setDirectPlayingState(false); }
             }}
           >
@@ -1053,132 +1056,206 @@ function PlayerPage() {
                 setDirectVolume(e.currentTarget.volume);
                 setDirectMuted(e.currentTarget.muted);
               }}
-              className="size-full object-contain"
+              onMouseMove={directWake}
+              className="size-full object-contain bg-black"
             />
             {directBuffering && (
-              <div className="absolute inset-0 z-15 flex items-center justify-center pointer-events-none">
-                <Loader className="size-10 text-white/60 animate-spin" />
+              <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+                <Loader className="size-12 text-white/60 animate-spin" />
               </div>
             )}
-            {/* Direct player controls */}
+
+            {/* Top bar */}
             <div
-              className={`absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black via-black/60 to-transparent pt-8 pb-4 px-4 transition-opacity duration-300 ${directShowControls ? "opacity-100" : "opacity-0"}`}
+              className={`absolute inset-x-0 top-0 z-20 bg-gradient-to-b from-black/80 via-black/40 to-transparent transition-opacity duration-300 ${
+                directShowControls ? "opacity-100" : "opacity-0"
+              }`}
               onClick={(e) => e.stopPropagation()}
+              onMouseMove={directWake}
             >
-              <div className="flex items-center gap-3 text-sm text-white/90">
+              <div className="flex items-center gap-3 px-4 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] pb-3">
                 <button
                   onClick={() => {
-                    const v = directVideoRef.current;
-                    if (!v) return;
-                    if (v.paused) { v.play().catch(() => {}); setDirectPlayingState(true); }
-                    else { v.pause(); setDirectPlayingState(false); }
+                    destroyHls();
+                    setDirectPlaying(false);
                   }}
-                  className="min-h-11 min-w-11 flex items-center justify-center"
+                  className="flex items-center gap-2 text-white/90 hover:text-white min-h-11"
                 >
-                  {directPlayingState ? (
-                    <svg className="size-6" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
-                  ) : (
-                    <svg className="size-6" fill="currentColor" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21" /></svg>
-                  )}
+                  <ArrowLeft className="size-5" />
+                  <span className="text-sm font-medium">Back to streams</span>
                 </button>
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={0.1}
-                  value={directProgress}
-                  onChange={(e) => {
-                    const v = directVideoRef.current;
-                    if (!v || !v.duration) return;
-                    v.currentTime = (Number(e.target.value) / 100) * v.duration;
-                  }}
-                  className="flex-1 h-1 accent-primary cursor-pointer"
-                  onClick={(e) => e.stopPropagation()}
-                />
-                <span className="text-xs tabular-nums text-white/70 min-w-[80px] text-right">
-                  {fmt(directCurrentTime)} / {fmt(directDuration)}
+                <div className="flex-1" />
+                <span className="text-xs text-white/50 font-medium truncate max-w-[50%]">
+                  {movie.title}
                 </span>
-                <button
-                  onClick={() => {
-                    const v = directVideoRef.current;
-                    if (v) v.muted = !v.muted;
-                  }}
-                  className="min-h-11 min-w-11 flex items-center justify-center"
-                >
-                  {directMuted ? (
-                    <svg className="size-5" fill="currentColor" viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0021 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 003.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" /></svg>
-                  ) : (
-                    <svg className="size-5" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" /></svg>
-                  )}
-                </button>
-                <button
-                  onClick={goBack}
-                  className="text-xs text-white/60 hover:text-white min-h-11 px-2"
-                >
-                  Back
-                </button>
+              </div>
+            </div>
+
+            {/* Bottom controls */}
+            <div
+              className={`absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/90 via-black/50 to-transparent transition-opacity duration-300 ${
+                directShowControls ? "opacity-100" : "opacity-0"
+              }`}
+              onClick={(e) => e.stopPropagation()}
+              onMouseMove={directWake}
+            >
+              <div className="px-4 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] pt-10">
+                {/* Seek bar */}
+                <div className="mb-3 flex items-center gap-3">
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={0.1}
+                    value={directProgress}
+                    onChange={(e) => {
+                      const v = directVideoRef.current;
+                      if (!v || !v.duration) return;
+                      v.currentTime = (Number(e.target.value) / 100) * v.duration;
+                    }}
+                    className="flex-1 h-1.5 rounded-full appearance-none bg-white/20 accent-primary cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
+                  />
+                  <span className="text-[11px] tabular-nums text-white/60 min-w-[90px] text-right">
+                    {fmt(directCurrentTime)} / {fmt(directDuration)}
+                  </span>
+                </div>
+                {/* Control buttons */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => {
+                        const v = directVideoRef.current;
+                        if (!v) return;
+                        if (v.paused) { v.play().catch(() => {}); setDirectPlayingState(true); }
+                        else { v.pause(); setDirectPlayingState(false); }
+                      }}
+                      className="min-h-12 min-w-12 flex items-center justify-center rounded-full hover:bg-white/10 transition"
+                    >
+                      {directPlayingState ? (
+                        <svg className="size-7" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
+                      ) : (
+                        <svg className="size-7" fill="currentColor" viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21" /></svg>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => {
+                        const v = directVideoRef.current;
+                        if (v) { v.currentTime -= 10; }
+                      }}
+                      className="min-h-11 min-w-11 flex items-center justify-center rounded-full hover:bg-white/10 transition"
+                    >
+                      <svg className="size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.333 4z" /><path d="M4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z" /></svg>
+                    </button>
+                    <button
+                      onClick={() => {
+                        const v = directVideoRef.current;
+                        if (v) { v.currentTime += 10; }
+                      }}
+                      className="min-h-11 min-w-11 flex items-center justify-center rounded-full hover:bg-white/10 transition"
+                    >
+                      <svg className="size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11.933 12.8a1 1 0 000-1.6L6.6 7.2A1 1 0 005 8v8a1 1 0 001.6.8l5.333-4z" /><path d="M19.933 12.8a1 1 0 000-1.6l-5.333-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.333-4z" /></svg>
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => {
+                        const v = directVideoRef.current;
+                        if (v) v.muted = !v.muted;
+                      }}
+                      className="min-h-11 min-w-11 flex items-center justify-center rounded-full hover:bg-white/10 transition"
+                    >
+                      {directMuted || directVolume === 0 ? (
+                        <svg className="size-5" fill="currentColor" viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0021 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 003.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" /></svg>
+                      ) : (
+                        <svg className="size-5" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" /></svg>
+                      )}
+                    </button>
+                    <input
+                      type="range"
+                      min={0}
+                      max={1}
+                      step={0.05}
+                      value={directMuted ? 0 : directVolume}
+                      onChange={(e) => {
+                        const v = directVideoRef.current;
+                        if (!v) return;
+                        const val = Number(e.target.value);
+                        v.volume = val;
+                        v.muted = val === 0;
+                      }}
+                      className="w-20 h-1 rounded-full appearance-none bg-white/20 accent-white cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-2.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <button
+                      onClick={() => {
+                        const c = directContainerRef.current;
+                        if (!c) return;
+                        if (document.fullscreenElement) {
+                          document.exitFullscreen().catch(() => {});
+                        } else {
+                          c.requestFullscreen().catch(() => {});
+                        }
+                      }}
+                      className="min-h-11 min-w-11 flex items-center justify-center rounded-full hover:bg-white/10 transition"
+                    >
+                      <Maximize className="size-5" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center size-full bg-black p-4">
-            {directLoading ? (
-              <div className="flex flex-col items-center gap-4">
-                <Loader className="size-10 text-white/60 animate-spin" />
-                <p className="text-sm text-white/50">Loading direct streams...</p>
-              </div>
-            ) : directError ? (
-              <div className="flex flex-col items-center gap-4 text-center">
-                <Zap className="size-12 text-white/30" />
-                <p className="text-sm text-white/50">{directError}</p>
-                <p className="text-xs text-white/30">Try a different server above.</p>
-              </div>
-            ) : (
-              <div className="w-full max-w-lg space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wider text-white/40 mb-3">
-                  {directStreams.length} direct stream{directStreams.length !== 1 ? "s" : ""} found
-                </p>
-                {directStreams.map((stream, i) => (
-                  <div
-                    key={`${stream.resolver}-${i}`}
-                    className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 transition hover:bg-white/10"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-white/90 truncate">
-                          {stream.resolver}
-                        </span>
-                        <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
-                          stream.type === "mp4" ? "bg-emerald-500/20 text-emerald-300" : "bg-blue-500/20 text-blue-300"
-                        }`}>
-                          {stream.type.toUpperCase()}
-                        </span>
-                        {stream.language && (
-                          <span className="text-[10px] text-white/40">{stream.language}</span>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => playDirectStream(stream, i)}
-                      className="flex items-center gap-1 rounded bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition"
-                    >
-                      <Play className="size-3" />
-                      Play
-                    </button>
-                    <button
-                      onClick={() => copyStreamUrl(stream.url)}
-                      className="flex items-center gap-1 rounded bg-white/10 px-2 py-1.5 text-xs text-white/70 hover:bg-white/20 transition"
-                    >
-                      {copiedUrl === stream.url ? (
-                        <Check className="size-3 text-emerald-400" />
-                      ) : (
-                        <Copy className="size-3" />
-                      )}
-                    </button>
+          <div className="flex flex-col items-center justify-center size-full bg-[#0a0a0a]">
+            <div className="w-full max-w-2xl px-6 py-8 overflow-y-auto max-h-dvh">
+              {directLoading ? (
+                <div className="flex flex-col items-center gap-4 py-20">
+                  <Loader className="size-10 text-white/40 animate-spin" />
+                  <p className="text-sm text-white/40">Finding direct streams...</p>
+                </div>
+              ) : directError ? (
+                <div className="flex flex-col items-center gap-4 py-20 text-center">
+                  <Zap className="size-12 text-white/20" />
+                  <p className="text-sm text-white/40">{directError}</p>
+                  <p className="text-xs text-white/25">Try a different server above.</p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm font-medium text-white/50 mb-5">
+                    {directStreams.length} direct stream{directStreams.length !== 1 ? "s" : ""} available
+                  </p>
+                  <div className="space-y-3">
+                    {directStreams.map((stream, i) => (
+                      <button
+                        key={`${stream.resolver}-${i}`}
+                        onClick={() => playDirectStream(stream, i)}
+                        className="w-full flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] px-5 py-4 transition hover:bg-white/[0.08] hover:border-white/20 text-left group"
+                      >
+                        <div className="size-12 rounded-lg bg-white/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition">
+                          <Play className="size-5 text-white/60 group-hover:text-primary transition" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-base font-semibold text-white/90 capitalize">
+                              {stream.resolver}
+                            </span>
+                            <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                              stream.type === "mp4" ? "bg-emerald-500/20 text-emerald-300" : "bg-blue-500/20 text-blue-300"
+                            }`}>
+                              {stream.type.toUpperCase()}
+                            </span>
+                          </div>
+                          {stream.language && (
+                            <p className="text-xs text-white/35">{stream.language}</p>
+                          )}
+                        </div>
+                        <Play className="size-5 text-white/30 group-hover:text-primary transition shrink-0" />
+                      </button>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
+                </>
+              )}
+            </div>
           </div>
         )
       ) : null}
@@ -1234,7 +1311,7 @@ function PlayerPage() {
                     <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/50">
                       Server
                     </p>
-                    <div className="grid grid-cols-2 gap-1 mb-3 max-h-40 overflow-y-auto">
+                    <div className="grid grid-cols-2 gap-1 mb-3 max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
                       {availableEmbedServers.map((server) => (
                         <button
                           key={server.id}
