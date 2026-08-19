@@ -88,10 +88,24 @@ function AuthPage() {
       (window as any).Capacitor.isNativePlatform();
     if (inApp) return;
 
-    const rawHash = window.location.hash || "";
-    const cleanHash = rawHash.startsWith("#") ? rawHash.slice(1) : rawHash;
-    const target = `com.itiswayneee.streamflix://auth` + (cleanHash ? `#${cleanHash}` : "");
-    window.location.replace(target);
+    (async () => {
+      let hash = (window.location.hash || "").replace(/^#/, "");
+
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          const idToken = await result.user.getIdToken();
+          const params = new URLSearchParams();
+          params.set("id_token", idToken);
+          hash = params.toString();
+        }
+      } catch {
+        // ignore — fall through with whatever hash is already present
+      }
+
+      const target = `com.itiswayneee.streamflix://auth` + (hash ? `#${hash}` : "");
+      window.location.replace(target);
+    })();
   }, []);
 
   useEffect(() => {
