@@ -216,62 +216,65 @@ function AuthPage() {
   const onGoogle = async () => {
     setBusy(true);
     setPopupBlocked(false);
-    const provider = new GoogleAuthProvider();
     const inNativeApp =
       typeof window !== "undefined" &&
       typeof (window as any).Capacitor?.isNativePlatform === "function" &&
       (window as any).Capacitor.isNativePlatform();
-    try {
-      await signInWithPopup(auth, provider);
-      toast.success("Signed in with Google.");
-      navigate({ to: "/profiles" });
-    } catch (err: any) {
-      if (inNativeApp) {
-        try {
-          const authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string;
-          const apiKey = import.meta.env.VITE_FIREBASE_API_KEY as string;
-          const appId = import.meta.env.VITE_FIREBASE_APP_ID as string;
-          const redirectUrl = import.meta.env.VITE_SITE_URL as string;
-          const authUrl =
-            `https://${authDomain}/__/auth/handler` +
-            `?apiKey=${encodeURIComponent(apiKey)}` +
-            `&appName=${encodeURIComponent(appId)}` +
-            `&authType=signInViaRedirect` +
-            `&redirectUrl=${encodeURIComponent(redirectUrl + "/auth")}` +
-            `&providerId=google.com` +
-            `&scopes=profile`;
-          const cap = (window as any).Capacitor?.Plugins?.GoogleAuth;
-          if (!cap) {
-            toast.error("Google Auth plugin not available.");
-            setBusy(false);
+
+    if (inNativeApp) {
+      try {
+        const authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string;
+        const apiKey = import.meta.env.VITE_FIREBASE_API_KEY as string;
+        const appId = import.meta.env.VITE_FIREBASE_APP_ID as string;
+        const redirectUrl = import.meta.env.VITE_SITE_URL as string;
+        const authUrl =
+          `https://${authDomain}/__/auth/handler` +
+          `?apiKey=${encodeURIComponent(apiKey)}` +
+          `&appName=${encodeURIComponent(appId)}` +
+          `&authType=signInViaRedirect` +
+          `&redirectUrl=${encodeURIComponent(redirectUrl + "/auth")}` +
+          `&providerId=google.com` +
+          `&scopes=profile`;
+        const cap = (window as any).Capacitor?.Plugins?.GoogleAuth;
+        if (!cap) {
+          toast.error("Google Auth plugin not available.");
+          setBusy(false);
+          return;
+        }
+        const r = await cap.openUrl({ url: authUrl });
+        const resultUrl = r?.url ?? null;
+        if (resultUrl) {
+          const hash = resultUrl.split("#")[1] || "";
+          const params = new URLSearchParams(hash);
+          const idToken = params.get("id_token");
+          const accessToken = params.get("access_token");
+          if (idToken || accessToken) {
+            const credential = GoogleAuthProvider.credential(idToken, accessToken);
+            await signInWithCredential(auth, credential);
+            toast.success("Signed in with Google.");
+            navigate({ to: "/profiles" });
             return;
           }
-          let resultUrl: string | null = null;
-          const r = await cap.openUrl({ url: authUrl });
-          resultUrl = r?.url ?? null;
-          if (resultUrl) {
-            const hash = resultUrl.split("#")[1] || "";
-            const params = new URLSearchParams(hash);
-            const idToken = params.get("id_token");
-            const accessToken = params.get("access_token");
-            if (idToken || accessToken) {
-              const credential = GoogleAuthProvider.credential(idToken, accessToken);
-              await signInWithCredential(auth, credential);
-              toast.success("Signed in with Google.");
-              navigate({ to: "/profiles" });
-              return;
-            }
-          }
-          toast.error("Google sign-in failed: no tokens received.");
-        } catch (pluginErr: any) {
-          toast.error(pluginErr?.message ?? "Google sign-in failed");
         }
-      } else if (err?.code === "auth/popup-blocked") {
-        setPopupBlocked(true);
-      } else if (err?.code !== "auth/popup-closed-by-user") {
-        toast.error(err?.message ?? "Google sign-in failed");
+        toast.error("Google sign-in failed: no tokens received.");
+      } catch (pluginErr: any) {
+        toast.error(pluginErr?.message ?? "Google sign-in failed");
       }
       setBusy(false);
+    } else {
+      const provider = new GoogleAuthProvider();
+      try {
+        await signInWithPopup(auth, provider);
+        toast.success("Signed in with Google.");
+        navigate({ to: "/profiles" });
+      } catch (err: any) {
+        if (err?.code === "auth/popup-blocked") {
+          setPopupBlocked(true);
+        } else if (err?.code !== "auth/popup-closed-by-user") {
+          toast.error(err?.message ?? "Google sign-in failed");
+        }
+        setBusy(false);
+      }
     }
   };
 

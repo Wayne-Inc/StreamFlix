@@ -85,6 +85,7 @@ export async function initMobileApp(): Promise<void> {
 
   try {
     await cap?.App?.addListener("appUrlOpen", ({ url }) => {
+      if (url.startsWith(`${APP_SCHEME}://`)) return;
       const webUrl = deepLinkToWebUrl(url);
       if (webUrl) window.location.href = webUrl;
     });
