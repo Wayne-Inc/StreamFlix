@@ -12,8 +12,6 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signInWithCredential,
-  signInWithRedirect,
-  getRedirectResult,
   onAuthStateChanged,
   updateProfile as updateFirebaseProfile,
   sendEmailVerification,
@@ -88,24 +86,10 @@ function AuthPage() {
       (window as any).Capacitor.isNativePlatform();
     if (inApp) return;
 
-    (async () => {
-      let hash = (window.location.hash || "").replace(/^#/, "");
-
-      try {
-        const result = await getRedirectResult(auth);
-        if (result?.user) {
-          const idToken = await result.user.getIdToken();
-          const params = new URLSearchParams();
-          params.set("id_token", idToken);
-          hash = params.toString();
-        }
-      } catch {
-        // ignore — fall through with whatever hash is already present
-      }
-
-      const target = `com.itiswayneee.streamflix://auth` + (hash ? `#${hash}` : "");
-      window.location.replace(target);
-    })();
+    const rawHash = window.location.hash || "";
+    const cleanHash = rawHash.startsWith("#") ? rawHash.slice(1) : rawHash;
+    const target = `com.itiswayneee.streamflix://auth` + (cleanHash ? `#${cleanHash}` : "");
+    window.location.replace(target);
   }, []);
 
   useEffect(() => {
@@ -237,18 +221,15 @@ function AuthPage() {
 
     if (inNativeApp) {
       try {
-        const authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string;
-        const apiKey = import.meta.env.VITE_FIREBASE_API_KEY as string;
-        const appId = import.meta.env.VITE_FIREBASE_APP_ID as string;
-        const redirectUrl = import.meta.env.VITE_SITE_URL as string;
+        const clientId = "1064779147344-63l8ajcotfgjgtcv97u82u1j194lvieo.apps.googleusercontent.com";
+        const nonce = crypto.randomUUID().replace(/-/g, "");
         const authUrl =
-          `https://${authDomain}/__/auth/handler` +
-          `?apiKey=${encodeURIComponent(apiKey)}` +
-          `&appName=${encodeURIComponent(appId)}` +
-          `&authType=signInViaRedirect` +
-          `&redirectUrl=${encodeURIComponent(redirectUrl + "/auth")}` +
-          `&providerId=google.com` +
-          `&scopes=profile`;
+          `https://accounts.google.com/o/oauth2/v2/auth` +
+          `?client_id=${encodeURIComponent(clientId)}` +
+          `&redirect_uri=${encodeURIComponent("com.itiswayneee.streamflix://auth")}` +
+          `&response_type=id_token` +
+          `&scope=${encodeURIComponent("openid profile email")}` +
+          `&nonce=${encodeURIComponent(nonce)}`;
         const cap = (window as any).Capacitor?.Plugins?.GoogleAuth;
         if (!cap) {
           toast.error("Google Auth plugin not available.");
@@ -261,16 +242,15 @@ function AuthPage() {
           const hash = resultUrl.split("#")[1] || "";
           const params = new URLSearchParams(hash);
           const idToken = params.get("id_token");
-          const accessToken = params.get("access_token");
-          if (idToken || accessToken) {
-            const credential = GoogleAuthProvider.credential(idToken, accessToken);
+          if (idToken) {
+            const credential = GoogleAuthProvider.credential(idToken);
             await signInWithCredential(auth, credential);
             toast.success("Signed in with Google.");
             navigate({ to: "/profiles" });
             return;
           }
         }
-        toast.error("Google sign-in failed: no tokens received.");
+        toast.error("Google sign-in failed: no token received.");
       } catch (pluginErr: any) {
         toast.error(pluginErr?.message ?? "Google sign-in failed");
       }
