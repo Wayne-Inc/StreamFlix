@@ -8,8 +8,8 @@ export type RecommendSeed = {
   genreIds?: number[];
 };
 
-const MAX_SEEDS = 5;
-const MAX_RECS = 12;
+const MAX_SEEDS = 8;
+const MAX_RECS = 20;
 
 function recencyWeight(index: number, total: number) {
   if (total <= 1) return 1;
@@ -37,6 +37,22 @@ const GENRE_LABELS: Record<number, string> = {
   37: "Western",
 };
 
+function computeGenreAffinity(seeds: RecommendSeed[]): Map<number, number> {
+  const affinity = new Map<number, number>();
+  for (const seed of seeds) {
+    const recency = seed.watchedAt;
+    for (const gid of seed.genreIds ?? []) {
+      const existing = affinity.get(gid) ?? 0;
+      affinity.set(gid, existing + 1 + (recency > Date.now() - 7 * 24 * 60 * 60 * 1000 ? 0.5 : 0));
+    }
+  }
+  return affinity;
+}
+
+function diversityBoost(rank: number, genreCounts: Map<number, number>): number {
+  return 1 + rank * 0.1;
+}
+
 export async function getPersonalizedRecommendations(seeds: RecommendSeed[]): Promise<{
   items: Movie[];
   basedOnTitle: string | null;
@@ -58,8 +74,15 @@ export async function getPersonalizedRecommendations(seeds: RecommendSeed[]): Pr
       firstPos: number;
       seedScores: Map<string, number>;
       seedIds: Map<string, string>;
+      genreOverlap: number;
     }
   >();
+
+  const genreAffinity = computeGenreAffinity(seeds);
+  const topGenreIds = Array.from(genreAffinity.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([gid]) => gid);
 
   const results = await Promise.all(
     top.map((seed) => fetchRecommendations({ data: { id: seed.id } }).catch(() => [] as Movie[])),
@@ -76,6 +99,11 @@ export async function getPersonalizedRecommendations(seeds: RecommendSeed[]): Pr
       if (seen.has(movie.id)) return;
       const pos = 1 - (j / 10) * 0.5;
       const contribution = rw * pos;
+
+      const movieGenreOverlap = (movie.genreIds ?? []).reduce((sum, gid) => {
+        return sum + (genreAffinity.get(gid) ?? 0);
+      }, 0);
+
       const seedTitle = seed.title ?? seed.id;
       const entry = scores.get(movie.id);
       if (entry) {
@@ -83,6 +111,7 @@ export async function getPersonalizedRecommendations(seeds: RecommendSeed[]): Pr
         entry.count += 1;
         entry.seedScores.set(seedTitle, (entry.seedScores.get(seedTitle) ?? 0) + contribution);
         entry.seedIds.set(seedTitle, seed.id);
+        entry.genreOverlap = Math.max(entry.genreOverlap, movieGenreOverlap);
       } else {
         const seedScores = new Map<string, number>();
         seedScores.set(seedTitle, contribution);
@@ -95,13 +124,18 @@ export async function getPersonalizedRecommendations(seeds: RecommendSeed[]): Pr
           firstPos: firstPos++,
           seedScores,
           seedIds,
+          genreOverlap: movieGenreOverlap,
         });
       }
     });
   });
 
   const ranked = Array.from(scores.values())
-    .sort((a, b) => b.score - a.score || a.firstPos - b.firstPos)
+    .sort((a, b) => {
+      const scoreA = a.score * (1 + a.genreOverlap * 0.15) * (a.count > 1 ? 1.2 : 1);
+      const scoreB = b.score * (1 + b.genreOverlap * 0.15) * (b.count > 1 ? 1.2 : 1);
+      return scoreB - scoreA || a.firstPos - b.firstPos;
+    })
     .map((e) => e.movie)
     .slice(0, MAX_RECS);
 
@@ -115,7 +149,7 @@ export async function getPersonalizedRecommendations(seeds: RecommendSeed[]): Pr
     }
     const topGenres = Array.from(genreCounts.entries())
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
+      .slice(0, 5)
       .map(([gid]) => String(gid));
     const seenFilled = new Set(ranked.map((m) => m.id));
     for (const gid of topGenres) {

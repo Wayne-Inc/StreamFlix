@@ -17,6 +17,8 @@ import {
   Check,
   Crown,
   KeyRound,
+  EyeOff,
+  BarChart3,
 } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
 import {
@@ -42,6 +44,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AvatarCropModal } from "@/components/streamflix/AvatarCropModal";
 import { getDeviceId, recordCurrentDevice } from "@/lib/device-tracking";
 import { isKidsProfile } from "@/lib/kids-mode";
+import { useReduceMotion } from "@/lib/reduce-motion";
 import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -87,6 +90,7 @@ function SettingsPage() {
   const [appVersion, setAppVersion] = useState<string | null>(null);
   const [updateStatus, setUpdateStatus] = useState<{ state: string; message: string } | null>(null);
   const [updateBusy, setUpdateBusy] = useState(false);
+  const { reduceMotion, setReduceMotion } = useReduceMotion();
 
   const isElectron = typeof window !== "undefined" && !!window.electronAPI;
 
@@ -591,6 +595,57 @@ function SettingsPage() {
             </div>
           </section>
         )}
+
+        {/* Accessibility */}
+        <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <EyeOff className="size-4" /> Accessibility
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Customize your viewing experience. Reduce motion disables animations and transitions.
+          </p>
+          <div className="mt-4 flex items-center justify-between gap-4 rounded-md border border-border bg-background/60 px-4 py-3">
+            <div>
+              <p className="text-sm font-medium">Reduce Motion</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Disable animations, transitions, and auto-rotating carousels.
+              </p>
+            </div>
+            <button
+              onClick={() => setReduceMotion(!reduceMotion)}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+                reduceMotion ? "bg-primary" : "bg-muted"
+              }`}
+              role="switch"
+              aria-checked={reduceMotion}
+            >
+              <span
+                className={`pointer-events-none inline-block size-5 rounded-full bg-white shadow-lg ring-0 transition-transform ${
+                  reduceMotion ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+        </section>
+
+        {/* Stats */}
+        <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <BarChart3 className="size-4" /> Your Stats
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            View your watching habits, favourite genres, and streaming stats.
+          </p>
+          <div className="mt-4">
+            <Link
+              to="/stats"
+              className="inline-flex items-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/20"
+            >
+              <BarChart3 className="size-4" />
+              View Dashboard
+            </Link>
+          </div>
+        </section>
 
         {/* Desktop app (Electron only) */}
         {isElectron && (

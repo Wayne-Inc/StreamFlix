@@ -24,6 +24,7 @@ import { metaImageUrl } from "@/lib/seo";
 import { useNavTracker } from "@/lib/nav-history";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { ReduceMotionProvider } from "@/lib/reduce-motion";
 
 function NotFoundComponent() {
   return (
@@ -253,17 +254,19 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <GlobalContextMenu>
-        <CustomTitleBar />
-        <div>
-          <Toaster />
-          <Outlet />
-          <CookieConsent />
-          <ScreenSaver />
-          <Analytics />
-          <SpeedInsights />
-        </div>
-      </GlobalContextMenu>
+      <ReduceMotionProvider>
+        <GlobalContextMenu>
+          <CustomTitleBar />
+          <div>
+            <Toaster />
+            <Outlet />
+            <CookieConsent />
+            <ScreenSaver />
+            <Analytics />
+            <SpeedInsights />
+          </div>
+        </GlobalContextMenu>
+      </ReduceMotionProvider>
     </QueryClientProvider>
   );
 }

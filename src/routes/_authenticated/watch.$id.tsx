@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { useEffect, useRef, useState, useCallback, type MouseEvent, type TouchEvent } from "react";
-import { ArrowLeft, Settings, Wifi, Loader, RotateCw, Users, ShieldOff, Play, Zap, Maximize, Minimize } from "lucide-react";
+import { ArrowLeft, Settings, Wifi, Loader, RotateCw, Users, ShieldOff, Play, Zap, Maximize, Minimize, Minimize2 } from "lucide-react";
 import { movieById } from "@/lib/streamflix-data";
 import { getContinueWatching, recordProgress } from "@/lib/continue-watching";
 import { saveProgressToFirestore } from "@/lib/continue-watching-firestore";
@@ -416,6 +416,17 @@ function PlayerPage() {
       } catch {}
       return next;
     });
+  }, []);
+
+  const enterPiP = useCallback(async () => {
+    try {
+      if (document.pictureInPictureEnabled) {
+        const video = videoRef.current || directVideoRef.current;
+        if (video && document.pictureInPictureElement !== video) {
+          await video.requestPictureInPicture();
+        }
+      }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -1300,6 +1311,15 @@ function PlayerPage() {
             </div>
 
             <div className="flex items-center gap-2">
+              {typeof document !== "undefined" && (document as any).pictureInPictureEnabled && (
+                <button
+                  onClick={enterPiP}
+                  aria-label="Picture in Picture"
+                  className="hover:text-white/70 transition min-h-11 min-w-11 flex items-center justify-center"
+                >
+                  <Minimize2 className="size-5 sm:size-5" />
+                </button>
+              )}
               <div className="relative">
                 <button
                   onClick={() => setShowSettings((v) => !v)}

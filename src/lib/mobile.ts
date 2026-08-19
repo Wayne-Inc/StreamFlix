@@ -34,6 +34,25 @@ export function isMobileApp(): boolean {
   }
 }
 
+export function isPipSupported(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return (document as any).pictureInPictureEnabled === true;
+  } catch {
+    return false;
+  }
+}
+
+export async function enterPictureInPicture(videoElement: HTMLVideoElement): Promise<boolean> {
+  try {
+    if (isPipSupported() && document.pictureInPictureElement !== videoElement) {
+      await videoElement.requestPictureInPicture();
+      return true;
+    }
+  } catch {}
+  return false;
+}
+
 /**
  * Wires native-shell behavior when running inside the Capacitor WebView:
  * Android hardware back button and status bar styling.
@@ -61,5 +80,11 @@ export async function initMobileApp(): Promise<void> {
     });
   } catch {
     // plugin unavailable — ignore
+  }
+
+  if (typeof window !== "undefined") {
+    window.addEventListener("pip-mode-changed", ((e: CustomEvent) => {
+      document.body.classList.toggle("pip-active", e.detail === true);
+    }) as EventListener);
   }
 }

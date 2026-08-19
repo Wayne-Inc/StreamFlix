@@ -1,6 +1,6 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronRight, Play, ChevronDown, Mail, Instagram } from "lucide-react";
+import { ChevronRight, Play, ChevronDown, Mail, Instagram, Tv, Smartphone, Monitor, Shield, Zap, Globe } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
 import { ContactEmail } from "@/components/streamflix/ContactEmail";
 import { DownloadApp } from "@/components/streamflix/DownloadApp";
@@ -139,6 +139,50 @@ function Landing() {
         </div>
       </section>
 
+      {/* Features */}
+      <section className="border-y-8 border-black bg-background py-20 sm:py-28">
+        <div className="mx-auto max-w-6xl px-4">
+          <h2 className="text-center text-4xl font-black sm:text-5xl">
+            Why StreamFlix?
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-center text-lg text-muted-foreground">
+            Everything you love about streaming, minus the subscription fee.
+          </p>
+          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <FeatureCard
+              icon={<Play className="size-6" />}
+              title="Instant Streaming"
+              description="Hit play and start watching instantly. No buffering, no waiting — just smooth playback on any device."
+            />
+            <FeatureCard
+              icon={<Globe className="size-6" />}
+              title="Watch Anywhere"
+              description="Works on your phone, tablet, laptop, or TV. Sign in once and pick up where you left off on any device."
+            />
+            <FeatureCard
+              icon={<Shield className="size-6" />}
+              title="Kids Safe"
+              description="Built-in parental controls with Kids profiles that filter age-inappropriate content automatically."
+            />
+            <FeatureCard
+              icon={<Tv className="size-6" />}
+              title="Movies & TV"
+              description="Thousands of movies and TV episodes across every genre — from blockbusters to hidden gems."
+            />
+            <FeatureCard
+              icon={<Zap className="size-6" />}
+              title="Smart Recommendations"
+              description="AI-powered suggestions that learn what you love and surface titles you won't want to miss."
+            />
+            <FeatureCard
+              icon={<Smartphone className="size-6" />}
+              title="Mobile Apps"
+              description="Download the Android app for a native experience with offline support and notifications."
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Download the app */}
       <DownloadApp />
 
@@ -230,6 +274,26 @@ function FaqItem({
           <p className="px-8 pb-8 pt-2 text-lg text-muted-foreground leading-relaxed">{a}</p>
         </div>
       </div>
+    </div>
+  );
+}
+
+function FeatureCard({
+  icon,
+  title,
+  description,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-card/60 p-6 transition-all duration-300 hover:border-primary/40 hover:bg-card/80">
+      <div className="grid size-12 place-items-center rounded-lg bg-primary/10 text-primary">
+        {icon}
+      </div>
+      <h3 className="mt-4 text-lg font-bold">{title}</h3>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
     </div>
   );
 }

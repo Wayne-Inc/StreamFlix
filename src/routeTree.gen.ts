@@ -9,51 +9,41 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TosRouteImport } from './routes/tos'
-import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
-import { Route as OfflineRouteImport } from './routes/offline'
-import { Route as DownloadRouteImport } from './routes/download'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthActionRouteImport } from './routes/auth/action'
-import { Route as ApiReleaseNotificationsCronRouteImport } from './routes/api/release-notifications-cron'
-import { Route as ApiProxyRouteImport } from './routes/api/proxy'
-import { Route as ApiClientIpRouteImport } from './routes/api/client-ip'
-import { Route as ApiArchiveRouteImport } from './routes/api/archive'
-import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
-import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
-import { Route as AuthenticatedProfilesRouteImport } from './routes/_authenticated/profiles'
-import { Route as AuthenticatedMylistRouteImport } from './routes/_authenticated/mylist'
-import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
-import { Route as AuthenticatedForcePasswordRouteImport } from './routes/_authenticated/force-password'
-import { Route as AuthenticatedExploreRouteImport } from './routes/_authenticated/explore'
-import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as DownloadRouteImport } from './routes/download'
+import { Route as OfflineRouteImport } from './routes/offline'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
+import { Route as TosRouteImport } from './routes/tos'
 import { Route as AuthenticatedBrowseRouteImport } from './routes/_authenticated/browse'
+import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
+import { Route as AuthenticatedExploreRouteImport } from './routes/_authenticated/explore'
+import { Route as AuthenticatedForcePasswordRouteImport } from './routes/_authenticated/force-password'
+import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
+import { Route as AuthenticatedMylistRouteImport } from './routes/_authenticated/mylist'
+import { Route as AuthenticatedProfilesRouteImport } from './routes/_authenticated/profiles'
+import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedStatsRouteImport } from './routes/_authenticated/stats'
+import { Route as ApiArchiveRouteImport } from './routes/api/archive'
+import { Route as ApiClientIpRouteImport } from './routes/api/client-ip'
+import { Route as ApiProxyRouteImport } from './routes/api/proxy'
+import { Route as ApiReleaseNotificationsCronRouteImport } from './routes/api/release-notifications-cron'
+import { Route as AuthActionRouteImport } from './routes/auth/action'
 import { Route as AuthenticatedExploreIndexRouteImport } from './routes/_authenticated/explore/index'
-import { Route as AuthenticatedWatchIdRouteImport } from './routes/_authenticated/watch.$id'
-import { Route as AuthenticatedPersonIdRouteImport } from './routes/_authenticated/person.$id'
-import { Route as AuthenticatedMovieIdRouteImport } from './routes/_authenticated/movie.$id'
 import { Route as AuthenticatedExploreGenreIdRouteImport } from './routes/_authenticated/explore/$genreId'
+import { Route as AuthenticatedMovieIdRouteImport } from './routes/_authenticated/movie.$id'
+import { Route as AuthenticatedPersonIdRouteImport } from './routes/_authenticated/person.$id'
+import { Route as AuthenticatedWatchIdRouteImport } from './routes/_authenticated/watch.$id'
 
-const TosRoute = TosRouteImport.update({
-  id: '/tos',
-  path: '/tos',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
-  id: '/privacy-policy',
-  path: '/privacy-policy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OfflineRoute = OfflineRouteImport.update({
-  id: '/offline',
-  path: '/offline',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DownloadRoute = DownloadRouteImport.update({
-  id: '/download',
-  path: '/download',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -61,64 +51,39 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const DownloadRoute = DownloadRouteImport.update({
+  id: '/download',
+  path: '/download',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const OfflineRoute = OfflineRouteImport.update({
+  id: '/offline',
+  path: '/offline',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthActionRoute = AuthActionRouteImport.update({
-  id: '/action',
-  path: '/action',
-  getParentRoute: () => AuthRoute,
-} as any)
-const ApiReleaseNotificationsCronRoute =
-  ApiReleaseNotificationsCronRouteImport.update({
-    id: '/api/release-notifications-cron',
-    path: '/api/release-notifications-cron',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiProxyRoute = ApiProxyRouteImport.update({
-  id: '/api/proxy',
-  path: '/api/proxy',
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiClientIpRoute = ApiClientIpRouteImport.update({
-  id: '/api/client-ip',
-  path: '/api/client-ip',
+const TosRoute = TosRouteImport.update({
+  id: '/tos',
+  path: '/tos',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiArchiveRoute = ApiArchiveRouteImport.update({
-  id: '/api/archive',
-  path: '/api/archive',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
+const AuthenticatedBrowseRoute = AuthenticatedBrowseRouteImport.update({
+  id: '/browse',
+  path: '/browse',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedSearchRoute = AuthenticatedSearchRouteImport.update({
-  id: '/search',
-  path: '/search',
+const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedProfilesRoute = AuthenticatedProfilesRouteImport.update({
-  id: '/profiles',
-  path: '/profiles',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMylistRoute = AuthenticatedMylistRouteImport.update({
-  id: '/mylist',
-  path: '/mylist',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
-  id: '/history',
-  path: '/history',
+const AuthenticatedExploreRoute = AuthenticatedExploreRouteImport.update({
+  id: '/explore',
+  path: '/explore',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedForcePasswordRoute =
@@ -127,20 +92,61 @@ const AuthenticatedForcePasswordRoute =
     path: '/force-password',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedExploreRoute = AuthenticatedExploreRouteImport.update({
-  id: '/explore',
-  path: '/explore',
+const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
-  id: '/calendar',
-  path: '/calendar',
+const AuthenticatedMylistRoute = AuthenticatedMylistRouteImport.update({
+  id: '/mylist',
+  path: '/mylist',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedBrowseRoute = AuthenticatedBrowseRouteImport.update({
-  id: '/browse',
-  path: '/browse',
+const AuthenticatedProfilesRoute = AuthenticatedProfilesRouteImport.update({
+  id: '/profiles',
+  path: '/profiles',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSearchRoute = AuthenticatedSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStatsRoute = AuthenticatedStatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiArchiveRoute = ApiArchiveRouteImport.update({
+  id: '/api/archive',
+  path: '/api/archive',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiClientIpRoute = ApiClientIpRouteImport.update({
+  id: '/api/client-ip',
+  path: '/api/client-ip',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiProxyRoute = ApiProxyRouteImport.update({
+  id: '/api/proxy',
+  path: '/api/proxy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiReleaseNotificationsCronRoute =
+  ApiReleaseNotificationsCronRouteImport.update({
+    id: '/api/release-notifications-cron',
+    path: '/api/release-notifications-cron',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthActionRoute = AuthActionRouteImport.update({
+  id: '/action',
+  path: '/action',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthenticatedExploreIndexRoute =
   AuthenticatedExploreIndexRouteImport.update({
@@ -148,9 +154,15 @@ const AuthenticatedExploreIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedExploreRoute,
   } as any)
-const AuthenticatedWatchIdRoute = AuthenticatedWatchIdRouteImport.update({
-  id: '/watch/$id',
-  path: '/watch/$id',
+const AuthenticatedExploreGenreIdRoute =
+  AuthenticatedExploreGenreIdRouteImport.update({
+    id: '/$genreId',
+    path: '/$genreId',
+    getParentRoute: () => AuthenticatedExploreRoute,
+  } as any)
+const AuthenticatedMovieIdRoute = AuthenticatedMovieIdRouteImport.update({
+  id: '/movie/$id',
+  path: '/movie/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPersonIdRoute = AuthenticatedPersonIdRouteImport.update({
@@ -158,17 +170,11 @@ const AuthenticatedPersonIdRoute = AuthenticatedPersonIdRouteImport.update({
   path: '/person/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedMovieIdRoute = AuthenticatedMovieIdRouteImport.update({
-  id: '/movie/$id',
-  path: '/movie/$id',
+const AuthenticatedWatchIdRoute = AuthenticatedWatchIdRouteImport.update({
+  id: '/watch/$id',
+  path: '/watch/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedExploreGenreIdRoute =
-  AuthenticatedExploreGenreIdRouteImport.update({
-    id: '/$genreId',
-    path: '/$genreId',
-    getParentRoute: () => AuthenticatedExploreRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -186,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/profiles': typeof AuthenticatedProfilesRoute
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/stats': typeof AuthenticatedStatsRoute
   '/api/archive': typeof ApiArchiveRoute
   '/api/client-ip': typeof ApiClientIpRoute
   '/api/proxy': typeof ApiProxyRoute
@@ -212,6 +219,7 @@ export interface FileRoutesByTo {
   '/profiles': typeof AuthenticatedProfilesRoute
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/stats': typeof AuthenticatedStatsRoute
   '/api/archive': typeof ApiArchiveRoute
   '/api/client-ip': typeof ApiClientIpRoute
   '/api/proxy': typeof ApiProxyRoute
@@ -241,6 +249,7 @@ export interface FileRoutesById {
   '/_authenticated/profiles': typeof AuthenticatedProfilesRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/stats': typeof AuthenticatedStatsRoute
   '/api/archive': typeof ApiArchiveRoute
   '/api/client-ip': typeof ApiClientIpRoute
   '/api/proxy': typeof ApiProxyRoute
@@ -270,6 +279,7 @@ export interface FileRouteTypes {
     | '/profiles'
     | '/search'
     | '/settings'
+    | '/stats'
     | '/api/archive'
     | '/api/client-ip'
     | '/api/proxy'
@@ -296,6 +306,7 @@ export interface FileRouteTypes {
     | '/profiles'
     | '/search'
     | '/settings'
+    | '/stats'
     | '/api/archive'
     | '/api/client-ip'
     | '/api/proxy'
@@ -324,6 +335,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profiles'
     | '/_authenticated/search'
     | '/_authenticated/settings'
+    | '/_authenticated/stats'
     | '/api/archive'
     | '/api/client-ip'
     | '/api/proxy'
@@ -352,39 +364,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/tos': {
-      id: '/tos'
-      path: '/tos'
-      fullPath: '/tos'
-      preLoaderRoute: typeof TosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy-policy': {
-      id: '/privacy-policy'
-      path: '/privacy-policy'
-      fullPath: '/privacy-policy'
-      preLoaderRoute: typeof PrivacyPolicyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/offline': {
-      id: '/offline'
-      path: '/offline'
-      fullPath: '/offline'
-      preLoaderRoute: typeof OfflineRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/download': {
-      id: '/download'
-      path: '/download'
-      fullPath: '/download'
-      preLoaderRoute: typeof DownloadRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -394,95 +378,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/action': {
-      id: '/auth/action'
-      path: '/action'
-      fullPath: '/auth/action'
-      preLoaderRoute: typeof AuthActionRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/api/release-notifications-cron': {
-      id: '/api/release-notifications-cron'
-      path: '/api/release-notifications-cron'
-      fullPath: '/api/release-notifications-cron'
-      preLoaderRoute: typeof ApiReleaseNotificationsCronRouteImport
+    '/download': {
+      id: '/download'
+      path: '/download'
+      fullPath: '/download'
+      preLoaderRoute: typeof DownloadRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/proxy': {
-      id: '/api/proxy'
-      path: '/api/proxy'
-      fullPath: '/api/proxy'
-      preLoaderRoute: typeof ApiProxyRouteImport
+    '/offline': {
+      id: '/offline'
+      path: '/offline'
+      fullPath: '/offline'
+      preLoaderRoute: typeof OfflineRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/client-ip': {
-      id: '/api/client-ip'
-      path: '/api/client-ip'
-      fullPath: '/api/client-ip'
-      preLoaderRoute: typeof ApiClientIpRouteImport
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/archive': {
-      id: '/api/archive'
-      path: '/api/archive'
-      fullPath: '/api/archive'
-      preLoaderRoute: typeof ApiArchiveRouteImport
+    '/tos': {
+      id: '/tos'
+      path: '/tos'
+      fullPath: '/tos'
+      preLoaderRoute: typeof TosRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/search': {
-      id: '/_authenticated/search'
-      path: '/search'
-      fullPath: '/search'
-      preLoaderRoute: typeof AuthenticatedSearchRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/profiles': {
-      id: '/_authenticated/profiles'
-      path: '/profiles'
-      fullPath: '/profiles'
-      preLoaderRoute: typeof AuthenticatedProfilesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/mylist': {
-      id: '/_authenticated/mylist'
-      path: '/mylist'
-      fullPath: '/mylist'
-      preLoaderRoute: typeof AuthenticatedMylistRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/history': {
-      id: '/_authenticated/history'
-      path: '/history'
-      fullPath: '/history'
-      preLoaderRoute: typeof AuthenticatedHistoryRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/force-password': {
-      id: '/_authenticated/force-password'
-      path: '/force-password'
-      fullPath: '/force-password'
-      preLoaderRoute: typeof AuthenticatedForcePasswordRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/explore': {
-      id: '/_authenticated/explore'
-      path: '/explore'
-      fullPath: '/explore'
-      preLoaderRoute: typeof AuthenticatedExploreRouteImport
+    '/_authenticated/browse': {
+      id: '/_authenticated/browse'
+      path: '/browse'
+      fullPath: '/browse'
+      preLoaderRoute: typeof AuthenticatedBrowseRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/calendar': {
@@ -492,12 +427,96 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCalendarRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/browse': {
-      id: '/_authenticated/browse'
-      path: '/browse'
-      fullPath: '/browse'
-      preLoaderRoute: typeof AuthenticatedBrowseRouteImport
+    '/_authenticated/explore': {
+      id: '/_authenticated/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof AuthenticatedExploreRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/force-password': {
+      id: '/_authenticated/force-password'
+      path: '/force-password'
+      fullPath: '/force-password'
+      preLoaderRoute: typeof AuthenticatedForcePasswordRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/history': {
+      id: '/_authenticated/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof AuthenticatedHistoryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/mylist': {
+      id: '/_authenticated/mylist'
+      path: '/mylist'
+      fullPath: '/mylist'
+      preLoaderRoute: typeof AuthenticatedMylistRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profiles': {
+      id: '/_authenticated/profiles'
+      path: '/profiles'
+      fullPath: '/profiles'
+      preLoaderRoute: typeof AuthenticatedProfilesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/search': {
+      id: '/_authenticated/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof AuthenticatedSearchRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/stats': {
+      id: '/_authenticated/stats'
+      path: '/stats'
+      fullPath: '/stats'
+      preLoaderRoute: typeof AuthenticatedStatsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/archive': {
+      id: '/api/archive'
+      path: '/api/archive'
+      fullPath: '/api/archive'
+      preLoaderRoute: typeof ApiArchiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/client-ip': {
+      id: '/api/client-ip'
+      path: '/api/client-ip'
+      fullPath: '/api/client-ip'
+      preLoaderRoute: typeof ApiClientIpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/proxy': {
+      id: '/api/proxy'
+      path: '/api/proxy'
+      fullPath: '/api/proxy'
+      preLoaderRoute: typeof ApiProxyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/release-notifications-cron': {
+      id: '/api/release-notifications-cron'
+      path: '/api/release-notifications-cron'
+      fullPath: '/api/release-notifications-cron'
+      preLoaderRoute: typeof ApiReleaseNotificationsCronRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/action': {
+      id: '/auth/action'
+      path: '/action'
+      fullPath: '/auth/action'
+      preLoaderRoute: typeof AuthActionRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/_authenticated/explore/': {
       id: '/_authenticated/explore/'
@@ -506,11 +525,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedExploreIndexRouteImport
       parentRoute: typeof AuthenticatedExploreRoute
     }
-    '/_authenticated/watch/$id': {
-      id: '/_authenticated/watch/$id'
-      path: '/watch/$id'
-      fullPath: '/watch/$id'
-      preLoaderRoute: typeof AuthenticatedWatchIdRouteImport
+    '/_authenticated/explore/$genreId': {
+      id: '/_authenticated/explore/$genreId'
+      path: '/$genreId'
+      fullPath: '/explore/$genreId'
+      preLoaderRoute: typeof AuthenticatedExploreGenreIdRouteImport
+      parentRoute: typeof AuthenticatedExploreRoute
+    }
+    '/_authenticated/movie/$id': {
+      id: '/_authenticated/movie/$id'
+      path: '/movie/$id'
+      fullPath: '/movie/$id'
+      preLoaderRoute: typeof AuthenticatedMovieIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/person/$id': {
@@ -520,19 +546,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPersonIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/movie/$id': {
-      id: '/_authenticated/movie/$id'
-      path: '/movie/$id'
-      fullPath: '/movie/$id'
-      preLoaderRoute: typeof AuthenticatedMovieIdRouteImport
+    '/_authenticated/watch/$id': {
+      id: '/_authenticated/watch/$id'
+      path: '/watch/$id'
+      fullPath: '/watch/$id'
+      preLoaderRoute: typeof AuthenticatedWatchIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/explore/$genreId': {
-      id: '/_authenticated/explore/$genreId'
-      path: '/$genreId'
-      fullPath: '/explore/$genreId'
-      preLoaderRoute: typeof AuthenticatedExploreGenreIdRouteImport
-      parentRoute: typeof AuthenticatedExploreRoute
     }
   }
 }
@@ -560,6 +579,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfilesRoute: typeof AuthenticatedProfilesRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedStatsRoute: typeof AuthenticatedStatsRoute
   AuthenticatedMovieIdRoute: typeof AuthenticatedMovieIdRoute
   AuthenticatedPersonIdRoute: typeof AuthenticatedPersonIdRoute
   AuthenticatedWatchIdRoute: typeof AuthenticatedWatchIdRoute
@@ -575,6 +595,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfilesRoute: AuthenticatedProfilesRoute,
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedStatsRoute: AuthenticatedStatsRoute,
   AuthenticatedMovieIdRoute: AuthenticatedMovieIdRoute,
   AuthenticatedPersonIdRoute: AuthenticatedPersonIdRoute,
   AuthenticatedWatchIdRoute: AuthenticatedWatchIdRoute,
@@ -609,13 +630,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

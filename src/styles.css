@@ -249,3 +249,22 @@ body.electron-app .min-h-dvh {
 body.electron-app .min-h-screen {
   min-height: calc(100vh - 40px) !important;
 }
+
+/* Reduce motion — disables all CSS animations and transitions */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *:not(.reduce-motion-opt-out) *:not(.reduce-motion-opt-out)::before,
+  *:not(.reduce-motion-opt-out) *:not(.reduce-motion-opt-out)::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
