@@ -211,7 +211,8 @@ function AuthPage() {
           clientId: "1064779147344-63l8ajcotfgjgtcv97u82u1j194lvieo.apps.googleusercontent.com",
         });
         const result = await GoogleSignIn.signIn();
-        const idToken = result.authentication?.idToken;
+        console.log("GOOGLE_SIGN_IN_RESULT", JSON.stringify(result));
+        const idToken = result.idToken;
         if (idToken) {
           const credential = GoogleAuthProvider.credential(idToken);
           await signInWithCredential(auth, credential);
