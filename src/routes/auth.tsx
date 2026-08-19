@@ -12,6 +12,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signInWithCredential,
+  signInWithRedirect,
+  getRedirectResult,
   onAuthStateChanged,
   updateProfile as updateFirebaseProfile,
   sendEmailVerification,
@@ -76,6 +78,21 @@ function AuthPage() {
     });
     return () => unsub();
   }, [navigate]);
+
+  // Bounce-back: when this page loads inside a Custom Tab / external browser,
+  // redirect to the app via the deep-link scheme so the Capacitor WebView picks it up.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const inApp =
+      typeof (window as any).Capacitor?.isNativePlatform === "function" &&
+      (window as any).Capacitor.isNativePlatform();
+    if (inApp) return;
+
+    const rawHash = window.location.hash || "";
+    const cleanHash = rawHash.startsWith("#") ? rawHash.slice(1) : rawHash;
+    const target = `com.itiswayneee.streamflix://auth` + (cleanHash ? `#${cleanHash}` : "");
+    window.location.replace(target);
+  }, []);
 
   useEffect(() => {
     if (mode !== "signin" || forgotPw) {
