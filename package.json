@@ -10,6 +10,7 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
+    "sitemap": "node scripts/generate-sitemap.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
     "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:8080 && electron .\"",
