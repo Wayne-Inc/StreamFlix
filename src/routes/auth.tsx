@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
 import { auth } from "@/lib/firebase";
+import { GoogleSignIn } from "@capawesome/capacitor-google-sign-in";
 import { passwordMeetsPolicy } from "@/lib/password";
 import { PasswordPolicyChecklist } from "@/components/streamflix/PasswordPolicyChecklist";
 import {
@@ -76,21 +77,6 @@ function AuthPage() {
     });
     return () => unsub();
   }, [navigate]);
-
-  // Bounce-back: when this page loads inside a Custom Tab / external browser,
-  // redirect to the app via the deep-link scheme so the Capacitor WebView picks it up.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const inApp =
-      typeof (window as any).Capacitor?.isNativePlatform === "function" &&
-      (window as any).Capacitor.isNativePlatform();
-    if (inApp) return;
-
-    const rawHash = window.location.hash || "";
-    const cleanHash = rawHash.startsWith("#") ? rawHash.slice(1) : rawHash;
-    const target = `com.itiswayneee.streamflix://auth` + (cleanHash ? `#${cleanHash}` : "");
-    window.location.replace(target);
-  }, []);
 
   useEffect(() => {
     if (mode !== "signin" || forgotPw) {
@@ -221,34 +207,17 @@ function AuthPage() {
 
     if (inNativeApp) {
       try {
-        const clientId = "1064779147344-di4tt4ju0b9782po9ga8kj8fo51m75n8.apps.googleusercontent.com";
-        const nonce = crypto.randomUUID().replace(/-/g, "");
-        const authUrl =
-          `https://accounts.google.com/o/oauth2/v2/auth` +
-          `?client_id=${encodeURIComponent(clientId)}` +
-          `&redirect_uri=${encodeURIComponent("com.itiswayneee.streamflix://auth")}` +
-          `&response_type=id_token` +
-          `&scope=${encodeURIComponent("openid profile email")}` +
-          `&nonce=${encodeURIComponent(nonce)}`;
-        const cap = (window as any).Capacitor?.Plugins?.GoogleAuth;
-        if (!cap) {
-          toast.error("Google Auth plugin not available.");
-          setBusy(false);
+        await GoogleSignIn.initialize({
+          clientId: "1064779147344-63l8ajcotfgjgtcv97u82u1j194lvieo.apps.googleusercontent.com",
+        });
+        const result = await GoogleSignIn.signIn();
+        const idToken = result.authentication?.idToken;
+        if (idToken) {
+          const credential = GoogleAuthProvider.credential(idToken);
+          await signInWithCredential(auth, credential);
+          toast.success("Signed in with Google.");
+          navigate({ to: "/profiles" });
           return;
-        }
-        const r = await cap.openUrl({ url: authUrl });
-        const resultUrl = r?.url ?? null;
-        if (resultUrl) {
-          const hash = resultUrl.split("#")[1] || "";
-          const params = new URLSearchParams(hash);
-          const idToken = params.get("id_token");
-          if (idToken) {
-            const credential = GoogleAuthProvider.credential(idToken);
-            await signInWithCredential(auth, credential);
-            toast.success("Signed in with Google.");
-            navigate({ to: "/profiles" });
-            return;
-          }
         }
         toast.error("Google sign-in failed: no token received.");
       } catch (pluginErr: any) {
