@@ -1,5 +1,4 @@
 const APP_ORIGIN = "https://streamflix.dpdns.org";
-const APP_SCHEME = "com.itiswayneee.streamflix";
 
 declare global {
   interface Window {
@@ -35,28 +34,9 @@ export function isMobileApp(): boolean {
   }
 }
 
-export function nativeAppScheme(): string {
-  return APP_SCHEME;
-}
-
-export function deepLinkToWebUrl(rawUrl: string): string | null {
-  try {
-    const parsed = new URL(rawUrl);
-    if (parsed.protocol === "streamflix:" || parsed.protocol === `${APP_SCHEME}:`) {
-      const host = parsed.hostname ? "/" + parsed.hostname : "";
-      return APP_ORIGIN + host + parsed.pathname + parsed.search + parsed.hash;
-    }
-    if (parsed.origin === APP_ORIGIN) return rawUrl;
-  } catch {
-    // malformed URL
-  }
-  return null;
-}
-
 /**
  * Wires native-shell behavior when running inside the Capacitor WebView:
- * Android hardware back button, status bar styling, and deep links (used for
- * the Google sign-in return path).
+ * Android hardware back button and status bar styling.
  */
 export async function initMobileApp(): Promise<void> {
   if (!isMobileApp()) return;
@@ -79,28 +59,6 @@ export async function initMobileApp(): Promise<void> {
         cap.App?.exitApp?.();
       }
     });
-  } catch {
-    // plugin unavailable — ignore
-  }
-
-  try {
-    await cap?.App?.addListener("appUrlOpen", ({ url }) => {
-      if (url.startsWith(`${APP_SCHEME}://`)) return;
-      const webUrl = deepLinkToWebUrl(url);
-      if (webUrl) window.location.href = webUrl;
-    });
-  } catch {
-    // plugin unavailable — ignore
-  }
-
-  try {
-    const launchUrl = await cap?.App?.getLaunchUrl();
-    if (launchUrl?.url) {
-      const webUrl = deepLinkToWebUrl(launchUrl.url);
-      if (webUrl && window.location.href !== webUrl) {
-        window.location.replace(webUrl);
-      }
-    }
   } catch {
     // plugin unavailable — ignore
   }
