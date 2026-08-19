@@ -221,7 +221,7 @@ function AuthPage() {
 
     if (inNativeApp) {
       try {
-        const clientId = "1064779147344-63l8ajcotfgjgtcv97u82u1j194lvieo.apps.googleusercontent.com";
+        const clientId = "1064779147344-di4tt4ju0b9782po9ga8kj8fo51m75n8.apps.googleusercontent.com";
         const nonce = crypto.randomUUID().replace(/-/g, "");
         const authUrl =
           `https://accounts.google.com/o/oauth2/v2/auth` +
