@@ -300,7 +300,7 @@ export function Navbar() {
               className="h-9 w-44 rounded-full border border-border bg-background/40 pl-9 pr-4 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all duration-200 focus:w-60 focus:border-primary/60 focus:bg-background/70"
             />
             {searchFocused && searchQ.trim().length >= 2 && (
-              <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-border bg-card/95 shadow-2xl backdrop-blur animate-fade-in">
+              <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-border bg-card/95 shadow-2xl backdrop-blur animate-fade-in">
                 <ul className="max-h-72 overflow-y-auto py-1">
                   {searchSuggestions.length === 0 ? (
                     <li className="px-3 py-2 text-sm text-muted-foreground">Searching…</li>
@@ -364,7 +364,7 @@ export function Navbar() {
             </button>
             {menuOpen && (
               <div
-                className="fixed sm:absolute right-5 left-5 sm:left-auto sm:right-0 top-16 sm:top-12 z-50 sm:w-72 overflow-hidden rounded-3xl sm:rounded-2xl border border-border bg-card/95 backdrop-blur shadow-2xl animate-fade-in"
+                className="fixed sm:absolute right-4 left-4 sm:left-auto sm:right-0 top-16 sm:top-12 z-50 sm:w-72 overflow-hidden rounded-2xl sm:rounded-xl border border-border bg-card/95 backdrop-blur shadow-2xl animate-fade-in"
                 onMouseLeave={() => setMenuOpen(false)}
               >
                 <div className="flex items-center gap-3 border-b border-border px-4 py-3">

@@ -7,9 +7,10 @@ type ShareInput = {
 
 export async function shareContent(input: ShareInput): Promise<"shared" | "copied"> {
   const shareUrl = input.url || (typeof window !== "undefined" ? window.location.href : "");
-  const shareText = input.text || input.title || "";
   const shareTitle = input.title || "StreamFlix";
+  const shareText = input.text || shareTitle;
 
+  // Web Share API (works in Chrome, not all WebViews)
   if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
     try {
       const shareData: ShareData = {
@@ -22,9 +23,11 @@ export async function shareContent(input: ShareInput): Promise<"shared" | "copie
         try {
           const response = await fetch(input.image);
           const blob = await response.blob();
-          const file = new File([blob], "poster.jpg", { type: "image/jpeg" });
-          if (navigator.canShare({ files: [file] })) {
-            shareData.files = [file];
+          if (blob.size > 0) {
+            const file = new File([blob], "poster.jpg", { type: blob.type || "image/jpeg" });
+            if (navigator.canShare({ files: [file] })) {
+              shareData.files = [file];
+            }
           }
         } catch {}
       }
@@ -37,13 +40,13 @@ export async function shareContent(input: ShareInput): Promise<"shared" | "copie
     }
   }
 
-  // Capacitor native share fallback
+  // Capacitor native share
   try {
     if (typeof window !== "undefined" && (window as any).Capacitor?.isNativePlatform?.()) {
       const { Share } = await import("@capacitor/share");
       await Share.share({
         title: shareTitle,
-        text: `${shareTitle}\n\n${shareText}`,
+        text: shareText,
         url: shareUrl,
       });
       return "shared";
