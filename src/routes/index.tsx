@@ -143,18 +143,24 @@ function Landing() {
               onScroll={checkScroll}
               className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide"
             >
-              {trending.map((m) => (
+              {trending.map((m, i) => (
                 <Link
                   key={m.id}
                   to="/browse"
-                  className="shrink-0 overflow-hidden rounded-lg transition hover:scale-105 hover:ring-2 hover:ring-primary"
+                  className="shrink-0 overflow-hidden rounded-lg transition hover:scale-105 relative group"
                 >
                   <img
                     src={m.poster || "/placeholder.svg"}
                     alt={m.title}
-                    className="h-72 w-48 object-cover sm:h-80 sm:w-56"
+                    className="h-52 w-36 object-cover sm:h-60 sm:w-44"
                     loading="lazy"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-100" />
+                  <div className="absolute bottom-2 left-2 flex items-end">
+                    <span className="text-5xl sm:text-6xl font-black text-white/20 leading-none select-none" style={{ WebkitTextStroke: "2px rgba(255,255,255,0.5)", WebkitTextFillColor: "transparent" }}>
+                      {i + 1}
+                    </span>
+                  </div>
                 </Link>
               ))}
             </div>

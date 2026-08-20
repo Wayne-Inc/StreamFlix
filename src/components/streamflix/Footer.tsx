@@ -1,4 +1,4 @@
-import { Download } from "lucide-react";
+import { Download, Github } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { isInApp } from "@/lib/app-downloads";
 
@@ -19,6 +19,15 @@ export function Footer() {
           <Link to="/privacy-policy" className="hover:text-foreground">
             Privacy Policy
           </Link>
+          <a
+            href="https://github.com/Wayne-Inc/StreamFlix"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 transition hover:text-foreground"
+          >
+            <Github className="size-4" />
+            GitHub
+          </a>
           {!isInApp() && (
             <a
               href="https://github.com/Wayne-Inc/StreamFlix/releases"

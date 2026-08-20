@@ -766,6 +766,15 @@ function PlayerPage() {
     sendEmbedPlaybackCommand(iframe, "requestProgress");
   };
 
+  useEffect(() => {
+    const onBlocked = (e: Event) => {
+      const url = (e as CustomEvent).detail;
+      if (url) toast.info(`Blocked redirect: ${new URL(url).hostname}`);
+    };
+    window.addEventListener("blocked-redirect", onBlocked);
+    return () => window.removeEventListener("blocked-redirect", onBlocked);
+  }, []);
+
   // === Direct stream (VidNest) effects ===
   const isDirect = selectedServerId === "direct";
 
@@ -964,6 +973,7 @@ function PlayerPage() {
             ref={iframeRef}
             src={videoUrl}
             title={`Embed Player — ${movie.title}`}
+            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
             allow="autoplay; fullscreen"
             allowFullScreen
             onLoad={handleEmbedLoad}
