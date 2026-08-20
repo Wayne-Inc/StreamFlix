@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
@@ -38,8 +38,6 @@ function AuthPage() {
   const [popupBlocked, setPopupBlocked] = useState(false);
   const [forgotPw, setForgotPw] = useState(false);
   const [resetSent, setResetSent] = useState(false);
-  const captchaRef = useRef<HTMLDivElement>(null);
-  const [captchaVerified, setCaptchaVerified] = useState(false);
 
   // Rate limiting
   const checkRateLimit = (): boolean => {
@@ -78,40 +76,28 @@ function AuthPage() {
     return () => unsub();
   }, [navigate]);
 
-  useEffect(() => {
-    if (mode !== "signin" || forgotPw) {
-      setCaptchaVerified(true);
-      return;
-    }
-    setCaptchaVerified(false);
-    import("@/lib/captcha").then(({ renderCaptcha }) => {
-      setTimeout(() => {
-        if (captchaRef.current) {
-          renderCaptcha(
-            "auth-captcha",
-            () => setCaptchaVerified(true),
-            () => setCaptchaVerified(false),
-          );
-        }
-      }, 100);
-    });
-  }, [mode, forgotPw]);
-
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!checkRateLimit()) return;
-    if (mode === "signin" && !captchaVerified) {
-      toast.error("Please complete the CAPTCHA before proceeding.");
-      return;
-    }
     setBusy(true);
     setVerifyMsg("");
     try {
       if (mode === "signin") {
-        const { getCaptchaToken, resetCaptcha } = await import("@/lib/captcha");
-        const token = await getCaptchaToken();
-        if (!token || !captchaVerified) {
-          toast.error("Please complete the CAPTCHA");
+        const { executeCaptcha } = await import("@/lib/captcha");
+        const token = await executeCaptcha("signin");
+        if (!token) {
+          toast.error("Verification failed. Please try again.");
+          setBusy(false);
+          return;
+        }
+        const verifyRes = await fetch("/api/verify-recaptcha", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, action: "signin" }),
+        });
+        const verifyData = await verifyRes.json();
+        if (!verifyData.ok) {
+          toast.error("Verification failed. Please try again.");
           setBusy(false);
           return;
         }
@@ -122,7 +108,6 @@ function AuthPage() {
           setBusy(false);
           return;
         }
-        resetCaptcha();
         if (!passwordMeetsPolicy(password)) {
           try {
             localStorage.setItem("sf:upgrade_password", "1");
@@ -371,10 +356,6 @@ function AuthPage() {
                 </button>
               )}
 
-              {mode === "signin" && (
-                <div id="auth-captcha" ref={captchaRef} className="flex justify-center" />
-              )}
-
               {mode === "signup" && password && (
                 <div className="animate-checklist-drop space-y-2 rounded-md border border-border/60 bg-neutral-900/40 p-3">
                   <p className="text-xs font-medium text-muted-foreground">Password requirements</p>
@@ -385,7 +366,6 @@ function AuthPage() {
               <button
                 disabled={
                   busy ||
-                  (mode === "signin" && !captchaVerified) ||
                   (mode === "signup" && !passwordMeetsPolicy(password))
                 }
                 className="w-full rounded bg-primary py-3 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"

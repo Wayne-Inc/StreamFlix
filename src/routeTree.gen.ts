@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthActionRouteImport } from './routes/auth/action'
+import { Route as ApiVerifyRecaptchaRouteImport } from './routes/api/verify-recaptcha'
 import { Route as ApiReleaseNotificationsCronRouteImport } from './routes/api/release-notifications-cron'
 import { Route as ApiProxyRouteImport } from './routes/api/proxy'
 import { Route as ApiClientIpRouteImport } from './routes/api/client-ip'
@@ -69,6 +70,11 @@ const AuthActionRoute = AuthActionRouteImport.update({
   id: '/action',
   path: '/action',
   getParentRoute: () => AuthRoute,
+} as any)
+const ApiVerifyRecaptchaRoute = ApiVerifyRecaptchaRouteImport.update({
+  id: '/api/verify-recaptcha',
+  path: '/api/verify-recaptcha',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiReleaseNotificationsCronRoute =
   ApiReleaseNotificationsCronRouteImport.update({
@@ -190,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/api/client-ip': typeof ApiClientIpRoute
   '/api/proxy': typeof ApiProxyRoute
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
+  '/api/verify-recaptcha': typeof ApiVerifyRecaptchaRoute
   '/auth/action': typeof AuthActionRoute
   '/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
   '/movie/$id': typeof AuthenticatedMovieIdRoute
@@ -216,6 +223,7 @@ export interface FileRoutesByTo {
   '/api/client-ip': typeof ApiClientIpRoute
   '/api/proxy': typeof ApiProxyRoute
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
+  '/api/verify-recaptcha': typeof ApiVerifyRecaptchaRoute
   '/auth/action': typeof AuthActionRoute
   '/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
   '/movie/$id': typeof AuthenticatedMovieIdRoute
@@ -245,6 +253,7 @@ export interface FileRoutesById {
   '/api/client-ip': typeof ApiClientIpRoute
   '/api/proxy': typeof ApiProxyRoute
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
+  '/api/verify-recaptcha': typeof ApiVerifyRecaptchaRoute
   '/auth/action': typeof AuthActionRoute
   '/_authenticated/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
   '/_authenticated/movie/$id': typeof AuthenticatedMovieIdRoute
@@ -274,6 +283,7 @@ export interface FileRouteTypes {
     | '/api/client-ip'
     | '/api/proxy'
     | '/api/release-notifications-cron'
+    | '/api/verify-recaptcha'
     | '/auth/action'
     | '/explore/$genreId'
     | '/movie/$id'
@@ -300,6 +310,7 @@ export interface FileRouteTypes {
     | '/api/client-ip'
     | '/api/proxy'
     | '/api/release-notifications-cron'
+    | '/api/verify-recaptcha'
     | '/auth/action'
     | '/explore/$genreId'
     | '/movie/$id'
@@ -328,6 +339,7 @@ export interface FileRouteTypes {
     | '/api/client-ip'
     | '/api/proxy'
     | '/api/release-notifications-cron'
+    | '/api/verify-recaptcha'
     | '/auth/action'
     | '/_authenticated/explore/$genreId'
     | '/_authenticated/movie/$id'
@@ -347,6 +359,7 @@ export interface RootRouteChildren {
   ApiClientIpRoute: typeof ApiClientIpRoute
   ApiProxyRoute: typeof ApiProxyRoute
   ApiReleaseNotificationsCronRoute: typeof ApiReleaseNotificationsCronRoute
+  ApiVerifyRecaptchaRoute: typeof ApiVerifyRecaptchaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -399,6 +412,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/action'
       preLoaderRoute: typeof AuthActionRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/api/verify-recaptcha': {
+      id: '/api/verify-recaptcha'
+      path: '/api/verify-recaptcha'
+      fullPath: '/api/verify-recaptcha'
+      preLoaderRoute: typeof ApiVerifyRecaptchaRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/release-notifications-cron': {
       id: '/api/release-notifications-cron'
@@ -605,6 +625,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiClientIpRoute: ApiClientIpRoute,
   ApiProxyRoute: ApiProxyRoute,
   ApiReleaseNotificationsCronRoute: ApiReleaseNotificationsCronRoute,
+  ApiVerifyRecaptchaRoute: ApiVerifyRecaptchaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
