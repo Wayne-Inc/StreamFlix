@@ -43,7 +43,7 @@ export async function shareContent(input: ShareInput): Promise<"shared" | "copie
       const { Share } = await import("@capacitor/share");
       await Share.share({
         title: shareTitle,
-        text: shareText,
+        text: `${shareTitle}\n\n${shareText}`,
         url: shareUrl,
       });
       return "shared";

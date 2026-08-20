@@ -402,6 +402,7 @@ function MoviePage() {
                       title: `${movie.title} (${movie.year}) — StreamFlix`,
                       text: movie.description.slice(0, 140),
                       url: base ? `${base}/movie/${movie.id}` : window.location.href,
+                      image: movie.backdropSm || movie.backdrop || movie.poster || undefined,
                     }).then((mode) => toast.success(mode === "shared" ? "Shared" : "Link copied"));
                   }}
                   className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground"
