@@ -265,7 +265,7 @@ body.electron-app .min-h-screen {
 }
 .group:hover .rank-badge {
   -webkit-text-stroke: 3px #ef4444;
-  -webkit-text-fill-color: #ef4444;
+  -webkit-text-fill-color: transparent;
 }
 @media (prefers-reduced-motion: reduce) {
   *:not(.reduce-motion-opt-out) *:not(.reduce-motion-opt-out)::before,
