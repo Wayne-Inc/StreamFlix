@@ -20,7 +20,6 @@ import {
   Home,
   Compass,
   BarChart3,
-  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Logo } from "./Logo";
@@ -29,7 +28,6 @@ import { signOut as firebaseSignOut } from "firebase/auth";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { profileHasPin, verifyProfilePin } from "@/lib/profiles";
 import { suggestTitles } from "@/lib/streamflix-data";
-import { isInApp } from "@/lib/app-downloads";
 
 const links = [
   { kind: "home", label: "Home" },
@@ -364,17 +362,6 @@ export function Navbar() {
           >
             <Search className="size-5" />
           </Link>
-          {!isInApp() && (
-            <a
-              href="https://github.com/blueislandon/StreamFlix/releases"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition hover:bg-primary/20"
-            >
-              <Download className="size-3.5" />
-              Download
-            </a>
-          )}
           <div className="relative pr-1 sm:pr-0">
             <button
               onClick={() => setMenuOpen((v) => !v)}
@@ -503,17 +490,6 @@ export function Navbar() {
             >
               <CalendarDays className="size-4" /> Calendar
             </Link>
-            {!isInApp() && (
-              <a
-                href="https://github.com/blueislandon/StreamFlix/releases"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setMobileNavOpen(false)}
-                className="flex items-center gap-3 rounded-md px-2 py-2.5 text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground transition-colors"
-              >
-                <Download className="size-4" /> Download App
-              </a>
-            )}
           </div>
         </div>
       )}
