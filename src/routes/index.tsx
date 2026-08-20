@@ -145,7 +145,7 @@ function Landing() {
             >
               {trending.map((m, i) => (
                 <div key={m.id} className="shrink-0 relative transition duration-300 ease-out group hover:scale-105">
-                  <span className="absolute bottom-6 -left-5 text-[4.5rem] sm:text-[5.5rem] font-black leading-none select-none z-10 text-primary/40 group-hover:text-red-500 transition-colors duration-300" style={{ WebkitTextStroke: "3px currentColor", WebkitTextFillColor: "transparent" }}>
+                  <span className="rank-badge absolute bottom-6 -left-5 text-[4.5rem] sm:text-[5.5rem] font-black leading-none select-none z-10">
                     {i + 1}
                   </span>
                   <Link

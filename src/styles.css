@@ -257,6 +257,16 @@ body.electron-app .min-h-screen {
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
 }
+
+.rank-badge {
+  -webkit-text-stroke: 3px rgba(255,255,255,0.6);
+  -webkit-text-fill-color: transparent;
+  transition: all 0.3s ease;
+}
+.group:hover .rank-badge {
+  -webkit-text-stroke: 3px #ef4444;
+  -webkit-text-fill-color: #ef4444;
+}
 @media (prefers-reduced-motion: reduce) {
   *:not(.reduce-motion-opt-out) *:not(.reduce-motion-opt-out)::before,
   *:not(.reduce-motion-opt-out) *:not(.reduce-motion-opt-out)::after {
