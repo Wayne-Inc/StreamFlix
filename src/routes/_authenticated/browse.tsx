@@ -85,7 +85,7 @@ function BrowsePage() {
   const data = Route.useLoaderData();
   const heroSlides: Movie[] = data.heroSlides;
   const top10Today: Movie[] = data.top10Today;
-  const top10TrendingWeek: Movie[] = data.top10TrendingWeek;
+  const top10TrendingWeek: Movie[] = data.top10TrendingWeek ?? [];
   const genreGroups: { id: string; name: string; items: Movie[] }[] = data.genreGroups;
   const rows: { title: string; items: Movie[] }[] = data.rows;
   const { kind } = Route.useSearch();
@@ -375,6 +375,7 @@ function BrowsePage() {
   }, [top10Ref, top10Today.length]);
 
   useEffect(() => {
+    if (kind !== "home") return;
     const el = trendingWeekRef;
     if (!el) return;
     const measure = () =>
@@ -391,7 +392,7 @@ function BrowsePage() {
       el.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", measure);
     };
-  }, [trendingWeekRef, top10TrendingWeek.length]);
+  }, [kind, trendingWeekRef, top10TrendingWeek.length]);
 
   const scrollTop10 = (dir: 1 | -1) => {
     if (!top10Ref) return;
