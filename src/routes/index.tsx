@@ -144,13 +144,13 @@ function Landing() {
               className="flex gap-8 overflow-visible pb-2 pl-4 scrollbar-hide"
             >
               {trending.map((m, i) => (
-                <div key={m.id} className="shrink-0 relative">
-                  <span className="absolute -bottom-3 -left-5 text-7xl sm:text-8xl font-black leading-none select-none z-10" style={{ WebkitTextStroke: "3px rgba(255,255,255,0.6)", WebkitTextFillColor: "transparent" }}>
+                <div key={m.id} className="shrink-0 relative transition hover:scale-105">
+                  <span className="absolute bottom-6 -left-5 text-7xl sm:text-8xl font-black leading-none select-none z-10" style={{ WebkitTextStroke: "3px rgba(255,255,255,0.6)", WebkitTextFillColor: "transparent" }}>
                     {i + 1}
                   </span>
                   <Link
                     to="/browse"
-                    className="block overflow-hidden rounded-lg transition hover:scale-105 relative"
+                    className="block overflow-hidden rounded-lg relative"
                   >
                     <img
                       src={m.poster || "/placeholder.svg"}
