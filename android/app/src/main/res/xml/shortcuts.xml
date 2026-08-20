@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="search"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_search"
+        android:shortcutLongLabel="@string/shortcut_search_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.itiswayneee.streamflix"
+            android:targetClass="com.itiswayneee.streamflix.MainActivity"
+            android:data="https://streamflix.dpdns.org/search" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="my_list"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_my_list"
+        android:shortcutLongLabel="@string/shortcut_my_list_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.itiswayneee.streamflix"
+            android:targetClass="com.itiswayneee.streamflix.MainActivity"
+            android:data="https://streamflix.dpdns.org/mylist" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="continue_watching"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_continue"
+        android:shortcutLongLabel="@string/shortcut_continue_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.itiswayneee.streamflix"
+            android:targetClass="com.itiswayneee.streamflix.MainActivity"
+            android:data="https://streamflix.dpdns.org/browse" />
+    </shortcut>
+</shortcuts>

@@ -5,6 +5,11 @@ type ShareInput = {
   image?: string;
 };
 
+function isMobile(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
 export async function shareContent(input: ShareInput): Promise<"shared" | "copied"> {
   const shareUrl = input.url || (typeof window !== "undefined" ? window.location.href : "");
   const shareTitle = input.title || "StreamFlix";
@@ -19,7 +24,8 @@ export async function shareContent(input: ShareInput): Promise<"shared" | "copie
         url: shareUrl,
       };
 
-      if (input.image && typeof navigator.canShare === "function") {
+      // Only attach image files on mobile — desktop shares as image instead of link
+      if (input.image && isMobile() && typeof navigator.canShare === "function") {
         try {
           const response = await fetch(input.image);
           const blob = await response.blob();

@@ -189,7 +189,7 @@ function Landing() {
           <p className="mx-auto mt-4 max-w-2xl text-center text-lg text-muted-foreground">
             Everything you love about streaming, minus the subscription fee.
           </p>
-          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-14 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
             <FeatureCard
               icon={<Play className="size-6" />}
               title="Instant Streaming"

@@ -63,6 +63,7 @@
 @layer base {
   * {
     border-color: var(--color-border);
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   }
   html,
   body,
@@ -71,8 +72,8 @@
     color: var(--color-foreground);
   }
   body {
-    font-family: var(--font-display);
     -webkit-font-smoothing: antialiased;
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   }
   body {
     -webkit-user-select: none;

@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">StreamFlix</string>
+    <string name="title_activity_main">StreamFlix</string>
+    <string name="package_name">com.itiswayneee.streamflix</string>
+    <string name="custom_url_scheme">com.itiswayneee.streamflix</string>
+    <string name="loading_message">StreamFlix is loading…</string>
+    <string name="tagline">Free for everyone.</string>
+    <string name="offline_title">You\'re offline</string>
+    <string name="offline_subtitle">StreamFlix needs an internet connection. Check your network and try again.</string>
+    <string name="retry">Retry</string>
+    <string name="shortcut_search">Search</string>
+    <string name="shortcut_search_long">Search movies and TV shows</string>
+    <string name="shortcut_my_list">My List</string>
+    <string name="shortcut_my_list_long">View your watchlist</string>
+    <string name="shortcut_continue">Continue Watching</string>
+    <string name="shortcut_continue_long">Resume where you left off</string>
+</resources>

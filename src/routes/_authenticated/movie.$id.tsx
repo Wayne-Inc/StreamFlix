@@ -400,7 +400,7 @@ function MoviePage() {
                     const base = siteUrl();
                     shareContent({
                       title: `${movie.title} (${movie.year})`,
-                      text: `${movie.title} (${movie.year}) — ${movie.description.slice(0, 120)}`,
+                      text: `${movie.title} (${movie.year}) — ${movie.description}`,
                       url: base ? `${base}/movie/${movie.id}` : window.location.href,
                       image: movie.backdropSm || movie.backdrop || movie.poster || undefined,
                     }).then((mode) => toast.success(mode === "shared" ? "Shared" : "Link copied"));

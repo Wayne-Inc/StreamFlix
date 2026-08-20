@@ -25,7 +25,7 @@ import { toast } from "sonner";
 import { Logo } from "./Logo";
 import { auth, db } from "@/lib/firebase";
 import { signOut as firebaseSignOut } from "firebase/auth";
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { profileHasPin, verifyProfilePin } from "@/lib/profiles";
 import { suggestTitles } from "@/lib/streamflix-data";
 
@@ -55,6 +55,7 @@ export function Navbar() {
   const [exitKidsOpen, setExitKidsOpen] = useState(false);
   const [exitKidsPin, setExitKidsPin] = useState("");
   const [exitKidsBusy, setExitKidsBusy] = useState(false);
+  const [isVip, setIsVip] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const searchKind = useRouterState({
     select: (s) => (s.location.search as { kind?: string } | undefined)?.kind ?? "home",
@@ -137,6 +138,11 @@ export function Navbar() {
   }, []);
 
   useEffect(() => {
+    if (!u?.uid) { setIsVip(false); return; }
+    getDoc(doc(db, "vip", u.uid)).then((snap) => setIsVip(snap.exists())).catch(() => setIsVip(false));
+  }, [u?.uid]);
+
+  useEffect(() => {
     const on = () => setScrolled(window.scrollY > 24);
     on();
     window.addEventListener("scroll", on, { passive: true });
@@ -202,16 +208,18 @@ export function Navbar() {
     setExitKidsBusy(false);
   };
 
+  const vipRing = isVip ? "ring-2 ring-yellow-400 ring-offset-2 ring-offset-background" : "";
+
   const profileAvatar = selectedProfile ? (
     selectedProfile.avatarUrl ? (
       <img
         src={selectedProfile.avatarUrl}
         alt=""
-        className="size-9 sm:size-8 shrink-0 aspect-square rounded-lg object-cover"
+        className={`size-11 sm:size-8 shrink-0 aspect-square rounded-lg object-cover ${vipRing}`}
       />
     ) : (
       <div
-        className={`grid size-9 sm:size-8 place-items-center rounded-lg bg-gradient-to-br ${selectedProfile.color} text-xs font-bold text-white`}
+        className={`grid size-11 sm:size-8 place-items-center rounded-lg bg-gradient-to-br ${selectedProfile.color} text-xs font-bold text-white ${vipRing}`}
       >
         {selectedProfile.name[0]?.toUpperCase()}
       </div>
@@ -220,10 +228,10 @@ export function Navbar() {
     <img
       src={userData.photoURL}
       alt=""
-      className="size-9 sm:size-8 shrink-0 aspect-square rounded-lg object-cover"
+      className={`size-11 sm:size-8 shrink-0 aspect-square rounded-lg object-cover ${vipRing}`}
     />
   ) : (
-    <div className="grid size-9 sm:size-8 place-items-center rounded-lg bg-gradient-to-br from-rose-500 to-red-700 text-xs font-bold text-white">
+    <div className={`grid size-11 sm:size-8 place-items-center rounded-lg bg-gradient-to-br from-rose-500 to-red-700 text-xs font-bold text-white ${vipRing}`}>
       {(userData.email || "?")[0]?.toUpperCase()}
     </div>
   );
@@ -300,7 +308,7 @@ export function Navbar() {
               className="h-9 w-44 rounded-full border border-border bg-background/40 pl-9 pr-4 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all duration-200 focus:w-60 focus:border-primary/60 focus:bg-background/70"
             />
             {searchFocused && searchQ.trim().length >= 2 && (
-              <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-border bg-card/95 shadow-2xl backdrop-blur animate-fade-in">
+              <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-border bg-card/95 shadow-2xl backdrop-blur animate-fade-in">
                 <ul className="max-h-72 overflow-y-auto py-1">
                   {searchSuggestions.length === 0 ? (
                     <li className="px-3 py-2 text-sm text-muted-foreground">Searching…</li>
@@ -434,7 +442,7 @@ export function Navbar() {
         </div>
       </div>
       {mobileNavOpen && (
-        <div className="md:hidden border-t border-border bg-background/95 backdrop-blur px-4 py-4 animate-fade-in">
+        <div className="md:hidden mx-4 mb-4 rounded-2xl border border-border bg-background/95 backdrop-blur py-4 px-4 animate-fade-in shadow-2xl">
           <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
             Browse
           </p>

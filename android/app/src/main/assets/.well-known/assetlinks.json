@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.itiswayneee.streamflix",
+    "sha256_cert_fingerprints": ["A8:56:97:B8:BC:BE:5A:46:CF:03:A9:E7:7A:EB:10:4D:DD:E1:2D:E8:CB:EF:8B:00:B4:4F:6C:0D:0F:5D:8C:01"]
+  }
+}]

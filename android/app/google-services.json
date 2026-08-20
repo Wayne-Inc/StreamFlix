@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1064779147344",
+    "firebase_url": "https://streamflix-e91bc-default-rtdb.firebaseio.com",
+    "project_id": "streamflix-e91bc",
+    "storage_bucket": "streamflix-e91bc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1064779147344:android:b408affdf43f84e8128955",
+        "android_client_info": {
+          "package_name": "com.itiswayneee.streamflix"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1064779147344-63l8ajcotfgjgtcv97u82u1j194lvieo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAZRvFUP-7FAxO23sKIo33h3HPWO47Mk_c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1064779147344-63l8ajcotfgjgtcv97u82u1j194lvieo.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
