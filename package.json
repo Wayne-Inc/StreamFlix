@@ -120,7 +120,7 @@
     ],
     "publish": {
       "provider": "github",
-      "owner": "itiswayneee",
+      "owner": "Wayne-Inc",
       "repo": "StreamFlix"
     }
   }

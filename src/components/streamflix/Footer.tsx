@@ -21,7 +21,7 @@ export function Footer() {
           </Link>
           {!isInApp() && (
             <a
-              href="https://github.com/blueislandon/StreamFlix/releases"
+              href="https://github.com/Wayne-Inc/StreamFlix/releases"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition hover:bg-primary/20"
