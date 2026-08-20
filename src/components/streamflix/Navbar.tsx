@@ -55,7 +55,9 @@ export function Navbar() {
   const [exitKidsOpen, setExitKidsOpen] = useState(false);
   const [exitKidsPin, setExitKidsPin] = useState("");
   const [exitKidsBusy, setExitKidsBusy] = useState(false);
-  const [isVip, setIsVip] = useState(false);
+  const [isVip, setIsVip] = useState(() => {
+    try { return localStorage.getItem("sf:vip") === "1"; } catch { return false; }
+  });
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const searchKind = useRouterState({
     select: (s) => (s.location.search as { kind?: string } | undefined)?.kind ?? "home",
@@ -138,8 +140,12 @@ export function Navbar() {
   }, []);
 
   useEffect(() => {
-    if (!u?.uid) { setIsVip(false); return; }
-    getDoc(doc(db, "vip", u.uid)).then((snap) => setIsVip(snap.exists())).catch(() => setIsVip(false));
+    if (!u?.uid) { setIsVip(false); try { localStorage.removeItem("sf:vip"); } catch {} return; }
+    getDoc(doc(db, "vip", u.uid)).then((snap) => {
+      const v = snap.exists();
+      setIsVip(v);
+      try { localStorage.setItem("sf:vip", v ? "1" : "0"); } catch {}
+    }).catch(() => {});
   }, [u?.uid]);
 
   useEffect(() => {
