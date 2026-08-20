@@ -3,7 +3,6 @@ import { useState, useRef } from "react";
 import { ChevronRight, Play, ChevronDown, Mail, Instagram, Tv, Smartphone, Monitor, Shield, Zap, Globe, ChevronLeft } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
 import { ContactEmail } from "@/components/streamflix/ContactEmail";
-import { DownloadApp } from "@/components/streamflix/DownloadApp";
 import { tmdbFetch, toMovie } from "@/lib/api/tmdb.server";
 import type { Movie } from "@/lib/types";
 import heroImg from "@/assets/landing.jpg";
@@ -223,9 +222,6 @@ function Landing() {
           </div>
         </div>
       </section>
-
-      {/* Download the app */}
-      <DownloadApp />
 
       {/* FAQ */}
       <section className="border-y-8 border-black bg-background py-24">

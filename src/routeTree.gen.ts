@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TosRouteImport } from './routes/tos'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as OfflineRouteImport } from './routes/offline'
-import { Route as DownloadRouteImport } from './routes/download'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -50,11 +49,6 @@ const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
 const OfflineRoute = OfflineRouteImport.update({
   id: '/offline',
   path: '/offline',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DownloadRoute = DownloadRouteImport.update({
-  id: '/download',
-  path: '/download',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -179,7 +173,6 @@ const AuthenticatedExploreGenreIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
-  '/download': typeof DownloadRoute
   '/offline': typeof OfflineRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/tos': typeof TosRoute
@@ -207,7 +200,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
-  '/download': typeof DownloadRoute
   '/offline': typeof OfflineRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/tos': typeof TosRoute
@@ -236,7 +228,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
-  '/download': typeof DownloadRoute
   '/offline': typeof OfflineRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/tos': typeof TosRoute
@@ -266,7 +257,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/download'
     | '/offline'
     | '/privacy-policy'
     | '/tos'
@@ -294,7 +284,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/download'
     | '/offline'
     | '/privacy-policy'
     | '/tos'
@@ -322,7 +311,6 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
-    | '/download'
     | '/offline'
     | '/privacy-policy'
     | '/tos'
@@ -352,7 +340,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
-  DownloadRoute: typeof DownloadRoute
   OfflineRoute: typeof OfflineRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   TosRoute: typeof TosRoute
@@ -383,13 +370,6 @@ declare module '@tanstack/react-router' {
       path: '/offline'
       fullPath: '/offline'
       preLoaderRoute: typeof OfflineRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/download': {
-      id: '/download'
-      path: '/download'
-      fullPath: '/download'
-      preLoaderRoute: typeof DownloadRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -618,7 +598,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
-  DownloadRoute: DownloadRoute,
   OfflineRoute: OfflineRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   TosRoute: TosRoute,
