@@ -141,7 +141,7 @@ function Landing() {
             <div
               ref={scrollContainerRef}
               onScroll={checkScroll}
-              className="flex gap-5 overflow-x-auto pb-2 scrollbar-hide"
+              className="flex gap-8 overflow-visible pb-2 pl-4 scrollbar-hide"
             >
               {trending.map((m, i) => (
                 <Link
@@ -156,7 +156,7 @@ function Landing() {
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-100" />
-                  <div className="absolute -top-1 -left-1">
+                  <div className="absolute bottom-4 -left-5">
                     <span className="text-7xl sm:text-8xl font-black leading-none select-none" style={{ WebkitTextStroke: "3px rgba(255,255,255,0.6)", WebkitTextFillColor: "transparent" }}>
                       {i + 1}
                     </span>
