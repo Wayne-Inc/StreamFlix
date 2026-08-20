@@ -19,6 +19,7 @@ import {
   Bookmark,
   Home,
   Compass,
+  BarChart3,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Logo } from "./Logo";
@@ -363,7 +364,7 @@ export function Navbar() {
             </button>
             {menuOpen && (
               <div
-                className="fixed sm:absolute right-4 left-4 sm:left-auto sm:right-0 top-16 sm:top-12 z-50 sm:w-72 overflow-hidden rounded-xl border border-border bg-card/95 backdrop-blur shadow-2xl animate-fade-in"
+                className="fixed sm:absolute right-4 left-4 sm:left-auto sm:right-0 top-16 sm:top-12 z-50 sm:w-72 overflow-hidden rounded-2xl sm:rounded-xl border border-border bg-card/95 backdrop-blur shadow-2xl animate-fade-in"
                 onMouseLeave={() => setMenuOpen(false)}
               >
                 <div className="flex items-center gap-3 border-b border-border px-4 py-3">
@@ -411,6 +412,12 @@ export function Navbar() {
                     className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-accent"
                   >
                     <Bookmark className="size-4 text-muted-foreground" /> My List
+                  </Link>
+                  <Link
+                    to="/stats"
+                    className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-accent"
+                  >
+                    <BarChart3 className="size-4 text-muted-foreground" /> Stats
                   </Link>
                 </div>
                 <div className="border-t border-border py-1">

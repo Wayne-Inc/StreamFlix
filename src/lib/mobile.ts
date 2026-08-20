@@ -20,6 +20,12 @@ declare global {
         };
       };
     };
+    NativeBridge?: {
+      enterPipMode: () => void;
+      isPipSupported: () => boolean;
+      startMediaServiceNative: () => void;
+      stopMediaServiceNative: () => void;
+    };
   }
 }
 
@@ -37,13 +43,28 @@ export function isMobileApp(): boolean {
 export function isPipSupported(): boolean {
   if (typeof window === "undefined") return false;
   try {
+    // Native bridge
+    if (window.NativeBridge?.isPipSupported()) return true;
+  } catch {}
+  try {
     return (document as any).pictureInPictureEnabled === true;
   } catch {
     return false;
   }
 }
 
+export function enterPipModeNative(): void {
+  try {
+    window.NativeBridge?.enterPipMode();
+  } catch {}
+}
+
 export async function enterPictureInPicture(videoElement: HTMLVideoElement): Promise<boolean> {
+  // On native app, use the native PiP bridge instead
+  if (isMobileApp() && window.NativeBridge?.isPipSupported()) {
+    enterPipModeNative();
+    return true;
+  }
   try {
     if (isPipSupported() && document.pictureInPictureElement !== videoElement) {
       await videoElement.requestPictureInPicture();

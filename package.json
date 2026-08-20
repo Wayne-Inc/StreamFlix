@@ -18,6 +18,7 @@
     "electron:build": "vite build && electron-builder"
   },
   "dependencies": {
+    "@capacitor/share": "^8.0.1",
     "@capawesome/capacitor-google-sign-in": "^0.1.2",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",

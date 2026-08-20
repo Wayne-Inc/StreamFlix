@@ -1,6 +1,6 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { useState } from "react";
-import { ChevronRight, Play, ChevronDown, Mail, Instagram, Tv, Smartphone, Monitor, Shield, Zap, Globe } from "lucide-react";
+import { useState, useRef } from "react";
+import { ChevronRight, Play, ChevronDown, Mail, Instagram, Tv, Smartphone, Monitor, Shield, Zap, Globe, ChevronLeft } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
 import { ContactEmail } from "@/components/streamflix/ContactEmail";
 import { DownloadApp } from "@/components/streamflix/DownloadApp";
@@ -70,10 +70,27 @@ const faqs = [
 function Landing() {
   const trending: Movie[] = Route.useLoaderData();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = () => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  };
+
+  const scrollBy = (dir: number) => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * 300, behavior: "smooth" });
+  };
+
   return (
     <main className="min-h-dvh bg-background text-foreground">
       {/* Hero */}
-      <section className="relative min-h-[88vh] overflow-hidden">
+      <section className="relative min-h-[50vh] sm:min-h-[88vh] overflow-hidden">
         <img src={heroImg} alt="" className="absolute inset-0 size-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-background" />
         <div className="relative z-10">
@@ -112,21 +129,45 @@ function Landing() {
       <section className="bg-background py-12 sm:py-16">
         <div className="w-full px-4 sm:px-8">
           <h2 className="px-1 text-2xl font-bold sm:text-3xl">Trending Now</h2>
-          <div className="mt-6 flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {trending.map((m) => (
-              <Link
-                key={m.id}
-                to="/browse"
-                className="shrink-0 overflow-hidden rounded-lg transition hover:scale-105 hover:ring-2 hover:ring-primary"
+          <div className="relative mt-6">
+            {canScrollLeft && (
+              <button
+                onClick={() => scrollBy(-1)}
+                className="hidden md:flex absolute -left-3 top-1/2 -translate-y-1/2 z-10 size-10 items-center justify-center rounded-full bg-background/80 border border-border backdrop-blur-sm shadow-lg hover:bg-accent transition"
+                aria-label="Scroll left"
               >
-                <img
-                  src={m.poster || "/placeholder.svg"}
-                  alt={m.title}
-                  className="h-72 w-48 object-cover sm:h-80 sm:w-56"
-                  loading="lazy"
-                />
-              </Link>
-            ))}
+                <ChevronLeft className="size-5" />
+              </button>
+            )}
+            <div
+              ref={scrollContainerRef}
+              onScroll={checkScroll}
+              className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide"
+            >
+              {trending.map((m) => (
+                <Link
+                  key={m.id}
+                  to="/browse"
+                  className="shrink-0 overflow-hidden rounded-lg transition hover:scale-105 hover:ring-2 hover:ring-primary"
+                >
+                  <img
+                    src={m.poster || "/placeholder.svg"}
+                    alt={m.title}
+                    className="h-72 w-48 object-cover sm:h-80 sm:w-56"
+                    loading="lazy"
+                  />
+                </Link>
+              ))}
+            </div>
+            {canScrollRight && (
+              <button
+                onClick={() => scrollBy(1)}
+                className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 z-10 size-10 items-center justify-center rounded-full bg-background/80 border border-border backdrop-blur-sm shadow-lg hover:bg-accent transition"
+                aria-label="Scroll right"
+              >
+                <ChevronRight className="size-5" />
+              </button>
+            )}
           </div>
           <div className="mt-6 text-center">
             <Link

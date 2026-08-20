@@ -18,7 +18,6 @@ import {
   Crown,
   KeyRound,
   EyeOff,
-  BarChart3,
 } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
 import {
@@ -292,16 +291,18 @@ function SettingsPage() {
   const deviceQueryKey = ["user_devices", user?.uid] as const;
 
   const removeDevice = useMutation({
-    mutationFn: async (id: string) => {
-      await deleteDoc(doc(db, "user_devices", id));
+    mutationFn: async (d: Device) => {
+      if (d.device_id === currentDeviceId) return;
+      await deleteDoc(doc(db, "user_devices", d.id));
     },
-    onMutate: async (id: string) => {
+    onMutate: async (d: Device) => {
+      if (d.device_id === currentDeviceId) return { prev: undefined };
       await qc.cancelQueries({ queryKey: deviceQueryKey });
       const prev = qc.getQueryData<Device[]>(deviceQueryKey);
-      qc.setQueryData<Device[]>(deviceQueryKey, (old) => (old ?? []).filter((d) => d.id !== id));
+      qc.setQueryData<Device[]>(deviceQueryKey, (old) => (old ?? []).filter((dev) => dev.id !== d.id));
       return { prev };
     },
-    onError: (e: Error, _id, context) => {
+    onError: (e: Error, _d, context) => {
       if (context?.prev) qc.setQueryData(deviceQueryKey, context.prev);
       toast.error(e.message);
     },
@@ -628,25 +629,6 @@ function SettingsPage() {
           </div>
         </section>
 
-        {/* Stats */}
-        <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
-          <div className="flex items-center gap-2 text-sm font-semibold">
-            <BarChart3 className="size-4" /> Your Stats
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            View your watching habits, favourite genres, and streaming stats.
-          </p>
-          <div className="mt-4">
-            <Link
-              to="/stats"
-              className="inline-flex items-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/20"
-            >
-              <BarChart3 className="size-4" />
-              View Dashboard
-            </Link>
-          </div>
-        </section>
-
         {/* Desktop app (Electron only) */}
         {isElectron && (
           <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
@@ -760,7 +742,7 @@ function SettingsPage() {
                   </div>
                   {!isCurrent && (
                     <button
-                      onClick={() => removeDevice.mutate(d.id)}
+                      onClick={() => removeDevice.mutate(d)}
                       disabled={removeDevice.isPending}
                       className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1.5 text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive shrink-0"
                       aria-label="Remove device"

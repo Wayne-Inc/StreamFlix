@@ -8,6 +8,7 @@ import { saveProgressToFirestore } from "@/lib/continue-watching-firestore";
 import { getVideoSource } from "@/lib/video-sources";
 import { probeEmbedUrl, fetchTvSeason } from "@/lib/api/tmdb";
 import { resolveVidNestStreams, type VidNestStream } from "@/lib/api/vidnest";
+import { isPipSupported, enterPictureInPicture } from "@/lib/mobile";
 import { auth } from "@/lib/firebase";
 import { startSession, endSession } from "@/lib/session-tracking";
 import { toast } from "sonner";
@@ -418,15 +419,23 @@ function PlayerPage() {
     });
   }, []);
 
+  const [pipSupported, setPipSupported] = useState(false);
+
   const enterPiP = useCallback(async () => {
     try {
-      if (document.pictureInPictureEnabled) {
-        const video = videoRef.current || directVideoRef.current;
-        if (video && document.pictureInPictureElement !== video) {
-          await video.requestPictureInPicture();
-        }
+      const video = videoRef.current || directVideoRef.current;
+      if (video) {
+        await enterPictureInPicture(video);
+      } else {
+        // No video element, use native PiP
+        const { enterPipModeNative } = await import("@/lib/mobile");
+        enterPipModeNative();
       }
     } catch {}
+  }, []);
+
+  useEffect(() => {
+    setPipSupported(isPipSupported());
   }, []);
 
   useEffect(() => {
@@ -1311,7 +1320,7 @@ function PlayerPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              {typeof document !== "undefined" && (document as any).pictureInPictureEnabled && (
+              {pipSupported && (
                 <button
                   onClick={enterPiP}
                   aria-label="Picture in Picture"
