@@ -21,7 +21,7 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
       : s.description;
 
   return (
-    <section className="relative min-h-[35vh] h-[45vh] w-full overflow-hidden sm:min-h-[280px] sm:h-[48vh] lg:min-h-[320px] lg:h-[52vh]">
+    <section className="relative min-h-[40vh] h-[50vh] w-full overflow-hidden sm:min-h-[350px] sm:h-[60vh] lg:min-h-[450px] lg:h-[75vh]">
       {slides.map((slide, idx) => {
         const near = Math.abs(idx - i) <= 1;
         return (
