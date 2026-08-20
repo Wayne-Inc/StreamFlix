@@ -141,16 +141,16 @@ function Landing() {
             <div
               ref={scrollContainerRef}
               onScroll={checkScroll}
-              className="flex gap-12 overflow-x-auto pb-2 pl-8 scrollbar-hide"
+              className="flex gap-12 overflow-x-auto py-4 pl-8 pr-8 scrollbar-hide"
             >
               {trending.map((m, i) => (
-                <div key={m.id} className="shrink-0 relative transition duration-300 ease-out hover:scale-105">
-                  <span className="absolute bottom-6 -left-5 text-[4.5rem] sm:text-[5.5rem] font-black leading-none select-none z-10" style={{ WebkitTextStroke: "3px rgba(255,255,255,0.6)", WebkitTextFillColor: "transparent" }}>
+                <div key={m.id} className="shrink-0 relative transition duration-300 ease-out group hover:scale-105">
+                  <span className="absolute bottom-6 -left-5 text-[4.5rem] sm:text-[5.5rem] font-black leading-none select-none z-10 text-primary/40 group-hover:text-red-500 transition-colors duration-300" style={{ WebkitTextStroke: "3px currentColor", WebkitTextFillColor: "transparent" }}>
                     {i + 1}
                   </span>
                   <Link
                     to="/browse"
-                    className="block overflow-hidden rounded-lg relative"
+                    className="block overflow-hidden rounded-lg relative ring-0 group-hover:ring-2 group-hover:ring-red-500 transition-all duration-300"
                   >
                     <img
                       src={m.poster || "/placeholder.svg"}
