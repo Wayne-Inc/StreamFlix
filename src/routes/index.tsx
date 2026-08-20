@@ -144,24 +144,23 @@ function Landing() {
               className="flex gap-8 overflow-visible pb-2 pl-4 scrollbar-hide"
             >
               {trending.map((m, i) => (
-                <Link
-                  key={m.id}
-                  to="/browse"
-                  className="shrink-0 overflow-hidden rounded-lg transition hover:scale-105 relative group"
-                >
-                  <img
-                    src={m.poster || "/placeholder.svg"}
-                    alt={m.title}
-                    className="h-60 w-40 object-cover sm:h-72 sm:w-52"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-100" />
-                  <div className="absolute bottom-4 -left-5">
-                    <span className="text-7xl sm:text-8xl font-black leading-none select-none" style={{ WebkitTextStroke: "3px rgba(255,255,255,0.6)", WebkitTextFillColor: "transparent" }}>
-                      {i + 1}
-                    </span>
-                  </div>
-                </Link>
+                <div key={m.id} className="shrink-0 relative">
+                  <span className="absolute -bottom-3 -left-5 text-7xl sm:text-8xl font-black leading-none select-none z-10" style={{ WebkitTextStroke: "3px rgba(255,255,255,0.6)", WebkitTextFillColor: "transparent" }}>
+                    {i + 1}
+                  </span>
+                  <Link
+                    to="/browse"
+                    className="block overflow-hidden rounded-lg transition hover:scale-105 relative"
+                  >
+                    <img
+                      src={m.poster || "/placeholder.svg"}
+                      alt={m.title}
+                      className="h-60 w-40 object-cover sm:h-72 sm:w-52"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-100" />
+                  </Link>
+                </div>
               ))}
             </div>
             {canScrollRight && (
