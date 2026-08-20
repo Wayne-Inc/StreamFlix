@@ -4,6 +4,24 @@ import type { Movie } from "../types";
 const TMDB_BASE = "https://api.themoviedb.org/3";
 const IMG_BASE = "https://image.tmdb.org/t/p/";
 
+const CACHE = new Map<string, { data: any; expiry: number }>();
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+function cacheGet(key: string): any | undefined {
+  const entry = CACHE.get(key);
+  if (!entry) return undefined;
+  if (Date.now() > entry.expiry) { CACHE.delete(key); return undefined; }
+  return entry.data;
+}
+
+function cacheSet(key: string, data: any) {
+  if (CACHE.size > 200) {
+    const oldest = CACHE.keys().next().value;
+    if (oldest !== undefined) CACHE.delete(oldest);
+  }
+  CACHE.set(key, { data, expiry: Date.now() + CACHE_TTL });
+}
+
 export async function tmdbFetch(path: string, params: Record<string, string> = {}) {
   const { tmdbApiKey } = getServerConfig();
   const url = new URL(`${TMDB_BASE}${path}`);
@@ -12,13 +30,20 @@ export async function tmdbFetch(path: string, params: Record<string, string> = {
   }
   url.searchParams.set("language", "en-US");
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+
+  const cacheKey = url.toString();
+  const cached = cacheGet(cacheKey);
+  if (cached) return cached;
+
   try {
     const res = await fetch(url.toString());
     if (!res.ok) {
       console.warn(`TMDB error ${res.status} for ${path}`);
       return { results: [], genres: [] };
     }
-    return res.json();
+    const data = await res.json();
+    cacheSet(cacheKey, data);
+    return data;
   } catch (err) {
     console.warn(`TMDB fetch failed for ${path}:`, err);
     return { results: [], genres: [] };

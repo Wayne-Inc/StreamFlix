@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { fetchTrending, fetchTitleLogos } from "@/lib/api/tmdb";
 import type { Movie } from "@/lib/types";
@@ -12,24 +12,25 @@ export function ScreenSaver() {
   const [slides, setSlides] = useState<Movie[]>([]);
   const [slideIndex, setSlideIndex] = useState(0);
   const [logoMap, setLogoMap] = useState<Record<string, string | null>>({});
+  const dataLoadedRef = useRef(false);
   const routerState = useRouterState();
   const pathname = routerState.location.pathname;
   const isWatching = pathname.startsWith("/watch");
 
-  // Fetch movies for screensaver slideshow
-  useEffect(() => {
-    fetchTrending()
-      .then((data) => {
-        if (data && data.length > 0) {
-          const filtered = isKidsProfile() ? filterKidsContent(data) : data;
-          setSlides(filtered);
-          fetchTitleLogos({ data: { ids: filtered.map((m: Movie) => m.id) } })
-            .then((map) => setLogoMap(map))
-            .catch(() => {});
-        }
-      })
-      .catch(() => {});
-  }, []);
+  // Fetch movies only when screensaver first activates
+  const loadSlides = async () => {
+    if (dataLoadedRef.current) return;
+    dataLoadedRef.current = true;
+    try {
+      const data = await fetchTrending();
+      if (data && data.length > 0) {
+        const filtered = isKidsProfile() ? filterKidsContent(data) : data;
+        setSlides(filtered);
+        const map = await fetchTitleLogos({ data: { ids: filtered.map((m: Movie) => m.id) } }).catch(() => ({}));
+        setLogoMap(map);
+      }
+    } catch {}
+  };
 
   // Slide rotator when screensaver is active
   useEffect(() => {
@@ -40,7 +41,7 @@ export function ScreenSaver() {
     return () => clearInterval(t);
   }, [active, slides.length]);
 
-  // Inactivity timer
+  // Inactivity timer — no router state subscription when inactive
   useEffect(() => {
     if (isWatching) {
       setActive(false);
@@ -54,6 +55,7 @@ export function ScreenSaver() {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
         if (!window.location.pathname.startsWith("/watch")) {
+          loadSlides();
           setActive(true);
         }
       }, INACTIVITY_TIMEOUT);

@@ -330,6 +330,7 @@ function PlayerPage() {
   const [duration, setDuration] = useState(0);
   const [showControls, setShowControls] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const lastTimeUpdateRef = useRef(0);
 
   const [ended, setEnded] = useState(false);
   const [subtitles, setSubtitles] = useState<{ lang: string; label: string; url: string }[]>([]);
@@ -651,41 +652,31 @@ function PlayerPage() {
   }, []);
 
 
-  // server fallback: probe all embed servers once on load; if the default
-  // server is unreachable, switch to the first responding one.
+  // server fallback: probe embed servers only when user opens the server picker
   const probedRef = useRef(false);
-  useEffect(() => {
+  const probeServers = useCallback(async () => {
     if (probedRef.current) return;
     probedRef.current = true;
-    let cancelled = false;
-    (async () => {
-      const results = await Promise.all(
-        availableEmbedServers.map(async (s) => ({
-          id: s.id,
-          ok: await probeEmbedUrl({
-            data: { url: buildEmbedUrl(s.id, movie.id, season, episode) },
-          }),
-        })),
+    const results = await Promise.all(
+      availableEmbedServers.map(async (s) => ({
+        id: s.id,
+        ok: await probeEmbedUrl({
+          data: { url: buildEmbedUrl(s.id, movie.id, season, episode) },
+        }),
+      })),
+    );
+    const live = results.find((r) => r.ok);
+    const currentOk = results.find((r) => r.id === selectedServerId)?.ok;
+    if (live && !currentOk) {
+      const liveServer = availableEmbedServers.find((s) => s.id === live.id);
+      setSelectedServerId(live.id);
+      toast.warning(
+        `"${selectedServer.name}" was unreachable — switched to ${liveServer?.name ?? live.id}`,
       );
-      if (cancelled) return;
-      const live = results.find((r) => r.ok);
-      const currentOk = results.find((r) => r.id === selectedServerId)?.ok;
-      if (live && !currentOk) {
-        const liveServer = availableEmbedServers.find((s) => s.id === live.id);
-        setSelectedServerId(live.id);
-        toast.warning(
-          `"${selectedServer.name}" was unreachable — switched to ${liveServer?.name ?? live.id}`,
-        );
-      } else if (!currentOk) {
-        toast.error(`${selectedServer.name} is unreachable. Try a different server below.`);
-      }
-    })().catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    // probedRef guard ensures this runs once regardless of deps
-  }, [movie.id]);
+    } else if (!currentOk) {
+      toast.error(`${selectedServer.name} is unreachable. Try a different server below.`);
+    }
+  }, [movie.id, season, episode, selectedServerId, selectedServer.name]);
 
   useEffect(() => {
     let sid: string | null = null;
@@ -992,9 +983,13 @@ function PlayerPage() {
             onTimeUpdate={(e) => {
               const cur = e.currentTarget.currentTime;
               const dur = e.currentTarget.duration || 1;
-              setProgress(dur > 0 ? (cur / dur) * 100 : 0);
-              setDuration(dur);
-              setCurrentTime(cur);
+              const now = Date.now();
+              if (now - lastTimeUpdateRef.current >= 1000) {
+                lastTimeUpdateRef.current = now;
+                setProgress(dur > 0 ? (cur / dur) * 100 : 0);
+                setDuration(dur);
+                setCurrentTime(cur);
+              }
               if (Math.floor(cur) % 5 === 0) doRecord(cur, dur);
             }}
              onLoadedMetadata={(e) => {
@@ -1331,7 +1326,7 @@ function PlayerPage() {
               )}
               <div className="relative">
                 <button
-                  onClick={() => setShowSettings((v) => !v)}
+                  onClick={() => { setShowSettings((v) => !v); probeServers(); }}
                   aria-label="Settings"
                   className="hover:text-white/70 transition min-h-11 min-w-11 flex items-center justify-center"
                 >

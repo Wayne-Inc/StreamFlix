@@ -157,12 +157,7 @@ function BrowsePage() {
       setContinueLoading(false);
     };
     update();
-    window.addEventListener("storage", update);
-    window.addEventListener("focus", update);
-    return () => {
-      window.removeEventListener("storage", update);
-      window.removeEventListener("focus", update);
-    };
+    return () => {};
   }, []);
 
   useEffect(() => {
@@ -195,13 +190,9 @@ function BrowsePage() {
       }
     };
     update();
-    window.addEventListener("storage", update);
-    window.addEventListener("focus", update);
     window.addEventListener(MY_LIST_EVENT, update);
     return () => {
       cancelled = true;
-      window.removeEventListener("storage", update);
-      window.removeEventListener("focus", update);
       window.removeEventListener(MY_LIST_EVENT, update);
     };
   }, [kind]);
@@ -309,12 +300,10 @@ function BrowsePage() {
     };
 
     loadWatchedRow();
-    window.addEventListener("storage", scheduleReload);
     window.addEventListener("sf:watchedUpdated", scheduleReload);
     return () => {
       cancelled = true;
       if (timer) clearTimeout(timer);
-      window.removeEventListener("storage", scheduleReload);
       window.removeEventListener("sf:watchedUpdated", scheduleReload);
     };
   }, [kind]);
