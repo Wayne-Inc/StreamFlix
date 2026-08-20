@@ -234,7 +234,7 @@ function ProfilesPage() {
           <ul className="mt-8 flex flex-wrap justify-center gap-3 sm:mt-10 sm:gap-8">
             {[1, 2, 3, 4].map((i) => (
               <li key={i} className="flex flex-col items-center gap-3">
-                <Skeleton className="size-20 sm:size-32 rounded-lg" />
+                <Skeleton className="size-28 sm:size-32 rounded-lg" />
                 <Skeleton className="h-4 w-20 rounded" />
               </li>
             ))}
@@ -248,7 +248,7 @@ function ProfilesPage() {
                   className="group flex flex-col items-center gap-3"
                 >
                   <div
-                    className={`relative size-20 overflow-hidden rounded-lg transition-all group-hover:ring-4 group-hover:ring-foreground sm:size-32 ${p.avatarUrl ? "" : `bg-gradient-to-br ${p.color}`}`}
+                    className={`relative size-28 overflow-hidden rounded-lg transition-all group-hover:ring-4 group-hover:ring-foreground sm:size-32 ${p.avatarUrl ? "" : `bg-gradient-to-br ${p.color}`}`}
                   >
                     {p.avatarUrl ? (
                       <img src={p.avatarUrl} alt="" className="size-full object-cover" />
@@ -288,7 +288,7 @@ function ProfilesPage() {
                   onClick={() => setEditTarget("new")}
                   className="group flex flex-col items-center gap-3"
                 >
-                  <div className="grid size-20 place-items-center rounded-lg border border-dashed border-border text-muted-foreground transition-colors group-hover:border-foreground group-hover:text-foreground sm:size-32">
+                  <div className="grid size-28 place-items-center rounded-lg border border-dashed border-border text-muted-foreground transition-colors group-hover:border-foreground group-hover:text-foreground sm:size-32">
                     <Plus className="size-8 sm:size-10" />
                   </div>
                   <span className="text-muted-foreground">Add Profile</span>

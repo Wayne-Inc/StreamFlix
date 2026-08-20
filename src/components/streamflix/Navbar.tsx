@@ -215,11 +215,11 @@ export function Navbar() {
       <img
         src={selectedProfile.avatarUrl}
         alt=""
-        className={`size-11 sm:size-8 shrink-0 aspect-square rounded-lg object-cover ${vipRing}`}
+        className={`size-9 sm:size-8 shrink-0 aspect-square rounded-lg object-cover ${vipRing}`}
       />
     ) : (
       <div
-        className={`grid size-11 sm:size-8 place-items-center rounded-lg bg-gradient-to-br ${selectedProfile.color} text-xs font-bold text-white ${vipRing}`}
+        className={`grid size-9 sm:size-8 place-items-center rounded-lg bg-gradient-to-br ${selectedProfile.color} text-xs font-bold text-white ${vipRing}`}
       >
         {selectedProfile.name[0]?.toUpperCase()}
       </div>
@@ -228,10 +228,10 @@ export function Navbar() {
     <img
       src={userData.photoURL}
       alt=""
-      className={`size-11 sm:size-8 shrink-0 aspect-square rounded-lg object-cover ${vipRing}`}
+      className={`size-9 sm:size-8 shrink-0 aspect-square rounded-lg object-cover ${vipRing}`}
     />
   ) : (
-    <div className={`grid size-11 sm:size-8 place-items-center rounded-lg bg-gradient-to-br from-rose-500 to-red-700 text-xs font-bold text-white ${vipRing}`}>
+    <div className={`grid size-9 sm:size-8 place-items-center rounded-lg bg-gradient-to-br from-rose-500 to-red-700 text-xs font-bold text-white ${vipRing}`}>
       {(userData.email || "?")[0]?.toUpperCase()}
     </div>
   );
