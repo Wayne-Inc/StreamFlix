@@ -96,29 +96,13 @@ function SettingsPage() {
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>("default");
   const [notifBusy, setNotifBusy] = useState(false);
   const [hasToken, setHasToken] = useState(false);
-  const [notifUnsupported, setNotifUnsupported] = useState(false);
-  const [notifReason, setNotifReason] = useState<string | null>(null);
-
   const isElectron = typeof window !== "undefined" && !!window.electronAPI;
 
   useEffect(() => {
-    import("@/lib/push").then(({ checkPushSupport }) =>
-      checkPushSupport().then(({ ok, reason }) => {
-        if (!ok) {
-          setNotifUnsupported(true);
-          setNotifReason(reason ?? "Unknown reason");
-        } else {
-          // Check current permission state (skip on Capacitor — uses native flow)
-          const isCap = typeof window !== "undefined" &&
-            "Capacitor" in window &&
-            (window as any).Capacitor?.isNativePlatform?.();
-          if (!isCap && typeof Notification !== "undefined") {
-            setNotifPermission(Notification.permission);
-            setHasToken(Notification.permission === "granted");
-          }
-        }
-      })
-    );
+    if (typeof Notification !== "undefined") {
+      setNotifPermission(Notification.permission);
+      setHasToken(Notification.permission === "granted");
+    }
   }, []);
 
   useEffect(() => {
@@ -806,9 +790,7 @@ function SettingsPage() {
               <div>
                 <p className="text-sm font-semibold">Push Notifications</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {notifUnsupported
-                    ? notifReason ?? "Not supported on this device"
-                    : notifPermission === "granted" && hasToken
+                  {notifPermission === "granted" && hasToken
                     ? "Enabled — you'll receive release reminders and updates"
                     : notifPermission === "denied"
                     ? "Blocked — enable in your browser settings and reload"
@@ -816,11 +798,7 @@ function SettingsPage() {
                 </p>
               </div>
             </div>
-            {notifUnsupported ? (
-              <span className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs text-muted-foreground">
-                <BellOff className="size-3.5" /> Unavailable
-              </span>
-            ) : notifPermission === "denied" ? (
+            {notifPermission === "denied" ? (
               <span className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs text-muted-foreground">
                 <BellOff className="size-3.5" /> Blocked
               </span>
@@ -834,33 +812,23 @@ function SettingsPage() {
                   if (notifBusy) return;
                   setNotifBusy(true);
                   try {
-                    const { checkPushSupport, ensurePushSubscription } = await import("@/lib/push");
-                    const support = await checkPushSupport();
-                    if (!support.ok) {
-                      setNotifUnsupported(true);
-                      setNotifReason(support.reason ?? "Unknown");
-                      toast.error(support.reason ?? "Not supported on this device");
-                      return;
-                    }
+                    const { ensurePushSubscription } = await import("@/lib/push");
                     const status = await ensurePushSubscription();
                     if (status === "granted") {
                       setHasToken(true);
                       if (typeof Notification !== "undefined") {
                         setNotifPermission(Notification.permission);
                       }
-                    }
-                    if (status === "granted") {
                       toast.success("Notifications enabled!");
                     } else if (status === "denied") {
+                      if (typeof Notification !== "undefined") {
+                        setNotifPermission(Notification.permission);
+                      }
                       toast.error("Permission denied — enable in browser settings");
                     } else if (status === "no-vapid") {
                       toast.error("Push not configured on this server");
                     } else {
-                      const { checkPushSupport: recheck } = await import("@/lib/push");
-                      const r = await recheck();
-                      setNotifUnsupported(!r.ok);
-                      setNotifReason(r.reason ?? "Unknown error");
-                      toast.error(r.reason ?? "Notifications unavailable");
+                      toast.error("Notifications unavailable on this device");
                     }
                   } catch {
                     toast.error("Failed to enable notifications");
