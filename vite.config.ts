@@ -111,6 +111,7 @@ export default defineConfig(({ command, mode }): UserConfig => {
     ],
     build: {
       rollupOptions: {
+        external: ["@capacitor/push-notifications"],
         output: {
           manualChunks(id) {
             if (id.includes("node_modules/firebase/") || id.includes("node_modules/@firebase/")) {
