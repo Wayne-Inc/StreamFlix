@@ -19,6 +19,9 @@ import {
   KeyRound,
   EyeOff,
   Rocket,
+  Bell,
+  BellOff,
+  BellRing,
 } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
 import {
@@ -92,8 +95,26 @@ function SettingsPage() {
   const [updateBusy, setUpdateBusy] = useState(false);
   const { reduceMotion, setReduceMotion } = useReduceMotion();
   const [deploying, setDeploying] = useState(false);
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission>("default");
+  const [notifBusy, setNotifBusy] = useState(false);
+  const [hasToken, setHasToken] = useState(false);
 
   const isElectron = typeof window !== "undefined" && !!window.electronAPI;
+
+  useEffect(() => {
+    if (typeof Notification === "undefined") {
+      setNotifPermission("default");
+    } else {
+      setNotifPermission(Notification.permission);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    import("@/lib/push").then(({ ensurePushSubscription }) => {
+      ensurePushSubscription().then((status) => setHasToken(status === "granted"));
+    });
+  }, []);
 
   useEffect(() => {
     if (!window.electronAPI) return;
@@ -755,6 +776,81 @@ function SettingsPage() {
                 </div>
               );
             })}
+          </div>
+        </section>
+
+        {/* Notifications */}
+        <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className={`grid size-10 shrink-0 place-items-center rounded-md ${
+                notifPermission === "granted" && hasToken
+                  ? "bg-emerald-500/15 text-emerald-400"
+                  : notifPermission === "denied"
+                  ? "bg-destructive/15 text-destructive"
+                  : "bg-accent text-muted-foreground"
+              }`}>
+                {notifPermission === "denied" ? (
+                  <BellOff className="size-5" />
+                ) : notifPermission === "granted" && hasToken ? (
+                  <BellRing className="size-5" />
+                ) : (
+                  <Bell className="size-5" />
+                )}
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Push Notifications</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {notifPermission === "granted" && hasToken
+                    ? "Enabled — you'll receive release reminders and updates"
+                    : notifPermission === "denied"
+                    ? "Blocked — enable in your browser settings and reload"
+                    : "Not enabled yet — get notified about new releases"}
+                </p>
+              </div>
+            </div>
+            {notifPermission === "denied" ? (
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs text-muted-foreground">
+                <BellOff className="size-3.5" /> Blocked
+              </span>
+            ) : notifPermission === "granted" && hasToken ? (
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-400 font-medium">
+                <CheckCircle2 className="size-3.5" /> Active
+              </span>
+            ) : (
+              <button
+                onClick={async () => {
+                  if (notifBusy) return;
+                  setNotifBusy(true);
+                  try {
+                    const { ensurePushSubscription } = await import("@/lib/push");
+                    const status = await ensurePushSubscription();
+                    if (typeof Notification !== "undefined") {
+                      setNotifPermission(Notification.permission);
+                    }
+                    setHasToken(status === "granted");
+                    if (status === "granted") {
+                      toast.success("Notifications enabled!");
+                    } else if (status === "denied") {
+                      toast.error("Permission denied — enable in browser settings");
+                    } else if (status === "no-vapid") {
+                      toast.error("Push not configured on this server");
+                    } else {
+                      toast.error("Notifications unavailable on this device");
+                    }
+                  } catch {
+                    toast.error("Failed to enable notifications");
+                  } finally {
+                    setNotifBusy(false);
+                  }
+                }}
+                disabled={notifBusy}
+                className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              >
+                {notifBusy ? <Loader2 className="size-4 animate-spin" /> : <Bell className="size-4" />}
+                {notifBusy ? "Enabling..." : "Enable Notifications"}
+              </button>
+            )}
           </div>
         </section>
 
