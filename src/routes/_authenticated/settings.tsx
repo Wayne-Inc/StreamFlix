@@ -108,6 +108,7 @@ function SettingsPage() {
       setNotifReason("Notification API not available");
     } else {
       setNotifPermission(Notification.permission);
+      setHasToken(Notification.permission === "granted");
       import("@/lib/push").then(({ checkPushSupport }) =>
         checkPushSupport().then(({ ok, reason }) => {
           if (!ok) {
@@ -851,7 +852,7 @@ function SettingsPage() {
                     if (typeof Notification !== "undefined") {
                       setNotifPermission(Notification.permission);
                     }
-                    setHasToken(status === "granted");
+                    setHasToken(Notification.permission === "granted");
                     if (status === "granted") {
                       toast.success("Notifications enabled!");
                     } else if (status === "denied") {
