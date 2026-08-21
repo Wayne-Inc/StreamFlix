@@ -109,7 +109,7 @@ function Landing() {
           </header>
 
           <div className="mx-auto mt-24 max-w-3xl px-4 text-center sm:mt-36">
-            <h1 className="text-shadow-hero text-5xl font-black tracking-tight sm:text-7xl">
+            <h1 className="text-shadow-hero text-5xl font-bold tracking-tight sm:text-7xl">
               Unlimited movies, TV shows, and more.
             </h1>
             <p className="text-shadow-hero mt-6 text-xl sm:text-3xl font-medium">
@@ -207,7 +207,7 @@ function Landing() {
           <p className="mx-auto mt-4 max-w-2xl text-center text-lg text-muted-foreground">
             Everything you love about streaming, minus the subscription fee.
           </p>
-          <div className="mt-14 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
+          <div className="mt-14 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
             <FeatureCard
               icon={<Play className="size-6" />}
               title="Instant Streaming"
