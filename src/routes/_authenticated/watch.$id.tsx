@@ -518,6 +518,22 @@ function PlayerPage() {
     };
   }, [wake]);
 
+  useEffect(() => {
+    if (typeof window === "undefined" || !("navigation" in window)) return;
+    const nav = (window as any).navigation;
+    const handler = (e: any) => {
+      try {
+        const dest = new URL(e.destination.url, window.location.href);
+        if (dest.origin !== window.location.origin) {
+          e.preventDefault();
+          toast.error("Redirect blocked");
+        }
+      } catch {}
+    };
+    nav.addEventListener("navigate", handler);
+    return () => nav.removeEventListener("navigate", handler);
+  }, []);
+
   const lastSaveErrorAtRef = useRef(0);
   const notifySaveError = useCallback((err?: unknown) => {
     const now = Date.now();
