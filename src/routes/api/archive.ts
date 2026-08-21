@@ -26,8 +26,8 @@ function archiveKey(): string {
 function isAuthorized(request: Request): { ok: boolean; reason?: string } {
   const key = archiveKey();
   if (key && request.headers.get("x-archive-key") === key) return { ok: true };
-  const ua = request.headers.get("user-agent") ?? "";
-  if (ua.startsWith("Vercel-Cron")) return { ok: true };
+  const ua = (request.headers.get("user-agent") ?? "").toLowerCase();
+  if (ua.includes("vercel-cron")) return { ok: true };
   return { ok: false, reason: key ? "missing or invalid x-archive-key header" : "endpoint is protected" };
 }
 
