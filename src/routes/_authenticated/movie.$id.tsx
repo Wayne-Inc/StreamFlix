@@ -208,7 +208,7 @@ function MoviePage() {
   const router = useRouter();
   const location = useLocation();
   const goBack = () => {
-    const steps = stepsToUsefulBackTarget(location.pathname, [`/watch/${movie.id}`]);
+    const steps = stepsToUsefulBackTarget(location.pathname, []);
     if (steps !== null) {
       router.history.go(-steps);
     } else {

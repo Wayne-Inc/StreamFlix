@@ -1,6 +1,7 @@
-import { Download, Github } from "lucide-react";
+import { Download, Github, Mail, Instagram } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { isInApp } from "@/lib/app-downloads";
+import { ContactEmail } from "@/components/streamflix/ContactEmail";
 
 export function Footer() {
   return (
@@ -13,6 +14,17 @@ export function Footer() {
           </p>
         </div>
         <nav className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+          <ContactEmail className="inline-flex items-center gap-1.5 transition hover:text-foreground">
+            <Mail className="size-4" />
+          </ContactEmail>
+          <a
+            href="https://instagram.com/itiswayneee"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 transition hover:text-foreground"
+          >
+            <Instagram className="size-4" /> @itiswayneee
+          </a>
           <Link to="/tos" className="hover:text-foreground">
             Terms of Service
           </Link>

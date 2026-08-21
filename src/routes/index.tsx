@@ -1,6 +1,6 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useState, useRef } from "react";
-import { ChevronRight, Play, ChevronDown, Mail, Instagram, Tv, Smartphone, Monitor, Shield, Zap, Globe, ChevronLeft } from "lucide-react";
+import { ChevronRight, Play, ChevronDown, Mail, Instagram, Tv, Smartphone, Monitor, Shield, Zap, Globe, ChevronLeft, Download, Github } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
 import { ContactEmail } from "@/components/streamflix/ContactEmail";
 import { tmdbFetch, toMovie } from "@/lib/api/tmdb.server";
@@ -112,13 +112,21 @@ function Landing() {
             <p className="text-shadow-hero mt-6 text-xl sm:text-3xl font-medium">
               Completely free. No subscriptions, no catches.
             </p>
-            <div className="mt-10 flex items-center justify-center gap-6">
+            <div className="mt-10 flex items-center justify-center gap-6 flex-wrap">
               <Link
                 to="/auth"
                 className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90"
               >
                 <Play className="size-5 fill-current" /> Start Watching
               </Link>
+              <a
+                href="https://github.com/Wayne-Inc/StreamFlix/releases"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-6 py-3 text-base font-semibold text-primary hover:bg-primary/20 transition-colors"
+              >
+                <Download className="size-5" /> Download the App
+              </a>
             </div>
           </div>
         </div>
@@ -150,7 +158,7 @@ function Landing() {
                   </span>
                   <Link
                     to="/browse"
-                    className="block overflow-hidden rounded-lg relative ring-0 group-hover:ring-2 group-hover:ring-red-500 transition-all duration-300"
+                    className="block overflow-hidden rounded-lg relative transition-shadow duration-300 group-hover:shadow-[0_0_20px_rgba(239,68,68,0.5)]"
                   >
                     <img
                       src={m.poster || "/placeholder.svg"}
@@ -159,6 +167,9 @@ function Landing() {
                       loading="lazy"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-100" />
+                    <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out">
+                      <p className="text-xs sm:text-sm font-semibold text-white leading-tight drop-shadow-lg">{m.title}</p>
+                    </div>
                   </Link>
                 </div>
               ))}
@@ -271,6 +282,14 @@ function Landing() {
               className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
             >
               <Instagram className="size-4" /> @itiswayneee
+            </a>
+            <a
+              href="https://github.com/Wayne-Inc/StreamFlix"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+            >
+              <Github className="size-4" /> GitHub
             </a>
             <Link to="/tos" className="hover:text-foreground transition-colors">
               Terms of Service

@@ -1,7 +1,7 @@
 import { type MouseEvent, type ReactNode } from "react";
 
 const EMAIL_LOCAL = "hello";
-const EMAIL_DOMAIN = "samway.dpdns.org";
+const EMAIL_DOMAIN = "itiswayneee.dpdns.org";
 const EMAIL = `${EMAIL_LOCAL}@${EMAIL_DOMAIN}`;
 
 export function ContactEmail({
