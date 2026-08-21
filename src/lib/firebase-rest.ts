@@ -35,9 +35,11 @@ async function getAccessToken(): Promise<string> {
   return cachedToken.token;
 }
 
-function firestoreUrl(projectId: string, collection: string, docId?: string): string {
+function firestoreUrl(projectId: string, collection?: string, docId?: string): string {
   const base = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents`;
-  return docId ? `${base}/${collection}/${docId}` : `${base}/${collection}`;
+  if (docId) return `${base}/${collection}/${docId}`;
+  if (collection) return `${base}/${collection}`;
+  return base;
 }
 
 type FirestoreDoc = { name: string; fields: Record<string, unknown>; createTime: string; updateTime: string };
@@ -66,7 +68,7 @@ export async function runFirestoreQuery(
   filters: Array<{ field: string; op: "EQUAL" | "NOT_EQUAL"; value: string | null }>,
 ): Promise<Array<{ id: string; data: Record<string, unknown> }>> {
   const token = await getAccessToken();
-  const url = `${firestoreUrl(projectId, collection)}:runQuery`;
+  const url = `${firestoreUrl(projectId)}:runQuery`;
   const where =
     filters.length === 1
       ? {
