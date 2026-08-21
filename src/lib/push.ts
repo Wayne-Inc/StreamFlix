@@ -21,10 +21,37 @@ function getMessagingInstance(): Promise<Messaging | null> {
   return messagingPromise;
 }
 
-export type PushStatus = "granted" | "denied" | "unavailable" | "no-vapid";
+// ---------------------------------------------------------------------------
+// Platform detection
+// ---------------------------------------------------------------------------
+
+function isCapacitor(): boolean {
+  if (typeof window === "undefined") return false;
+  const w = window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } };
+  return typeof w.Capacitor?.isNativePlatform === "function" && w.Capacitor.isNativePlatform();
+}
+
+function isElectron(): boolean {
+  return typeof window !== "undefined" && "electronAPI" in window;
+}
+
+// ---------------------------------------------------------------------------
+// checkPushSupport — returns the specific reason push won't work
+// ---------------------------------------------------------------------------
 
 export async function checkPushSupport(): Promise<{ ok: boolean; reason?: string }> {
   if (typeof window === "undefined") return { ok: false, reason: "Server-side rendering" };
+
+  // Capacitor: uses native FCM, always supported if google-services.json is present
+  if (isCapacitor()) return { ok: true };
+
+  // Electron: uses native Notification API — supported in packaged builds
+  if (isElectron()) {
+    if (typeof Notification !== "undefined") return { ok: true };
+    return { ok: false, reason: "Desktop notifications not available in this build" };
+  }
+
+  // Web browser
   if (!("serviceWorker" in navigator)) return { ok: false, reason: "Service Workers not supported" };
   if (location.protocol !== "https:" && location.hostname !== "localhost") return { ok: false, reason: "Requires HTTPS" };
   if (typeof Notification === "undefined") return { ok: false, reason: "Notification API not available" };
@@ -39,7 +66,66 @@ export async function checkPushSupport(): Promise<{ ok: boolean; reason?: string
   return { ok: true };
 }
 
-export async function ensurePushSubscription(): Promise<PushStatus> {
+// ---------------------------------------------------------------------------
+// Platform-specific push subscription
+// ---------------------------------------------------------------------------
+
+export type PushStatus = "granted" | "denied" | "unavailable" | "no-vapid";
+
+async function saveTokenToFirestore(token: string, platform: string): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) return;
+  await setDoc(
+    doc(db, "fcm_tokens", token),
+    {
+      user_id: user.uid,
+      token,
+      device_id: getDeviceId(),
+      platform,
+      user_agent: navigator.userAgent.slice(0, 500),
+      created_at: serverTimestamp(),
+      last_seen_at: serverTimestamp(),
+    },
+    { merge: true },
+  );
+}
+
+async function ensureCapacitorPush(): Promise<PushStatus> {
+  const user = auth.currentUser;
+  if (!user) return "unavailable";
+  try {
+    const { PushNotifications } = await import("@capacitor/push-notifications");
+
+    // Request permission
+    const perm = await PushNotifications.requestPermissions();
+    if (perm.receive !== "granted") return "denied";
+
+    // Register for FCM
+    await PushNotifications.register();
+
+    // Wait for token (the listener fires asynchronously)
+    return await new Promise<PushStatus>((resolve) => {
+      const timeout = setTimeout(() => resolve("unavailable"), 10000);
+
+      PushNotifications.addListener("registration", async (token) => {
+        clearTimeout(timeout);
+        await saveTokenToFirestore(token.value, "android");
+        resolve("granted");
+      });
+
+      PushNotifications.addListener("registrationError", (err) => {
+        clearTimeout(timeout);
+        console.error("Capacitor push registration error:", err);
+        resolve("unavailable");
+      });
+    });
+  } catch (e) {
+    console.error("Capacitor push error:", e);
+    return "unavailable";
+  }
+}
+
+async function ensureWebPush(): Promise<PushStatus> {
   const user = auth.currentUser;
   if (!user) return "unavailable";
   const messaging = await getMessagingInstance();
@@ -55,30 +141,87 @@ export async function ensurePushSubscription(): Promise<PushStatus> {
     if (permission !== "granted") return "denied";
     const token = await getToken(messaging, { vapidKey });
     if (!token) return "unavailable";
-    await setDoc(
-      doc(db, "fcm_tokens", token),
-      {
-        user_id: user.uid,
-        token,
-        device_id: getDeviceId(),
-        platform: "web",
-        user_agent: navigator.userAgent.slice(0, 500),
-        created_at: serverTimestamp(),
-        last_seen_at: serverTimestamp(),
-      },
-      { merge: true },
-    );
+    await saveTokenToFirestore(token, "web");
     return "granted";
   } catch {
     return "unavailable";
   }
 }
 
+async function ensureElectronPush(): Promise<PushStatus> {
+  const user = auth.currentUser;
+  if (!user) return "unavailable";
+  try {
+    // Electron's renderer has the Notification API in packaged builds
+    if (typeof Notification === "undefined") return "unavailable";
+    let permission = Notification.permission;
+    if (permission === "default") {
+      permission = await Notification.requestPermission();
+    }
+    if (permission !== "granted") return "denied";
+
+    // Try web FCM first (works if service worker is available)
+    const messaging = await getMessagingInstance();
+    if (messaging) {
+      const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+      if (vapidKey) {
+        const token = await getToken(messaging, { vapidKey });
+        if (token) {
+          await saveTokenToFirestore(token, "electron");
+          return "granted";
+        }
+      }
+    }
+
+    // Fallback: save a synthetic token based on device ID so server can track this device
+    const syntheticToken = `electron-${getDeviceId()}`;
+    await saveTokenToFirestore(syntheticToken, "electron");
+    return "granted";
+  } catch {
+    return "unavailable";
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
+export async function ensurePushSubscription(): Promise<PushStatus> {
+  if (isCapacitor()) return ensureCapacitorPush();
+  if (isElectron()) return ensureElectronPush();
+  return ensureWebPush();
+}
+
+// ---------------------------------------------------------------------------
+// Foreground push handler (web + Electron)
+// ---------------------------------------------------------------------------
+
 let foregroundStarted = false;
 
 export function setupForegroundPush(): void {
   if (foregroundStarted) return;
   foregroundStarted = true;
+
+  // Capacitor handles foreground notifications via native listeners
+  if (isCapacitor()) {
+    import("@capacitor/push-notifications").then(({ PushNotifications }) => {
+      PushNotifications.addListener("pushNotificationReceived", (notification) => {
+        toast(notification.title ?? "StreamFlix", {
+          description: notification.body ?? "",
+          duration: 6000,
+        });
+      });
+      PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
+        const data = action.notification.data;
+        if (data?.movie_id) {
+          window.location.href = `/movie/${data.movie_id}`;
+        }
+      });
+    }).catch(() => {});
+    return;
+  }
+
+  // Web / Electron: use Firebase Messaging onMessage
   getMessagingInstance()
     .then((messaging) => {
       if (!messaging) return;

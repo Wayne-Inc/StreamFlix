@@ -47,7 +47,6 @@ import { AvatarCropModal } from "@/components/streamflix/AvatarCropModal";
 import { getDeviceId, recordCurrentDevice } from "@/lib/device-tracking";
 import { isKidsProfile } from "@/lib/kids-mode";
 import { useReduceMotion } from "@/lib/reduce-motion";
-import { isInApp } from "@/lib/app-downloads";
 import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -103,29 +102,23 @@ function SettingsPage() {
   const isElectron = typeof window !== "undefined" && !!window.electronAPI;
 
   useEffect(() => {
-    if (typeof Notification === "undefined") {
-      setNotifPermission("default");
-      setNotifUnsupported(true);
-      setNotifReason("Notification API not available");
-    } else {
-      setNotifPermission(Notification.permission);
-      setHasToken(Notification.permission === "granted");
-      import("@/lib/push").then(({ checkPushSupport }) =>
-        checkPushSupport().then(({ ok, reason }) => {
-          if (!ok) {
-            setNotifUnsupported(true);
-            setNotifReason(reason ?? "Unknown reason");
+    import("@/lib/push").then(({ checkPushSupport }) =>
+      checkPushSupport().then(({ ok, reason }) => {
+        if (!ok) {
+          setNotifUnsupported(true);
+          setNotifReason(reason ?? "Unknown reason");
+        } else {
+          // Check current permission state (skip on Capacitor — uses native flow)
+          const isCap = typeof window !== "undefined" &&
+            "Capacitor" in window &&
+            (window as any).Capacitor?.isNativePlatform?.();
+          if (!isCap && typeof Notification !== "undefined") {
+            setNotifPermission(Notification.permission);
+            setHasToken(Notification.permission === "granted");
           }
-        })
-      );
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
-    import("@/lib/push").then(({ ensurePushSubscription }) => {
-      ensurePushSubscription().then((status) => setHasToken(status === "granted"));
-    });
+        }
+      })
+    );
   }, []);
 
   useEffect(() => {
@@ -791,8 +784,7 @@ function SettingsPage() {
           </div>
         </section>
 
-        {/* Notifications — web browser only */}
-        {!isInApp() && (
+        {/* Notifications */}
         <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -832,7 +824,7 @@ function SettingsPage() {
               <span className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs text-muted-foreground">
                 <BellOff className="size-3.5" /> Blocked
               </span>
-            ) : notifPermission === "granted" && hasToken ? (
+            ) : hasToken ? (
               <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-400 font-medium">
                 <CheckCircle2 className="size-3.5" /> Active
               </span>
@@ -851,10 +843,12 @@ function SettingsPage() {
                       return;
                     }
                     const status = await ensurePushSubscription();
-                    if (typeof Notification !== "undefined") {
-                      setNotifPermission(Notification.permission);
+                    if (status === "granted") {
+                      setHasToken(true);
+                      if (typeof Notification !== "undefined") {
+                        setNotifPermission(Notification.permission);
+                      }
                     }
-                    setHasToken(Notification.permission === "granted");
                     if (status === "granted") {
                       toast.success("Notifications enabled!");
                     } else if (status === "denied") {
@@ -883,7 +877,6 @@ function SettingsPage() {
             )}
           </div>
         </section>
-        )}
 
         {/* Danger */}
         <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
