@@ -47,6 +47,7 @@ import { AvatarCropModal } from "@/components/streamflix/AvatarCropModal";
 import { getDeviceId, recordCurrentDevice } from "@/lib/device-tracking";
 import { isKidsProfile } from "@/lib/kids-mode";
 import { useReduceMotion } from "@/lib/reduce-motion";
+import { isInApp } from "@/lib/app-downloads";
 import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -790,7 +791,8 @@ function SettingsPage() {
           </div>
         </section>
 
-        {/* Notifications */}
+        {/* Notifications — web browser only */}
+        {!isInApp() && (
         <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -881,6 +883,7 @@ function SettingsPage() {
             )}
           </div>
         </section>
+        )}
 
         {/* Danger */}
         <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
