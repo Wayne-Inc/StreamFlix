@@ -23,6 +23,22 @@ function getMessagingInstance(): Promise<Messaging | null> {
 
 export type PushStatus = "granted" | "denied" | "unavailable" | "no-vapid";
 
+export async function checkPushSupport(): Promise<{ ok: boolean; reason?: string }> {
+  if (typeof window === "undefined") return { ok: false, reason: "Server-side rendering" };
+  if (!("serviceWorker" in navigator)) return { ok: false, reason: "Service Workers not supported" };
+  if (location.protocol !== "https:" && location.hostname !== "localhost") return { ok: false, reason: "Requires HTTPS" };
+  if (typeof Notification === "undefined") return { ok: false, reason: "Notification API not available" };
+  try {
+    const supported = await isSupported();
+    if (!supported) return { ok: false, reason: "Firebase Messaging not supported in this browser" };
+  } catch (e) {
+    return { ok: false, reason: `Messaging check failed: ${e}` };
+  }
+  const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+  if (!vapidKey) return { ok: false, reason: "VAPID key not configured" };
+  return { ok: true };
+}
+
 export async function ensurePushSubscription(): Promise<PushStatus> {
   const user = auth.currentUser;
   if (!user) return "unavailable";

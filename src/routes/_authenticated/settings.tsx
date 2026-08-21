@@ -108,22 +108,14 @@ function SettingsPage() {
       setNotifReason("Notification API not available");
     } else {
       setNotifPermission(Notification.permission);
-      if (!("serviceWorker" in navigator)) {
-        setNotifUnsupported(true);
-        setNotifReason("Service Workers not supported");
-      } else if (location.protocol !== "https:" && location.hostname !== "localhost") {
-        setNotifUnsupported(true);
-        setNotifReason("Requires HTTPS");
-      } else {
-        import("firebase/messaging").then(({ isSupported }) =>
-          isSupported().then((ok) => {
-            if (!ok) {
-              setNotifUnsupported(true);
-              setNotifReason("Firebase Messaging not supported in this browser");
-            }
-          })
-        );
-      }
+      import("@/lib/push").then(({ checkPushSupport }) =>
+        checkPushSupport().then(({ ok, reason }) => {
+          if (!ok) {
+            setNotifUnsupported(true);
+            setNotifReason(reason ?? "Unknown reason");
+          }
+        })
+      );
     }
   }, []);
 
@@ -819,7 +811,9 @@ function SettingsPage() {
               <div>
                 <p className="text-sm font-semibold">Push Notifications</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {notifPermission === "granted" && hasToken
+                  {notifUnsupported
+                    ? notifReason ?? "Not supported on this device"
+                    : notifPermission === "granted" && hasToken
                     ? "Enabled — you'll receive release reminders and updates"
                     : notifPermission === "denied"
                     ? "Blocked — enable in your browser settings and reload"
@@ -827,7 +821,11 @@ function SettingsPage() {
                 </p>
               </div>
             </div>
-            {notifPermission === "denied" ? (
+            {notifUnsupported ? (
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs text-muted-foreground">
+                <BellOff className="size-3.5" /> Unavailable
+              </span>
+            ) : notifPermission === "denied" ? (
               <span className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs text-muted-foreground">
                 <BellOff className="size-3.5" /> Blocked
               </span>
@@ -841,7 +839,14 @@ function SettingsPage() {
                   if (notifBusy) return;
                   setNotifBusy(true);
                   try {
-                    const { ensurePushSubscription } = await import("@/lib/push");
+                    const { checkPushSupport, ensurePushSubscription } = await import("@/lib/push");
+                    const support = await checkPushSupport();
+                    if (!support.ok) {
+                      setNotifUnsupported(true);
+                      setNotifReason(support.reason ?? "Unknown");
+                      toast.error(support.reason ?? "Not supported on this device");
+                      return;
+                    }
                     const status = await ensurePushSubscription();
                     if (typeof Notification !== "undefined") {
                       setNotifPermission(Notification.permission);
@@ -854,7 +859,11 @@ function SettingsPage() {
                     } else if (status === "no-vapid") {
                       toast.error("Push not configured on this server");
                     } else {
-                      toast.error("Notifications unavailable on this device");
+                      const { checkPushSupport: recheck } = await import("@/lib/push");
+                      const r = await recheck();
+                      setNotifUnsupported(!r.ok);
+                      setNotifReason(r.reason ?? "Unknown error");
+                      toast.error(r.reason ?? "Notifications unavailable");
                     }
                   } catch {
                     toast.error("Failed to enable notifications");
