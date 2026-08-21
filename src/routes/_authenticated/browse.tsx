@@ -60,7 +60,7 @@ function BrowseSkeleton() {
           </div>
         </div>
       </div>
-      <div className="relative z-10 space-y-6 md:mt-12">
+      <div className="relative z-10 space-y-6 md:mt-12 md:space-y-12">
         {isHome && <RowSkeleton />}
         {[1, 2, 3, 4, 5].map((i) => (
           <RowSkeleton key={i} />
