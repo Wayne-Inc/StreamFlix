@@ -3,6 +3,7 @@ import { useState, useRef } from "react";
 import { ChevronRight, Play, ChevronDown, Mail, Instagram, Tv, Smartphone, Monitor, Shield, Zap, Globe, ChevronLeft, Download, Github } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
 import { ContactEmail } from "@/components/streamflix/ContactEmail";
+import { isInApp } from "@/lib/app-downloads";
 import { tmdbFetch, toMovie } from "@/lib/api/tmdb.server";
 import type { Movie } from "@/lib/types";
 import heroImg from "@/assets/landing.jpg";
@@ -122,14 +123,16 @@ function Landing() {
               >
                 <Play className="size-5 fill-current" /> Start Watching
               </Link>
-              <a
-                href="https://github.com/Wayne-Inc/StreamFlix/releases"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-6 py-3 text-base font-semibold text-primary hover:bg-primary/20 transition-colors"
-              >
-                <Download className="size-5" /> Download the App
-              </a>
+              {!isInApp() && (
+                <a
+                  href="https://github.com/Wayne-Inc/StreamFlix/releases"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-6 py-3 text-base font-semibold text-primary hover:bg-primary/20 transition-colors"
+                >
+                  <Download className="size-5" /> Download the App
+                </a>
+              )}
             </div>
           </div>
         </div>
