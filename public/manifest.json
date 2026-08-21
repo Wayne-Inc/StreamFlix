@@ -3,6 +3,7 @@
   "short_name": "StreamFlix",
   "start_url": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#141414",
   "theme_color": "#E50914",
   "description": "Stream your favorite movies and TV shows",

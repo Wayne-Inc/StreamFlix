@@ -19,7 +19,10 @@ export const Route = createFileRoute("/")({
       });
     });
     if (user) {
+      try { localStorage.setItem("sf:auth", "1"); } catch {}
       throw redirect({ to: "/profiles" });
+    } else {
+      try { localStorage.removeItem("sf:auth"); } catch {}
     }
   },
   loader: async () => {

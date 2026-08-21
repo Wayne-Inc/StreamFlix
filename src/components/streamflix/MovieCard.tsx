@@ -64,7 +64,7 @@ export function MovieCard({
           </div>
 
           {/* Title + meta on hover */}
-          <div className="absolute inset-x-0 bottom-0 p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+          <div className="absolute inset-x-0 bottom-0 p-3 translate-y-2 opacity-0 transition-all duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100">
             <p className="text-xs sm:text-sm font-bold text-white line-clamp-1 drop-shadow-lg">
               {movie.title}
             </p>

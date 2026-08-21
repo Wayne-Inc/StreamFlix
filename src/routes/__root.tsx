@@ -257,7 +257,7 @@ function RootComponent() {
       <ReduceMotionProvider>
         <GlobalContextMenu>
           <CustomTitleBar />
-          <div>
+          <div className="wco-titlebar-padding">
             <Toaster />
             <Outlet />
             <CookieConsent />

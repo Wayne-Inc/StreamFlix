@@ -113,6 +113,18 @@
 *::-webkit-scrollbar {
   display: none;
 }
+
+@supports (display: window-controls-overlay) {
+  .wco-titlebar-padding {
+    padding-top: env(titlebar-area-height, 0);
+  }
+  header.wco-aware {
+    left: env(titlebar-area-left, 0);
+    right: calc(100% - env(titlebar-area-right, 100%));
+    top: env(titlebar-area-top, 0);
+    inset-inline: unset;
+  }
+}
 * {
   -ms-overflow-style: none;
   scrollbar-width: none;
