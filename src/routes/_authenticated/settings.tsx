@@ -18,7 +18,6 @@ import {
   Crown,
   KeyRound,
   EyeOff,
-  Rocket,
   Bell,
   BellOff,
   BellRing,
@@ -94,18 +93,37 @@ function SettingsPage() {
   const [updateStatus, setUpdateStatus] = useState<{ state: string; message: string } | null>(null);
   const [updateBusy, setUpdateBusy] = useState(false);
   const { reduceMotion, setReduceMotion } = useReduceMotion();
-  const [deploying, setDeploying] = useState(false);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>("default");
   const [notifBusy, setNotifBusy] = useState(false);
   const [hasToken, setHasToken] = useState(false);
+  const [notifUnsupported, setNotifUnsupported] = useState(false);
+  const [notifReason, setNotifReason] = useState<string | null>(null);
 
   const isElectron = typeof window !== "undefined" && !!window.electronAPI;
 
   useEffect(() => {
     if (typeof Notification === "undefined") {
       setNotifPermission("default");
+      setNotifUnsupported(true);
+      setNotifReason("Notification API not available");
     } else {
       setNotifPermission(Notification.permission);
+      if (!("serviceWorker" in navigator)) {
+        setNotifUnsupported(true);
+        setNotifReason("Service Workers not supported");
+      } else if (location.protocol !== "https:" && location.hostname !== "localhost") {
+        setNotifUnsupported(true);
+        setNotifReason("Requires HTTPS");
+      } else {
+        import("firebase/messaging").then(({ isSupported }) =>
+          isSupported().then((ok) => {
+            if (!ok) {
+              setNotifUnsupported(true);
+              setNotifReason("Firebase Messaging not supported in this browser");
+            }
+          })
+        );
+      }
     }
   }, []);
 
@@ -851,38 +869,6 @@ function SettingsPage() {
                 {notifBusy ? "Enabling..." : "Enable Notifications"}
               </button>
             )}
-          </div>
-        </section>
-
-        {/* Deploy */}
-        <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-semibold">Deploy StreamFlix</p>
-              <p className="mt-1 text-xs text-muted-foreground">Trigger a fresh deployment to Vercel from the main branch.</p>
-            </div>
-            <button
-              onClick={async () => {
-                if (deploying) return;
-                setDeploying(true);
-                try {
-                  const res = await fetch(
-                    "https://api.vercel.com/v1/integrations/deploy/prj_dgTJUIH9QDeR17YOA9ehvbmSMd7p/Nvad2gXdKX",
-                    { method: "POST" },
-                  );
-                  toast.success(res.ok ? "Deployment triggered!" : "Deploy failed");
-                } catch {
-                  toast.error("Deploy failed");
-                } finally {
-                  setDeploying(false);
-                }
-              }}
-              disabled={deploying}
-              className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-            >
-              {deploying ? <Loader2 className="size-4 animate-spin" /> : <Rocket className="size-4" />}
-              {deploying ? "Deploying..." : "Deploy"}
-            </button>
           </div>
         </section>
 

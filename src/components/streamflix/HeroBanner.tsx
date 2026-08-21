@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Link } from "@tanstack/react-router";
 import { Play, Info } from "lucide-react";
 import type { Movie } from "@/lib/types";
@@ -6,11 +6,36 @@ import { AgeRatingBadge } from "./AgeRatingBadge";
 
 export function HeroBanner({ slides }: { slides: Movie[] }) {
   const [i, setI] = useState(0);
+  const touchStart = useRef<number | null>(null);
+  const touchDelta = useRef(0);
+
   useEffect(() => {
     if (slides.length === 0) return;
     const t = setInterval(() => setI((v) => (v + 1) % slides.length), 8000);
     return () => clearInterval(t);
   }, [slides.length]);
+
+  const go = useCallback((dir: -1 | 1) => {
+    setI((v) => (v + dir + slides.length) % slides.length);
+  }, [slides.length]);
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStart.current = e.touches[0].clientX;
+    touchDelta.current = 0;
+  }, []);
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (touchStart.current === null) return;
+    touchDelta.current = e.touches[0].clientX - touchStart.current;
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    const threshold = 50;
+    if (touchDelta.current > threshold) go(-1);
+    else if (touchDelta.current < -threshold) go(1);
+    touchStart.current = null;
+    touchDelta.current = 0;
+  }, [go]);
   if (slides.length === 0) return null;
   const s = slides[i];
   if (!s) return null;
@@ -21,7 +46,12 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
       : s.description;
 
   return (
-    <section className="relative min-h-[40vh] h-[50vh] w-full overflow-hidden sm:min-h-[400px] sm:h-[65vh] lg:min-h-[550px] lg:h-[85vh]">
+    <section
+      className="relative min-h-[40vh] h-[50vh] w-full overflow-hidden sm:min-h-[400px] sm:h-[65vh] lg:min-h-[550px] lg:h-[85vh]"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
       {slides.map((slide, idx) => {
         const near = Math.abs(idx - i) <= 1;
         return (
