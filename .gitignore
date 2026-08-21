@@ -12,6 +12,7 @@ electron
 dist
 dist-ssr
 .output
+release
 .vinxi
 .tanstack/**
 .nitro
