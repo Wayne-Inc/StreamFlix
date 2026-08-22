@@ -255,11 +255,13 @@ function AuthPage() {
       (window as any).Capacitor.isNativePlatform();
 
     if (inNativeApp) {
-      // Capacitor: redirect flow opens system browser, returns via deep link
+      // Capacitor: use signInWithRedirect — the WebViewClient allows
+      // Firebase auth handler + github.com domains so the OAuth flow
+      // completes inside the WebView (no system browser needed).
       try {
         const provider = new GithubAuthProvider();
         await signInWithRedirect(auth, provider);
-        // App suspends; redirect result handled in useEffect on return
+        // App navigates through OAuth; getRedirectResult in useEffect picks up the result
       } catch (err: any) {
         toast.error(err?.message ?? "GitHub sign-in failed");
         setBusy(false);
