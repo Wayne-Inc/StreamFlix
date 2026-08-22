@@ -131,13 +131,13 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
         <script
           async
-          data-cfasync="false"
+          data-cf-sync="false"
           src="https://www.googletagmanager.com/gtag/js?id=G-V9783E9S0W"
         />
       </head>
       <body>
         <script
-          data-cfasync="false"
+          data-cf-sync="false"
           dangerouslySetInnerHTML={{
             __html: `window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
@@ -198,13 +198,6 @@ function RootComponent() {
     }
     registerSW();
     const unsub = onAuthStateChanged(auth, (user) => {
-      try {
-        if (user) {
-          localStorage.setItem("sf:auth", "1");
-        } else {
-          localStorage.removeItem("sf:auth");
-        }
-      } catch {}
       if (initial.current) {
         initial.current = false;
         return;
@@ -264,7 +257,7 @@ function RootComponent() {
       <ReduceMotionProvider>
         <GlobalContextMenu>
           <CustomTitleBar />
-          <div className="wco-titlebar-padding">
+          <div>
             <Toaster />
             <Outlet />
             <CookieConsent />
