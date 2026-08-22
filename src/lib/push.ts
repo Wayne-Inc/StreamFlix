@@ -125,7 +125,7 @@ async function ensureCapacitorPush(): Promise<PushStatus> {
 
     // Ask Android for permission only when the native plugin says it is promptable.
     let perm = await PushNotifications.checkPermissions();
-    if (perm.receive === "prompt") {
+    if (perm.receive === "prompt" || perm.receive === "prompt-with-rationale") {
       perm = await PushNotifications.requestPermissions();
     }
     if (perm.receive !== "granted") {
@@ -144,12 +144,13 @@ async function ensureCapacitorPush(): Promise<PushStatus> {
       clearTimeout(timeout);
       try {
         await saveTokenToFirestore(token.value, "android");
-        console.log("Capacitor push: Subscription granted");
-        registrationResolve("granted");
       } catch (error) {
+        // Native registration succeeded; retrying persistence should not make the
+        // permission flow appear unavailable to the user.
         console.error("Capacitor push: Failed to save registration token:", error);
-        registrationResolve("unavailable");
       }
+      console.log("Capacitor push: Subscription granted");
+      registrationResolve("granted");
     });
 
     await PushNotifications.addListener("registrationError", (err: unknown) => {

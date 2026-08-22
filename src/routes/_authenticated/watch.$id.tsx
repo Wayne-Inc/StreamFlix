@@ -943,6 +943,15 @@ function PlayerPage() {
     return () => {
       destroyHls();
       if (directHideTimer.current) window.clearTimeout(directHideTimer.current);
+      if (hideTimer.current) window.clearTimeout(hideTimer.current);
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      videoRef.current?.pause();
+      directVideoRef.current?.pause();
+      try {
+        screen.orientation?.unlock();
+      } catch {}
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
     };
   }, [destroyHls]);
 
