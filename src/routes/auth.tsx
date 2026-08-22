@@ -13,8 +13,6 @@ import {
   GoogleAuthProvider,
   GithubAuthProvider,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   signInWithCredential,
   onAuthStateChanged,
   updateProfile as updateFirebaseProfile,
@@ -67,23 +65,6 @@ function AuthPage() {
   // Redirect away if already signed in (use profile chooser), unless a
   // password upgrade is pending.
   useEffect(() => {
-    const inNativeApp =
-      typeof window !== "undefined" &&
-      typeof (window as any).Capacitor?.isNativePlatform === "function" &&
-      (window as any).Capacitor.isNativePlatform();
-
-    // On mobile, handle OAuth redirect results when returning from system browser
-    if (inNativeApp) {
-      getRedirectResult(auth)
-        .then((result) => {
-          if (result?.user) {
-            toast.success(`Signed in with ${result.providerId === "github.com" ? "GitHub" : "Google"}.`);
-            navigate({ to: "/profiles" });
-          }
-        })
-        .catch(() => {});
-    }
-
     const unsub = onAuthStateChanged(auth, (user) => {
       let pending = false;
       try {
@@ -255,22 +236,22 @@ function AuthPage() {
       (window as any).Capacitor.isNativePlatform();
 
     if (inNativeApp) {
-      // Capacitor: open Firebase auth handler in system browser.
-      // signInWithRedirect doesn't work in WebView because the redirect chain
-      // hits domains the WebViewClient blocks. Opening in the system browser
-      // avoids this entirely. After GitHub auth, the redirect returns to
-      // streamflix.dpdns.org via the Android intent filter, and getRedirectResult
-      // in the mount useEffect picks up the credential.
+      // Capacitor: native GitHub sign-in via @capacitor-firebase/authentication
       try {
-        const { Browser } = await import("@capacitor/browser");
-        const authDomain = auth.app.options.authDomain;
-        const apiKey = auth.app.options.apiKey;
-        const url = `https://${authDomain}/__/auth/handler?apiKey=${apiKey}&authType=signInViaRedirect&provider=github.com&redirectUri=${encodeURIComponent(window.location.origin)}`;
-        await Browser.open({ url, presentationStyle: "popover" });
+        const { FirebaseAuthentication } = await import("@capacitor-firebase/authentication");
+        const result = await FirebaseAuthentication.signInWithGithub();
+        if (result.credential) {
+          const credential = GithubAuthProvider.credential(result.credential.idToken);
+          await signInWithCredential(auth, credential);
+          toast.success("Signed in with GitHub.");
+          navigate({ to: "/profiles" });
+          return;
+        }
+        toast.error("GitHub sign-in failed: no credential received.");
       } catch (err: any) {
         toast.error(err?.message ?? "GitHub sign-in failed");
-        setBusy(false);
       }
+      setBusy(false);
     } else {
       // Web: popup flow
       const provider = new GithubAuthProvider();
