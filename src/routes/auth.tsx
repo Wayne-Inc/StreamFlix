@@ -255,13 +255,18 @@ function AuthPage() {
       (window as any).Capacitor.isNativePlatform();
 
     if (inNativeApp) {
-      // Capacitor: use signInWithRedirect — the WebViewClient allows
-      // Firebase auth handler + github.com domains so the OAuth flow
-      // completes inside the WebView (no system browser needed).
+      // Capacitor: open Firebase auth handler in system browser.
+      // signInWithRedirect doesn't work in WebView because the redirect chain
+      // hits domains the WebViewClient blocks. Opening in the system browser
+      // avoids this entirely. After GitHub auth, the redirect returns to
+      // streamflix.dpdns.org via the Android intent filter, and getRedirectResult
+      // in the mount useEffect picks up the credential.
       try {
-        const provider = new GithubAuthProvider();
-        await signInWithRedirect(auth, provider);
-        // App navigates through OAuth; getRedirectResult in useEffect picks up the result
+        const { Browser } = await import("@capacitor/browser");
+        const authDomain = auth.app.options.authDomain;
+        const apiKey = auth.app.options.apiKey;
+        const url = `https://${authDomain}/__/auth/handler?apiKey=${apiKey}&authType=signInViaRedirect&provider=github.com&redirectUri=${encodeURIComponent(window.location.origin)}`;
+        await Browser.open({ url, presentationStyle: "popover" });
       } catch (err: any) {
         toast.error(err?.message ?? "GitHub sign-in failed");
         setBusy(false);
