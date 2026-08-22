@@ -10,22 +10,11 @@ export async function registerSW() {
       });
   };
 
-  // Register Firebase messaging service worker
-  const registerFirebaseSW = () => {
-    navigator.serviceWorker
-      .register("/firebase-messaging-sw.js", { scope: "/" })
-      .catch((err) => {
-        console.error("Failed to register Firebase messaging service worker:", err);
-      });
-  };
-
   if (document.readyState === "complete") {
     registerMainSW();
-    registerFirebaseSW();
   } else {
     window.addEventListener("load", () => {
       registerMainSW();
-      registerFirebaseSW();
     }, { once: true });
   }
 

@@ -235,7 +235,14 @@ async function ensureWebPush(): Promise<PushStatus> {
     }
 
     console.log("Web push: About to call getToken with VAPID key (as-is from env)");
-    const token = await getToken(messaging, { vapidKey: validatedVapidKey });
+    const serviceWorkerRegistration = await navigator.serviceWorker.register(
+      "/firebase-messaging-sw.js",
+      { scope: "/firebase-messaging-sw.js", updateViaCache: "none" },
+    );
+    const token = await getToken(messaging, {
+      vapidKey: validatedVapidKey,
+      serviceWorkerRegistration,
+    });
     console.log("Web push: getToken returned:", token ? "token present" : "null/empty");
     if (!token) {
       console.warn("Web push: FCM token not available");
