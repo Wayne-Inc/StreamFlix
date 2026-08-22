@@ -46,9 +46,6 @@ export function MovieCard({
             </div>
           )}
 
-          {/* Hover overlay */}
-          <div className="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/50" />
-
           {/* Centered play button on hover */}
           <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
             <Link

@@ -68,6 +68,8 @@ export function Row({
 
   const { start, end, padStart, padEnd } = useMemo(() => {
     if (viewportW <= 0) return { start: 0, end: Math.min(items.length, 6), padStart: 0, padEnd: 0 };
+    // Skip virtualization on mobile to prevent scroll glitches
+    if (!isSm) return { start: 0, end: items.length, padStart: 0, padEnd: 0 };
     const firstVisible = Math.max(0, Math.floor(scrollLeft / step) - OVERSCAN);
     const lastVisible = Math.min(
       items.length,
@@ -79,7 +81,7 @@ export function Row({
       padStart: Math.max(0, firstVisible * step - gap),
       padEnd: Math.max(0, (items.length - lastVisible) * step - gap),
     };
-  }, [items.length, scrollLeft, viewportW, step, gap]);
+  }, [items.length, scrollLeft, viewportW, step, gap, isSm]);
 
   const visible = items.slice(start, end);
 
@@ -125,6 +127,7 @@ export function Row({
         <div
           ref={scrollerRef}
           className="scrollbar-thin flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth px-4 sm:px-8 pb-4 sm:pb-10"
+          style={{ WebkitOverflowScrolling: "touch", overscrollBehaviorX: "contain" }}
         >
           {padStart > 0 && <div aria-hidden style={{ width: padStart }} className="shrink-0" />}
           {visible.map((m) => (

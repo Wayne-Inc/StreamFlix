@@ -100,6 +100,15 @@ function Landing() {
           <header className="flex items-center justify-between px-4 sm:px-12 py-5">
             <Logo className="[&>span]:text-3xl [&>span]:sm:text-5xl" />
             <div className="flex items-center gap-3">
+              <a
+                href="https://github.com/Wayne-Inc/StreamFlix"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                title="GitHub"
+              >
+                <Github className="size-5" />
+              </a>
               <Link
                 to="/auth"
                 className="rounded-md bg-primary px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base font-semibold text-primary-foreground hover:bg-primary/90 mr-0 sm:mr-12"

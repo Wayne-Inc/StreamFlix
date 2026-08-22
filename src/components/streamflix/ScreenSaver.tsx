@@ -41,9 +41,12 @@ export function ScreenSaver() {
     return () => clearInterval(t);
   }, [active, slides.length]);
 
+  // Disable screensaver on mobile
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
+
   // Inactivity timer — no router state subscription when inactive
   useEffect(() => {
-    if (isWatching) {
+    if (isWatching || isMobile) {
       setActive(false);
       return;
     }
@@ -72,7 +75,7 @@ export function ScreenSaver() {
     };
   }, [isWatching]);
 
-  if (!active || slides.length === 0) return null;
+  if (!active || slides.length === 0 || isMobile) return null;
 
   const currentMovie = slides[slideIndex] || slides[0];
   if (!currentMovie) return null;
