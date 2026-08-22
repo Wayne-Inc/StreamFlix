@@ -123,8 +123,11 @@ async function ensureCapacitorPush(): Promise<PushStatus> {
     // @ts-expect-error The Capacitor plugin is unavailable in non-Capacitor builds.
     const { PushNotifications } = await import("@capacitor/push-notifications");
 
-    // Request permission
-    const perm = await PushNotifications.requestPermissions();
+    // Ask Android for permission only when the native plugin says it is promptable.
+    let perm = await PushNotifications.checkPermissions();
+    if (perm.receive === "prompt") {
+      perm = await PushNotifications.requestPermissions();
+    }
     if (perm.receive !== "granted") {
       console.warn("Capacitor push: Notification permission denied");
       return "denied";
@@ -162,6 +165,44 @@ async function ensureCapacitorPush(): Promise<PushStatus> {
   } catch (e) {
     console.error("Capacitor push: Failed to subscribe:", e);
     return "unavailable";
+  }
+}
+
+async function setupCapacitorPushListeners(): Promise<void> {
+  try {
+    // @ts-expect-error The plugin may not be installed for non-Capacitor builds.
+    const { PushNotifications } = await import("@capacitor/push-notifications");
+    await PushNotifications.addListener(
+      "pushNotificationReceived",
+      (notification: { title?: string; body?: string }) => {
+        showPushNotification(notification.title ?? "StreamFlix", {
+          description: notification.body ?? "",
+          duration: 6000,
+        });
+      },
+    );
+    await PushNotifications.addListener(
+      "pushNotificationActionPerformed",
+      (action: { notification: { data?: Record<string, string> } }) => {
+        const movieId = action.notification.data?.movie_id;
+        if (movieId) window.location.href = `/movie/${movieId}`;
+      },
+    );
+  } catch (error) {
+    console.error("Failed to setup Capacitor push notifications:", error);
+  }
+}
+
+export async function requestCapacitorNotificationPermission(): Promise<boolean> {
+  if (!isCapacitor()) return false;
+  try {
+    // @ts-expect-error The plugin may not be installed for non-Capacitor builds.
+    const { PushNotifications } = await import("@capacitor/push-notifications");
+    const permission = await PushNotifications.requestPermissions();
+    return permission.receive === "granted";
+  } catch (error) {
+    console.error("Failed to request Capacitor notification permission:", error);
+    return false;
   }
 }
 
@@ -344,33 +385,7 @@ export function setupForegroundPush(): void {
 
   // Capacitor handles foreground notifications via native listeners
   if (isCapacitor()) {
-    // The Capacitor plugin is optional in web/Electron builds.
-    // @ts-expect-error The plugin may not be installed for non-Capacitor targets.
-    import("@capacitor/push-notifications")
-      .then(({ PushNotifications }) => {
-        PushNotifications.addListener(
-          "pushNotificationReceived",
-          (notification: { title?: string; body?: string }) => {
-            showPushNotification(notification.title ?? "StreamFlix", {
-              description: notification.body ?? "",
-              duration: 6000,
-            });
-          },
-        );
-        PushNotifications.addListener(
-          "pushNotificationActionPerformed",
-          (action: { notification: { data?: Record<string, string> } }) => {
-          const data = action.notification.data;
-          if (data?.movie_id) {
-            window.location.href = `/movie/${data.movie_id}`;
-          }
-          },
-        );
-      })
-      .catch((err) => {
-        console.error("Failed to setup Capacitor push notifications:", err);
-        pushError("Failed to setup push notifications");
-      });
+    void setupCapacitorPushListeners();
     return;
   }
 
