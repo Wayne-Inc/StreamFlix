@@ -96,24 +96,6 @@ export default defineConfig(({ command, mode }): UserConfig => {
       ignoreOutdatedRequests: true,
     },
     plugins: [
-      // Stub out Capacitor-only native modules on web builds so they don't
-      // cause "failed to resolve module specifier" errors in the browser.
-      {
-        name: "stub-capacitor-native",
-        resolveId(source) {
-          if (
-            source === "@capacitor-firebase/authentication" ||
-            source === "@capacitor/push-notifications"
-          ) {
-            return { id: `\0capacitor-shim:${source}`, moduleSideEffects: false };
-          }
-        },
-        load(id) {
-          if (id.startsWith("\0capacitor-shim:")) {
-            return "export default {}";
-          }
-        },
-      },
       tailwindcss(),
       tsConfigPaths({ projects: ["./tsconfig.json"] }),
       tanstackStart({
@@ -129,7 +111,7 @@ export default defineConfig(({ command, mode }): UserConfig => {
     ],
     build: {
       rollupOptions: {
-        external: ["@capacitor/push-notifications", "@capacitor-firebase/authentication"],
+        external: ["@capacitor/push-notifications"],
         output: {
           manualChunks(id) {
             if (id.includes("node_modules/firebase/") || id.includes("node_modules/@firebase/")) {

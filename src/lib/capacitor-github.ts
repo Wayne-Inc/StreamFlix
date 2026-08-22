@@ -1,6 +1,8 @@
-import { FirebaseAuthentication } from "@capacitor-firebase/authentication";
+import { registerPlugin } from "@capacitor/core";
 import { GithubAuthProvider, signInWithCredential } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+
+const FirebaseAuthentication = registerPlugin("FirebaseAuthentication");
 
 export async function signInWithGitHubNative() {
   const result = await FirebaseAuthentication.signInWithGithub();
