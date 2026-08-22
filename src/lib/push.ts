@@ -204,27 +204,35 @@ export function setupForegroundPush(): void {
 
   // Capacitor handles foreground notifications via native listeners
   if (isCapacitor()) {
-    import("@capacitor/push-notifications").then(({ PushNotifications }) => {
-      PushNotifications.addListener("pushNotificationReceived", (notification) => {
-        toast(notification.title ?? "StreamFlix", {
-          description: notification.body ?? "",
-          duration: 6000,
+    import("@capacitor/push-notifications")
+      .then(({ PushNotifications }) => {
+        PushNotifications.addListener("pushNotificationReceived", (notification) => {
+          toast(notification.title ?? "StreamFlix", {
+            description: notification.body ?? "",
+            duration: 6000,
+          });
         });
+        PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
+          const data = action.notification.data;
+          if (data?.movie_id) {
+            window.location.href = `/movie/${data.movie_id}`;
+          }
+        });
+      })
+      .catch((err) => {
+        console.error("Failed to setup Capacitor push notifications:", err);
+        toast.error("Failed to setup push notifications");
       });
-      PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
-        const data = action.notification.data;
-        if (data?.movie_id) {
-          window.location.href = `/movie/${data.movie_id}`;
-        }
-      });
-    }).catch(() => {});
     return;
   }
 
   // Web / Electron: use Firebase Messaging onMessage
   getMessagingInstance()
     .then((messaging) => {
-      if (!messaging) return;
+      if (!messaging) {
+        console.warn("Firebase messaging not available");
+        return;
+      }
       onMessage(messaging, (payload) => {
         const data = payload.data ?? {};
         const title = payload.notification?.title ?? data.title ?? "StreamFlix";
@@ -244,5 +252,8 @@ export function setupForegroundPush(): void {
         });
       });
     })
-    .catch(() => {});
+    .catch((err) => {
+      console.error("Failed to setup Firebase messaging foreground handler:", err);
+      toast.error("Failed to setup push notifications");
+    });
 }
