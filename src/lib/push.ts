@@ -132,6 +132,16 @@ async function ensureCapacitorPush(): Promise<PushStatus> {
   }
 }
 
+// Helper to convert base64url to base64 (for VAPID key)
+function base64urlToBase64(base64url: string): string {
+  let base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+  // Pad with = to make length a multiple of 4
+  while (base64.length % 4) {
+    base64 += '=';
+  }
+  return base64;
+}
+
 async function ensureWebPush(): Promise<PushStatus> {
   const user = auth.currentUser;
   if (!user) {
@@ -148,6 +158,11 @@ async function ensureWebPush(): Promise<PushStatus> {
     console.warn("Web push: VAPID key not configured");
     return "no-vapid";
   }
+
+  // Log key info for debugging (safely)
+  console.log(`Web push: VAPID key present, length: ${vapidKey.length}`);
+  console.log(`Web push: VAPID key starts with: ${vapidKey.substring(0, 20)}...`);
+
   try {
     if (typeof Notification === "undefined") {
       console.warn("Web push: Notification API not available");
@@ -161,7 +176,12 @@ async function ensureWebPush(): Promise<PushStatus> {
       console.warn("Web push: Notification permission denied");
       return "denied";
     }
-    const token = await getToken(messaging, { vapidKey });
+
+    // Convert VAPID key to proper format if needed
+    const processedVapidKey = base64urlToBase64(vapidKey);
+    console.log("Web push: Using processed VAPID key");
+
+    const token = await getToken(messaging, { vapidKey: processedVapidKey });
     if (!token) {
       console.warn("Web push: FCM token not available");
       return "unavailable";
@@ -169,8 +189,23 @@ async function ensureWebPush(): Promise<PushStatus> {
     await saveTokenToFirestore(token, "web");
     console.log("Web push: Subscription granted");
     return "granted";
-  } catch (error) {
+  } catch (error: any) {
     console.error("Web push: Failed to subscribe:", error);
+    // Check if it's the specific VAPID key error
+    if (error.message?.includes('applicationServerKey is not valid')) {
+      console.error("Web push: VAPID key format issue - trying raw key as fallback");
+      try {
+        // Try with original key as fallback
+        const token = await getToken(messaging, { vapidKey });
+        if (token) {
+          await saveTokenToFirestore(token, "web");
+          console.log("Web push: Subscription granted with original key");
+          return "granted";
+        }
+      } catch (fallbackError) {
+        console.error("Web push: Fallback also failed:", fallbackError);
+      }
+    }
     return "unavailable";
   }
 }
