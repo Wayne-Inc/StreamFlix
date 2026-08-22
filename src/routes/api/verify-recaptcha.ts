@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 const RECAPTCHA_PROJECT = "streamflix-e91bc";
-const RECAPTCHA_SITE_KEY = "6Ld01m0tAAAAAF3mEtOM49srcxPNIsBT3mzXppZ7";
+const RECAPTCHA_SITE_KEY = "6Ley4pEtAAAAAEYBuciRyro32EY15v0BAsfwkzAV";
 const SCORE_THRESHOLD = 0.5;
 
 export const Route = createFileRoute("/api/verify-recaptcha")({

@@ -1,4 +1,4 @@
-export const RECAPTCHA_SITE_KEY = "6Ld01m0tAAAAAF3mEtOM49srcxPNIsBT3mzXppZ7";
+export const RECAPTCHA_SITE_KEY = "6Ley4pEtAAAAAEYBuciRyro32EY15v0BAsfwkzAV";
 
 let readyPromise: Promise<void> | null = null;
 
