@@ -198,6 +198,13 @@ function RootComponent() {
     }
     registerSW();
     const unsub = onAuthStateChanged(auth, (user) => {
+      try {
+        if (user) {
+          localStorage.setItem("sf:auth", "1");
+        } else {
+          localStorage.removeItem("sf:auth");
+        }
+      } catch {}
       if (initial.current) {
         initial.current = false;
         return;

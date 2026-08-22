@@ -11,6 +11,15 @@ import heroImg from "@/assets/landing.jpg";
 export const Route = createFileRoute("/")({
   beforeLoad: async () => {
     if (typeof window === "undefined") return;
+    // Instant redirect from localStorage cache — no flash
+    try {
+      if (localStorage.getItem("sf:auth") === "1") {
+        throw redirect({ to: "/profiles" });
+      }
+    } catch (e) {
+      if (e && typeof e === "object" && "isRedirect" in e) throw e;
+    }
+    // Fallback: check Firebase (e.g. first visit or cache cleared)
     const { auth } = await import("@/lib/firebase");
     const { onAuthStateChanged } = await import("firebase/auth");
     const user = await new Promise<unknown>((resolve) => {
@@ -22,8 +31,6 @@ export const Route = createFileRoute("/")({
     if (user) {
       try { localStorage.setItem("sf:auth", "1"); } catch {}
       throw redirect({ to: "/profiles" });
-    } else {
-      try { localStorage.removeItem("sf:auth"); } catch {}
     }
   },
   loader: async () => {

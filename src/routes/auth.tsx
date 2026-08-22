@@ -72,7 +72,10 @@ function AuthPage() {
       } catch {}
       const onUpgrade =
         typeof window !== "undefined" && window.location.pathname === "/force-password";
-      if (user && user.emailVerified && !pending && !onUpgrade) navigate({ to: "/profiles" });
+      if (user && user.emailVerified && !pending && !onUpgrade) {
+        try { localStorage.setItem("sf:auth", "1"); } catch {}
+        navigate({ to: "/profiles" });
+      }
     });
     return () => unsub();
   }, [navigate]);
@@ -122,6 +125,7 @@ function AuthPage() {
         try {
           localStorage.removeItem("sf:upgrade_password");
         } catch {}
+        try { localStorage.setItem("sf:auth", "1"); } catch {}
         toast.success("Signed in.");
         navigate({ to: "/profiles" });
       } else {
@@ -201,8 +205,9 @@ function AuthPage() {
         const idToken = result.idToken;
         if (idToken) {
           const credential = GoogleAuthProvider.credential(idToken);
-          await signInWithCredential(auth, credential);
-          toast.success("Signed in with Google.");
+        await signInWithCredential(auth, credential);
+        try { localStorage.setItem("sf:auth", "1"); } catch {}
+        toast.success("Signed in with Google.");
           navigate({ to: "/profiles" });
           return;
         }
@@ -215,6 +220,7 @@ function AuthPage() {
       const provider = new GoogleAuthProvider();
       try {
         await signInWithPopup(auth, provider);
+        try { localStorage.setItem("sf:auth", "1"); } catch {}
         toast.success("Signed in with Google.");
         navigate({ to: "/profiles" });
       } catch (err: any) {
@@ -240,6 +246,7 @@ function AuthPage() {
       try {
         const { signInWithGitHubNative } = await import("@/lib/capacitor-github");
         await signInWithGitHubNative();
+        try { localStorage.setItem("sf:auth", "1"); } catch {}
         toast.success("Signed in with GitHub.");
         navigate({ to: "/profiles" });
         return;
@@ -252,6 +259,7 @@ function AuthPage() {
       const provider = new GithubAuthProvider();
       try {
         await signInWithPopup(auth, provider);
+        try { localStorage.setItem("sf:auth", "1"); } catch {}
         toast.success("Signed in with GitHub.");
         navigate({ to: "/profiles" });
       } catch (err: any) {
