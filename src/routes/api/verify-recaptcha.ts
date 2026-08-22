@@ -19,7 +19,7 @@ export const Route = createFileRoute("/api/verify-recaptcha")({
             });
           }
 
-          const apiKey = process.env.RECAPTCHA_API_KEY;
+          const apiKey = process.env.RECAPTCHA_API_KEY || (import.meta as any).env?.VITE_FIREBASE_API_KEY;
           if (!apiKey) {
             console.error("RECAPTCHA_API_KEY env var not set");
             return new Response(JSON.stringify({ ok: false, error: "Server config error" }), {
