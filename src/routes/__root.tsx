@@ -131,13 +131,13 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
         <script
           async
-          data-cf-sync="false"
+          data-cfasync="false"
           src="https://www.googletagmanager.com/gtag/js?id=G-V9783E9S0W"
         />
       </head>
       <body>
         <script
-          data-cf-sync="false"
+          data-cfasync="false"
           dangerouslySetInnerHTML={{
             __html: `window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
