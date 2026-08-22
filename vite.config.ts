@@ -96,16 +96,21 @@ export default defineConfig(({ command, mode }): UserConfig => {
       ignoreOutdatedRequests: true,
     },
     plugins: [
-      // Forcefully externalize Capacitor-only native modules so TanStack Start's
-      // build pipeline doesn't try to resolve them on Vercel (web).
+      // Stub out Capacitor-only native modules on web builds so they don't
+      // cause "failed to resolve module specifier" errors in the browser.
       {
-        name: "externalize-capacitor-native",
+        name: "stub-capacitor-native",
         resolveId(source) {
           if (
             source === "@capacitor-firebase/authentication" ||
             source === "@capacitor/push-notifications"
           ) {
-            return { id: source, external: true };
+            return { id: `\0capacitor-shim:${source}`, moduleSideEffects: false };
+          }
+        },
+        load(id) {
+          if (id.startsWith("\0capacitor-shim:")) {
+            return "export default {}";
           }
         },
       },
