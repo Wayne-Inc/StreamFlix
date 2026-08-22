@@ -9,8 +9,8 @@ function loadEnterpriseScript(): Promise<void> {
     if ((window as any).grecaptcha?.enterprise) return resolve();
     const script = document.createElement("script");
     script.src = `https://www.google.com/recaptcha/enterprise.js?render=${RECAPTCHA_SITE_KEY}`;
+    script.setAttribute("data-cfasync", "false");
     script.async = true;
-    script.defer = true;
     script.onload = () => {
       const check = () => {
         if ((window as any).grecaptcha?.enterprise) resolve();
