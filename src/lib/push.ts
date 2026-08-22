@@ -92,13 +92,19 @@ async function saveTokenToFirestore(token: string, platform: string): Promise<vo
 
 async function ensureCapacitorPush(): Promise<PushStatus> {
   const user = auth.currentUser;
-  if (!user) return "unavailable";
+  if (!user) {
+    console.warn("Capacitor push: No authenticated user");
+    return "unavailable";
+  }
   try {
     const { PushNotifications } = await import("@capacitor/push-notifications");
 
     // Request permission
     const perm = await PushNotifications.requestPermissions();
-    if (perm.receive !== "granted") return "denied";
+    if (perm.receive !== "granted") {
+      console.warn("Capacitor push: Notification permission denied");
+      return "denied";
+    }
 
     // Register for FCM
     await PushNotifications.register();
@@ -110,6 +116,7 @@ async function ensureCapacitorPush(): Promise<PushStatus> {
       PushNotifications.addListener("registration", async (token) => {
         clearTimeout(timeout);
         await saveTokenToFirestore(token.value, "android");
+        console.log("Capacitor push: Subscription granted");
         resolve("granted");
       });
 
@@ -120,45 +127,74 @@ async function ensureCapacitorPush(): Promise<PushStatus> {
       });
     });
   } catch (e) {
-    console.error("Capacitor push error:", e);
+    console.error("Capacitor push: Failed to subscribe:", e);
     return "unavailable";
   }
 }
 
 async function ensureWebPush(): Promise<PushStatus> {
   const user = auth.currentUser;
-  if (!user) return "unavailable";
+  if (!user) {
+    console.warn("Web push: No authenticated user");
+    return "unavailable";
+  }
   const messaging = await getMessagingInstance();
-  if (!messaging) return "unavailable";
+  if (!messaging) {
+    console.warn("Web push: Firebase messaging not available");
+    return "unavailable";
+  }
   const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
-  if (!vapidKey) return "no-vapid";
+  if (!vapidKey) {
+    console.warn("Web push: VAPID key not configured");
+    return "no-vapid";
+  }
   try {
-    if (typeof Notification === "undefined") return "unavailable";
+    if (typeof Notification === "undefined") {
+      console.warn("Web push: Notification API not available");
+      return "unavailable";
+    }
     let permission = Notification.permission;
     if (permission === "default") {
       permission = await Notification.requestPermission();
     }
-    if (permission !== "granted") return "denied";
+    if (permission !== "granted") {
+      console.warn("Web push: Notification permission denied");
+      return "denied";
+    }
     const token = await getToken(messaging, { vapidKey });
-    if (!token) return "unavailable";
+    if (!token) {
+      console.warn("Web push: FCM token not available");
+      return "unavailable";
+    }
     await saveTokenToFirestore(token, "web");
+    console.log("Web push: Subscription granted");
     return "granted";
-  } catch {
+  } catch (error) {
+    console.error("Web push: Failed to subscribe:", error);
     return "unavailable";
   }
 }
 
 async function ensureElectronPush(): Promise<PushStatus> {
   const user = auth.currentUser;
-  if (!user) return "unavailable";
+  if (!user) {
+    console.warn("Electron push: No authenticated user");
+    return "unavailable";
+  }
   try {
     // Electron's renderer has the Notification API in packaged builds
-    if (typeof Notification === "undefined") return "unavailable";
+    if (typeof Notification === "undefined") {
+      console.warn("Electron push: Notification API not available");
+      return "unavailable";
+    }
     let permission = Notification.permission;
     if (permission === "default") {
       permission = await Notification.requestPermission();
     }
-    if (permission !== "granted") return "denied";
+    if (permission !== "granted") {
+      console.warn("Electron push: Notification permission denied");
+      return "denied";
+    }
 
     // Try web FCM first (works if service worker is available)
     const messaging = await getMessagingInstance();
@@ -168,6 +204,7 @@ async function ensureElectronPush(): Promise<PushStatus> {
         const token = await getToken(messaging, { vapidKey });
         if (token) {
           await saveTokenToFirestore(token, "electron");
+          console.log("Electron push: Subscription granted via FCM");
           return "granted";
         }
       }
@@ -176,8 +213,10 @@ async function ensureElectronPush(): Promise<PushStatus> {
     // Fallback: save a synthetic token based on device ID so server can track this device
     const syntheticToken = `electron-${getDeviceId()}`;
     await saveTokenToFirestore(syntheticToken, "electron");
+    console.log("Electron push: Subscription granted via synthetic token");
     return "granted";
-  } catch {
+  } catch (error) {
+    console.error("Electron push: Failed to subscribe:", error);
     return "unavailable";
   }
 }

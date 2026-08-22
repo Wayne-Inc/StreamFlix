@@ -814,6 +814,7 @@ function SettingsPage() {
                   try {
                     const { ensurePushSubscription } = await import("@/lib/push");
                     const status = await ensurePushSubscription();
+                    console.log("Push subscription status:", status); // Debug log
                     if (status === "granted") {
                       setHasToken(true);
                       if (typeof Notification !== "undefined") {
@@ -827,10 +828,13 @@ function SettingsPage() {
                       toast.error("Permission denied — enable in browser settings");
                     } else if (status === "no-vapid") {
                       toast.error("Push not configured on this server");
+                    } else if (status === "unavailable") {
+                      toast.error("Notifications unavailable — check console for details");
                     } else {
-                      toast.error("Notifications unavailable on this device");
+                      toast.error(`Notifications failed: ${status}`);
                     }
-                  } catch {
+                  } catch (error) {
+                    console.error("Push subscription error:", error);
                     toast.error("Failed to enable notifications");
                   } finally {
                     setNotifBusy(false);

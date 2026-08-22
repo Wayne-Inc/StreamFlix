@@ -80,6 +80,19 @@ function AuthPage() {
     return () => unsub();
   }, [navigate]);
 
+  const verifyCaptcha = async (action: string): Promise<boolean> => {
+    const { executeCaptcha } = await import("@/lib/captcha");
+    const token = await executeCaptcha(action);
+    if (!token) return false;
+    const verifyRes = await fetch("/api/verify-recaptcha", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, action }),
+    });
+    const data = await verifyRes.json();
+    return !!data.ok;
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!checkRateLimit()) return;
@@ -87,20 +100,7 @@ function AuthPage() {
     setVerifyMsg("");
     try {
       if (mode === "signin") {
-        const { executeCaptcha } = await import("@/lib/captcha");
-        const token = await executeCaptcha("signin");
-        if (!token) {
-          toast.error("Verification failed. Please try again.");
-          setBusy(false);
-          return;
-        }
-        const verifyRes = await fetch("/api/verify-recaptcha", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token, action: "signin" }),
-        });
-        const verifyData = await verifyRes.json();
-        if (!verifyData.ok) {
+        if (!(await verifyCaptcha("signin"))) {
           toast.error("Verification failed. Please try again.");
           setBusy(false);
           return;
@@ -190,6 +190,11 @@ function AuthPage() {
   const onGoogle = async () => {
     setBusy(true);
     setPopupBlocked(false);
+    if (!(await verifyCaptcha("google_signin"))) {
+      toast.error("Verification failed. Please try again.");
+      setBusy(false);
+      return;
+    }
     const inNativeApp =
       typeof window !== "undefined" &&
       typeof (window as any).Capacitor?.isNativePlatform === "function" &&
@@ -236,6 +241,11 @@ function AuthPage() {
 
   const onGitHub = async () => {
     setBusy(true);
+    if (!(await verifyCaptcha("github_signin"))) {
+      toast.error("Verification failed. Please try again.");
+      setBusy(false);
+      return;
+    }
     const inNativeApp =
       typeof window !== "undefined" &&
       typeof (window as any).Capacitor?.isNativePlatform === "function" &&
@@ -246,6 +256,7 @@ function AuthPage() {
       try {
         const { signInWithGitHubNative } = await import("@/lib/capacitor-github");
         await signInWithGitHubNative();
+        try { localStorage.setItem("sf:github_prompt", "1"); } catch {}
         try { localStorage.setItem("sf:auth", "1"); } catch {}
         toast.success("Signed in with GitHub.");
         navigate({ to: "/profiles" });
@@ -259,6 +270,7 @@ function AuthPage() {
       const provider = new GithubAuthProvider();
       try {
         await signInWithPopup(auth, provider);
+        try { localStorage.setItem("sf:github_prompt", "1"); } catch {}
         try { localStorage.setItem("sf:auth", "1"); } catch {}
         toast.success("Signed in with GitHub.");
         navigate({ to: "/profiles" });
