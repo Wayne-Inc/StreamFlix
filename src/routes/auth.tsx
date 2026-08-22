@@ -238,17 +238,11 @@ function AuthPage() {
     if (inNativeApp) {
       // Capacitor: native GitHub sign-in via @capacitor-firebase/authentication
       try {
-        const mod = "@capacitor-firebase/authentication";
-        const { FirebaseAuthentication } = await import(mod);
-        const result = await FirebaseAuthentication.signInWithGithub();
-        if (result.credential) {
-          const credential = GithubAuthProvider.credential(result.credential.idToken);
-          await signInWithCredential(auth, credential);
-          toast.success("Signed in with GitHub.");
-          navigate({ to: "/profiles" });
-          return;
-        }
-        toast.error("GitHub sign-in failed: no credential received.");
+        const { signInWithGitHubNative } = await import("@/lib/capacitor-github");
+        await signInWithGitHubNative();
+        toast.success("Signed in with GitHub.");
+        navigate({ to: "/profiles" });
+        return;
       } catch (err: any) {
         toast.error(err?.message ?? "GitHub sign-in failed");
       }
