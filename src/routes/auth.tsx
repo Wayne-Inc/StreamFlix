@@ -238,7 +238,7 @@ function AuthPage() {
     if (inNativeApp) {
       // Capacitor: native GitHub sign-in via @capacitor-firebase/authentication
       try {
-        const { FirebaseAuthentication } = await import("@capacitor-firebase/authentication");
+        const { FirebaseAuthentication } = await import(/* @vite-ignore */ "@capacitor-firebase/authentication");
         const result = await FirebaseAuthentication.signInWithGithub();
         if (result.credential) {
           const credential = GithubAuthProvider.credential(result.credential.idToken);
