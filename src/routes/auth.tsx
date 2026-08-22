@@ -11,7 +11,10 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   GoogleAuthProvider,
+  GithubAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInWithCredential,
   onAuthStateChanged,
   updateProfile as updateFirebaseProfile,
@@ -64,6 +67,23 @@ function AuthPage() {
   // Redirect away if already signed in (use profile chooser), unless a
   // password upgrade is pending.
   useEffect(() => {
+    const inNativeApp =
+      typeof window !== "undefined" &&
+      typeof (window as any).Capacitor?.isNativePlatform === "function" &&
+      (window as any).Capacitor.isNativePlatform();
+
+    // On mobile, handle OAuth redirect results when returning from system browser
+    if (inNativeApp) {
+      getRedirectResult(auth)
+        .then((result) => {
+          if (result?.user) {
+            toast.success(`Signed in with ${result.providerId === "github.com" ? "GitHub" : "Google"}.`);
+            navigate({ to: "/profiles" });
+          }
+        })
+        .catch(() => {});
+    }
+
     const unsub = onAuthStateChanged(auth, (user) => {
       let pending = false;
       try {
@@ -221,6 +241,41 @@ function AuthPage() {
           setPopupBlocked(true);
         } else if (err?.code !== "auth/popup-closed-by-user") {
           toast.error(err?.message ?? "Google sign-in failed");
+        }
+        setBusy(false);
+      }
+    }
+  };
+
+  const onGitHub = async () => {
+    setBusy(true);
+    const inNativeApp =
+      typeof window !== "undefined" &&
+      typeof (window as any).Capacitor?.isNativePlatform === "function" &&
+      (window as any).Capacitor.isNativePlatform();
+
+    if (inNativeApp) {
+      // Capacitor: redirect flow opens system browser, returns via deep link
+      try {
+        const provider = new GithubAuthProvider();
+        await signInWithRedirect(auth, provider);
+        // App suspends; redirect result handled in useEffect on return
+      } catch (err: any) {
+        toast.error(err?.message ?? "GitHub sign-in failed");
+        setBusy(false);
+      }
+    } else {
+      // Web: popup flow
+      const provider = new GithubAuthProvider();
+      try {
+        await signInWithPopup(auth, provider);
+        toast.success("Signed in with GitHub.");
+        navigate({ to: "/profiles" });
+      } catch (err: any) {
+        if (err?.code === "auth/popup-blocked") {
+          setPopupBlocked(true);
+        } else if (err?.code !== "auth/popup-closed-by-user") {
+          toast.error(err?.message ?? "GitHub sign-in failed");
         }
         setBusy(false);
       }
@@ -394,6 +449,13 @@ function AuthPage() {
                 className="mt-4 w-full rounded bg-foreground/10 py-3 font-semibold text-foreground hover:bg-foreground/20 disabled:opacity-60"
               >
                 Continue with Google
+              </button>
+              <button
+                onClick={onGitHub}
+                disabled={busy}
+                className="mt-3 w-full rounded bg-foreground/10 py-3 font-semibold text-foreground hover:bg-foreground/20 disabled:opacity-60"
+              >
+                Continue with GitHub
               </button>
 
               <p className="mt-8 text-muted-foreground">
