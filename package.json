@@ -1,6 +1,6 @@
 {
   "name": "streamflix",
-  "version": "1.0.0",
+  "version": "2.5.0",
   "private": true,
   "main": "electron/main.cjs",
   "sideEffects": false,
@@ -18,6 +18,8 @@
     "electron:build": "vite build && electron-builder"
   },
   "dependencies": {
+    "@capacitor-firebase/authentication": "^8.4.0",
+    "@capacitor/push-notifications": "^8.1.2",
     "@capacitor/share": "^8.0.1",
     "@capawesome/capacitor-google-sign-in": "^0.1.2",
     "@hookform/resolvers": "^5.2.2",

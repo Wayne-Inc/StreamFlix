@@ -96,6 +96,19 @@ export default defineConfig(({ command, mode }): UserConfig => {
       ignoreOutdatedRequests: true,
     },
     plugins: [
+      // Forcefully externalize Capacitor-only native modules so TanStack Start's
+      // build pipeline doesn't try to resolve them on Vercel (web).
+      {
+        name: "externalize-capacitor-native",
+        resolveId(source) {
+          if (
+            source === "@capacitor-firebase/authentication" ||
+            source === "@capacitor/push-notifications"
+          ) {
+            return { id: source, external: true };
+          }
+        },
+      },
       tailwindcss(),
       tsConfigPaths({ projects: ["./tsconfig.json"] }),
       tanstackStart({
@@ -111,7 +124,7 @@ export default defineConfig(({ command, mode }): UserConfig => {
     ],
     build: {
       rollupOptions: {
-        external: ["@capacitor/push-notifications"],
+        external: ["@capacitor/push-notifications", "@capacitor-firebase/authentication"],
         output: {
           manualChunks(id) {
             if (id.includes("node_modules/firebase/") || id.includes("node_modules/@firebase/")) {
