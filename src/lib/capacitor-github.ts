@@ -6,8 +6,9 @@ const FirebaseAuthentication = registerPlugin("FirebaseAuthentication");
 
 export async function signInWithGitHubNative() {
   const result = await FirebaseAuthentication.signInWithGithub();
-  if (result.credential) {
-    const credential = GithubAuthProvider.credential(result.credential.idToken);
+  const token = result.credential?.accessToken ?? result.credential?.idToken;
+  if (token) {
+    const credential = GithubAuthProvider.credential(token);
     await signInWithCredential(auth, credential);
     return true;
   }
