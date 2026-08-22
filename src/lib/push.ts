@@ -1,8 +1,28 @@
-import { getMessaging, getToken, onMessage, isSupported, type Messaging } from "firebase/messaging";
+// Firebase Messaging is an optional runtime dependency in some targets, and
+// its package declaration is not exposed by the installed Firebase typings.
+// @ts-expect-error Firebase Messaging may be unavailable in non-web builds.
+import { getMessaging, getToken, onMessage, isSupported, type Messaging, type MessagePayload } from "firebase/messaging";
+// Firestore is an optional runtime dependency in some targets, and its package
+// declaration is not exposed by the installed Firebase typings.
+// @ts-expect-error Firebase Firestore may be unavailable in non-web builds.
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { toast } from "sonner";
 import { auth, db } from "./firebase";
 import { getDeviceId } from "./device-tracking";
+
+function showPushNotification(
+  title: string,
+  options: { description?: string; duration?: number; action?: { label: string; onClick: () => void } } = {},
+): void {
+  if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+    const notification = new Notification(title, { body: options.description });
+    notification.onclick = options.action?.onClick ?? (() => notification.close());
+    if (options.duration) setTimeout(() => notification.close(), options.duration);
+    return;
+  }
+  console.info(title, options.description ?? "");
+}
+
+const pushError = (message: string): void => showPushNotification("StreamFlix", { description: message });
 
 let messagingPromise: Promise<Messaging | null> | null = null;
 
@@ -61,7 +81,9 @@ export async function checkPushSupport(): Promise<{ ok: boolean; reason?: string
   } catch (e) {
     return { ok: false, reason: `Messaging check failed: ${e}` };
   }
-  const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+  const vapidKey = (import.meta as ImportMeta & {
+    env?: { VITE_FIREBASE_VAPID_KEY?: string };
+  }).env?.VITE_FIREBASE_VAPID_KEY;
   if (!vapidKey) return { ok: false, reason: "VAPID key not configured" };
   return { ok: true };
 }
@@ -97,6 +119,8 @@ async function ensureCapacitorPush(): Promise<PushStatus> {
     return "unavailable";
   }
   try {
+    // Capacitor is an optional target dependency and may not be installed for web builds.
+    // @ts-expect-error The Capacitor plugin is unavailable in non-Capacitor builds.
     const { PushNotifications } = await import("@capacitor/push-notifications");
 
     // Request permission
@@ -113,14 +137,14 @@ async function ensureCapacitorPush(): Promise<PushStatus> {
     return await new Promise<PushStatus>((resolve) => {
       const timeout = setTimeout(() => resolve("unavailable"), 10000);
 
-      PushNotifications.addListener("registration", async (token) => {
+      PushNotifications.addListener("registration", async (token: { value: string }) => {
         clearTimeout(timeout);
         await saveTokenToFirestore(token.value, "android");
         console.log("Capacitor push: Subscription granted");
         resolve("granted");
       });
 
-      PushNotifications.addListener("registrationError", (err) => {
+      PushNotifications.addListener("registrationError", (err: unknown) => {
         clearTimeout(timeout);
         console.error("Capacitor push registration error:", err);
         resolve("unavailable");
@@ -178,7 +202,9 @@ async function ensureWebPush(): Promise<PushStatus> {
     console.warn("Web push: Firebase messaging not available");
     return "unavailable";
   }
-  const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+  const vapidKey = (import.meta as ImportMeta & {
+    env: Record<string, string | undefined>;
+  }).env.VITE_FIREBASE_VAPID_KEY;
   console.log("Web push: vapidKey from env =", vapidKey ? "present" : "null");
   if (!vapidKey) {
     console.warn("Web push: VAPID key not configured");
@@ -256,7 +282,9 @@ async function ensureElectronPush(): Promise<PushStatus> {
     // Try web FCM first (works if service worker is available)
     const messaging = await getMessagingInstance();
     if (messaging) {
-      const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+      const vapidKey = (import.meta as ImportMeta & {
+        env?: { VITE_FIREBASE_VAPID_KEY?: string };
+      }).env?.VITE_FIREBASE_VAPID_KEY;
       if (vapidKey) {
         const token = await getToken(messaging, { vapidKey });
         if (token) {
@@ -300,24 +328,32 @@ export function setupForegroundPush(): void {
 
   // Capacitor handles foreground notifications via native listeners
   if (isCapacitor()) {
+    // The Capacitor plugin is optional in web/Electron builds.
+    // @ts-expect-error The plugin may not be installed for non-Capacitor targets.
     import("@capacitor/push-notifications")
       .then(({ PushNotifications }) => {
-        PushNotifications.addListener("pushNotificationReceived", (notification) => {
-          toast(notification.title ?? "StreamFlix", {
-            description: notification.body ?? "",
-            duration: 6000,
-          });
-        });
-        PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
+        PushNotifications.addListener(
+          "pushNotificationReceived",
+          (notification: { title?: string; body?: string }) => {
+            showPushNotification(notification.title ?? "StreamFlix", {
+              description: notification.body ?? "",
+              duration: 6000,
+            });
+          },
+        );
+        PushNotifications.addListener(
+          "pushNotificationActionPerformed",
+          (action: { notification: { data?: Record<string, string> } }) => {
           const data = action.notification.data;
           if (data?.movie_id) {
             window.location.href = `/movie/${data.movie_id}`;
           }
-        });
+          },
+        );
       })
       .catch((err) => {
         console.error("Failed to setup Capacitor push notifications:", err);
-        toast.error("Failed to setup push notifications");
+        pushError("Failed to setup push notifications");
       });
     return;
   }
@@ -329,12 +365,12 @@ export function setupForegroundPush(): void {
         console.warn("Firebase messaging not available");
         return;
       }
-      onMessage(messaging, (payload) => {
+      onMessage(messaging, (payload: MessagePayload) => {
         const data = payload.data ?? {};
         const title = payload.notification?.title ?? data.title ?? "StreamFlix";
         const body = payload.notification?.body ?? data.body ?? "";
         const movieId = data.movie_id;
-        toast(title, {
+        showPushNotification(title, {
           description: body,
           duration: 6000,
           action: movieId
@@ -350,6 +386,6 @@ export function setupForegroundPush(): void {
     })
     .catch((err) => {
       console.error("Failed to setup Firebase messaging foreground handler:", err);
-      toast.error("Failed to setup push notifications");
+      pushError("Failed to setup push notifications");
     });
 }
