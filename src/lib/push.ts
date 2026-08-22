@@ -130,23 +130,32 @@ async function ensureCapacitorPush(): Promise<PushStatus> {
       return "denied";
     }
 
-    // Register for FCM
-    await PushNotifications.register();
-
-    // Wait for token (the listener fires asynchronously)
+    // Attach listeners before registering so a fast native response is not missed.
     return await new Promise<PushStatus>((resolve) => {
       const timeout = setTimeout(() => resolve("unavailable"), 10000);
 
       PushNotifications.addListener("registration", async (token: { value: string }) => {
         clearTimeout(timeout);
-        await saveTokenToFirestore(token.value, "android");
-        console.log("Capacitor push: Subscription granted");
-        resolve("granted");
+        try {
+          await saveTokenToFirestore(token.value, "android");
+          console.log("Capacitor push: Subscription granted");
+          resolve("granted");
+        } catch (error) {
+          console.error("Capacitor push: Failed to save registration token:", error);
+          resolve("unavailable");
+        }
       });
 
       PushNotifications.addListener("registrationError", (err: unknown) => {
         clearTimeout(timeout);
         console.error("Capacitor push registration error:", err);
+        resolve("unavailable");
+      });
+
+      // Register for FCM after both listeners are ready.
+      PushNotifications.register().catch((error: unknown) => {
+        clearTimeout(timeout);
+        console.error("Capacitor push registration failed:", error);
         resolve("unavailable");
       });
     });
