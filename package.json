@@ -55,7 +55,7 @@
     "@tanstack/react-start": "^1.167.50",
     "@tanstack/router-plugin": "^1.167.28",
     "@vercel/analytics": "^2.0.1",
-    "@vercel/speed-insights": "^2.1.0-canary",
+    "@vercel/speed-insights": "^2.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

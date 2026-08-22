@@ -92,19 +92,13 @@ async function saveTokenToFirestore(token: string, platform: string): Promise<vo
 
 async function ensureCapacitorPush(): Promise<PushStatus> {
   const user = auth.currentUser;
-  if (!user) {
-    console.warn("Capacitor push: No authenticated user");
-    return "unavailable";
-  }
+  if (!user) return "unavailable";
   try {
     const { PushNotifications } = await import("@capacitor/push-notifications");
 
     // Request permission
     const perm = await PushNotifications.requestPermissions();
-    if (perm.receive !== "granted") {
-      console.warn("Capacitor push: Notification permission denied");
-      return "denied";
-    }
+    if (perm.receive !== "granted") return "denied";
 
     // Register for FCM
     await PushNotifications.register();
@@ -116,7 +110,6 @@ async function ensureCapacitorPush(): Promise<PushStatus> {
       PushNotifications.addListener("registration", async (token) => {
         clearTimeout(timeout);
         await saveTokenToFirestore(token.value, "android");
-        console.log("Capacitor push: Subscription granted");
         resolve("granted");
       });
 
@@ -127,131 +120,45 @@ async function ensureCapacitorPush(): Promise<PushStatus> {
       });
     });
   } catch (e) {
-    console.error("Capacitor push: Failed to subscribe:", e);
+    console.error("Capacitor push error:", e);
     return "unavailable";
   }
-}
-
-// Validate VAPID key - pass it through as-is since Firebase SDK should handle the format
-function validateVapidKey(vapidKey: string): string | null {
-  if (!vapidKey) {
-    console.warn("Web push: VAPID key is empty");
-    return null;
-  }
-
-  // Trim whitespace
-  const trimmed = vapidKey.trim();
-  if (!trimmed) {
-    console.warn("Web push: VAPID key is only whitespace");
-    return null;
-  }
-
-  console.log("Web push: VAPID key received:", JSON.stringify(trimmed));
-
-  // Basic validation - check it looks like base64url (the format from Firebase console)
-  // URL-safe base64 alphabet: A-Z, a-z, 0-9, -, _, plus optional padding =
-  const base64urlRegex = /^[A-Za-z0-9\-_]+=*$/;
-  if (!base64urlRegex.test(trimmed)) {
-    console.error("Web push: VAPID key contains invalid characters for base64url:", trimmed);
-    return null;
-  }
-
-  // Check approximate length - VAPID keys are usually around 88 characters
-  if (trimmed.length < 50 || trimmed.length > 200) {
-    console.warn("Web push: VAPID key length seems unusual:", trimmed.length);
-  }
-
-  return trimmed; // Return as-is - Firebase SDK should handle base64url format
 }
 
 async function ensureWebPush(): Promise<PushStatus> {
-  console.log("ensureWebPush called");
   const user = auth.currentUser;
-  console.log("Web push: user =", user ? "present" : "null");
-  if (!user) {
-    console.warn("Web push: No authenticated user");
-    return "unavailable";
-  }
+  if (!user) return "unavailable";
   const messaging = await getMessagingInstance();
-  console.log("Web push: messaging =", messaging ? "present" : "null");
-  if (!messaging) {
-    console.warn("Web push: Firebase messaging not available");
-    return "unavailable";
-  }
+  if (!messaging) return "unavailable";
   const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
-  console.log("Web push: vapidKey from env =", vapidKey ? "present" : "null");
-  if (!vapidKey) {
-    console.warn("Web push: VAPID key not configured");
-    return "no-vapid";
-  }
-
-  // Validate VAPID key (pass through as-is)
-  const validatedVapidKey = validateVapidKey(vapidKey);
-  if (!validatedVapidKey) {
-    console.error("Web push: Failed to validate VAPID key");
-    return "unavailable";
-  }
-
+  if (!vapidKey) return "no-vapid";
   try {
-    if (typeof Notification === "undefined") {
-      console.warn("Web push: Notification API not available");
-      return "unavailable";
-    }
+    if (typeof Notification === "undefined") return "unavailable";
     let permission = Notification.permission;
-    console.log("Web push: Notification.permission =", permission);
     if (permission === "default") {
       permission = await Notification.requestPermission();
-      console.log("Web push: After requestPermission, permission =", permission);
     }
-    if (permission !== "granted") {
-      console.warn("Web push: Notification permission denied");
-      return "denied";
-    }
-
-    console.log("Web push: About to call getToken with VAPID key (as-is from env)");
-    const token = await getToken(messaging, { vapidKey: validatedVapidKey });
-    console.log("Web push: getToken returned:", token ? "token present" : "null/empty");
-    if (!token) {
-      console.warn("Web push: FCM token not available");
-      return "unavailable";
-    }
+    if (permission !== "granted") return "denied";
+    const token = await getToken(messaging, { vapidKey });
+    if (!token) return "unavailable";
     await saveTokenToFirestore(token, "web");
-    console.log("Web push: Subscription granted");
     return "granted";
-  } catch (error: any) {
-    console.error("Web push: Failed to subscribe:", error);
-    console.error("Error details:", error);
-    // Check if it's the specific VAPID key error
-    if (error.message?.includes('applicationServerKey is not valid')) {
-      console.error("Web push: VAPID key validation failed - the key from environment may be incorrect for this Firebase project");
-      console.error("Web push: Please verify that VITE_FIREBASE_VAPID_KEY in your .env matches the key from Firebase Console > Project Settings > Cloud Messaging tab");
-      console.error("Web push: The key should be a base64url-encoded string (no + or / characters, may end with =)");
-      console.error("Web push: You can get the correct key from: Firebase Console → Project Settings → Cloud Messaging tab → Web Push certificates");
-    }
+  } catch {
     return "unavailable";
   }
 }
 
 async function ensureElectronPush(): Promise<PushStatus> {
   const user = auth.currentUser;
-  if (!user) {
-    console.warn("Electron push: No authenticated user");
-    return "unavailable";
-  }
+  if (!user) return "unavailable";
   try {
     // Electron's renderer has the Notification API in packaged builds
-    if (typeof Notification === "undefined") {
-      console.warn("Electron push: Notification API not available");
-      return "unavailable";
-    }
+    if (typeof Notification === "undefined") return "unavailable";
     let permission = Notification.permission;
     if (permission === "default") {
       permission = await Notification.requestPermission();
     }
-    if (permission !== "granted") {
-      console.warn("Electron push: Notification permission denied");
-      return "denied";
-    }
+    if (permission !== "granted") return "denied";
 
     // Try web FCM first (works if service worker is available)
     const messaging = await getMessagingInstance();
@@ -261,7 +168,6 @@ async function ensureElectronPush(): Promise<PushStatus> {
         const token = await getToken(messaging, { vapidKey });
         if (token) {
           await saveTokenToFirestore(token, "electron");
-          console.log("Electron push: Subscription granted via FCM");
           return "granted";
         }
       }
@@ -270,10 +176,8 @@ async function ensureElectronPush(): Promise<PushStatus> {
     // Fallback: save a synthetic token based on device ID so server can track this device
     const syntheticToken = `electron-${getDeviceId()}`;
     await saveTokenToFirestore(syntheticToken, "electron");
-    console.log("Electron push: Subscription granted via synthetic token");
     return "granted";
-  } catch (error) {
-    console.error("Electron push: Failed to subscribe:", error);
+  } catch {
     return "unavailable";
   }
 }
@@ -300,35 +204,27 @@ export function setupForegroundPush(): void {
 
   // Capacitor handles foreground notifications via native listeners
   if (isCapacitor()) {
-    import("@capacitor/push-notifications")
-      .then(({ PushNotifications }) => {
-        PushNotifications.addListener("pushNotificationReceived", (notification) => {
-          toast(notification.title ?? "StreamFlix", {
-            description: notification.body ?? "",
-            duration: 6000,
-          });
+    import("@capacitor/push-notifications").then(({ PushNotifications }) => {
+      PushNotifications.addListener("pushNotificationReceived", (notification) => {
+        toast(notification.title ?? "StreamFlix", {
+          description: notification.body ?? "",
+          duration: 6000,
         });
-        PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
-          const data = action.notification.data;
-          if (data?.movie_id) {
-            window.location.href = `/movie/${data.movie_id}`;
-          }
-        });
-      })
-      .catch((err) => {
-        console.error("Failed to setup Capacitor push notifications:", err);
-        toast.error("Failed to setup push notifications");
       });
+      PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
+        const data = action.notification.data;
+        if (data?.movie_id) {
+          window.location.href = `/movie/${data.movie_id}`;
+        }
+      });
+    }).catch(() => {});
     return;
   }
 
   // Web / Electron: use Firebase Messaging onMessage
   getMessagingInstance()
     .then((messaging) => {
-      if (!messaging) {
-        console.warn("Firebase messaging not available");
-        return;
-      }
+      if (!messaging) return;
       onMessage(messaging, (payload) => {
         const data = payload.data ?? {};
         const title = payload.notification?.title ?? data.title ?? "StreamFlix";
@@ -348,8 +244,5 @@ export function setupForegroundPush(): void {
         });
       });
     })
-    .catch((err) => {
-      console.error("Failed to setup Firebase messaging foreground handler:", err);
-      toast.error("Failed to setup push notifications");
-    });
+    .catch(() => {});
 }
