@@ -133,35 +133,40 @@ async function ensureCapacitorPush(): Promise<PushStatus> {
       return "denied";
     }
 
-    // Attach listeners before registering so a fast native response is not missed.
-    return await new Promise<PushStatus>((resolve) => {
-      const timeout = setTimeout(() => resolve("unavailable"), 10000);
-
-      PushNotifications.addListener("registration", async (token: { value: string }) => {
-        clearTimeout(timeout);
-        try {
-          await saveTokenToFirestore(token.value, "android");
-          console.log("Capacitor push: Subscription granted");
-          resolve("granted");
-        } catch (error) {
-          console.error("Capacitor push: Failed to save registration token:", error);
-          resolve("unavailable");
-        }
-      });
-
-      PushNotifications.addListener("registrationError", (err: unknown) => {
-        clearTimeout(timeout);
-        console.error("Capacitor push registration error:", err);
-        resolve("unavailable");
-      });
-
-      // Register for FCM after both listeners are ready.
-      PushNotifications.register().catch((error: unknown) => {
-        clearTimeout(timeout);
-        console.error("Capacitor push registration failed:", error);
-        resolve("unavailable");
-      });
+    // Wait for listener registration before registering so a fast native response is not missed.
+    let registrationResolve: (status: PushStatus) => void = () => {};
+    const registrationResult = new Promise<PushStatus>((resolve) => {
+      registrationResolve = resolve;
     });
+    const timeout = setTimeout(() => registrationResolve("unavailable"), 10000);
+
+    await PushNotifications.addListener("registration", async (token: { value: string }) => {
+      clearTimeout(timeout);
+      try {
+        await saveTokenToFirestore(token.value, "android");
+        console.log("Capacitor push: Subscription granted");
+        registrationResolve("granted");
+      } catch (error) {
+        console.error("Capacitor push: Failed to save registration token:", error);
+        registrationResolve("unavailable");
+      }
+    });
+
+    await PushNotifications.addListener("registrationError", (err: unknown) => {
+      clearTimeout(timeout);
+      console.error("Capacitor push registration error:", err);
+      registrationResolve("unavailable");
+    });
+
+    try {
+      await PushNotifications.register();
+    } catch (error) {
+      clearTimeout(timeout);
+      console.error("Capacitor push registration failed:", error);
+      registrationResolve("unavailable");
+    }
+
+    return registrationResult;
   } catch (e) {
     console.error("Capacitor push: Failed to subscribe:", e);
     return "unavailable";
