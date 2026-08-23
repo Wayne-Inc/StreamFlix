@@ -70,9 +70,13 @@ async function fetchVidnestStreams(
   const mediaPath = buildVidnestPath(type, tmdbId, season, episode);
   const streams: VidNestStream[] = [];
 
+  console.log("[vidnest] Fetching streams for:", { tmdbId, type, mediaPath });
+
   const results = await Promise.allSettled(
     VIDNEST_RESOLVERS.map(async (resolver) => {
-      const r = await fetch(`https://new.vidnest.fun/${resolver}/${mediaPath}`, {
+      const url = `https://new.vidnest.fun/${resolver}/${mediaPath}`;
+      console.log("[vidnest] Trying resolver:", resolver, url);
+      const r = await fetch(url, {
         headers: {
           "User-Agent": UA,
           Referer: "https://vidnest.fun/",
@@ -80,16 +84,21 @@ async function fetchVidnestStreams(
         },
         signal: AbortSignal.timeout(10000),
       });
+      console.log("[vidnest] Resolver", resolver, "status:", r.status);
       if (r.status !== 200) return [];
 
       const parsed = (await r.json()) as { data?: string };
-      if (!parsed.data) return [];
+      if (!parsed.data) {
+        console.log("[vidnest] Resolver", resolver, "no data field");
+        return [];
+      }
 
       const decoded = decodeVidnestPayload(parsed.data);
       let payload: any;
       try {
         payload = JSON.parse(decoded);
-      } catch {
+      } catch (e) {
+        console.log("[vidnest] Resolver", resolver, "JSON parse error:", e);
         return [];
       }
 
@@ -99,6 +108,8 @@ async function fetchVidnestStreams(
         ...(payload.data?.sources || []),
         ...(payload.sources || []),
       ];
+
+      console.log("[vidnest] Resolver", resolver, "rawStreams count:", rawStreams.length);
 
       const rawDownloads = payload.data?.downloads || [];
       const captions = payload.data?.captions || payload.captions || [];
@@ -140,14 +151,20 @@ async function fetchVidnestStreams(
         });
       }
 
+      console.log("[vidnest] Resolver", resolver, "final streams:", result.length);
       return result;
     }),
   );
 
   for (const r of results) {
-    if (r.status === "fulfilled") streams.push(...r.value);
+    if (r.status === "fulfilled") {
+      streams.push(...r.value);
+    } else {
+      console.log("[vidnest] Resolver promise rejected:", r.reason);
+    }
   }
 
+  console.log("[vidnest] Total streams before probe:", streams.length);
   return streams;
 }
 
