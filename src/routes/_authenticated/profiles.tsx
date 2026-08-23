@@ -29,6 +29,15 @@ import {
 import { getFavoriteGenres, setFavoriteGenres, GENRE_OPTIONS } from "@/lib/favorite-genres";
 import { isKidsProfile } from "@/lib/kids-mode";
 
+function isValidAvatarUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" || parsed.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
 export const Route = createFileRoute("/_authenticated/profiles")({
   beforeLoad: () => {
     if (isKidsProfile()) {
@@ -468,16 +477,6 @@ function ProfileEditor({
   const [kids, setKids] = useState(existing?.kids ?? false);
   const [color, setColor] = useState(existing?.color ?? COLORS[existingCount % COLORS.length]);
   const [avatarUrl, setAvatarUrl] = useState(existing?.avatarUrl ?? "");
-
-  // Validate avatar URL to prevent XSS
-  const isValidAvatarUrl = (url: string): boolean => {
-    try {
-      const parsed = new URL(url);
-      return parsed.protocol === "https:" || parsed.protocol === "http:";
-    } catch {
-      return false;
-    }
-  };
   const [pin, setPin] = useState("");
   const [hasPin, setHasPin] = useState(existing?.hasPin ?? false);
   const [removePinOpen, setRemovePinOpen] = useState(false);
