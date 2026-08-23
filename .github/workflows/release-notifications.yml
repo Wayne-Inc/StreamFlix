@@ -5,9 +5,14 @@ on:
     - cron: "0 8 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   trigger:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Trigger release-notifications cron
         run: |

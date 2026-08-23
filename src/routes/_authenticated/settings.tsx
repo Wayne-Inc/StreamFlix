@@ -28,6 +28,16 @@ import {
   sendEmailVerification,
   sendPasswordResetEmail,
 } from "firebase/auth";
+
+// Validate avatar URL to prevent XSS
+const isValidAvatarUrl = (url: string): boolean => {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" || parsed.protocol === "http:";
+  } catch {
+    return false;
+  }
+};
 import {
   collection,
   query,
@@ -467,12 +477,16 @@ function SettingsPage() {
           ) : (
             <div className="mt-5 flex flex-col sm:flex-row gap-6">
               <div className="flex flex-col items-center gap-3">
-                {avatarUrl ? (
+                {avatarUrl && isValidAvatarUrl(avatarUrl) ? (
                   <img
                     src={avatarUrl}
                     alt=""
                     className="size-24 rounded-full object-cover ring-2 ring-border"
                   />
+                ) : avatarUrl && !isValidAvatarUrl(avatarUrl) ? (
+                  <div className="size-24 rounded-full bg-destructive/10 flex items-center justify-center text-xs text-destructive">
+                    Invalid URL
+                  </div>
                 ) : googlePhotoURL && (profile?.show_google_pfp ?? true) ? (
                   <img
                     src={googlePhotoURL}

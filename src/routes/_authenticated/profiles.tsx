@@ -261,7 +261,7 @@ function ProfilesPage() {
                   <div
                     className={`relative size-28 overflow-hidden rounded-lg transition-all group-hover:ring-4 group-hover:ring-foreground sm:size-32 ${p.avatarUrl ? "" : `bg-gradient-to-br ${p.color}`}`}
                   >
-                    {p.avatarUrl ? (
+                    {p.avatarUrl && isValidAvatarUrl(p.avatarUrl) ? (
                       <img src={p.avatarUrl} alt="" className="size-full object-cover" />
                     ) : (
                       <span className="grid size-full place-items-center text-2xl font-black text-white/90 sm:text-5xl">
@@ -468,6 +468,16 @@ function ProfileEditor({
   const [kids, setKids] = useState(existing?.kids ?? false);
   const [color, setColor] = useState(existing?.color ?? COLORS[existingCount % COLORS.length]);
   const [avatarUrl, setAvatarUrl] = useState(existing?.avatarUrl ?? "");
+
+  // Validate avatar URL to prevent XSS
+  const isValidAvatarUrl = (url: string): boolean => {
+    try {
+      const parsed = new URL(url);
+      return parsed.protocol === "https:" || parsed.protocol === "http:";
+    } catch {
+      return false;
+    }
+  };
   const [pin, setPin] = useState("");
   const [hasPin, setHasPin] = useState(existing?.hasPin ?? false);
   const [removePinOpen, setRemovePinOpen] = useState(false);
@@ -591,12 +601,16 @@ function ProfileEditor({
         </div>
 
         <div className="mt-6 flex flex-col items-center gap-4 sm:flex-row">
-          {avatarUrl ? (
+          {avatarUrl && isValidAvatarUrl(avatarUrl) ? (
             <img
               src={avatarUrl}
               alt=""
               className="size-20 rounded-lg object-cover ring-2 ring-border"
             />
+          ) : avatarUrl && !isValidAvatarUrl(avatarUrl) ? (
+            <div className="text-xs text-destructive mb-2">
+              Invalid URL — must start with http:// or https://
+            </div>
           ) : (
             <div
               className={`grid size-20 place-items-center rounded-lg bg-gradient-to-br ${color} text-3xl font-black text-white/90`}
