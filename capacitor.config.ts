@@ -31,10 +31,6 @@ const config: CapacitorConfig = {
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert", "banner", "list"],
     },
-    AppCheck: {
-      provider: "playintegrity",
-      isTokenAutoRefreshEnabled: true,
-    },
   },
 };
 
