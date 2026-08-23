@@ -1,8 +1,21 @@
-import { importPKCS8, SignJWT } from "jose";
+// import { importPKCS8, SignJWT } from "jose";
 
 const SCOPES = "https://www.googleapis.com/auth/datastore https://www.googleapis.com/auth/firebase.messaging";
 
-let cachedToken: { token: string; expires: number } | null = null;
+async function pkcs8PemToCryptoKey(pem: string): Promise<CryptoKey> {
+  const pemContents = pem
+    .replace(/-----BEGIN PRIVATE KEY-----/, "")
+    .replace(/-----END PRIVATE KEY-----/, "")
+    .replace(/\s/g, "");
+  const binary = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0));
+  return crypto.subtle.importKey(
+    "pkcs8",
+    binary,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+}
 
 async function getAccessToken(): Promise<string> {
   const now = Date.now();
@@ -12,7 +25,7 @@ async function getAccessToken(): Promise<string> {
   const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
   if (!clientEmail || !privateKey) throw new Error("Missing FIREBASE_CLIENT_EMAIL or FIREBASE_PRIVATE_KEY");
 
-  const key = await importPKCS8(privateKey, "RS256");
+  const key = await pkcs8PemToCryptoKey(privateKey);
   const iat = Math.floor(now / 1000);
   const jwt = await new SignJWT({
     iss: clientEmail,
