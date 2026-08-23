@@ -103,6 +103,20 @@ export async function initMobileApp(): Promise<void> {
     // plugin unavailable — ignore
   }
 
+  // Initialize Firebase App Check with Play Integrity for Android
+  try {
+    const { AppCheck } = cap as any;
+    if (AppCheck?.initialize) {
+      await AppCheck.initialize({
+        provider: "playintegrity",
+        isTokenAutoRefreshEnabled: true,
+      });
+      console.log("[AppCheck] Play Integrity initialized");
+    }
+  } catch (e) {
+    console.warn("[AppCheck] Play Integrity initialization failed:", e);
+  }
+
   if (typeof window !== "undefined") {
     window.addEventListener("pip-mode-changed", ((e: CustomEvent) => {
       document.body.classList.toggle("pip-active", e.detail === true);

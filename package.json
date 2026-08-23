@@ -18,6 +18,7 @@
     "electron:build": "vite build && electron-builder"
   },
   "dependencies": {
+    "@capacitor-firebase/app-check": "^8.4.0",
     "@capacitor-firebase/authentication": "^8.4.0",
     "@capacitor/push-notifications": "^8.1.2",
     "@capacitor/share": "^8.0.1",
