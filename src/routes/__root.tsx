@@ -197,6 +197,24 @@ function RootComponent() {
       document.body.classList.add("electron-app");
     }
     registerSW();
+
+    const handleExternalLink = async (e: MouseEvent) => {
+      const anchor = (e.target as HTMLElement).closest("a[href]");
+      if (!anchor) return;
+      const href = anchor.getAttribute("href");
+      if (!href || !href.startsWith("http")) return;
+      const origin = window.location.origin;
+      if (href.startsWith(origin)) return;
+      e.preventDefault();
+      try {
+        const { Browser } = await import("@capacitor/browser");
+        await Browser.open({ url: href, toolbarColor: "#09090b", presentationStyle: "popover" });
+      } catch {
+        window.location.href = href;
+      }
+    };
+    document.addEventListener("click", handleExternalLink, true);
+
     const unsub = onAuthStateChanged(auth, (user) => {
       try {
         if (user) {
@@ -254,6 +272,7 @@ function RootComponent() {
     window.addEventListener("online", handleOnline);
     return () => {
       unsub();
+      document.removeEventListener("click", handleExternalLink, true);
       window.removeEventListener("offline", handleOffline);
       window.removeEventListener("online", handleOnline);
     };

@@ -6,6 +6,7 @@ import {
   X,
   Lock,
   Upload,
+  Github,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -67,6 +68,16 @@ function ProfilesPage() {
   const [onboardBusy, setOnboardBusy] = useState(false);
   const [bgSlides, setBgSlides] = useState<string[]>([]);
   const [bgIdx, setBgIdx] = useState(0);
+  const [showGithubPrompt, setShowGithubPrompt] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("sf:github_prompt") === "1") {
+        setShowGithubPrompt(true);
+        localStorage.removeItem("sf:github_prompt");
+      }
+    } catch {}
+  }, []);
 
   useEffect(() => {
     const u = auth.currentUser;
@@ -403,6 +414,35 @@ function ProfilesPage() {
                   {onboardBusy ? "Saving…" : "Continue"}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showGithubPrompt && (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-black/80 p-4">
+          <div className="w-full max-w-md rounded-lg bg-card p-6 shadow-2xl sm:p-8 text-center">
+            <Github className="mx-auto size-12 text-foreground mb-4" />
+            <h2 className="text-xl font-semibold">Join our GitHub community</h2>
+            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+              StreamFlix is open source! Join our GitHub organisation to contribute, report bugs, and help shape the project.
+            </p>
+            <div className="mt-6 flex flex-col gap-2">
+              <a
+                href="https://github.com/Wayne-Inc"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setShowGithubPrompt(false)}
+                className="rounded bg-foreground px-4 py-2.5 text-sm font-semibold text-background transition-colors hover:bg-foreground/90"
+              >
+                Join Wayne-Inc on GitHub
+              </a>
+              <button
+                onClick={() => setShowGithubPrompt(false)}
+                className="rounded border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-accent"
+              >
+                Maybe later
+              </button>
             </div>
           </div>
         </div>
