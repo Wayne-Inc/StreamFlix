@@ -96,6 +96,7 @@ function SettingsPage() {
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>("default");
   const [notifBusy, setNotifBusy] = useState(false);
   const [hasToken, setHasToken] = useState(false);
+  const [verifyEmailSent, setVerifyEmailSent] = useState(false);
   const isElectron = typeof window !== "undefined" && !!window.electronAPI;
 
   useEffect(() => {
@@ -209,6 +210,12 @@ function SettingsPage() {
 
   const useGooglePfp = async () => {
     if (!googlePhotoURL || !user) return;
+    const prevProfile = qc.getQueryData<Profile>(["profile", user.uid]);
+    const prevAvatarUrl = avatarUrl;
+    setAvatarUrl(googlePhotoURL);
+    qc.setQueryData<Profile>(["profile", user.uid], (old) =>
+      old ? { ...old, avatar_url: googlePhotoURL, show_google_pfp: true } : old,
+    );
     setSavingName(true);
     try {
       await setDoc(
@@ -220,10 +227,11 @@ function SettingsPage() {
         },
         { merge: true },
       );
-      setAvatarUrl(googlePhotoURL);
       toast.success("Avatar updated to Google profile picture");
       qc.invalidateQueries({ queryKey: ["profile"] });
     } catch (err: any) {
+      setAvatarUrl(prevAvatarUrl);
+      if (prevProfile) qc.setQueryData(["profile", user.uid], prevProfile);
       toast.error(err.message);
     }
     setSavingName(false);
@@ -231,6 +239,12 @@ function SettingsPage() {
 
   const removeAvatar = async () => {
     if (!user) return;
+    const prevProfile = qc.getQueryData<Profile>(["profile", user.uid]);
+    const prevAvatarUrl = avatarUrl;
+    setAvatarUrl("");
+    qc.setQueryData<Profile>(["profile", user.uid], (old) =>
+      old ? { ...old, avatar_url: "", show_google_pfp: false } : old,
+    );
     setSavingName(true);
     try {
       await setDoc(
@@ -242,10 +256,11 @@ function SettingsPage() {
         },
         { merge: true },
       );
-      setAvatarUrl("");
       toast.success("Avatar removed");
       qc.invalidateQueries({ queryKey: ["profile"] });
     } catch (err: any) {
+      setAvatarUrl(prevAvatarUrl);
+      if (prevProfile) qc.setQueryData(["profile", user.uid], prevProfile);
       toast.error(err.message);
     }
     setSavingName(false);
@@ -358,12 +373,17 @@ function SettingsPage() {
 
   const saveName = async () => {
     if (!user || !displayName.trim()) return;
+    const trimmed = displayName.trim();
+    const prevProfile = qc.getQueryData<Profile>(["profile", user.uid]);
+    qc.setQueryData<Profile>(["profile", user.uid], (old) =>
+      old ? { ...old, display_name: trimmed } : old,
+    );
     setSavingName(true);
     try {
       await setDoc(
         doc(db, "profiles", user.uid),
         {
-          display_name: displayName.trim(),
+          display_name: trimmed,
           updated_at: serverTimestamp(),
         },
         { merge: true },
@@ -371,6 +391,7 @@ function SettingsPage() {
       toast.success("Profile updated");
       qc.invalidateQueries({ queryKey: ["profile"] });
     } catch (err: any) {
+      if (prevProfile) qc.setQueryData(["profile", user.uid], prevProfile);
       toast.error(err.message);
     }
     setSavingName(false);
@@ -522,16 +543,19 @@ function SettingsPage() {
                       <button
                         onClick={async () => {
                           if (!user) return;
+                          setVerifyEmailSent(true);
                           try {
                             await sendEmailVerification(user);
                             toast.success("Verification email sent.");
                           } catch (e: any) {
+                            setVerifyEmailSent(false);
                             toast.error(e.message);
                           }
                         }}
-                        className="ml-auto shrink-0 rounded-md border border-border px-2 py-0.5 text-[10px] hover:bg-accent whitespace-nowrap"
+                        disabled={verifyEmailSent}
+                        className="ml-auto shrink-0 rounded-md border border-border px-2 py-0.5 text-[10px] hover:bg-accent whitespace-nowrap disabled:opacity-50"
                       >
-                        Verify email
+                        {verifyEmailSent ? "Email sent" : "Verify email"}
                       </button>
                     )}
                   </div>
@@ -810,6 +834,10 @@ function SettingsPage() {
               <button
                 onClick={async () => {
                   if (notifBusy) return;
+                  const prevHasToken = hasToken;
+                  const prevNotifPermission = notifPermission;
+                  setHasToken(true);
+                  setNotifPermission("granted");
                   setNotifBusy(true);
                   try {
                     const { ensurePushSubscription } = await import("@/lib/push");
@@ -820,17 +848,23 @@ function SettingsPage() {
                         setNotifPermission(Notification.permission);
                       }
                       toast.success("Notifications enabled!");
-                    } else if (status === "denied") {
-                      if (typeof Notification !== "undefined") {
-                        setNotifPermission(Notification.permission);
-                      }
-                      toast.error("Permission denied — enable in browser settings");
-                    } else if (status === "no-vapid") {
-                      toast.error("Push not configured on this server");
                     } else {
-                      toast.error("Notifications unavailable on this device");
+                      setHasToken(prevHasToken);
+                      setNotifPermission(prevNotifPermission);
+                      if (status === "denied") {
+                        if (typeof Notification !== "undefined") {
+                          setNotifPermission(Notification.permission);
+                        }
+                        toast.error("Permission denied — enable in browser settings");
+                      } else if (status === "no-vapid") {
+                        toast.error("Push not configured on this server");
+                      } else {
+                        toast.error("Notifications unavailable on this device");
+                      }
                     }
                   } catch {
+                    setHasToken(prevHasToken);
+                    setNotifPermission(prevNotifPermission);
                     toast.error("Failed to enable notifications");
                   } finally {
                     setNotifBusy(false);
