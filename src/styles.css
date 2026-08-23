@@ -69,6 +69,7 @@
   #root {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    overflow-x: clip;
     font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
   body {

@@ -5,14 +5,9 @@ const config: CapacitorConfig = {
   appName: "StreamFlix",
   webDir: "dist",
   server: {
-    // StreamFlix is a server-rendered app, so the native shell loads the live
-    // site (same as the Electron production build). The Android WebView shares
-    // cookies/storage with the origin so auth and preferences persist.
+    // The SSR app is served from the deployed site in the native shell.
     url: "https://streamflix.dpdns.org/",
     cleartext: false,
-    // Present a normal mobile-Chrome UA so Google's OAuth page does not flag
-    // the embedded WebView as an insecure browser ("This browser or app may
-    // not be secure") — mirrors the Electron UA stripping in electron/main.cjs.
     overrideUserAgent:
       "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36",
   },
@@ -31,7 +26,10 @@ const config: CapacitorConfig = {
       style: "DARK",
     },
     FirebaseAuthentication: {
-      providers: ["github.com"],
+      providers: ["github.com", "google.com"],
+    },
+    PushNotifications: {
+      presentationOptions: ["badge", "sound", "alert", "banner", "list"],
     },
   },
 };

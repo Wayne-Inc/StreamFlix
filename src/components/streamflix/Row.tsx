@@ -126,8 +126,8 @@ export function Row({
         )}
         <div
           ref={scrollerRef}
-          className="scrollbar-thin flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth px-4 sm:px-8 pb-4 sm:pb-10"
-          style={{ WebkitOverflowScrolling: "touch", overscrollBehaviorX: "contain" }}
+          className="scrollbar-thin flex min-w-0 touch-pan-x gap-4 overflow-x-auto overscroll-x-contain scroll-smooth px-4 sm:gap-6 sm:px-8 pb-4 sm:pb-10"
+          style={{ WebkitOverflowScrolling: "touch" }}
         >
           {padStart > 0 && <div aria-hidden style={{ width: padStart }} className="shrink-0" />}
           {visible.map((m) => (

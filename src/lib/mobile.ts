@@ -84,8 +84,8 @@ export async function initMobileApp(): Promise<void> {
   const cap = window.Capacitor?.Plugins;
 
   try {
-    await cap?.StatusBar?.setOverlaysWebView({ overlay: false });
-    await cap?.StatusBar?.setBackgroundColor({ color: "#09090b" });
+    await cap?.StatusBar?.setOverlaysWebView({ overlay: true });
+    await cap?.StatusBar?.setBackgroundColor({ color: "#00000000" });
     await cap?.StatusBar?.setStyle({ style: 1 }); // Style.Dark
   } catch {
     // plugin unavailable — ignore
