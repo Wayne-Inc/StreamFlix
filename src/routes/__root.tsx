@@ -202,9 +202,13 @@ function RootComponent() {
       const anchor = (e.target as HTMLElement).closest("a[href]");
       if (!anchor) return;
       const href = anchor.getAttribute("href");
-      if (!href || !href.startsWith("http")) return;
+      if (!href) return;
+      // Handle mailto: links and external http/https links
+      const isMailto = href.startsWith("mailto:");
+      const isExternalHttp = href.startsWith("http");
       const origin = window.location.origin;
-      if (href.startsWith(origin)) return;
+      if (isExternalHttp && href.startsWith(origin)) return;
+      if (!isMailto && !isExternalHttp) return;
       e.preventDefault();
       try {
         const { Browser } = await import("@capacitor/browser");
