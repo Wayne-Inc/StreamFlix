@@ -845,9 +845,11 @@ function PlayerPage() {
       try {
         const tmdbId = movie.id.startsWith("tv-") ? movie.id.slice(3) : movie.id;
         const type = movie.id.startsWith("tv-") ? "tv" : "movie";
+        console.log("[direct] Requesting streams for:", { tmdbId, type, season, episode });
         const result = await resolveVidNestStreams({
           data: { id: tmdbId, type, season, episode },
         });
+        console.log("[direct] Response:", result);
         if (cancelled) return;
         if (result.streams.length === 0) {
           setDirectError("No direct streams found for this title.");
@@ -855,6 +857,7 @@ function PlayerPage() {
           setDirectStreams(result.streams);
         }
       } catch (e: any) {
+        console.error("[direct] Error:", e);
         if (!cancelled) setDirectError(e?.message || "Failed to load streams.");
       } finally {
         if (!cancelled) setDirectLoading(false);
@@ -867,6 +870,7 @@ function PlayerPage() {
 
   const playDirectStream = useCallback(
     (stream: VidNestStream, index: number) => {
+      console.log("[direct] Playing stream:", { index, url: stream.url, type: stream.type, language: stream.language, resolver: stream.resolver });
       destroyHls();
       setActiveDirectStream(index);
       setDirectPlaying(true);
@@ -882,6 +886,7 @@ function PlayerPage() {
 
       if (stream.type === "hls") {
         const proxiedUrl = proxyBase + "?url=" + encodeURIComponent(stream.url) + (stream.referer ? "&referer=" + encodeURIComponent(stream.referer) : "");
+        console.log("[direct] Proxied URL:", proxiedUrl);
 
         if (video.canPlayType("application/vnd.apple.mpegurl")) {
           video.src = proxiedUrl;
@@ -908,10 +913,12 @@ function PlayerPage() {
             hls.loadSource(proxiedUrl);
             hls.attachMedia(video);
             hls.on(Hls.Events.MANIFEST_PARSED, () => {
+              console.log("[direct] HLS manifest parsed, playing");
               setDirectBuffering(false);
               video.play().catch(() => {});
             });
             hls.on(Hls.Events.ERROR, (_: any, data: any) => {
+              console.log("[direct] HLS error:", data);
               if (data.fatal) {
                 console.log("[direct] HLS fatal error, trying next stream");
                 destroyHls();
@@ -922,6 +929,7 @@ function PlayerPage() {
         }
       } else {
         const src = stream.url;
+        console.log("[direct] Direct MP4 URL:", src);
         video.src = src;
       }
 
@@ -1120,19 +1128,34 @@ function PlayerPage() {
                 setDirectPlayingState(!e.currentTarget.paused);
               }}
               onLoadedMetadata={(e) => {
+                console.log("[direct] Video loadedmetadata, duration:", e.currentTarget.duration);
                 setDirectDuration(e.currentTarget.duration);
                 setDirectBuffering(false);
               }}
-              onCanPlay={() => setDirectBuffering(false)}
-              onWaiting={() => setDirectBuffering(true)}
+              onCanPlay={() => {
+                console.log("[direct] Video canplay");
+                setDirectBuffering(false);
+              }}
+              onWaiting={() => {
+                console.log("[direct] Video waiting");
+                setDirectBuffering(true);
+              }}
               onPlaying={() => {
+                console.log("[direct] Video playing");
                 setDirectBuffering(false);
                 setDirectPlayingState(true);
               }}
-              onPause={() => setDirectPlayingState(false)}
+              onPause={() => {
+                console.log("[direct] Video pause");
+                setDirectPlayingState(false);
+              }}
               onEnded={() => {
+                console.log("[direct] Video ended");
                 setDirectEnded(true);
                 if (autoplayNext && isTv && nextEp) goToNextEpisode();
+              }}
+              onError={(e) => {
+                console.error("[direct] Video error:", e.currentTarget.error);
               }}
               onVolumeChange={(e) => {
                 setDirectVolume(e.currentTarget.volume);
