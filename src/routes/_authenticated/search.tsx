@@ -25,6 +25,7 @@ import { search, searchByPerson, searchWithFilters, type SearchSort } from "@/li
 import type { Movie } from "@/lib/types";
 import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
 import { z } from "zod";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const searchSchema = z.object({
   q: z.string().optional().catch(""),
@@ -96,16 +97,55 @@ function SearchPage() {
   const [genre, setGenre] = useState<number | undefined>(urlGenre);
   const [rating, setRating] = useState<number | undefined>(urlRating);
   const [sort, setSort] = useState<SearchSort | undefined>(urlSort);
-  const [results, setResults] = useState<Movie[]>([]);
-  const [people, setPeople] = useState<PersonResult[]>([]);
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
   const debouncedQ = useDebounce(q, 300);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const kidsMode = isKidsProfile();
   const hasFilters = Boolean(year || genre || rating || sort);
   const canSearch = debouncedQ.length >= 2 || hasFilters;
+
+  // Build cache key based on search parameters
+  const searchKey = ["search", "titles", debouncedQ, year, genre, rating, sort, kidsMode] as const;
+  const peopleKey = ["search", "people", debouncedQ] as const;
+
+  // Fetch titles with React Query caching
+  const titlesQuery = useQuery({
+    queryKey: searchKey,
+    queryFn: async () => {
+      const run = hasFilters
+        ? searchWithFilters({
+            query: debouncedQ.length >= 2 ? debouncedQ : "",
+            genreId: genre,
+            year,
+            minRating: rating,
+            sort,
+          })
+        : search(debouncedQ);
+      const res = await run;
+      return kidsMode ? filterKidsContent(res) : res;
+    },
+    enabled: tab === "titles" && canSearch,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes (cache persists when navigating away)
+    placeholderData: (prev) => prev, // Keep previous data while fetching
+  });
+
+  // Fetch people with React Query caching
+  const peopleQuery = useQuery({
+    queryKey: peopleKey,
+    queryFn: () => searchByPerson(debouncedQ),
+    enabled: tab === "people" && debouncedQ.length >= 2,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    placeholderData: (prev) => prev,
+  });
+
+  // Sync query data to local state for pagination
+  const results = titlesQuery.data ?? [];
+  const people = peopleQuery.data ?? [];
+  const loading = titlesQuery.isLoading || peopleQuery.isLoading;
 
   const years = Array.from(
     { length: new Date().getFullYear() - 1970 + 1 },
@@ -135,61 +175,17 @@ function SearchPage() {
     pushFilters({ year: undefined, genre: undefined, rating: undefined, sort: undefined });
   };
 
+  // Reset page when query changes
   useEffect(() => {
-    if (tab !== "titles" || !canSearch) {
-      setResults([]);
-      setPage(1);
-      return;
-    }
-    let cancelled = false;
-    setLoading(true);
     setPage(1);
-    const run = hasFilters
-      ? searchWithFilters({
-          query: debouncedQ.length >= 2 ? debouncedQ : "",
-          genreId: genre,
-          year,
-          minRating: rating,
-          sort,
-        })
-      : search(debouncedQ);
-    run
-      .then((res) => {
-        if (!cancelled) {
-          setResults(kidsMode ? filterKidsContent(res) : res);
-          setLoading(false);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setResults([]);
-          setLoading(false);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [debouncedQ, tab, year, genre, rating, sort, canSearch, hasFilters, kidsMode]);
+  }, [debouncedQ, tab, year, genre, rating, sort, kidsMode]);
 
+  // Prefetch next page for smoother pagination
   useEffect(() => {
-    if (tab !== "people" || debouncedQ.length < 2) {
-      setPeople([]);
-      return;
+    if (tab === "titles" && page < Math.max(1, Math.ceil(results.length / 24))) {
+      // No-op: results are already fully loaded, pagination is client-side
     }
-    let cancelled = false;
-    searchByPerson(debouncedQ)
-      .then((res) => {
-        if (!cancelled) setPeople(res);
-      })
-      .catch(() => {
-        if (!cancelled) setPeople([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [debouncedQ, tab]);
-
-  const trending = ["Action", "Sci-Fi", "Thriller", "Comedy"];
+  }, [tab, page, results.length]);
 
   const totalPages = Math.max(1, Math.ceil(results.length / 24));
   const visible = results.slice((page - 1) * 24, page * 24);

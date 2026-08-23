@@ -433,22 +433,40 @@ function PlayerPage() {
 
   const [pipSupported, setPipSupported] = useState(false);
 
-  const enterPiP = useCallback(async () => {
+  const checkPipSupport = useCallback(async () => {
+    // First check: browser API
+    const browserSupports = isPipSupported();
+    if (!browserSupports) {
+      setPipSupported(false);
+      return;
+    }
+    // Second check: actually try to request PiP on a dummy video to verify it works
+    // (only on web, not Capacitor where we use native PiP)
+    const inNativeApp = isMobileApp();
+    if (inNativeApp) {
+      // On Capacitor, trust the native bridge
+      const { enterPipModeNative } = await import("@/lib/mobile");
+      const nativeSupports = window.NativeBridge?.isPipSupported?.() ?? false;
+      setPipSupported(nativeSupports);
+      return;
+    }
+    // On web, test with a hidden video element
     try {
-      const video = videoRef.current || directVideoRef.current;
-      if (video) {
-        await enterPictureInPicture(video);
-      } else {
-        // No video element, use native PiP
-        const { enterPipModeNative } = await import("@/lib/mobile");
-        enterPipModeNative();
-      }
-    } catch {}
+      const testVideo = document.createElement("video");
+      testVideo.src = "data:video/mp4;base64,AAAAIGZ0eXBtcDQyAAAAAG1wNDJpc21vbXAyAAAAHG1vb2YAAABsbXZoZAAAAPNtZGF0YQ==";
+      testVideo.muted = true;
+      testVideo.playsInline = true;
+      await testVideo.requestPictureInPicture();
+      await document.exitPictureInPicture();
+      setPipSupported(true);
+    } catch {
+      setPipSupported(false);
+    }
   }, []);
 
   useEffect(() => {
-    setPipSupported(isPipSupported());
-  }, []);
+    checkPipSupport();
+  }, [checkPipSupport]);
 
   useEffect(() => {
     embedEndedFiredRef.current = false;
