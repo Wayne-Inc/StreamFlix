@@ -77,6 +77,8 @@
     -webkit-user-select: none;
     user-select: none;
     -webkit-user-drag: none;
+    /* Safe area insets for edge-to-edge display */
+    padding-bottom: env(safe-area-inset-bottom, 0);
   }
   body input,
   body textarea,

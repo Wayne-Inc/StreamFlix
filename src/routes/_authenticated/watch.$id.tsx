@@ -386,16 +386,27 @@ function PlayerPage() {
     }
   }, []);
 
+  // Helper to extract quality number from stream language (e.g., "1080p" -> 1080)
+  const getStreamQuality = useCallback((stream: VidNestStream): number => {
+    const match = stream.language.match(/(\d+)p/i);
+    return match ? parseInt(match[1], 10) : 0;
+  }, []);
+
   const tryNextDirect = useCallback(() => {
-    const next = activeDirectStream + 1;
-    if (next < directStreams.length && !triedDirectRef.current.has(activeDirectStream)) {
+    // Sort untried streams by quality (highest first)
+    const untried = directStreams
+      .map((s, i) => ({ stream: s, index: i, quality: getStreamQuality(s) }))
+      .filter(({ index }) => !triedDirectRef.current.has(index))
+      .sort((a, b) => b.quality - a.quality);
+
+    if (untried.length > 0) {
       triedDirectRef.current.add(activeDirectStream);
-      setActiveDirectStream(next);
+      setActiveDirectStream(untried[0].index);
     } else {
       setDirectEnded(true);
       toast.error("All direct streams failed.");
     }
-  }, [activeDirectStream, directStreams.length]);
+  }, [activeDirectStream, directStreams, getStreamQuality]);
 
   const handleServerSelect = useCallback((id: string) => {
     setSelectedServerId(id);
@@ -499,8 +510,10 @@ function PlayerPage() {
   const wake = useCallback(() => {
     setShowControls(true);
     if (hideTimer.current) window.clearTimeout(hideTimer.current);
-    hideTimer.current = window.setTimeout(() => setShowControls(false), 3000);
-  }, []);
+    if (!showSettings) {
+      hideTimer.current = window.setTimeout(() => setShowControls(false), 3000);
+    }
+  }, [showSettings]);
 
   const handleWakeTap = useCallback(
     (event: MouseEvent<HTMLButtonElement> | TouchEvent<HTMLButtonElement>) => {
@@ -932,12 +945,14 @@ function PlayerPage() {
   const directWake = useCallback(() => {
     setDirectShowControls(true);
     if (directHideTimer.current) window.clearTimeout(directHideTimer.current);
-    directHideTimer.current = window.setTimeout(() => {
-      if (directVideoRef.current && !directVideoRef.current.paused) {
-        setDirectShowControls(false);
-      }
-    }, 4000);
-  }, []);
+    if (!showSettings) {
+      directHideTimer.current = window.setTimeout(() => {
+        if (directVideoRef.current && !directVideoRef.current.paused) {
+          setDirectShowControls(false);
+        }
+      }, 4000);
+    }
+  }, [showSettings]);
 
   useEffect(() => {
     return () => {
@@ -1390,6 +1405,45 @@ function PlayerPage() {
                     <div className="mb-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/80">
                       {selectedServer.name}
                     </div>
+                    {isDirect && directStreams.length > 0 && (
+                      <div className="mb-3">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/50">
+                          Quality
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {directStreams.map((stream, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => playDirectStream(stream, idx)}
+                              className={`rounded px-3 py-1.5 text-xs transition ${
+                                idx === activeDirectStream
+                                  ? "bg-white/20 text-white"
+                                  : "text-white/60 hover:bg-white/10 hover:text-white"
+                              }`}
+                            >
+                              {stream.language || (stream.type === "mp4" ? "MP4" : "HLS")}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {isDirect && directEnded && (
+                      <div className="mb-3">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/50">
+                          Error
+                        </p>
+                        <button
+                          onClick={() => {
+                            setDirectEnded(false);
+                            setDirectStreams([]);
+                            handleServerSelect("direct");
+                          }}
+                          className="w-full rounded px-3 py-1.5 text-xs bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition"
+                        >
+                          Retry Direct Streams
+                        </button>
+                      </div>
+                    )}
                     {isTv && (
                       <div className="mb-3 flex items-center justify-between gap-3">
                         <div>

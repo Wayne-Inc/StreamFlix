@@ -37,7 +37,7 @@ export function ReleaseReminderBanner() {
   if (!due || due.length === 0) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 z-40 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 rounded-2xl border border-primary/40 bg-card/95 p-4 shadow-2xl backdrop-blur">
+    <div className="fixed bottom-4 left-1/2 z-40 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 rounded-2xl border border-primary/40 bg-card/95 p-4 shadow-2xl backdrop-blur pb-[env(safe-area-inset-bottom)]">
       <button
         onClick={() => setDue(null)}
         aria-label="Dismiss"

@@ -451,7 +451,7 @@ export function Navbar() {
         </div>
       </div>
       {mobileNavOpen && (
-        <div className="md:hidden mx-4 mb-4 rounded-2xl border border-border bg-background/95 backdrop-blur py-4 px-4 animate-fade-in shadow-2xl">
+        <div className="md:hidden mx-4 mb-4 rounded-2xl border border-border bg-background/95 backdrop-blur py-4 px-4 animate-fade-in shadow-2xl pb-[env(safe-area-inset-bottom)]">
           <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
             Browse
           </p>

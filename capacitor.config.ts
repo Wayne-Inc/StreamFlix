@@ -22,7 +22,7 @@ const config: CapacitorConfig = {
   },
   plugins: {
     StatusBar: {
-      overlaysWebView: false,
+      overlaysWebView: true,
       style: "DARK",
     },
     FirebaseAuthentication: {
