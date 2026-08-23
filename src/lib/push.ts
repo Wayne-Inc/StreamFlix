@@ -8,6 +8,7 @@ import { getMessaging, getToken, onMessage, isSupported, type Messaging, type Me
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "./firebase";
 import { getDeviceId } from "./device-tracking";
+import { toast } from "sonner";
 
 function showPushNotification(
   title: string,
@@ -19,7 +20,13 @@ function showPushNotification(
     if (options.duration) setTimeout(() => notification.close(), options.duration);
     return;
   }
-  console.info(title, options.description ?? "");
+  toast(title, {
+    description: options.description,
+    duration: options.duration ?? 6000,
+    action: options.action
+      ? { label: options.action.label, onClick: options.action.onClick }
+      : undefined,
+  });
 }
 
 const pushError = (message: string): void => showPushNotification("StreamFlix", { description: message });
