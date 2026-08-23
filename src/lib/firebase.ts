@@ -1,7 +1,6 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, connectAuthEmulator } from "firebase/auth";
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
-import { initializeAppCheck, ReCaptchaEnterpriseProvider, getToken } from "firebase/app-check";
 
 // Vite inlines VITE_* vars into both the client and server bundles.
 const firebaseConfig = {
@@ -15,19 +14,6 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-// Initialize App Check
-if (typeof window !== "undefined") {
-  const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_ENTERPRISE_SITE_KEY || "6Ley4pEtAAAAAEYBuciRyro32EY15v0BAsfwkzAV";
-  try {
-    initializeAppCheck(app, {
-      provider: new ReCaptchaEnterpriseProvider(recaptchaSiteKey),
-      isTokenAutoRefreshEnabled: true,
-    });
-  } catch (e) {
-    console.warn("App Check initialization failed:", e);
-  }
-}
-
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export { app, getToken };
+export { app };
