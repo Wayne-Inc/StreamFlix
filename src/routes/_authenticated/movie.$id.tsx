@@ -201,6 +201,7 @@ function MoviePage() {
   const [watched, setWatched] = useState(false);
   const [offers, setOffers] = useState<WatchProvider[]>([]);
   const [offersLoading, setOffersLoading] = useState(true);
+  const [showAllOffers, setShowAllOffers] = useState(false);
 
   useEffect(() => {
     setInList(isInMyList(movie.id));

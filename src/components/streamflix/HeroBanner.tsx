@@ -121,7 +121,7 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
                 ))}
               </div>
             )}
-            <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm md:justify-start md:text-sm">
+            <div className="flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm md:justify-start md:text-sm">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur-lg sm:px-3 sm:py-1.5">
                 <Calendar className="size-3" /> {s.year}
               </span>

@@ -37,8 +37,8 @@ export function MovieCard({
   const handleTouchMove = (e: React.TouchEvent) => {
     const deltaX = Math.abs(e.touches[0].clientX - startX.current);
     const deltaY = Math.abs(e.touches[0].clientY - startY.current);
-    // If horizontal movement > 10px, it's a scroll gesture
-    if (deltaX > 10 || deltaY > 10) {
+    // Only mark as dragging if significant movement - let parent handle scroll
+    if (deltaX > 15 || deltaY > 15) {
       setIsDragging(true);
     }
   };

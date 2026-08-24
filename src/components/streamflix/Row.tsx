@@ -60,7 +60,7 @@ export function Row({
       el.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", measure);
     };
-  }, []);
+  }, [items.length]);
 
   const cardW = isSm ? SM_CARD_W : BASE_CARD_W;
   const gap = isSm ? SM_GAP : BASE_GAP;
@@ -127,7 +127,7 @@ export function Row({
         <div
           ref={scrollerRef}
           className="scrollbar-thin flex min-w-0 touch-pan-x gap-4 overflow-x-auto overscroll-x-contain scroll-smooth px-4 sm:gap-6 sm:px-8 pb-4 sm:pb-10"
-          style={{ WebkitOverflowScrolling: "touch" }}
+          style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
         >
           {padStart > 0 && <div aria-hidden style={{ width: padStart }} className="shrink-0" />}
           {visible.map((m) => (

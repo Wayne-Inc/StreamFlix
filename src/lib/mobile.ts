@@ -83,11 +83,11 @@ export async function initMobileApp(): Promise<void> {
   document.body.classList.add("mobile-app");
   const cap = window.Capacitor?.Plugins;
 
-  try {
-    await cap?.StatusBar?.setOverlaysWebView({ overlay: true });
-    await cap?.StatusBar?.setBackgroundColor({ color: "#00000000" });
-    await cap?.StatusBar?.setStyle({ style: 1 }); // Style.Dark
-  } catch {
+try {
+      await cap?.StatusBar?.setOverlaysWebView({ overlay: false });
+      await cap?.StatusBar?.setBackgroundColor({ color: "#000000" });
+      await cap?.StatusBar?.setStyle({ style: 1 }); // Style.Dark
+    } catch {
     // plugin unavailable — ignore
   }
 

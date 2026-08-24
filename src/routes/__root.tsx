@@ -204,12 +204,13 @@ function RootComponent() {
       if (!anchor) return;
       const href = anchor.getAttribute("href");
       if (!href) return;
-      // Handle mailto: links and external http/https links
+      // Handle mailto: links natively (let OS handle them)
       const isMailto = href.startsWith("mailto:");
       const isExternalHttp = href.startsWith("http");
       const origin = window.location.origin;
       if (isExternalHttp && href.startsWith(origin)) return;
-      if (!isMailto && !isExternalHttp) return;
+      if (isMailto) return; // Let the browser/app handle mailto natively
+      if (!isExternalHttp) return;
       e.preventDefault();
       try {
         const { Browser } = await import("@capacitor/browser");
