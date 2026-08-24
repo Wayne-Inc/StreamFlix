@@ -31,6 +31,15 @@ import {
   fetchAiringCalendar,
   enrichCertifications as enrichCertificationsFn,
 } from "./api/tmdb";
+import {
+  searchJustWatch,
+  getJustWatchTitle,
+  getPopularJustWatch,
+  getProviders,
+  type JustWatchTitle,
+  type JustWatchProvider,
+  type JustWatchOffer,
+} from "./api/justwatch";
 
 export type { Movie };
 
@@ -321,3 +330,37 @@ export async function loadAiringCalendar() {
     return [];
   }
 }
+
+export async function searchJustWatchTitles(query: string, contentType: "movie" | "show" | "all" = "all") {
+  try {
+    return await searchJustWatch({ data: { query, contentType } });
+  } catch {
+    return { items: [], total: 0, page: 1, pageSize: 10 };
+  }
+}
+
+export async function getJustWatchTitleById(id: number) {
+  try {
+    return await getJustWatchTitle({ data: { id } });
+  } catch {
+    return null;
+  }
+}
+
+export async function getPopularJustWatchTitles(contentType: "movie" | "show" = "movie") {
+  try {
+    return await getPopularJustWatch({ data: { contentType } });
+  } catch {
+    return { items: [] };
+  }
+}
+
+export async function getJustWatchProviders() {
+  try {
+    return await getProviders({ data: {} });
+  } catch {
+    return [];
+  }
+}
+
+export type { JustWatchTitle, JustWatchProvider, JustWatchOffer };

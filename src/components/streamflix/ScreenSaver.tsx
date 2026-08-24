@@ -22,6 +22,15 @@ export function ScreenSaver() {
   const [slides, setSlides] = useState<Movie[]>([]);
   const [slideIndex, setSlideIndex] = useState(0);
   const [logoMap, setLogoMap] = useState<Record<string, string | null>>({});
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 640 : false,
+  );
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+  
   const dataLoadedRef = useRef(false);
   const routerState = useRouterState();
   const pathname = routerState.location.pathname;
@@ -30,20 +39,20 @@ export function ScreenSaver() {
   // Listen for manual activation
   useEffect(() => {
     const handler = () => {
-      if (!window.location.pathname.startsWith("/watch")) {
+      if (!window.location.pathname.startsWith("/watch") && !isMobile) {
         loadSlides();
         setActive(true);
       }
     };
     window.addEventListener("streamflix:activate-screensaver", handler);
     return () => window.removeEventListener("streamflix:activate-screensaver", handler);
-  }, []);
+  }, [isMobile]);
 
   // Debug activation via console: __activateScreensaver()
   useEffect(() => {
     if (typeof window !== "undefined" && import.meta.env.DEV) {
       (window as any).__activateScreensaver = () => {
-        if (!window.location.pathname.startsWith("/watch")) {
+        if (!window.location.pathname.startsWith("/watch") && !isMobile) {
           loadSlides();
           setActive(true);
         }
@@ -54,7 +63,7 @@ export function ScreenSaver() {
         (window as any).__activateScreensaver = undefined;
       }
     };
-  }, []);
+  }, [isMobile]);
 
   // Fetch movies only when screensaver first activates
   const loadSlides = async () => {
@@ -79,9 +88,6 @@ export function ScreenSaver() {
     }, 10000);
     return () => clearInterval(t);
   }, [active, slides.length]);
-
-  // Disable screensaver on mobile
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
 
   // Inactivity timer — no router state subscription when inactive
   useEffect(() => {
@@ -162,7 +168,7 @@ export function ScreenSaver() {
           </h1>
         )}
         {currentMovie.genres && currentMovie.genres.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 text-sm sm:text-base font-normal text-white/80 tracking-wide">
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-1.5 text-sm sm:text-base font-normal text-white/80 tracking-wide">
             {currentMovie.genres.map((g, i) => (
               <span key={g} className="flex items-center gap-1.5">
                 {i > 0 && <span className="text-white/40">·</span>}

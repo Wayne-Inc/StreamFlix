@@ -112,7 +112,7 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
               <h1 className="mb-4 text-3xl md:text-4xl lg:text-5xl font-bold">{s.title}</h1>
             )}
             {s.genreIds.length > 0 && (
-              <div className="mb-2 flex flex-wrap items-center gap-1.5 text-sm sm:text-base font-normal text-white/80 tracking-wide">
+              <div className="mb-2 flex flex-wrap items-center justify-center md:justify-start gap-1.5 text-sm sm:text-base font-normal text-white/80 tracking-wide">
                 {s.genreIds.map((gid, idx) => (
                   <span key={gid} className="flex items-center gap-1.5">
                     {idx > 0 && <span className="text-white/40">·</span>}
