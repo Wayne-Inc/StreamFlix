@@ -639,41 +639,41 @@ function MoviePage() {
       </section>
 
       {offersLoading && (
-        <section className="px-4 sm:px-8 md:px-12 lg:px-16 py-8">
-          <h2 className="mb-4 text-2xl font-bold text-foreground">Where to Watch</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex flex-col items-center gap-2 rounded-xl border border-border bg-surface p-4 animate-pulse">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-background/50" />
-                <div className="h-3 w-16 bg-muted rounded" />
+        <section className="px-4 sm:px-8 md:px-12 lg:px-16 py-6">
+          <h2 className="mb-3 text-xl font-bold text-foreground">Where to Watch</h2>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <div key={i} className="flex flex-col items-center gap-1.5 rounded-lg border border-border bg-surface p-2 animate-pulse">
+                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-background/50" />
+                <div className="h-2 w-full bg-muted rounded" />
               </div>
             ))}
           </div>
         </section>
       )}
       {!offersLoading && offers.length > 0 && (
-        <section className="px-4 sm:px-8 md:px-12 lg:px-16 py-8">
-          <h2 className="mb-4 text-2xl font-bold text-foreground">Where to Watch</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+        <section className="px-4 sm:px-8 md:px-12 lg:px-16 py-6">
+          <h2 className="mb-3 text-xl font-bold text-foreground">Where to Watch</h2>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2">
             {offers.map((offer) => (
               <a
                 key={offer.provider_id}
                 href={offer.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-surface p-4 transition-all hover:border-primary/50 hover:shadow-lg"
+                className="group flex flex-col items-center gap-1.5 rounded-lg border border-border bg-surface p-2 transition-all hover:border-primary/50 hover:shadow-md"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-background/50">
+                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-background/50">
                   {offer.logo_path && (
                     <img
                       src={`https://image.tmdb.org/t/p/w92${offer.logo_path}`}
                       alt={offer.provider_name}
-                      className="h-10 w-10 object-contain"
+                      className="h-8 w-8 object-contain"
                       onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
                   )}
                 </div>
-                <span className="text-xs font-medium text-foreground truncate text-center w-full">
+                <span className="text-[10px] font-medium text-foreground truncate text-center w-full leading-tight">
                   {offer.provider_name}
                 </span>
               </a>
