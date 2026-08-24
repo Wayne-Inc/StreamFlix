@@ -38,7 +38,7 @@ import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { Row } from "@/components/streamflix/Row";
 import { Skeleton } from "@/components/ui/skeleton";
-import { movieById, loadSimilar, loadRecommendations, searchJustWatchTitles, type JustWatchOffer } from "@/lib/streamflix-data";
+import { movieById, loadSimilar, loadRecommendations, getWatchProviders, type WatchProvider } from "@/lib/streamflix-data";
 import { discoverByGenre, fetchTitleLogo } from "@/lib/api/tmdb";
 import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
 import { TrailerModal } from "@/components/streamflix/TrailerModal";
@@ -199,7 +199,7 @@ function MoviePage() {
 
   const [inList, setInList] = useState(false);
   const [watched, setWatched] = useState(false);
-  const [offers, setOffers] = useState<JustWatchOffer[]>([]);
+  const [offers, setOffers] = useState<WatchProvider[]>([]);
   const [offersLoading, setOffersLoading] = useState(true);
 
   useEffect(() => {
@@ -207,19 +207,29 @@ function MoviePage() {
     setWatched(getWatchHistory().some((x) => x.id === movie.id || x.id.startsWith(`${movie.id}:`)));
   }, [movie.id]);
 
-  // Fetch JustWatch streaming offers
+  // Fetch TMDB watch providers
   useEffect(() => {
     let cancelled = false;
     setOffersLoading(true);
-    searchJustWatchTitles(movie.title, isTv ? "show" : "movie")
-      .then((res) => {
-        if (!cancelled && res.items[0]?.offers) {
-          // Deduplicate by provider, prefer higher quality
-          const byProvider = new Map<number, JustWatchOffer>();
-          for (const o of res.items[0].offers) {
-            const existing = byProvider.get(o.providerId);
-            if (!existing || (o.quality && !existing.quality)) {
-              byProvider.set(o.providerId, o);
+    getWatchProviders(movie.id, isTv ? "tv" : "movie")
+      .then((results: Record<string, { link: string; flatrate?: WatchProvider[]; rent?: WatchProvider[]; buy?: WatchProvider[]; free?: WatchProvider[]; ads?: WatchProvider[] }>) => {
+        if (!cancelled) {
+          // Flatten providers from all countries, prefer US
+          const allProviders: WatchProvider[] = [];
+          const countries = Object.keys(results).sort((a, b) => a === "US" ? -1 : b === "US" ? 1 : 0);
+          for (const country of countries) {
+            const r = results[country];
+            if (r.flatrate) allProviders.push(...r.flatrate);
+            if (r.rent) allProviders.push(...r.rent);
+            if (r.buy) allProviders.push(...r.buy);
+            if (r.free) allProviders.push(...r.free);
+            if (r.ads) allProviders.push(...r.ads);
+          }
+          // Deduplicate by provider_id
+          const byProvider = new Map<number, WatchProvider>();
+          for (const p of allProviders) {
+            if (!byProvider.has(p.provider_id)) {
+              byProvider.set(p.provider_id, p);
             }
           }
           setOffers(Array.from(byProvider.values()));
@@ -229,7 +239,7 @@ function MoviePage() {
         if (!cancelled) setOffersLoading(false);
       });
     return () => { cancelled = true; };
-  }, [movie.title, isTv]);
+  }, [movie.id, isTv]);
 
   const navigate = useNavigate();
   const router = useRouter();
@@ -647,33 +657,25 @@ function MoviePage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {offers.map((offer) => (
               <a
-                key={`${offer.providerId}-${offer.presentationType}`}
-                href={offer.url}
+                key={offer.provider_id}
+                href={offer.link}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-surface p-4 transition-all hover:border-primary/50 hover:shadow-lg"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-background/50">
-                  {offer.providerId && (
+                  {offer.logo_path && (
                     <img
-                      src={`https://images.justwatch.com/provider/${offer.providerId}/clear_art.png`}
-                      alt=""
+                      src={`https://image.tmdb.org/t/p/w92${offer.logo_path}`}
+                      alt={offer.provider_name}
                       className="h-10 w-10 object-contain"
                       onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
                   )}
                 </div>
                 <span className="text-xs font-medium text-foreground truncate text-center w-full">
-                  {offer.presentationType.charAt(0).toUpperCase() + offer.presentationType.slice(1)}
+                  {offer.provider_name}
                 </span>
-                {offer.quality && (
-                  <span className="text-[10px] text-muted-foreground uppercase">{offer.quality}</span>
-                )}
-                {offer.retailPrice && (
-                  <span className="text-xs text-primary font-semibold">
-                    {offer.retailPriceCurrency || "$"}{offer.retailPrice.toFixed(2)}
-                  </span>
-                )}
               </a>
             ))}
           </div>

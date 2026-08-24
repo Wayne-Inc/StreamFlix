@@ -540,3 +540,11 @@ export const fetchPersonDetails = createServerFn({ method: "POST" })
       tvShows: (credits.cast || []).filter((c: any) => c.media_type === "tv").map(mapCredit),
     };
   });
+
+export const fetchWatchProviders = createServerFn({ method: "POST" })
+  .validator(z.object({ id: z.string(), type: z.enum(["movie", "tv"]).default("movie") }))
+  .handler(async ({ data }) => {
+    const { fetchWatchProviders: fetch } = await import("./tmdb.server");
+    const tmdbId = data.id.replace(/^tv-/, "");
+    return fetch(tmdbId, data.type);
+  });

@@ -216,3 +216,30 @@ export function toTv(m: any): Movie {
     numberOfEpisodes: m.number_of_episodes ?? undefined,
   };
 }
+
+export interface WatchProvider {
+  provider_id: number;
+  provider_name: string;
+  logo_path: string | null;
+  display_priority: number;
+  link: string;
+}
+
+export interface WatchProvidersResult {
+  results: Record<string, {
+    link: string;
+    flatrate?: WatchProvider[];
+    rent?: WatchProvider[];
+    buy?: WatchProvider[];
+    free?: WatchProvider[];
+    ads?: WatchProvider[];
+  }>;
+}
+
+export async function fetchWatchProviders(
+  tmdbId: string,
+  type: "movie" | "tv",
+): Promise<WatchProvidersResult["results"]> {
+  const data = await tmdbFetch(`/${type}/${tmdbId}/watch/providers`);
+  return data.results || {};
+}
