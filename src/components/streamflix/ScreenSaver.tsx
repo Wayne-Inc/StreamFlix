@@ -4,6 +4,8 @@ import { fetchTrending, fetchTitleLogos } from "@/lib/api/tmdb";
 import type { Movie } from "@/lib/types";
 import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
 import { buildTitleLogoUrl } from "@/lib/title-logo";
+import { AgeRatingBadge } from "./AgeRatingBadge";
+import { Calendar, Clock, Star } from "lucide-react";
 
 const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
@@ -16,6 +18,23 @@ export function ScreenSaver() {
   const routerState = useRouterState();
   const pathname = routerState.location.pathname;
   const isWatching = pathname.startsWith("/watch");
+
+  // Debug activation via console: __activateScreensaver()
+  useEffect(() => {
+    if (typeof window !== "undefined" && import.meta.env.DEV) {
+      (window as any).__activateScreensaver = () => {
+        if (!window.location.pathname.startsWith("/watch")) {
+          loadSlides();
+          setActive(true);
+        }
+      };
+    }
+    return () => {
+      if (typeof window !== "undefined" && import.meta.env.DEV) {
+        (window as any).__activateScreensaver = undefined;
+      }
+    };
+  }, []);
 
   // Fetch movies only when screensaver first activates
   const loadSlides = async () => {
@@ -118,7 +137,7 @@ export function ScreenSaver() {
             className="max-h-24 w-auto max-w-full object-contain drop-shadow-lg select-none sm:max-h-32 md:max-h-40"
           />
         ) : (
-          <h1 className="text-3xl sm:text-5xl font-semibold text-white tracking-tight drop-shadow-lg">
+          <h1 className="mb-4 text-3xl sm:text-5xl font-bold text-white drop-shadow-lg">
             {currentMovie.title}
           </h1>
         )}
@@ -127,6 +146,23 @@ export function ScreenSaver() {
             {currentMovie.genres.join(" · ")}
           </p>
         )}
+        <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-white/80 backdrop-blur-lg sm:px-3 sm:py-1.5">
+            <Calendar className="size-3" /> {currentMovie.year}
+          </span>
+          {currentMovie.score != null && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-xs font-semibold text-emerald-400 backdrop-blur-lg sm:px-3 sm:py-1.5">
+              <Star className="size-3 fill-current" /> {currentMovie.score.toFixed(1)}
+            </span>
+          )}
+          <AgeRatingBadge
+            rating={currentMovie.rating}
+            className="rounded-full px-2.5 py-1 text-xs backdrop-blur-lg sm:px-3 sm:py-1.5"
+          />
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-white/80 backdrop-blur-lg sm:px-3 sm:py-1.5">
+            <Clock className="size-3" /> {currentMovie.runtime}
+          </span>
+        </div>
       </div>
     </div>
   );
