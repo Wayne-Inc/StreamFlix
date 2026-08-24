@@ -24,6 +24,7 @@ export type Movie = {
   popularity?: number;
   numberOfSeasons?: number;
   numberOfEpisodes?: number;
+  logo?: { filePath: string };
 };
 
 export type Profile = {
