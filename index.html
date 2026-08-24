@@ -87,7 +87,7 @@
             user-select: none;
         }
         .wordmark span { color: var(--foreground); }
-        /* ── Left sidebar ───────────────────────────────── */
+/* ── Left sidebar ───────────────────────────────── */
         .sidebar {
             position: fixed;
             top: 64px;
@@ -101,11 +101,18 @@
             -webkit-overflow-scrolling: touch;
             padding: 1.25rem 0.75rem 3rem;
             transform: translateX(-100%);
-            transition: transform 300ms ease;
+            transition: transform 300ms ease, width 300ms ease;
             scrollbar-width: thin;
             scrollbar-color: rgba(255,255,255,0.25) transparent;
         }
         .sidebar.open { transform: translateX(0); }
+        .sidebar .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 0.75rem;
+            margin-bottom: 0.75rem;
+        }
         .sidebar .sidebar-brand {
             display: none;
             color: var(--primary);
@@ -117,9 +124,26 @@
             user-select: none;
             padding: 0 0.75rem;
             margin-bottom: 0.75rem;
+            flex: 1;
         }
         .sidebar .sidebar-brand span { color: var(--foreground); }
         .sidebar .sidebar-brand:hover { background: transparent; }
+        .sidebar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--muted-foreground);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: color 200ms ease, background-color 200ms ease;
+            flex-shrink: 0;
+        }
+        .sidebar-toggle:hover {
+            color: var(--foreground);
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .sidebar-toggle svg { width: 20px; height: 20px; display: block; }
         .sidebar-divider {
             height: 1px;
             background: var(--border);
@@ -151,6 +175,15 @@
             background: rgba(255, 255, 255, 0.06);
             color: var(--foreground);
         }
+        .sidebar a.active {
+            background: rgba(220, 38, 38, 0.15);
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .sidebar a.active:hover {
+            background: rgba(220, 38, 38, 0.25);
+            color: var(--primary-hover);
+        }
         .sidebar-backdrop {
             display: none;
             position: fixed;
@@ -174,7 +207,34 @@
                 padding-top: 1.5rem;
             }
             .sidebar .sidebar-brand { display: block; }
+            .sidebar .sidebar-header { display: flex; }
+            .sidebar-toggle { display: flex; }
             .sidebar-backdrop { display: none !important; }
+            .sidebar.collapsed {
+                width: 72px;
+            }
+            .sidebar.collapsed .sidebar-brand,
+            .sidebar.collapsed .sidebar-github span,
+            .sidebar.collapsed .sidebar-link-text,
+            .sidebar.collapsed .sidebar-divider {
+                display: none;
+            }
+            .sidebar.collapsed .sidebar-header {
+                justify-content: center;
+                padding: 0;
+            }
+            .sidebar.collapsed .sidebar-github {
+                justify-content: center;
+                padding: 0.625rem;
+            }
+            .sidebar.collapsed a {
+                padding: 0.625rem;
+                justify-content: center;
+            }
+            .sidebar.collapsed a svg {
+                margin: 0;
+            }
+            body.sidebar-collapsed { padding-left: 72px; }
         }
         .nav-toggle {
             display: block;
@@ -505,6 +565,52 @@
             color: var(--muted-foreground);
         }
 
+        /* ── Demo card ──────────────────────────────────── */
+        .demo-card {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.9rem 1.25rem;
+            background:
+                radial-gradient(ellipse 70% 140% at 0% 0%, rgba(220, 38, 38, 0.16), transparent),
+                var(--surface);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            border-radius: 0.85rem;
+            padding: 1.05rem 1.25rem;
+            margin: 1.25rem 0;
+        }
+        .demo-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 0.6rem;
+            background: var(--primary);
+            color: #fff;
+            flex-shrink: 0;
+            box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+        }
+        .demo-badge svg { width: 20px; height: 20px; fill: currentColor; }
+        .demo-info { min-width: 0; }
+        .demo-info strong {
+            display: block;
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            color: var(--foreground);
+        }
+        .demo-url {
+            font-family: ui-monospace, 'Cascadia Code', 'Menlo', monospace;
+            font-size: 0.8125rem;
+            color: var(--muted-foreground);
+            word-break: break-all;
+        }
+        .demo-card .btn-primary { margin-left: auto; }
+        @media (max-width: 768px) {
+            .demo-card .btn-primary { margin-left: 0; flex: 1 1 100%; justify-content: center; }
+        }
+
         main { animation: fade-in 0.6s ease-out both; }
 
         @media (max-width: 768px) {
@@ -543,27 +649,33 @@
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
     <aside class="sidebar" id="sidebar" aria-label="Documentation sections">
-        <a href="#overview" class="sidebar-brand">STREAM<span>FLIX</span></a>
-        <a href="#overview">Project Overview</a>
-        <a href="#architecture">Architecture &amp; Tech Stack</a>
-        <a href="#getting-started">Getting Started</a>
-        <a href="#environment">Environment Configuration</a>
-        <a href="#structure">Project Structure</a>
-        <a href="#features">Core Features</a>
-        <a href="#tmdb-api">TMDB API Integration</a>
-        <a href="#firebase">Firebase Integration</a>
-        <a href="#auth">Authentication System</a>
-        <a href="#video-player">Video Player &amp; Sources</a>
-        <a href="#electron">Desktop App (Electron)</a>
-        <a href="#capacitor">Mobile App (Capacitor/Android)</a>
-        <a href="#deployment">Deployment</a>
-        <a href="#development">Development Workflow</a>
-        <a href="#scripts">Scripts Reference</a>
-        <a href="#troubleshooting">Troubleshooting</a>
+        <div class="sidebar-header">
+            <a href="#overview" class="sidebar-brand">STREAM<span>FLIX</span></a>
+            <button class="sidebar-toggle" id="sidebarToggle" aria-label="Collapse sidebar" aria-expanded="true" aria-controls="sidebar">
+                <svg id="iconCollapse" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                <svg id="iconExpand" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+        </div>
+<a href="#overview"><svg class="li-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12l2 2 4-4"/></svg><span class="sidebar-link-text">Project Overview</span></a>
+        <a href="#architecture"><svg class="li-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="sidebar-link-text">Architecture & Tech Stack</span></a>
+        <a href="#getting-started"><svg class="li-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg><span class="sidebar-link-text">Getting Started</span></a>
+        <a href="#environment"><svg class="li-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="sidebar-link-text">Environment Configuration</span></a>
+        <a href="#structure"><svg class="li-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span class="sidebar-link-text">Project Structure</span></a>
+        <a href="#features"><svg class="li-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><span class="sidebar-link-text">Core Features</span></a>
+        <a href="#tmdb-api"><svg class="li-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M12 6v12"/><path d="M6 12h12"/></svg><span class="sidebar-link-text">TMDB API Integration</span></a>
+        <a href="#firebase"><svg class="li-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg><span class="sidebar-link-text">Firebase Integration</span></a>
+        <a href="#auth"><svg class="li-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span class="sidebar-link-text">Authentication System</span></a>
+        <a href="#video-player"><svg class="li-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg><span class="sidebar-link-text">Video Player & Sources</span></a>
+        <a href="#electron"><svg class="li-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><span class="sidebar-link-text">Desktop App (Electron)</span></a>
+        <a href="#capacitor"><svg class="li-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 3.21V20.8"/><path d="M10.88 2.83V21.18"/><path d="M16.24 2.43V21.57"/><path d="M20.66.59H.42"/><path d="M22.44 3.87v16.35"/></svg><span class="sidebar-link-text">Mobile App (Capacitor/Android)</span></a>
+        <a href="#deployment"><svg class="li-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg><span class="sidebar-link-text">Deployment</span></a>
+        <a href="#development"><svg class="li-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 18 2 12 8 6"/></svg><span class="sidebar-link-text">Development Workflow</span></a>
+        <a href="#scripts"><svg class="li-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span class="sidebar-link-text">Scripts Reference</span></a>
+        <a href="#troubleshooting"><svg class="li-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="sidebar-link-text">Troubleshooting</span></a>
         <div class="sidebar-divider"></div>
         <a href="https://github.com/Wayne-Inc/StreamFlix" target="_blank" rel="noopener" class="sidebar-github">
             <svg class="gh-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
-            GitHub Repository
+            <span class="sidebar-link-text">GitHub Repository</span>
         </a>
     </aside>
 
@@ -626,7 +738,17 @@
 │  Auth/DB    │     │  Capacitor  │
 └─────────────┘     └─────────────┘</code></pre>
 
-            <p><strong>Live Demo:</strong> <a href="https://streamflix.dpdns.org" target="_blank">https://streamflix.dpdns.org</a></p>
+            <div class="demo-card">
+                <span class="demo-badge"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 3 20 12 6 21 6 3"/></svg></span>
+                <div class="demo-info">
+                    <strong>Live Demo</strong>
+                    <span class="demo-url">streamflix.dpdns.org</span>
+                </div>
+                <a href="https://streamflix.dpdns.org" target="_blank" rel="noopener" class="btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+                    Visit Site
+                </a>
+            </div>
         </section>
 
         <section id="architecture">
@@ -1513,7 +1635,8 @@ kill -9 &lt;PID&gt;</code></pre>
 
     <footer>
         <p>STREAM<span style="color:#dc2626;font-weight:900;">FLIX</span> Documentation &bull; Built with TanStack Start, React 19, Tailwind CSS 4, Firebase, TMDB</p>
-        <p>Live at <a href="https://streamflix.dpdns.org" target="_blank">streamflix.dpdns.org</a></p>
+        <p>Live at <a href="https://streamflix.dpdns.org" target="_blank" rel="noopener">streamflix.dpdns.org
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:0.7em;height:0.7em;vertical-align:0.08em;"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></a></p>
     </footer>
 
     <script>
@@ -1546,6 +1669,71 @@ kill -9 &lt;PID&gt;</code></pre>
         );
         document.addEventListener("keydown", (e) => {
             if (e.key === "Escape") setSidebar(false);
+        });
+
+        /* ── Sidebar Collapse Toggle (Desktop) ───────────────── */
+        const sidebarToggle = document.getElementById("sidebarToggle");
+        const iconCollapse = document.getElementById("iconCollapse");
+        const iconExpand = document.getElementById("iconExpand");
+
+        const setSidebarCollapsed = (collapsed) => {
+            if (window.innerWidth < 1024) return;
+            sidebar.classList.toggle("collapsed", collapsed);
+            document.body.classList.toggle("sidebar-collapsed", collapsed);
+            iconCollapse.style.display = collapsed ? "none" : "block";
+            iconExpand.style.display = collapsed ? "block" : "none";
+            sidebarToggle.setAttribute("aria-expanded", String(!collapsed));
+            sidebarToggle.setAttribute("aria-label", collapsed ? "Expand sidebar" : "Collapse sidebar");
+        };
+
+        sidebarToggle.addEventListener("click", () => {
+            const isCollapsed = sidebar.classList.contains("collapsed");
+            setSidebarCollapsed(!isCollapsed);
+        });
+
+        /* ── Scrollspy: Highlight active section in sidebar ──── */
+        const sections = document.querySelectorAll("main section[id]");
+        const sidebarLinks = sidebar.querySelectorAll("a[href^='#']");
+        const linkMap = new Map();
+        sidebarLinks.forEach((link) => {
+            const href = link.getAttribute("href");
+            if (href.startsWith("#")) {
+                linkMap.set(href.slice(1), link);
+            }
+        });
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    const link = linkMap.get(entry.target.id);
+                    if (link) {
+                        link.classList.toggle("active", entry.isIntersecting);
+                    }
+                });
+            },
+            {
+                rootMargin: "-20% 0px -60% 0px",
+                threshold: 0,
+            }
+        );
+
+        sections.forEach((section) => observer.observe(section));
+
+        /* Fallback: set first link active on load if none intersecting */
+        if (sidebarLinks.length > 0 && !sidebar.querySelector("a.active")) {
+            sidebarLinks[0].classList.add("active");
+        }
+
+        /* Handle resize for collapse state */
+        window.addEventListener("resize", () => {
+            if (window.innerWidth < 1024) {
+                sidebar.classList.remove("collapsed");
+                document.body.classList.remove("sidebar-collapsed");
+                iconCollapse.style.display = "block";
+                iconExpand.style.display = "none";
+                sidebarToggle.setAttribute("aria-expanded", "true");
+                sidebarToggle.setAttribute("aria-label", "Collapse sidebar");
+            }
         });
     </script>
 </body>
