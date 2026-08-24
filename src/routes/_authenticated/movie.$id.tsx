@@ -38,7 +38,7 @@ import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { Row } from "@/components/streamflix/Row";
 import { Skeleton } from "@/components/ui/skeleton";
-import { movieById, loadSimilar, loadRecommendations } from "@/lib/streamflix-data";
+import { movieById, loadSimilar, loadRecommendations, searchJustWatchTitles, type JustWatchOffer } from "@/lib/streamflix-data";
 import { discoverByGenre, fetchTitleLogo } from "@/lib/api/tmdb";
 import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
 import { TrailerModal } from "@/components/streamflix/TrailerModal";
@@ -199,10 +199,37 @@ function MoviePage() {
 
   const [inList, setInList] = useState(false);
   const [watched, setWatched] = useState(false);
+  const [offers, setOffers] = useState<JustWatchOffer[]>([]);
+  const [offersLoading, setOffersLoading] = useState(true);
+
   useEffect(() => {
     setInList(isInMyList(movie.id));
     setWatched(getWatchHistory().some((x) => x.id === movie.id || x.id.startsWith(`${movie.id}:`)));
   }, [movie.id]);
+
+  // Fetch JustWatch streaming offers
+  useEffect(() => {
+    let cancelled = false;
+    setOffersLoading(true);
+    searchJustWatchTitles(movie.title, isTv ? "show" : "movie")
+      .then((res) => {
+        if (!cancelled && res.items[0]?.offers) {
+          // Deduplicate by provider, prefer higher quality
+          const byProvider = new Map<number, JustWatchOffer>();
+          for (const o of res.items[0].offers) {
+            const existing = byProvider.get(o.providerId);
+            if (!existing || (o.quality && !existing.quality)) {
+              byProvider.set(o.providerId, o);
+            }
+          }
+          setOffers(Array.from(byProvider.values()));
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setOffersLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [movie.title, isTv]);
 
   const navigate = useNavigate();
   const router = useRouter();
@@ -600,6 +627,45 @@ function MoviePage() {
           </div>
         </div>
       </section>
+
+      {offers.length > 0 && (
+        <section className="px-4 sm:px-8 md:px-12 lg:px-16 py-8">
+          <h2 className="mb-4 text-2xl font-bold text-foreground">Where to Watch</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {offers.map((offer) => (
+              <a
+                key={`${offer.providerId}-${offer.presentationType}`}
+                href={offer.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-surface p-4 transition-all hover:border-primary/50 hover:shadow-lg"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-background/50">
+                  {offer.providerId && (
+                    <img
+                      src={`https://images.justwatch.com/provider/${offer.providerId}/clear_art.png`}
+                      alt=""
+                      className="h-10 w-10 object-contain"
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                  )}
+                </div>
+                <span className="text-xs font-medium text-foreground truncate text-center w-full">
+                  {offer.presentationType.charAt(0).toUpperCase() + offer.presentationType.slice(1)}
+                </span>
+                {offer.quality && (
+                  <span className="text-[10px] text-muted-foreground uppercase">{offer.quality}</span>
+                )}
+                {offer.retailPrice && (
+                  <span className="text-xs text-primary font-semibold">
+                    {offer.retailPriceCurrency || "$"}{offer.retailPrice.toFixed(2)}
+                  </span>
+                )}
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
 
       {filteredSimilar.length > 0 && (
         <div className="space-y-2">
