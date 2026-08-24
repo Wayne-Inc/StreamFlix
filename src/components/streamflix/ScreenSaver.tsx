@@ -9,6 +9,14 @@ import { Calendar, Clock, Star } from "lucide-react";
 
 const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
+// Global trigger - available immediately in dev
+if (typeof window !== "undefined" && import.meta.env.DEV) {
+  (window as any).__activateScreensaver = () => {
+    // Dispatch custom event that ScreenSaver listens for
+    window.dispatchEvent(new CustomEvent("streamflix:activate-screensaver"));
+  };
+}
+
 export function ScreenSaver() {
   const [active, setActive] = useState(false);
   const [slides, setSlides] = useState<Movie[]>([]);
@@ -18,6 +26,18 @@ export function ScreenSaver() {
   const routerState = useRouterState();
   const pathname = routerState.location.pathname;
   const isWatching = pathname.startsWith("/watch");
+
+  // Listen for manual activation
+  useEffect(() => {
+    const handler = () => {
+      if (!window.location.pathname.startsWith("/watch")) {
+        loadSlides();
+        setActive(true);
+      }
+    };
+    window.addEventListener("streamflix:activate-screensaver", handler);
+    return () => window.removeEventListener("streamflix:activate-screensaver", handler);
+  }, []);
 
   // Debug activation via console: __activateScreensaver()
   useEffect(() => {
@@ -142,9 +162,14 @@ export function ScreenSaver() {
           </h1>
         )}
         {currentMovie.genres && currentMovie.genres.length > 0 && (
-          <p className="text-sm sm:text-base font-normal text-white/80 tracking-wide">
-            {currentMovie.genres.join(" · ")}
-          </p>
+          <div className="flex flex-wrap items-center gap-1.5 text-sm sm:text-base font-normal text-white/80 tracking-wide">
+            {currentMovie.genres.map((g, i) => (
+              <span key={g} className="flex items-center gap-1.5">
+                {i > 0 && <span className="text-white/40">·</span>}
+                {g}
+              </span>
+            ))}
+          </div>
         )}
         <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-white/80 backdrop-blur-lg sm:px-3 sm:py-1.5">
