@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Play, Sparkles } from "lucide-react";
+import { useState, useRef } from "react";
 import type { Movie } from "@/lib/types";
 import { LazyImage } from "./LazyImage";
 
@@ -19,6 +20,9 @@ export function MovieCard({
   rank?: number;
 }) {
   const navigate = useNavigate();
+  const [isDragging, setIsDragging] = useState(false);
+  const startX = useRef(0);
+  const startY = useRef(0);
 
   const goToWatch = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
@@ -30,14 +34,38 @@ export function MovieCard({
     navigate({ to: "/movie/$id", params: { id: movie.id } });
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    startX.current = e.touches[0].clientX;
+    startY.current = e.touches[0].clientY;
+    setIsDragging(false);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const deltaX = Math.abs(e.touches[0].clientX - startX.current);
+    const deltaY = Math.abs(e.touches[0].clientY - startY.current);
+    // If horizontal movement > 10px, it's a scroll gesture
+    if (deltaX > 10 || deltaY > 10) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleClick = () => {
+    if (!isDragging) {
+      goToInfo();
+    }
+  };
+
   return (
     <div
       className={`group relative ${fluid ? "w-full" : "w-[175px] sm:w-[220px] shrink-0"}`}
       data-context="movie"
       data-title={movie.title}
       data-url={`/movie/${movie.id}`}
-      onClick={goToInfo}
-      style={{ touchAction: "manipulation" }}
+      onClick={handleClick}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={() => setIsDragging(false)}
+      style={{ touchAction: "pan-y" }}
     >
       <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-surface shadow-md transition-shadow duration-300 group-hover:shadow-2xl">
         {movie.poster ? (
@@ -58,7 +86,6 @@ export function MovieCard({
         {/* Centered play button on hover/touch */}
         <button
           onClick={goToWatch}
-          onTouchStart={goToWatch}
           className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 active:opacity-100 z-10"
           aria-label={`Play ${movie.title}`}
         >

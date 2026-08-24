@@ -154,6 +154,19 @@ function SearchPage() {
 
   const curatedGenres = CURATED_GENRES;
 
+  const trending = [
+    "Action",
+    "Comedy",
+    "Drama",
+    "Horror",
+    "Sci-Fi",
+    "Thriller",
+    "Romance",
+    "Animation",
+    "Documentary",
+    "Fantasy",
+  ];
+
   const pushFilters = (next: {
     year?: number;
     genre?: number;
