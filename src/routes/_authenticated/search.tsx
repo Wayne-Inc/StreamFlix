@@ -238,9 +238,8 @@ function SearchPage() {
                 onClick={() => {
                   setTab(t);
                   setQ("");
-                  setResults([]);
-                  setPeople([]);
                   setPage(1);
+                  queryClient.invalidateQueries({ queryKey: ["search"] });
                 }}
                 className={`flex items-center gap-1.5 px-4 py-2.5 sm:py-2 text-sm font-medium transition-all duration-300 ease-in-out border-b-2 -mb-px ${tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
               >
@@ -452,7 +451,7 @@ function SearchPage() {
                   {people.length === 0 && (
                     <p className="text-sm text-muted-foreground">No people found</p>
                   )}
-                  {people.map((p) => (
+                  {people.map((p: PersonResult) => (
                     <Link
                       key={p.id}
                       to="/person/$id"

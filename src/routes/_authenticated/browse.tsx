@@ -85,7 +85,7 @@ function BrowsePage() {
   const data = Route.useLoaderData();
   const heroSlides: Movie[] = data.heroSlides;
   const top10Today: Movie[] = data.top10Today;
-  const top10TrendingWeek: Movie[] = data.top10TrendingWeek ?? [];
+  const top10TrendingWeek: Movie[] = "top10TrendingWeek" in data ? data.top10TrendingWeek : [];
   const genreGroups: { id: string; name: string; items: Movie[] }[] = data.genreGroups;
   const rows: { title: string; items: Movie[] }[] = data.rows;
   const { kind } = Route.useSearch();

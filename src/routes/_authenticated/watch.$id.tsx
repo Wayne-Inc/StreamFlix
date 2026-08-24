@@ -8,7 +8,7 @@ import { saveProgressToFirestore } from "@/lib/continue-watching-firestore";
 import { getVideoSource } from "@/lib/video-sources";
 import { probeEmbedUrl, fetchTvSeason } from "@/lib/api/tmdb";
 import { resolveVidNestStreams, type VidNestStream } from "@/lib/api/vidnest";
-import { isPipSupported, enterPictureInPicture } from "@/lib/mobile";
+import { isPipSupported, enterPictureInPicture, isMobileApp } from "@/lib/mobile";
 import { auth } from "@/lib/firebase";
 import { startSession, endSession } from "@/lib/session-tracking";
 import { toast } from "sonner";
@@ -1407,7 +1407,7 @@ function PlayerPage() {
             <div className="flex items-center gap-2">
               {pipSupported && (
                 <button
-                  onClick={enterPiP}
+                  onClick={() => videoRef.current && enterPictureInPicture(videoRef.current)}
                   aria-label="Picture in Picture"
                   className="hover:text-white/70 transition min-h-11 min-w-11 flex items-center justify-center"
                 >
