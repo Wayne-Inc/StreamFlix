@@ -108,6 +108,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href: appCss,
+        as: "style",
       },
       { rel: "manifest", href: "/manifest.json" },
       { rel: "preconnect", href: "https://firestore.googleapis.com" },
