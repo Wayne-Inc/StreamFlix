@@ -628,7 +628,20 @@ function MoviePage() {
         </div>
       </section>
 
-      {offers.length > 0 && (
+      {offersLoading && (
+        <section className="px-4 sm:px-8 md:px-12 lg:px-16 py-8">
+          <h2 className="mb-4 text-2xl font-bold text-foreground">Where to Watch</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex flex-col items-center gap-2 rounded-xl border border-border bg-surface p-4 animate-pulse">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-background/50" />
+                <div className="h-3 w-16 bg-muted rounded" />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+      {!offersLoading && offers.length > 0 && (
         <section className="px-4 sm:px-8 md:px-12 lg:px-16 py-8">
           <h2 className="mb-4 text-2xl font-bold text-foreground">Where to Watch</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -664,6 +677,12 @@ function MoviePage() {
               </a>
             ))}
           </div>
+        </section>
+      )}
+      {!offersLoading && offers.length === 0 && (
+        <section className="px-4 sm:px-8 md:px-12 lg:px-16 py-8">
+          <h2 className="mb-4 text-2xl font-bold text-foreground">Where to Watch</h2>
+          <p className="text-muted-foreground">No streaming offers found for this title.</p>
         </section>
       )}
 
