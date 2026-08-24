@@ -99,7 +99,7 @@
     "eslint-plugin-prettier": "^5.2.6",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
-    "firebase-admin": "^10.3.0",
+    "firebase-admin": "^14.3.0",
     "globals": "^15.15.0",
     "lightningcss": "^1.32.0",
     "nitro": "3.0.260603-beta",
@@ -125,5 +125,14 @@
       "owner": "Wayne-Inc",
       "repo": "StreamFlix"
     }
+  },
+  "overrides": {
+    "fast-xml-parser": "^5.11.0",
+    "nanoid": "^5.1.16",
+    "brace-expansion": "^2.0.2",
+    "js-yaml": "^5.3.0",
+    "postcss": "^8.5.26",
+    "uuid": "^11.1.1",
+    "esbuild": "^0.28.1"
   }
 }

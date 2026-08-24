@@ -28,7 +28,7 @@ import {
   toMovie as fsToMovie,
 } from "@/lib/continue-watching-firestore";
 import { getWatchHistoryFromFirestore } from "@/lib/history-firestore";
-import { isKidsProfile, filterKidsContent, filterKidsHeroSlides } from "@/lib/kids-mode";
+import { isKidsProfile, filterKidsContent, filterKidsHeroSlides, UNSAFE_GENRE_IDS } from "@/lib/kids-mode";
 import { getPersonalizedRecommendations, type RecommendSeed } from "@/lib/recommendations";
 
 const searchSchema = z.object({
@@ -89,7 +89,8 @@ function BrowsePage() {
   const genreGroups: { id: string; name: string; items: Movie[] }[] = data.genreGroups;
   const rows: { title: string; items: Movie[] }[] = data.rows;
   const { kind } = Route.useSearch();
-  const [activeGenreId, setActiveGenreId] = useState(genreGroups[0]?.id ?? "");
+  const safeGenreGroups = genreGroups.filter((g) => !kidsMode || !UNSAFE_GENRE_IDS.has(Number(g.id)));
+  const [activeGenreId, setActiveGenreId] = useState(safeGenreGroups[0]?.id ?? "");
   const [genreMenuOpen, setGenreMenuOpen] = useState(false);
   const genreMenuRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -102,7 +103,7 @@ function BrowsePage() {
     document.addEventListener("pointerdown", onPointerDown);
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [genreMenuOpen]);
-  const activeGenre = genreGroups.find((g) => g.id === activeGenreId) ?? genreGroups[0];
+  const activeGenre = genreGroups.find((g) => g.id === activeGenreId) ?? genreGroups.find((g) => !kidsMode || !UNSAFE_GENRE_IDS.has(Number(g.id))) ?? genreGroups[0];
   const [top10Ref, setTop10Ref] = useState<HTMLDivElement | null>(null);
   const [top10Scroll, setTop10Scroll] = useState({ left: 0, viewport: 0, width: 0 });
   const [trendingWeekRef, setTrendingWeekRef] = useState<HTMLDivElement | null>(null);
@@ -511,7 +512,7 @@ function BrowsePage() {
             reasonLinks={pickedRow.reasonLinks}
           />
         )}
-        {kind === "home" && top10Today.length > 0 && (
+        {kind === "home" && !kidsMode && top10Today.length > 0 && (
           <section className="space-y-4 py-4">
             <h2 className="px-4 sm:px-8 mb-4 sm:mb-6 text-2xl sm:text-3xl font-bold tracking-tight">
               Top 10 Today
@@ -542,14 +543,14 @@ function BrowsePage() {
                 ref={setTop10Ref}
                 className="scrollbar-hide flex gap-3 sm:gap-5 overflow-x-auto scroll-smooth px-4 sm:px-8"
               >
-                {(kidsMode ? filterKidsContent(top10Today) : top10Today).map((m, i) => (
+                {top10Today.map((m, i) => (
                   <MovieCard key={m.id} movie={m} rank={i + 1} />
                 ))}
               </div>
             </div>
           </section>
         )}
-        {kind === "home" && top10TrendingWeek.length > 0 && (
+        {kind === "home" && !kidsMode && top10TrendingWeek.length > 0 && (
           <section className="space-y-4 py-4">
             <h2 className="px-4 sm:px-8 mb-4 sm:mb-6 text-2xl sm:text-3xl font-bold tracking-tight">
               Trending This Week
@@ -580,7 +581,7 @@ function BrowsePage() {
                 ref={setTrendingWeekRef}
                 className="scrollbar-hide flex gap-3 sm:gap-5 overflow-x-auto scroll-smooth px-4 sm:px-8"
               >
-                {(kidsMode ? filterKidsContent(top10TrendingWeek) : top10TrendingWeek).map((m, i) => (
+                {top10TrendingWeek.map((m, i) => (
                   <MovieCard key={m.id} movie={m} rank={i + 1} />
                 ))}
               </div>
@@ -610,24 +611,26 @@ function BrowsePage() {
                     role="listbox"
                     className="absolute left-0 top-full z-50 mt-2 w-60 max-h-80 overflow-y-auto rounded-xl border border-border bg-popover/80 p-1.5 shadow-2xl backdrop-blur-xl"
                   >
-                    {genreGroups.map((g) => (
-                      <li key={g.id} role="option" aria-selected={g.id === activeGenre.id}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setActiveGenreId(g.id);
-                            setGenreMenuOpen(false);
-                          }}
-                          className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-                            g.id === activeGenre.id
-                              ? "bg-primary/15 font-semibold text-primary"
-                              : "text-foreground hover:bg-accent"
-                          }`}
-                        >
-                          {g.name}
-                        </button>
-                      </li>
-                    ))}
+                    {genreGroups
+                      .filter((g) => !kidsMode || !UNSAFE_GENRE_IDS.has(Number(g.id)))
+                      .map((g) => (
+                        <li key={g.id} role="option" aria-selected={g.id === activeGenre.id}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setActiveGenreId(g.id);
+                              setGenreMenuOpen(false);
+                            }}
+                            className={`w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                              g.id === activeGenre.id
+                                ? "bg-primary/15 font-semibold text-primary"
+                                : "text-foreground hover:bg-accent"
+                            }`}
+                          >
+                            {g.name}
+                          </button>
+                        </li>
+                      ))}
                   </ul>
                 )}
               </div>

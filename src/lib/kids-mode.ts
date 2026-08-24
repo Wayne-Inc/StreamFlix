@@ -15,7 +15,7 @@ const RATING_TIERS: Record<string, number> = {
 
 const KIDS_MAX_TIER = 1;
 
-const UNSAFE_GENRE_IDS = new Set([27, 53, 10752, 10749, 80, 9648, 18]);
+export const UNSAFE_GENRE_IDS = new Set([27, 53, 10752, 10749, 80, 9648, 18]);
 
 export function isRatingBlockedForKids(rating: string | undefined): boolean {
   if (!rating) return false;

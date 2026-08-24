@@ -106,6 +106,11 @@ function SearchPage() {
   const hasFilters = Boolean(year || genre || rating || sort);
   const canSearch = debouncedQ.length >= 2 || hasFilters;
 
+  // Invalidate search cache when URL search params change (e.g., back navigation)
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ["search"] });
+  }, [currentSearch, queryClient]);
+
   // Build cache key based on search parameters
   const searchKey = ["search", "titles", debouncedQ, year, genre, rating, sort, kidsMode] as const;
   const peopleKey = ["search", "people", debouncedQ] as const;
@@ -127,9 +132,8 @@ function SearchPage() {
       return kidsMode ? filterKidsContent(res) : res;
     },
     enabled: tab === "titles" && canSearch,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (cache persists when navigating away)
-    placeholderData: (prev) => prev, // Keep previous data while fetching
+    staleTime: 0, // Always refetch when params change
+    gcTime: 10 * 60 * 1000,
   });
 
   // Fetch people with React Query caching
@@ -137,9 +141,8 @@ function SearchPage() {
     queryKey: peopleKey,
     queryFn: () => searchByPerson(debouncedQ),
     enabled: tab === "people" && debouncedQ.length >= 2,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     gcTime: 10 * 60 * 1000,
-    placeholderData: (prev) => prev,
   });
 
   // Sync query data to local state for pagination
