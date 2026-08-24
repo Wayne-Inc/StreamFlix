@@ -112,16 +112,16 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
               <h1 className="mb-4 text-3xl md:text-4xl lg:text-5xl font-bold">{s.title}</h1>
             )}
             {s.genreIds.length > 0 && (
-              <div className="mx-auto mb-2 flex flex-wrap items-center justify-center gap-1.5 text-xs sm:text-sm text-muted-foreground">
+              <div className="mb-2 flex flex-wrap items-center gap-1.5 text-sm sm:text-base font-normal text-white/80 tracking-wide">
                 {s.genreIds.map((gid, idx) => (
                   <span key={gid} className="flex items-center gap-1.5">
-                    {idx > 0 && <span className="text-muted-foreground/40">•</span>}
+                    {idx > 0 && <span className="text-white/40">·</span>}
                     {genreLabels[String(gid)] || s.genres[idx] || "Explore"}
                   </span>
                 ))}
               </div>
             )}
-            <div className="mx-auto flex max-w-full flex-wrap items-center justify-center gap-2 text-xs sm:text-sm md:justify-start md:text-sm">
+            <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm md:justify-start md:text-sm">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur-lg sm:px-3 sm:py-1.5">
                 <Calendar className="size-3" /> {s.year}
               </span>
