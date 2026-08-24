@@ -24,12 +24,6 @@ export function MovieCard({
   const startX = useRef(0);
   const startY = useRef(0);
 
-  const goToWatch = (e: React.MouseEvent | React.TouchEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    navigate({ to: "/watch/$id", params: { id: movie.id }, search: { autoplay: true } });
-  };
-
   const goToInfo = () => {
     navigate({ to: "/movie/$id", params: { id: movie.id } });
   };
@@ -65,7 +59,6 @@ export function MovieCard({
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={() => setIsDragging(false)}
-      style={{ touchAction: "pan-y" }}
     >
       <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-surface shadow-md transition-shadow duration-300 group-hover:shadow-2xl">
         {movie.poster ? (
@@ -75,7 +68,6 @@ export function MovieCard({
             width={400}
             height={600}
             className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-            style={{ touchAction: "pan-y" }}
           />
         ) : (
           <div className="grid size-full place-items-center bg-card p-2 text-center text-xs text-muted-foreground">
@@ -83,16 +75,12 @@ export function MovieCard({
           </div>
         )}
 
-        {/* Centered play button on hover/touch */}
-        <button
-          onClick={goToWatch}
-          className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 active:opacity-100 z-10"
-          aria-label={`Play ${movie.title}`}
-        >
-          <div className="flex size-12 items-center justify-center rounded-full bg-white/90 text-black shadow-lg backdrop-blur-sm transition-transform duration-200 hover:scale-110 hover:bg-white active:scale-110">
+        {/* Centered play button on hover (visual only) */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-10 pointer-events-none" aria-hidden="true">
+          <div className="flex size-12 items-center justify-center rounded-full bg-white/90 text-black shadow-lg backdrop-blur-sm">
             <Play className="size-5 fill-current" />
           </div>
-        </button>
+        </div>
 
         {/* Title + meta on hover */}
         <div className="absolute inset-x-0 bottom-0 p-3 translate-y-2 opacity-0 transition-all duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100">
