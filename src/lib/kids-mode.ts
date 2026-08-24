@@ -40,7 +40,6 @@ export function isGenreBlockedForKids(genreIds: number[]): boolean {
 
 export function filterKidsContent(items: Movie[]): Movie[] {
   return items.filter((m) => {
-    if (isRatingBlockedForKids(m.rating)) return false;
     if (isGenreBlockedForKids(m.genreIds ?? [])) return false;
     return true;
   });

@@ -15,6 +15,7 @@ const RATING_STYLES: Record<string, string> = {
 const DEFAULT_STYLE = "bg-muted text-muted-foreground border-border";
 
 export function AgeRatingBadge({ rating, className }: { rating: string; className?: string }) {
+  if (!rating || rating.trim() === "") return null;
   const style = RATING_STYLES[rating.toUpperCase()] ?? DEFAULT_STYLE;
   return (
     <span
