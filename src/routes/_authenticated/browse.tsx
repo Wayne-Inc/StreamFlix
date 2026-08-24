@@ -89,6 +89,7 @@ function BrowsePage() {
   const genreGroups: { id: string; name: string; items: Movie[] }[] = data.genreGroups;
   const rows: { title: string; items: Movie[] }[] = data.rows;
   const { kind } = Route.useSearch();
+  const kidsMode = useMemo(() => isKidsProfile(), []);
   const safeGenreGroups = genreGroups.filter((g) => !kidsMode || !UNSAFE_GENRE_IDS.has(Number(g.id)));
   const [activeGenreId, setActiveGenreId] = useState(safeGenreGroups[0]?.id ?? "");
   const [genreMenuOpen, setGenreMenuOpen] = useState(false);
@@ -353,8 +354,6 @@ function BrowsePage() {
       cancelled = true;
     };
   }, [kind]);
-
-  const kidsMode = useMemo(() => isKidsProfile(), []);
 
   useEffect(() => {
     const el = top10Ref;
