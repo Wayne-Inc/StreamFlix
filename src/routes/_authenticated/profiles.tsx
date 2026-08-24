@@ -31,8 +31,21 @@ import { isKidsProfile } from "@/lib/kids-mode";
 
 function isValidAvatarUrl(url: string): boolean {
   if (!url) return false;
-  // Allow data URLs (cropped avatars) and http/https URLs
-  if (url.startsWith("data:")) return true;
+
+  // Allow only safe image data URLs used by avatar cropping.
+  if (url.startsWith("data:")) {
+    const match = url.match(/^data:([^;,]+)[;,]/i);
+    if (!match) return false;
+    const mime = match[1].toLowerCase();
+    return (
+      mime === "image/png" ||
+      mime === "image/jpeg" ||
+      mime === "image/jpg" ||
+      mime === "image/webp" ||
+      mime === "image/gif"
+    );
+  }
+
   try {
     const parsed = new URL(url);
     return parsed.protocol === "https:" || parsed.protocol === "http:";
