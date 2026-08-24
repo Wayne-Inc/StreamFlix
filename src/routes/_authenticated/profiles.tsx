@@ -30,6 +30,9 @@ import { getFavoriteGenres, setFavoriteGenres, GENRE_OPTIONS } from "@/lib/favor
 import { isKidsProfile } from "@/lib/kids-mode";
 
 function isValidAvatarUrl(url: string): boolean {
+  if (!url) return false;
+  // Allow data URLs (cropped avatars) and http/https URLs
+  if (url.startsWith("data:")) return true;
   try {
     const parsed = new URL(url);
     return parsed.protocol === "https:" || parsed.protocol === "http:";
