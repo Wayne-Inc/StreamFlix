@@ -37,8 +37,9 @@ export function MovieCard({
   const handleTouchMove = (e: React.TouchEvent) => {
     const deltaX = Math.abs(e.touches[0].clientX - startX.current);
     const deltaY = Math.abs(e.touches[0].clientY - startY.current);
-    // Only mark as dragging if significant movement - let parent handle scroll
-    if (deltaX > 15 || deltaY > 15) {
+    // Only mark as dragging for horizontal movement (carousel scroll)
+    // Vertical movement should allow page scroll - don't set isDragging
+    if (deltaX > 15 && deltaX > deltaY) {
       setIsDragging(true);
     }
   };
@@ -51,7 +52,7 @@ export function MovieCard({
 
   return (
     <div
-      className={`group relative ${fluid ? "w-full" : "w-[175px] sm:w-[220px] shrink-0"}`}
+      className={`group relative ${fluid ? "w-full" : "w-[175px] sm:w-[220px] shrink-0"} touch-pan-y`}
       data-context="movie"
       data-title={movie.title}
       data-url={`/movie/${movie.id}`}

@@ -656,7 +656,7 @@ function MoviePage() {
         <section className="px-4 sm:px-8 md:px-12 lg:px-16 py-6">
           <h2 className="mb-3 text-xl font-bold text-foreground">Where to Watch</h2>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2">
-            {offers.map((offer) => (
+            {(showAllOffers ? offers : offers.slice(0, 7)).map((offer) => (
               <a
                 key={offer.provider_id}
                 href={offer.link}
@@ -680,6 +680,27 @@ function MoviePage() {
               </a>
             ))}
           </div>
+          {offers.length > 7 && (
+            <div className="mt-3 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setShowAllOffers((v) => !v)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/80 px-4 py-2 text-sm font-medium text-foreground backdrop-blur transition hover:bg-background hover:border-primary/50"
+              >
+                {showAllOffers ? (
+                  <>
+                    <ChevronUp className="size-4" />
+                    Show less
+                  </>
+                ) : (
+                  <>
+                    Show more ({offers.length})
+                    <ChevronDown className="size-4" />
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </section>
       )}
       {!offersLoading && offers.length === 0 && (
