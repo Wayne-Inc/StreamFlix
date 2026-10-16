@@ -97,4 +97,6 @@ The mobile app is a Capacitor WebView wrapper around the deployed site.
 - `npm run mobile:open` — open `android/` in Android Studio
 - `npm run mobile:build` — build an APK
 
-> Note: web changes in `src/` only appear in the app after the site is rebuilt and redeployed.
+> Note: Web changes in `src/` only appear in the app after the site is rebuilt and redeployed.
+
+> Note: StreamFlix doesn't host or store films or any data about them. All films are hosted from third-party sites which may impose advertising. 
