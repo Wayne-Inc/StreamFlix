@@ -51,7 +51,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@tailwindcss/vite": "^4.2.1",
     "@tanstack/react-query": "^5.83.0",
-    "@tanstack/react-router": "1.168.60",
+    "@tanstack/react-router": "1.168.26",
     "@tanstack/react-start": "1.168.60",
     "@tanstack/router-plugin": "1.168.47",
     "@vercel/analytics": "^2.0.1",
@@ -115,7 +115,7 @@
     "directories": {
       "output": "release"
     },
-    "files": [
+  "files": [
       "dist/**/*",
       "electron/**/*",
       "package.json"
