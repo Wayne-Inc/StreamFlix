@@ -1,0 +1,169 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================
+    // USER DOCUMENTS (root collection)
+    // ============================================
+    match /users/{userId} {
+      // Users can read/write their own document
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // ============================================
+      // SUB-COLLECTION: users/{userId}/profiles/{profileId}
+      // ============================================
+      match /profiles/{profileId} {
+        // Users can CRUD their own profiles
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+
+        // Fields validation on create/update
+        allow create, update: if request.auth != null
+          && request.auth.uid == userId
+          && request.resource.data.keys().hasOnly(['name', 'color', 'kids', 'avatarUrl', 'pinHash', 'createdAt', 'updatedAt'])
+          && (request.resource.data.name is string && request.resource.data.name.size() <= 50)
+          && (request.resource.data.color is string)
+          && (request.resource.data.kids is bool)
+          && (request.resource.data.avatarUrl == null || request.resource.data.avatarUrl is string)
+          && (request.resource.data.pinHash == null || request.resource.data.pinHash is string);
+      }
+    }
+
+    // ============================================
+    // CONTINUE WATCHING
+    // Doc ID format: {uid}_{profileId}_{movieId} or {uid}_{profileId}_{movieId}:S{season}E{episode}
+    // ============================================
+    match /continue_watching/{docId} {
+      allow read, write: if request.auth != null
+        && docId.matches('^[^_]+_[^_]+_.*$')
+        && docId.split('_')[0] == request.auth.uid;
+
+      // Validate fields on write
+      allow create, update: if request.auth != null
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.profileId == resource.data.profileId
+        && request.resource.data.movieId is string
+        && request.resource.data.progress is number
+        && request.resource.data.duration is number
+        && request.resource.data.updatedAt is number;
+    }
+
+    // ============================================
+    // WATCH HISTORY
+    // Doc ID format: {uid}_{profileId}_{movieId}
+    // ============================================
+    match /watch_history/{docId} {
+      allow read, write: if request.auth != null
+        && docId.matches('^[^_]+_[^_]+_.*$')
+        && docId.split('_')[0] == request.auth.uid;
+
+      allow create, update: if request.auth != null
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.profileId == resource.data.profileId
+        && request.resource.data.movieId is string
+        && request.resource.data.watchedAt is number;
+
+      // Allow delete for clear history
+      allow delete: if request.auth != null
+        && docId.matches('^[^_]+_[^_]+_.*$')
+        && docId.split('_')[0] == request.auth.uid;
+    }
+
+    // ============================================
+    // MY LIST
+    // Doc ID format: {uid}_{profileId}_{movieId}
+    // ============================================
+    match /my_list/{docId} {
+      allow read, write: if request.auth != null
+        && docId.matches('^[^_]+_[^_]+_.*$')
+        && docId.split('_')[0] == request.auth.uid;
+
+      allow create, update: if request.auth != null
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.profileId == resource.data.profileId
+        && request.resource.data.movieId is string
+        && request.resource.data.addedAt is number
+        && request.resource.data.movie is map;
+    }
+
+    // ============================================
+    // FCM TOKENS (for push notifications)
+    // Doc ID = token
+    // ============================================
+    match /fcm_tokens/{token} {
+      // Users can write their own tokens
+      allow write: if request.auth != null
+        && request.resource.data.user_id == request.auth.uid
+        && request.resource.data.device_id is string
+        && request.resource.data.platform is string;
+
+      // Users can read their own tokens (for debugging)
+      allow read: if request.auth != null
+        && resource.data.user_id == request.auth.uid;
+    }
+
+    // ============================================
+    // RELEASE NOTIFICATIONS
+    // Doc ID format: {userId}_{movieId}
+    // ============================================
+    match /release_notifications/{docId} {
+      allow read, write: if request.auth != null
+        && docId.matches('^[^_]+_.*$')
+        && docId.split('_')[0] == request.auth.uid;
+
+      allow create, update: if request.auth != null
+        && request.resource.data.user_id == request.auth.uid
+        && request.resource.data.movie_id is string
+        && request.resource.data.title is string
+        && request.resource.data.release_date is string;
+    }
+
+    // ============================================
+    // USER DEVICES
+    // Doc ID = device_id
+    // ============================================
+    match /user_devices/{deviceId} {
+      // Users can write their own device info
+      allow write: if request.auth != null
+        && request.resource.data.user_id == request.auth.uid
+        && request.resource.data.device_id == deviceId
+        && request.resource.data.device_label is string
+        && request.resource.data.browser is string
+        && request.resource.data.os is string;
+
+      // Users can read their own devices
+      allow read: if request.auth != null
+        && resource.data.user_id == request.auth.uid;
+    }
+
+    // ============================================
+    // PROFILES (root collection - legacy/simple)
+    // Used for avatar sync and VIP check
+    // ============================================
+    match /profiles/{userId} {
+      // Users can read/write their own profile
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      allow create, update: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['avatar_url', 'updated_at'])
+        && (request.resource.data.avatar_url == null || request.resource.data.avatar_url is string);
+    }
+
+    // ============================================
+    // VIP (root collection)
+    // Read-only for users, admin write
+    // ============================================
+    match /vip/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // Admin write handled via Admin SDK / Cloud Functions
+      allow write: if false;
+    }
+
+    // ============================================
+    // DENY ALL OTHER ACCESS
+    // ============================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

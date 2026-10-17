@@ -59,8 +59,8 @@ const availableEmbedServers: EmbedServer[] = [
     name: "VidKing",
     isFrench: false,
     urls: {
-      movie: "https://www.vidking.ws/embed/movie/{id}?color=e50914&autoPlay=true",
-      tv: "https://www.vidking.net/embed/tv/{id}/{season}/{episode}?color=e50914&autoPlay=true&nextEpisode=true",
+      movie: "https://vidking.ws/embed/movie/{id}?color=e50914&autoPlay=true",
+      tv: "https://vidking.ws/embed/tv/{id}/{season}/{episode}?color=e50914&autoPlay=true&nextEpisode=true",
     },
   },
   {

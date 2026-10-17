@@ -1,6 +1,7 @@
 # StreamFlix
 
-A free, Netflix-style streaming web app. Browse an ever-changing catalog of movies and TV shows, manage multiple user profiles, keep a watchlist, and pick up where you left off.
+A free, Netflix-style streaming web app. Browse an ever-changing catalog of movies and TV shows, manage multiple user profiles, keep a watchlist, pick up where you left off, and get notified when new releases drop.
+
 **Live at [streamflix.dpdns.org](https://streamflix.dpdns.org)**
 
 ## Features
@@ -97,6 +98,29 @@ The mobile app is a Capacitor WebView wrapper around the deployed site.
 - `npm run mobile:open` — open `android/` in Android Studio
 - `npm run mobile:build` — build an APK
 
-> Note: Web changes in `src/` only appear in the app after the site is rebuilt and redeployed.
+> Note: web changes in `src/` only appear in the app after the site is rebuilt and redeployed.
 
-> Note: StreamFlix doesn't host or store films or any data about them. All films are hosted from third-party sites which may impose advertising. 
+## Deployment
+
+Vercel deploys directly from the `main` branch of this repository (TanStack Start SSR build, Nitro Vercel preset). Push to `main` to trigger a deploy.
+
+## Project Structure
+
+```
+src/
+├── components/          # Reusable UI + streamflix components
+├── routes/              # File-based routes (TanStack Router)
+│   ├── __root.tsx       # App shell
+│   ├── index.tsx        # Landing page
+│   ├── auth.tsx         # Sign in / sign up
+│   └── _authenticated/  # Authenticated pages (browse, search, watch, ...)
+├── lib/                 # Firebase, TMDB API, data helpers
+├── integrations/        # Third-party service adapters
+└── styles.css           # Global styles
+electron/                # Electron desktop shell
+android/                 # Capacitor Android project
+```
+
+## License
+
+[MIT](LICENSE)

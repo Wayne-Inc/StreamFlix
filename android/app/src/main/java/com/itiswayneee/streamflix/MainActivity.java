@@ -78,6 +78,7 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
 
         try {
+            WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
             getWindow().getDecorView().setBackgroundColor(Color.BLACK);
             WebView webView = bridge != null ? bridge.getWebView() : null;
             if (webView != null) {
