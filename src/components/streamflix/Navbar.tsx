@@ -517,13 +517,6 @@ export function Navbar() {
               Calendar
             </Link>
             <Link
-              to="/assistant"
-              onClick={() => setBrowseMenuOpen(false)}
-              className={`rounded-lg px-3 py-2.5 text-sm ${pathname === "/assistant" ? "bg-accent font-semibold text-foreground" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"}`}
-            >
-              AI Guide
-            </Link>
-            <Link
               to="/history"
               onClick={() => setBrowseMenuOpen(false)}
               className="rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground"
@@ -599,6 +592,13 @@ export function Navbar() {
           className={`flex min-w-14 flex-col items-center gap-1 py-1 text-[10px] ${pathname === "/search" ? "text-foreground" : "text-muted-foreground"}`}
         >
           <Search className="size-5" /> Search
+        </Link>
+        <Link
+          to="/assistant"
+          aria-label="AI Guide"
+          className={`flex min-w-14 flex-col items-center gap-1 py-1 text-[10px] ${pathname === "/assistant" ? "text-foreground" : "text-muted-foreground"}`}
+        >
+          <Sparkles className="size-5" /> AI Guide
         </Link>
         <button
           type="button"
