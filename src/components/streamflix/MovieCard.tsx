@@ -54,7 +54,7 @@ export function MovieCard({
 
   return (
     <div
-      className={`group relative ${fluid ? "w-full" : landscape ? "w-[220px] sm:w-[300px] shrink-0" : "w-[175px] sm:w-[220px] shrink-0"}`}
+      className={`group relative ${fluid ? "w-full" : landscape ? "w-[280px] sm:w-[380px] shrink-0" : "w-[175px] sm:w-[220px] shrink-0"}`}
       data-context="movie"
       data-title={movie.title}
       data-url={`/movie/${movie.id}`}
@@ -68,8 +68,8 @@ export function MovieCard({
           <LazyImage
             src={landscape ? movie.backdropSm || movie.backdrop : movie.poster}
             alt={movie.title}
-            width={landscape ? 640 : 400}
-            height={landscape ? 360 : 600}
+            width={landscape ? 800 : 400}
+            height={landscape ? 450 : 600}
             className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
           />
         ) : (
@@ -85,8 +85,8 @@ export function MovieCard({
           </div>
         </div>
 
-        {/* Title + meta on hover */}
-        <div className="absolute inset-x-0 bottom-0 p-3 translate-y-2 opacity-0 transition-all duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100">
+        {/* Title + meta (always visible for landscape, hover for portrait) */}
+        <div className={`absolute inset-x-0 bottom-0 p-3 ${landscape ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0 transition-all duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100"}`}>
           <p className="text-xs sm:text-sm font-bold text-white line-clamp-1 drop-shadow-lg">
             {movie.title}
           </p>
