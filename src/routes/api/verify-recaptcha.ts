@@ -1,8 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const RECAPTCHA_PROJECT = "streamflix-e91bc";
-const RECAPTCHA_SITE_KEY = "6Ley4pEtAAAAAEYBuciRyro32EY15v0BAsfwkzAV";
-const SCORE_THRESHOLD = 0.5;
+const SCORE_THRESHOLD = 0.5; // Keeping for compatibility, but Turnstile doesn't use scores
 
 export const Route = createFileRoute("/api/verify-recaptcha")({
   server: {
@@ -19,66 +17,55 @@ export const Route = createFileRoute("/api/verify-recaptcha")({
             });
           }
 
-          const apiKey = process.env.RECAPTCHA_API_KEY || (import.meta as any).env?.VITE_FIREBASE_API_KEY;
-          if (!apiKey) {
-            console.error("RECAPTCHA_API_KEY env var not set");
+          const secretKey = process.env.TURNSTILE_SECRET_KEY || (import.meta as any).env?.TURNSTILE_SECRET_KEY;
+          if (!secretKey) {
+            console.error("TURNSTILE_SECRET_KEY env var not set");
             return new Response(JSON.stringify({ ok: false, error: "Server config error" }), {
               status: 500,
               headers: { "Content-Type": "application/json" },
             });
           }
 
-          const assessRes = await fetch(
-            `https://recaptchaenterprise.googleapis.com/v1/projects/${RECAPTCHA_PROJECT}/assessments?key=${apiKey}`,
+          const verifyRes = await fetch(
+            `https://challenges.cloudflare.com/turnstile/v0/siteverify`,
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                event: {
-                  token,
-                  siteKey: RECAPTCHA_SITE_KEY,
-                  expectedAction: action || "signin",
-                },
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams({
+                secret: secretKey,
+                response: token,
               }),
-            },
+            }
           );
 
-          const data = await assessRes.json();
+          const data = await verifyRes.json();
 
-          if (!data.tokenProperties?.valid) {
+          if (!data.success) {
             return new Response(
               JSON.stringify({
                 ok: false,
                 score: 0,
-                reason: data.tokenProperties?.invalidReason || "invalid_token",
+                reasons: data["error-codes"] || [],
               }),
               { status: 200, headers: { "Content-Type": "application/json" } },
             );
           }
 
-          const score = data.riskAnalysis?.score ?? 0;
-          const reasons = data.riskAnalysis?.reasons ?? [];
-
-          if (data.tokenProperties?.action !== action) {
+          // Optionally verify action
+          if (data.action !== action) {
             return new Response(
-              JSON.stringify({ ok: false, score, reasons, reason: "action_mismatch" }),
+              JSON.stringify({ ok: false, score: 0, reasons: ["action_mismatch"] }),
               { status: 200, headers: { "Content-Type": "application/json" } },
             );
           }
 
-          if (score < SCORE_THRESHOLD) {
-            return new Response(
-              JSON.stringify({ ok: false, score, reasons, reason: "low_score" }),
-              { status: 200, headers: { "Content-Type": "application/json" } },
-            );
-          }
-
-          return new Response(JSON.stringify({ ok: true, score, reasons }), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
+          // Turnstile doesn't provide a score, so we'll use 1 for success to maintain compatibility
+          return new Response(
+            JSON.stringify({ ok: true, score: 1, reasons: [] }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          );
         } catch (err) {
-          console.error("reCAPTCHA verification error:", err);
+          console.error("Turnstile verification error:", err);
           return new Response(JSON.stringify({ ok: false, error: "Internal error" }), {
             status: 500,
             headers: { "Content-Type": "application/json" },

@@ -71,7 +71,8 @@ function TermsOfServicePage() {
             </li>
             <li>Attempt to gain unauthorized access to any part of the platform or its systems.</li>
             <li>Interfere with or disrupt the integrity or performance of the service.</li>
-            <li>Circumvent any technological measures implemented to protect the platform.</li>
+            <li>Circumvent any technological measures implemented to protect the platform (including security measures like Cloudflare Turnstile).</li>
+            <li>Use any automated system (including robots, spiders, or scrapers) to access the service in a manner that sends more request messages to our servers in a given period of time than a human can reasonably produce in the same period by using a conventional online web browser.</li>
           </ul>
         </section>
 
@@ -85,15 +86,6 @@ function TermsOfServicePage() {
           </p>
         </section>
 
-        <section className="space-y-2 sm:space-y-4">
-          <h2 className="text-base sm:text-2xl font-semibold">Open Source License</h2>
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            The StreamFlix software is distributed under the MIT License. You are permitted to use,
-            copy, modify, merge, publish, and distribute the software, free of charge and without
-            restriction, provided that the original copyright notice and license text are included
-            in copies or substantial portions of the software.
-          </p>
-        </section>
 
         <section className="space-y-2 sm:space-y-4">
           <h2 className="text-base sm:text-2xl font-semibold">Content and Availability</h2>
@@ -128,7 +120,7 @@ function TermsOfServicePage() {
         <section className="space-y-2 sm:space-y-4">
           <h2 className="text-base sm:text-2xl font-semibold">Limitation of Liability</h2>
           <p className="text-sm leading-relaxed text-muted-foreground">
-            To the fullest extent permitted by law, StreamFlix and Samwel Wayne shall not be liable
+            To the fullest extent permitted by law, StreamFlix and Wayne Inc shall not be liable
             for any indirect, incidental, special, consequential, or punitive damages arising out of
             or related to your use of the service, whether based on warranty, contract, tort, or any
             other legal theory.

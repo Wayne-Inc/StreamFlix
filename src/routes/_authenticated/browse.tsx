@@ -9,7 +9,6 @@ import { MovieCard } from "@/components/streamflix/MovieCard";
 import { Footer } from "@/components/streamflix/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RowSkeleton } from "@/components/streamflix/RowSkeleton";
-import { ReleaseReminderBanner } from "@/components/streamflix/ReleaseReminderBanner";
 import { loadBrowseData, searchByGenre, type BrowseKind } from "@/lib/streamflix-data";
 import { fetchPopular } from "@/lib/api/tmdb";
 import type { Movie } from "@/lib/types";
@@ -466,16 +465,6 @@ function BrowsePage() {
       <Navbar />
       <HeroBanner slides={filteredHeroSlides} />
       <div className="relative z-10 mt-0 md:mt-12 space-y-6 md:space-y-12">
-        {kind === "new" && (
-          <div className="px-4 sm:px-8 pt-2">
-            <Link
-              to="/calendar"
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-4 py-2 text-sm text-foreground transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:border-primary"
-            >
-              <span aria-hidden>📅</span> Release Calendar — get notified when titles arrive
-            </Link>
-          </div>
-        )}
         {kind === "home" && continueLoading && <RowSkeleton />}
         {continueRow && kind === "home" && (
           <section className="space-y-4 py-4">
@@ -659,7 +648,6 @@ function BrowsePage() {
           <ArrowUp className="size-5" />
         </button>
       </div>
-      <ReleaseReminderBanner />
       <Footer />
     </div>
   );

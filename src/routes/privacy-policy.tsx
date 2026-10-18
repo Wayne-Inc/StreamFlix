@@ -63,6 +63,29 @@ function PrivacyPolicyPage() {
               <strong>Cookies and Tracking:</strong> We use cookies and similar technologies to
               enhance functionality and analyze usage patterns.
             </li>
+            <li>
+              <strong>Turnstile Verification Data:</strong> To protect against bots and abuse,
+              we use Cloudflare Turnstile during sign-in. This collects device and browser
+              information to verify human interactions, as outlined in Cloudflare's
+              <a href="https://www.cloudflare.com/turnstile-privacy-addendum/" target="_blank"
+                rel="noopener noreferrer">Turnstile Privacy Addendum</a>. No personal data is
+              sold to third parties.
+            </li>
+            <li>
+              <strong>Analytics Data:</strong> We may use third-party analytics services to
+              understand how our service is used.
+            </li>
+            <li>
+              <strong>Communications:</strong> If you contact us directly, we may receive
+              additional information about you such as your name, email address, phone number,
+              the contents of the message and/or attachments you may send us, and any other
+              information you may choose to provide.
+            </li>
+            <li>
+              <strong>Transaction Data:</strong> Information about purchases and other financial
+              transactions, including payment card information (which is processed directly by
+              our payment partners).
+            </li>
           </ul>
         </section>
 
@@ -72,13 +95,14 @@ function PrivacyPolicyPage() {
             We use the collected information to:
           </p>
           <ul className="list-disc pl-6 text-sm leading-relaxed text-muted-foreground space-y-1">
-            <li>Provide, personalize, and improve your experience on StreamFlix.</li>
-            <li>Recommend content based on your viewing history and preferences.</li>
-            <li>
-              Communicate with you about service updates, support requests, and policy changes.
-            </li>
+            <li>Provide, maintain, and improve our service.</li>
+            <li>Personalize your experience and recommend content.</li>
+            <li>Communicate with you about your account, service updates, and promotional offers.</li>
+            <li>Process transactions and prevent fraud.</li>
+            <li>Enable security verification through Cloudflare Turnstile to protect against bots and abuse.</li>
             <li>Monitor and analyze usage trends to enhance platform performance.</li>
-            <li>Detect, prevent, and address technical issues, fraud, or abuse.</li>
+            <li>Detect, prevent, and address technical issues, fraud, or other harmful activities.</li>
+            <li>Ensure compliance with legal obligations and enforce our policies.</li>
           </ul>
         </section>
 

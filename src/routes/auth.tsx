@@ -87,8 +87,8 @@ function AuthPage() {
     setVerifyMsg("");
     try {
       if (mode === "signin") {
-        const { executeCaptcha } = await import("@/lib/captcha");
-        const token = await executeCaptcha("signin");
+        const { executeTurnstile } = await import("@/lib/turnstile");
+        const token = await executeTurnstile("signin");
         if (!token) {
           toast.error("Verification failed. Please try again.");
           setBusy(false);
