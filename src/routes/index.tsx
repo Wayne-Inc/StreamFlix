@@ -320,7 +320,7 @@ function Landing() {
               Privacy Policy
             </Link>
           </div>
-          <p className="mt-6 text-xs">© {new Date().getFullYear()} StreamFlix</p>
+          <p className="mt-6 text-xs">Made by Wayne Inc</p>
         </div>
       </footer>
     </main>

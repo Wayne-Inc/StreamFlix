@@ -27,6 +27,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedStatsRouteImport } from './routes/_authenticated/stats'
 import { Route as ApiArchiveRouteImport } from './routes/api/archive'
 import { Route as ApiClientIpRouteImport } from './routes/api/client-ip'
+import { Route as ApiPaypalRouteImport } from './routes/api/paypal'
 import { Route as ApiProxyRouteImport } from './routes/api/proxy'
 import { Route as ApiReleaseNotificationsCronRouteImport } from './routes/api/release-notifications-cron'
 import { Route as ApiSendNotificationRouteImport } from './routes/api/send-notification'
@@ -128,6 +129,11 @@ const ApiClientIpRoute = ApiClientIpRouteImport.update({
   path: '/api/client-ip',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPaypalRoute = ApiPaypalRouteImport.update({
+  id: '/api/paypal',
+  path: '/api/paypal',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiProxyRoute = ApiProxyRouteImport.update({
   id: '/api/proxy',
   path: '/api/proxy',
@@ -200,6 +206,7 @@ export interface FileRoutesByFullPath {
   '/stats': typeof AuthenticatedStatsRoute
   '/api/archive': typeof ApiArchiveRoute
   '/api/client-ip': typeof ApiClientIpRoute
+  '/api/paypal': typeof ApiPaypalRoute
   '/api/proxy': typeof ApiProxyRoute
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
   '/api/send-notification': typeof ApiSendNotificationRoute
@@ -228,6 +235,7 @@ export interface FileRoutesByTo {
   '/stats': typeof AuthenticatedStatsRoute
   '/api/archive': typeof ApiArchiveRoute
   '/api/client-ip': typeof ApiClientIpRoute
+  '/api/paypal': typeof ApiPaypalRoute
   '/api/proxy': typeof ApiProxyRoute
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
   '/api/send-notification': typeof ApiSendNotificationRoute
@@ -259,6 +267,7 @@ export interface FileRoutesById {
   '/_authenticated/stats': typeof AuthenticatedStatsRoute
   '/api/archive': typeof ApiArchiveRoute
   '/api/client-ip': typeof ApiClientIpRoute
+  '/api/paypal': typeof ApiPaypalRoute
   '/api/proxy': typeof ApiProxyRoute
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
   '/api/send-notification': typeof ApiSendNotificationRoute
@@ -290,6 +299,7 @@ export interface FileRouteTypes {
     | '/stats'
     | '/api/archive'
     | '/api/client-ip'
+    | '/api/paypal'
     | '/api/proxy'
     | '/api/release-notifications-cron'
     | '/api/send-notification'
@@ -318,6 +328,7 @@ export interface FileRouteTypes {
     | '/stats'
     | '/api/archive'
     | '/api/client-ip'
+    | '/api/paypal'
     | '/api/proxy'
     | '/api/release-notifications-cron'
     | '/api/send-notification'
@@ -348,6 +359,7 @@ export interface FileRouteTypes {
     | '/_authenticated/stats'
     | '/api/archive'
     | '/api/client-ip'
+    | '/api/paypal'
     | '/api/proxy'
     | '/api/release-notifications-cron'
     | '/api/send-notification'
@@ -369,6 +381,7 @@ export interface RootRouteChildren {
   TosRoute: typeof TosRoute
   ApiArchiveRoute: typeof ApiArchiveRoute
   ApiClientIpRoute: typeof ApiClientIpRoute
+  ApiPaypalRoute: typeof ApiPaypalRoute
   ApiProxyRoute: typeof ApiProxyRoute
   ApiReleaseNotificationsCronRoute: typeof ApiReleaseNotificationsCronRoute
   ApiSendNotificationRoute: typeof ApiSendNotificationRoute
@@ -501,6 +514,13 @@ declare module '@tanstack/react-router' {
       path: '/api/client-ip'
       fullPath: '/api/client-ip'
       preLoaderRoute: typeof ApiClientIpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/paypal': {
+      id: '/api/paypal'
+      path: '/api/paypal'
+      fullPath: '/api/paypal'
+      preLoaderRoute: typeof ApiPaypalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/proxy': {
@@ -643,6 +663,7 @@ const rootRouteChildren: RootRouteChildren = {
   TosRoute: TosRoute,
   ApiArchiveRoute: ApiArchiveRoute,
   ApiClientIpRoute: ApiClientIpRoute,
+  ApiPaypalRoute: ApiPaypalRoute,
   ApiProxyRoute: ApiProxyRoute,
   ApiReleaseNotificationsCronRoute: ApiReleaseNotificationsCronRoute,
   ApiSendNotificationRoute: ApiSendNotificationRoute,

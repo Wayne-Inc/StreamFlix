@@ -34,15 +34,21 @@ import { shareContent } from "@/lib/share";
 import { buildTitleLogoUrl } from "@/lib/title-logo";
 import { seoMetaFor, siteUrl } from "@/lib/seo";
 import { stepsToUsefulBackTarget } from "@/lib/nav-history";
-import { getWatchHistory, markAsWatched, unmarkWatched } from "@/lib/continue-watching";
+import {
+  getWatchHistory,
+  getWatchedEpisodeSet,
+  markAsWatched,
+  unmarkWatched,
+} from "@/lib/continue-watching";
 import { isInMyList, toggleMyList } from "@/lib/my-list";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { Row } from "@/components/streamflix/Row";
 import { Skeleton } from "@/components/ui/skeleton";
 import { movieById, loadSimilar, loadRecommendations, getWatchProviders, type WatchProvider } from "@/lib/streamflix-data";
-import { discoverByGenre, fetchTitleLogo } from "@/lib/api/tmdb";
+import { discoverByGenre, fetchTitleLogo, fetchTvSeason } from "@/lib/api/tmdb";
 import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
+import { getWatchHistoryFromFirestore } from "@/lib/history-firestore";
 import { TrailerModal } from "@/components/streamflix/TrailerModal";
 import { AgeRatingBadge } from "@/components/streamflix/AgeRatingBadge";
 
@@ -201,6 +207,10 @@ function MoviePage() {
 
   const [inList, setInList] = useState(false);
   const [watched, setWatched] = useState(false);
+  const [playEpisode, setPlayEpisode] = useState<{ season: number; episode: number }>({
+    season: 1,
+    episode: 1,
+  });
   const [offers, setOffers] = useState<WatchProvider[]>([]);
   const [offersLoading, setOffersLoading] = useState(true);
   const [showAllOffers, setShowAllOffers] = useState(false);
@@ -209,6 +219,67 @@ function MoviePage() {
     setInList(isInMyList(movie.id));
     setWatched(getWatchHistory().some((x) => x.id === movie.id || x.id.startsWith(`${movie.id}:`)));
   }, [movie.id]);
+
+  useEffect(() => {
+    if (!isTv) return;
+    let cancelled = false;
+    let revision = 0;
+    const updateNextEpisode = async () => {
+      const currentRevision = ++revision;
+      const watchedEpisodes = getWatchedEpisodeSet(movie.id);
+      try {
+        const firestoreHistory = await getWatchHistoryFromFirestore();
+        for (const item of firestoreHistory) {
+          if (item.id === movie.id || item.id.startsWith(`${movie.id}:`)) {
+            if (item.season != null && item.episode != null) {
+              watchedEpisodes.add(`S${item.season}E${item.episode}`);
+            }
+          }
+        }
+      } catch {}
+      if (cancelled || currentRevision !== revision) return;
+
+      const seasonCount = Math.max(1, movie.numberOfSeasons ?? 1);
+      for (let season = 1; season <= seasonCount; season++) {
+        try {
+          const data = await fetchTvSeason({
+            data: { id: movie.id.replace(/^tv-/, ""), season },
+          });
+          const episodes = [...(data.episodes || [])].sort(
+            (a: { episode_number: number }, b: { episode_number: number }) =>
+              a.episode_number - b.episode_number,
+          );
+          const next = episodes.find(
+            (item: { episode_number: number }) =>
+              !watchedEpisodes.has(`S${season}E${item.episode_number}`),
+          );
+          if (next) {
+            if (!cancelled && currentRevision === revision) {
+              setPlayEpisode({ season, episode: next.episode_number });
+            }
+            return;
+          }
+        } catch {
+          // Skip unavailable seasons and continue looking for the next playable one.
+        }
+      }
+
+      if (!cancelled && currentRevision === revision) setPlayEpisode({ season: 1, episode: 1 });
+    };
+
+    updateNextEpisode();
+    let refreshTimer: ReturnType<typeof setTimeout> | undefined;
+    const scheduleUpdate = () => {
+      if (refreshTimer) clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(updateNextEpisode, 150);
+    };
+    window.addEventListener("sf:watchedUpdated", scheduleUpdate);
+    return () => {
+      cancelled = true;
+      if (refreshTimer) clearTimeout(refreshTimer);
+      window.removeEventListener("sf:watchedUpdated", scheduleUpdate);
+    };
+  }, [isTv, movie.id, movie.numberOfSeasons]);
 
   // Fetch TMDB watch providers
   useEffect(() => {
@@ -388,13 +459,13 @@ function MoviePage() {
                   params={{ id: movie.id }}
                   search={
                     isTv
-                      ? { autoplay: true, season: 1, episode: 1 }
+                      ? { autoplay: true, ...playEpisode }
                       : { autoplay: true }
                   }
                   className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md bg-foreground px-5 py-2.5 text-sm font-semibold text-background hover:bg-foreground/85 sm:px-6 sm:py-3"
                 >
                   <Play className="size-4 fill-current sm:size-5" />{" "}
-                  {isTv ? "Play S1 E1" : "Play"}
+                  {isTv ? `Play S${playEpisode.season} E${playEpisode.episode}` : "Play"}
                 </Link>
                 {movie.trailer && (
                   <button

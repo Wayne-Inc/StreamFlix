@@ -218,6 +218,91 @@ function SettingsPage() {
     },
   });
 
+  const [vipPaymentBusy, setVipPaymentBusy] = useState(false);
+  const paypalReturnHandled = useRef(false);
+
+  const startVipCheckout = async () => {
+    if (!user || vipPaymentBusy) return;
+    setVipPaymentBusy(true);
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch("/api/paypal", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ action: "create-order" }),
+      });
+      const result = (await response.json()) as { approvalUrl?: string; error?: string };
+      if (!response.ok || !result.approvalUrl) {
+        throw new Error(result.error || "Could not start PayPal checkout.");
+      }
+      window.location.assign(result.approvalUrl);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not start PayPal checkout.");
+      setVipPaymentBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paypalStatus = params.get("paypal");
+    if (!paypalStatus) return;
+
+    const clearPayPalParams = () => {
+      params.delete("paypal");
+      params.delete("token");
+      params.delete("PayerID");
+      const query = params.toString();
+      window.history.replaceState(
+        window.history.state,
+        "",
+        `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`,
+      );
+    };
+
+    if (paypalStatus === "cancelled") {
+      clearPayPalParams();
+      toast.info("PayPal checkout was cancelled.");
+      return;
+    }
+
+    const orderId = params.get("token");
+    if (paypalStatus !== "success" || !orderId || !user || paypalReturnHandled.current) return;
+    paypalReturnHandled.current = true;
+    setVipPaymentBusy(true);
+
+    void (async () => {
+      try {
+        const token = await user.getIdToken();
+        const response = await fetch("/api/paypal", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ action: "capture-order", orderId }),
+        });
+        const result = (await response.json()) as { ok?: boolean; error?: string };
+        if (!response.ok || !result.ok) {
+          throw new Error(result.error || "PayPal payment could not be verified.");
+        }
+        await qc.invalidateQueries({ queryKey: ["vip", user.uid] });
+        try {
+          localStorage.setItem("sf:vip", "1");
+          window.dispatchEvent(new Event("sf:vipUpdated"));
+        } catch {}
+        toast.success("Payment complete — VIP is now active.");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "PayPal payment could not be verified.");
+      } finally {
+        clearPayPalParams();
+        setVipPaymentBusy(false);
+      }
+    })();
+  }, [qc, user]);
+
   const useGooglePfp = async () => {
     if (!googlePhotoURL || !user) return;
     const prevProfile = qc.getQueryData<Profile>(["profile", user.uid]);
@@ -450,6 +535,31 @@ function SettingsPage() {
                   Enjoy an ad-free experience, early access to new releases, and priority support.
                 </p>
               </div>
+            </div>
+          </section>
+        )}
+
+        {user && !isVip && (
+          <section className="mt-8 rounded-lg border border-primary/30 bg-gradient-to-r from-primary/10 via-card/50 to-transparent p-4 sm:p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="grid size-12 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
+                <Crown className="size-6" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg font-bold">Become a VIP member</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  One-time payment of $1.99 USD for lifetime VIP access. Secure checkout through PayPal.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={startVipCheckout}
+                disabled={vipPaymentBusy}
+                className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {vipPaymentBusy && <Loader2 className="size-4 animate-spin" />}
+                {vipPaymentBusy ? "Opening PayPal…" : "Get VIP with PayPal"}
+              </button>
             </div>
           </section>
         )}

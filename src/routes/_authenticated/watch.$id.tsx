@@ -1,20 +1,17 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { useEffect, useRef, useState, useCallback, type MouseEvent, type TouchEvent } from "react";
-import { ArrowLeft, Settings, Wifi, Loader, RotateCw, Users, ShieldOff, Play, Zap, Maximize, Minimize, Minimize2 } from "lucide-react";
+import { ArrowLeft, Settings, Loader, RotateCw, ShieldOff, Minimize2 } from "lucide-react";
 import { movieById } from "@/lib/streamflix-data";
-import { getContinueWatching, recordProgress } from "@/lib/continue-watching";
+import { recordProgress } from "@/lib/continue-watching";
 import { saveProgressToFirestore } from "@/lib/continue-watching-firestore";
-import { getVideoSource } from "@/lib/video-sources";
 import { probeEmbedUrl, fetchTvSeason } from "@/lib/api/tmdb";
-import { resolveVidNestStreams, type VidNestStream } from "@/lib/api/vidnest";
 import { isPipSupported, enterPictureInPicture, isMobileApp } from "@/lib/mobile";
 import { auth } from "@/lib/firebase";
 import { startSession, endSession } from "@/lib/session-tracking";
 import { toast } from "sonner";
 import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
 import { seoMetaFor } from "@/lib/seo";
-import { MAIN_VIDEO_URL } from "@/lib/constants";
 import { isKidsProfile, isRatingBlockedForKids, isGenreBlockedForKids } from "@/lib/kids-mode";
 
 interface NetworkInformation {
@@ -37,7 +34,7 @@ const watchSearchSchema = z.object({
 function fmt(t: number) {
   if (!isFinite(t)) return "0:00";
   const m = Math.floor(t / 60);
-  const s = Math.floor(t % 60)
+  const s = Math.floor(t % 66)
     .toString()
     .padStart(2, "0");
   return `${m}:${s}`;
@@ -91,15 +88,6 @@ const availableEmbedServers: EmbedServer[] = [
     },
   },
   {
-    id: "primewire",
-    name: "PrimeWire",
-    isFrench: false,
-    urls: {
-      movie: "https://www.primewire.tf/embed/movie?tmdb={id}",
-      tv: "https://www.primewire.tf/embed/tv?tmdb={id}&season={season}&episode={episode}",
-    },
-  },
-  {
     id: "multiembed",
     name: "MultiEmbed",
     isFrench: false,
@@ -145,15 +133,6 @@ const availableEmbedServers: EmbedServer[] = [
     },
   },
   {
-    id: "embedsu",
-    name: "Embed.su",
-    isFrench: false,
-    urls: {
-      movie: "https://embed.su/embed/movie/{id}",
-      tv: "https://embed.su/embed/tv/{id}/{season}/{episode}",
-    },
-  },
-  {
     id: "vidsrcto",
     name: "VidSrc.to",
     isFrench: false,
@@ -178,42 +157,6 @@ const availableEmbedServers: EmbedServer[] = [
     urls: {
       movie: "https://vidsrc.su/embed/movie/{id}",
       tv: "https://vidsrc.su/embed/tv/{id}/{season}/{episode}",
-    },
-  },
-  {
-    id: "vidsrcvip",
-    name: "VidSrc.vip",
-    isFrench: false,
-    urls: {
-      movie: "https://vidsrc.vip/embed/movie/{id}",
-      tv: "https://vidsrc.vip/embed/tv/{id}/{season}/{episode}",
-    },
-  },
-  {
-    id: "frembed",
-    name: "Frembed",
-    isFrench: true,
-    urls: {
-      movie: "https://frembed.cc/api/film.php?id={id}",
-      tv: "https://frembed.cc/api/serie.php?id={id}&sa={season}&epi={episode}",
-    },
-  },
-  {
-    id: "moviesapi",
-    name: "MoviesAPI",
-    isFrench: false,
-    urls: {
-      movie: "https://moviesapi.club/movie/{id}",
-      tv: "https://moviesapi.club/tv/{id}-{season}-{episode}",
-    },
-  },
-  {
-    id: "direct",
-    name: "Direct",
-    isFrench: false,
-    urls: {
-      movie: "",
-      tv: "",
     },
   },
 ];
@@ -241,8 +184,8 @@ function buildEmbedUrl(
   const template = isTv ? server.urls.tv : server.urls.movie;
   return template
     .replace("{id}", tmdbId)
-    .replace("{season}", season != null ? String(season) : "")
-    .replace("{episode}", episode != null ? String(episode) : "");
+    .replace("{season}", String(season ?? 1))
+    .replace("{episode}", String(episode ?? 1));
 }
 
 function isEmbedUrl(url: string) {
@@ -286,7 +229,7 @@ function sendEmbedPlaybackCommand(
 function PlayerPage() {
   const data = Route.useLoaderData();
   const movie = data?.movie;
-  const { season, episode, autoplay } = Route.useSearch();
+  const { season, episode } = Route.useSearch();
 
   const kidsMode = isKidsProfile();
 
@@ -296,7 +239,8 @@ function PlayerPage() {
   const [selectedServerId, setSelectedServerId] = useState<string>(() => {
     if (typeof window === "undefined") return "vidking";
     try {
-      return localStorage.getItem("sf:embedServer") || "vidking";
+      const savedId = localStorage.getItem("sf:embedServer");
+      return availableEmbedServers.some((server) => server.id === savedId) ? savedId! : "vidking";
     } catch {
       return "vidking";
     }
@@ -346,27 +290,6 @@ function PlayerPage() {
   const [connectionQuality, setConnectionQuality] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
-  // Direct stream (VidNest) state
-  const [directStreams, setDirectStreams] = useState<VidNestStream[]>([]);
-  const [directLoading, setDirectLoading] = useState(false);
-  const [directError, setDirectError] = useState<string | null>(null);
-  const [activeDirectStream, setActiveDirectStream] = useState<number>(0);
-  const [directPlaying, setDirectPlaying] = useState(false);
-  const hlsRef = useRef<any>(null);
-  const directVideoRef = useRef<HTMLVideoElement>(null);
-  const directContainerRef = useRef<HTMLDivElement>(null);
-  const [directCurrentTime, setDirectCurrentTime] = useState(0);
-  const [directDuration, setDirectDuration] = useState(0);
-  const [directProgress, setDirectProgress] = useState(0);
-  const [directPlayingState, setDirectPlayingState] = useState(false);
-  const [directBuffering, setDirectBuffering] = useState(false);
-  const [directEnded, setDirectEnded] = useState(false);
-  const [directShowControls, setDirectShowControls] = useState(true);
-  const directHideTimer = useRef<number | null>(null);
-  const [directVolume, setDirectVolume] = useState(1);
-  const [directMuted, setDirectMuted] = useState(false);
-  const triedDirectRef = useRef<Set<number>>(new Set());
-
   const isTv = movie.id.startsWith("tv-");
   const [autoplayNext, setAutoplayNext] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
@@ -379,47 +302,12 @@ function PlayerPage() {
   const [nextEp, setNextEp] = useState<{ season: number; episode: number } | null>(null);
   const embedEndedFiredRef = useRef(false);
 
-  const destroyHls = useCallback(() => {
-    if (hlsRef.current) {
-      hlsRef.current.destroy();
-      hlsRef.current = null;
-    }
-  }, []);
-
-  // Helper to extract quality number from stream language (e.g., "1080p" -> 1080)
-  const getStreamQuality = useCallback((stream: VidNestStream): number => {
-    const match = stream.language.match(/(\d+)p/i);
-    return match ? parseInt(match[1], 10) : 0;
-  }, []);
-
-  const tryNextDirect = useCallback(() => {
-    // Sort untried streams by quality (highest first)
-    const untried = directStreams
-      .map((s, i) => ({ stream: s, index: i, quality: getStreamQuality(s) }))
-      .filter(({ index }) => !triedDirectRef.current.has(index))
-      .sort((a, b) => b.quality - a.quality);
-
-    if (untried.length > 0) {
-      triedDirectRef.current.add(activeDirectStream);
-      setActiveDirectStream(untried[0].index);
-    } else {
-      setDirectEnded(true);
-      toast.error("All direct streams failed.");
-    }
-  }, [activeDirectStream, directStreams, getStreamQuality]);
-
   const handleServerSelect = useCallback((id: string) => {
     setSelectedServerId(id);
-    setDirectPlaying(false);
-    setDirectStreams([]);
-    setDirectEnded(false);
-    setActiveDirectStream(0);
-    triedDirectRef.current.clear();
-    destroyHls();
     try {
       localStorage.setItem("sf:embedServer", id);
     } catch {}
-  }, [destroyHls]);
+  }, []);
 
   const toggleAutoplayNext = useCallback(() => {
     setAutoplayNext((prev) => {
@@ -521,9 +409,8 @@ function PlayerPage() {
     try {
       screen.orientation?.unlock();
     } catch {}
-    destroyHls();
     navigate({ to: "/movie/$id", params: { id: movie.id } });
-  }, [navigate, movie.id, destroyHls]);
+  }, [navigate, movie.id]);
 
   const wake = useCallback(() => {
     setShowControls(true);
@@ -698,7 +585,6 @@ function PlayerPage() {
     return () => conn.removeEventListener("change", update);
   }, []);
 
-
   // server fallback: probe embed servers only when user opens the server picker
   const probedRef = useRef(false);
   const probeServers = useCallback(async () => {
@@ -737,7 +623,6 @@ function PlayerPage() {
   }, [movie.id]);
 
   useEffect(() => {
-    if (selectedServerId === "direct") return;
     const url = buildEmbedUrl(selectedServerId, movie.id, season, episode);
     setVideoUrl(url);
     setMainVideoUrl(url);
@@ -822,179 +707,18 @@ function PlayerPage() {
     return () => window.removeEventListener("blocked-redirect", onBlocked);
   }, []);
 
-  // === Direct stream (VidNest) effects ===
-  const isDirect = selectedServerId === "direct";
-
-  useEffect(() => {
-    if (!isDirect) {
-      setDirectStreams([]);
-      setDirectPlaying(false);
-      setActiveDirectStream(0);
-      setDirectError(null);
-      setDirectEnded(false);
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      setDirectLoading(true);
-      setDirectError(null);
-      setDirectStreams([]);
-      setDirectPlaying(false);
-      setActiveDirectStream(0);
-      triedDirectRef.current.clear();
-      try {
-        const tmdbId = movie.id.startsWith("tv-") ? movie.id.slice(3) : movie.id;
-        const type = movie.id.startsWith("tv-") ? "tv" : "movie";
-        console.log("[direct] Requesting streams for:", { tmdbId, type, season, episode });
-        const result = await resolveVidNestStreams({
-          data: { id: tmdbId, type, season, episode },
-        });
-        console.log("[direct] Response:", result);
-        if (cancelled) return;
-        if (result.streams.length === 0) {
-          setDirectError("No direct streams found for this title.");
-        } else {
-          setDirectStreams(result.streams);
-        }
-      } catch (e: any) {
-        console.error("[direct] Error:", e);
-        if (!cancelled) setDirectError(e?.message || "Failed to load streams.");
-      } finally {
-        if (!cancelled) setDirectLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [isDirect, movie.id, season, episode]);
-
-  const playDirectStream = useCallback(
-    (stream: VidNestStream, index: number) => {
-      console.log("[direct] Playing stream:", { index, url: stream.url, type: stream.type, language: stream.language, resolver: stream.resolver });
-      destroyHls();
-      setActiveDirectStream(index);
-      setDirectPlaying(true);
-      setDirectEnded(false);
-      setDirectBuffering(true);
-      triedDirectRef.current.clear();
-
-      const video = directVideoRef.current;
-      if (!video) return;
-
-      const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
-      const proxyBase = siteUrl + "/api/proxy";
-
-      if (stream.type === "hls") {
-        const proxiedUrl = proxyBase + "?url=" + encodeURIComponent(stream.url) + (stream.referer ? "&referer=" + encodeURIComponent(stream.referer) : "");
-        console.log("[direct] Proxied URL:", proxiedUrl);
-
-        if (video.canPlayType("application/vnd.apple.mpegurl")) {
-          video.src = proxiedUrl;
-        } else {
-          import("hls.js").then(({ default: Hls }) => {
-            if (hlsRef.current) hlsRef.current.destroy();
-            if (!Hls.isSupported()) {
-              video.src = proxiedUrl;
-              return;
-            }
-            const hls = new Hls({
-              enableWorker: true,
-              lowLatencyMode: false,
-              maxBufferLength: 30,
-              maxMaxBufferLength: 60,
-              startFragPrefetch: true,
-              manifestLoadingTimeOut: 12000,
-              manifestLoadingMaxRetry: 3,
-              manifestLoadingRetryDelay: 1000,
-              levelLoadingTimeOut: 12000,
-              fragLoadingTimeOut: 12000,
-            });
-            hlsRef.current = hls;
-            hls.loadSource(proxiedUrl);
-            hls.attachMedia(video);
-            hls.on(Hls.Events.MANIFEST_PARSED, () => {
-              console.log("[direct] HLS manifest parsed, playing");
-              setDirectBuffering(false);
-              video.play().catch(() => {});
-            });
-            hls.on(Hls.Events.ERROR, (_: any, data: any) => {
-              console.log("[direct] HLS error:", data);
-              if (data.fatal) {
-                console.log("[direct] HLS fatal error, trying next stream");
-                destroyHls();
-                tryNextDirect();
-              }
-            });
-          });
-        }
-      } else {
-        const src = stream.url;
-        console.log("[direct] Direct MP4 URL:", src);
-        video.src = src;
-      }
-
-      let stallCount = 0;
-      let lastTime = 0;
-      const stallCheck = setInterval(() => {
-        if (!video || video.ended) {
-          clearInterval(stallCheck);
-          return;
-        }
-        if (video.paused || video.seeking) {
-          lastTime = video.currentTime;
-          return;
-        }
-        if (video.currentTime === lastTime && video.currentTime > 0) {
-          stallCount++;
-          if (stallCount >= 3) {
-            clearInterval(stallCheck);
-            console.log("[direct] Stream stalled, trying next");
-            tryNextDirect();
-          }
-        } else {
-          stallCount = 0;
-        }
-        lastTime = video.currentTime;
-      }, 5000);
-
-      const errorHandler = () => {
-        clearInterval(stallCheck);
-        video.removeEventListener("error", errorHandler);
-        console.log("[direct] Video error, trying next");
-        tryNextDirect();
-      };
-      video.addEventListener("error", errorHandler);
-    },
-    [destroyHls, tryNextDirect],
-  );
-
-  const directWake = useCallback(() => {
-    setDirectShowControls(true);
-    if (directHideTimer.current) window.clearTimeout(directHideTimer.current);
-    if (!showSettings) {
-      directHideTimer.current = window.setTimeout(() => {
-        if (directVideoRef.current && !directVideoRef.current.paused) {
-          setDirectShowControls(false);
-        }
-      }, 4000);
-    }
-  }, [showSettings]);
-
   useEffect(() => {
     return () => {
-      destroyHls();
-      if (directHideTimer.current) window.clearTimeout(directHideTimer.current);
       if (hideTimer.current) window.clearTimeout(hideTimer.current);
       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
       videoRef.current?.pause();
-      directVideoRef.current?.pause();
       try {
         screen.orientation?.unlock();
       } catch {}
       document.body.style.overflow = "";
       document.documentElement.style.overflow = "";
     };
-  }, [destroyHls]);
+  }, []);
 
   if (!movie) {
     return (
@@ -1033,7 +757,7 @@ function PlayerPage() {
       onMouseMove={wake}
       onTouchEnd={onContainerTouch}
     >
-      {videoUrl && !isDirect ? (
+      {videoUrl ? (
         isEmbedUrl(videoUrl) ? (
           <iframe
             ref={iframeRef}
@@ -1098,274 +822,6 @@ function PlayerPage() {
               />
             ))}
           </video>
-        )
-      ) : isDirect ? (
-        directPlaying && directStreams[activeDirectStream] ? (
-          <div
-            ref={directContainerRef}
-            className="relative size-full"
-            onClick={() => {
-              const v = directVideoRef.current;
-              if (!v) return;
-              if (!directShowControls) {
-                directWake();
-                return;
-              }
-              if (v.paused) { v.play().catch(() => {}); setDirectPlayingState(true); directWake(); }
-              else { v.pause(); setDirectPlayingState(false); }
-            }}
-          >
-            <video
-              ref={directVideoRef}
-              playsInline
-              poster={movie.backdrop}
-              onTimeUpdate={(e) => {
-                const cur = e.currentTarget.currentTime;
-                const dur = e.currentTarget.duration || 1;
-                setDirectProgress(dur > 0 ? (cur / dur) * 100 : 0);
-                setDirectDuration(dur);
-                setDirectCurrentTime(cur);
-                setDirectPlayingState(!e.currentTarget.paused);
-              }}
-              onLoadedMetadata={(e) => {
-                console.log("[direct] Video loadedmetadata, duration:", e.currentTarget.duration);
-                setDirectDuration(e.currentTarget.duration);
-                setDirectBuffering(false);
-              }}
-              onCanPlay={() => {
-                console.log("[direct] Video canplay");
-                setDirectBuffering(false);
-              }}
-              onWaiting={() => {
-                console.log("[direct] Video waiting");
-                setDirectBuffering(true);
-              }}
-              onPlaying={() => {
-                console.log("[direct] Video playing");
-                setDirectBuffering(false);
-                setDirectPlayingState(true);
-              }}
-              onPause={() => {
-                console.log("[direct] Video pause");
-                setDirectPlayingState(false);
-              }}
-              onEnded={() => {
-                console.log("[direct] Video ended");
-                setDirectEnded(true);
-                if (autoplayNext && isTv && nextEp) goToNextEpisode();
-              }}
-              onError={(e) => {
-                console.error("[direct] Video error:", e.currentTarget.error);
-              }}
-              onVolumeChange={(e) => {
-                setDirectVolume(e.currentTarget.volume);
-                setDirectMuted(e.currentTarget.muted);
-              }}
-              onMouseMove={directWake}
-              className="size-full object-contain bg-black"
-            />
-            {directBuffering && (
-              <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
-                <Loader className="size-12 text-white/60 animate-spin" />
-              </div>
-            )}
-
-            {/* Top bar */}
-            <div
-              className={`absolute inset-x-0 top-0 z-20 bg-gradient-to-b from-black/80 via-black/40 to-transparent transition-opacity duration-300 ${
-                directShowControls ? "opacity-100" : "opacity-0"
-              }`}
-              onClick={(e) => e.stopPropagation()}
-              onMouseMove={directWake}
-            >
-              <div className="flex items-center justify-end px-4 pt-[calc(env(safe-area-inset-top,0px)+0.75rem)] pb-3">
-                <span className="text-xs text-white/50 font-medium truncate max-w-[60%]">
-                  {movie.title}
-                </span>
-              </div>
-            </div>
-
-            {/* Bottom controls */}
-            <div
-              className={`absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/90 via-black/50 to-transparent transition-opacity duration-300 ${
-                directShowControls ? "opacity-100" : "opacity-0"
-              }`}
-              onClick={(e) => e.stopPropagation()}
-              onMouseMove={directWake}
-            >
-              <div className="px-4 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] pt-10">
-                {/* Seek bar */}
-                <div className="mb-3 flex items-center gap-3">
-                  <input
-                    type="range"
-                    min={0}
-                    max={100}
-                    step={0.1}
-                    value={directProgress}
-                    onChange={(e) => {
-                      const v = directVideoRef.current;
-                      if (!v || !v.duration) return;
-                      v.currentTime = (Number(e.target.value) / 100) * v.duration;
-                    }}
-                    className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:relative [&::-webkit-slider-thumb]:z-10"
-                    style={{
-                      background: `linear-gradient(to right, #dc2626 ${directProgress}%, rgba(255,255,255,0.2) ${directProgress}%)`,
-                    }}
-                  />
-                  <span className="text-[11px] tabular-nums text-white/60 min-w-[90px] text-right">
-                    {fmt(directCurrentTime)} / {fmt(directDuration)}
-                  </span>
-                </div>
-                {/* Control buttons */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => {
-                        destroyHls();
-                        setDirectPlaying(false);
-                      }}
-                      className="min-h-11 min-w-11 flex items-center justify-center rounded-full hover:bg-white/10 transition"
-                    >
-                      <ArrowLeft className="size-5" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        const v = directVideoRef.current;
-                        if (!v) return;
-                        if (v.paused) { v.play().catch(() => {}); setDirectPlayingState(true); }
-                        else { v.pause(); setDirectPlayingState(false); }
-                      }}
-                      className="min-h-12 min-w-12 flex items-center justify-center rounded-full hover:bg-white/10 transition"
-                    >
-                      {directPlayingState ? (
-                        <svg className="size-7" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
-                      ) : (
-                        <svg className="size-7" fill="currentColor" viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21" /></svg>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => {
-                        const v = directVideoRef.current;
-                        if (v) { v.currentTime -= 10; }
-                      }}
-                      className="min-h-11 min-w-11 flex items-center justify-center rounded-full hover:bg-white/10 transition"
-                    >
-                      <svg className="size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.333 4z" /><path d="M4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z" /></svg>
-                    </button>
-                    <button
-                      onClick={() => {
-                        const v = directVideoRef.current;
-                        if (v) { v.currentTime += 10; }
-                      }}
-                      className="min-h-11 min-w-11 flex items-center justify-center rounded-full hover:bg-white/10 transition"
-                    >
-                      <svg className="size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11.933 12.8a1 1 0 000-1.6L6.6 7.2A1 1 0 005 8v8a1 1 0 001.6.8l5.333-4z" /><path d="M19.933 12.8a1 1 0 000-1.6l-5.333-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.333-4z" /></svg>
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => {
-                        const v = directVideoRef.current;
-                        if (v) v.muted = !v.muted;
-                      }}
-                      className="min-h-11 min-w-11 flex items-center justify-center rounded-full hover:bg-white/10 transition"
-                    >
-                      {directMuted || directVolume === 0 ? (
-                        <svg className="size-5" fill="currentColor" viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0021 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 003.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" /></svg>
-                      ) : (
-                        <svg className="size-5" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" /></svg>
-                      )}
-                    </button>
-                    <input
-                      type="range"
-                      min={0}
-                      max={1}
-                      step={0.05}
-                      value={directMuted ? 0 : directVolume}
-                      onChange={(e) => {
-                        const v = directVideoRef.current;
-                        if (!v) return;
-                        const val = Number(e.target.value);
-                        v.volume = val;
-                        v.muted = val === 0;
-                      }}
-                      className="w-20 h-1.5 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:relative [&::-webkit-slider-thumb]:z-10"
-                      style={{
-                        background: `linear-gradient(to right, #dc2626 ${(directMuted ? 0 : directVolume) * 100}%, rgba(255,255,255,0.2) ${(directMuted ? 0 : directVolume) * 100}%)`,
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                    <button
-                      onClick={() => {
-                        const c = directContainerRef.current;
-                        if (!c) return;
-                        if (document.fullscreenElement) {
-                          document.exitFullscreen().catch(() => {});
-                        } else {
-                          c.requestFullscreen().catch(() => {});
-                        }
-                      }}
-                      className="min-h-11 min-w-11 flex items-center justify-center rounded-full hover:bg-white/10 transition"
-                    >
-                      <Maximize className="size-5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center size-full bg-[#0a0a0a]">
-            <div className="w-full max-w-2xl px-6 py-8 overflow-y-auto max-h-dvh">
-              {directLoading ? (
-                <div className="flex flex-col items-center gap-4 py-20">
-                  <Loader className="size-10 text-white/40 animate-spin" />
-                  <p className="text-sm text-white/40">Finding direct streams...</p>
-                </div>
-              ) : directError ? (
-                <div className="flex flex-col items-center gap-4 py-20 text-center">
-                  <Zap className="size-12 text-white/20" />
-                  <p className="text-sm text-white/40">{directError}</p>
-                  <p className="text-xs text-white/25">Try a different server above.</p>
-                </div>
-              ) : (
-                <>
-                  <p className="text-sm font-medium text-white/50 mb-5">
-                    {directStreams.length} direct stream{directStreams.length !== 1 ? "s" : ""} available
-                  </p>
-                  <div className="space-y-3">
-                    {directStreams.map((stream, i) => (
-                      <button
-                        key={`${stream.resolver}-${i}`}
-                        onClick={() => playDirectStream(stream, i)}
-                        className="w-full flex items-center gap-4 rounded-xl border border-white/10 bg-white/[0.03] px-5 py-4 transition hover:bg-white/[0.08] hover:border-white/20 text-left group"
-                      >
-                        <div className="size-12 rounded-lg bg-white/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition">
-                          <Play className="size-5 text-white/60 group-hover:text-primary transition" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-base font-semibold text-white/90 capitalize">
-                              {stream.resolver}
-                            </span>
-                            <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
-                              stream.type === "mp4" ? "bg-emerald-500/20 text-emerald-300" : "bg-blue-500/20 text-blue-300"
-                            }`}>
-                              {stream.type.toUpperCase()}
-                            </span>
-                          </div>
-                          {stream.language && (
-                            <p className="text-xs text-white/35">{stream.language}</p>
-                          )}
-                        </div>
-                        <Play className="size-5 text-white/30 group-hover:text-primary transition shrink-0" />
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
         )
       ) : null}
 
@@ -1446,45 +902,6 @@ function PlayerPage() {
                     <div className="mb-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/80">
                       {selectedServer.name}
                     </div>
-                    {isDirect && directStreams.length > 0 && (
-                      <div className="mb-3">
-                        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/50">
-                          Quality
-                        </p>
-                        <div className="flex flex-wrap gap-1">
-                          {directStreams.map((stream, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => playDirectStream(stream, idx)}
-                              className={`rounded px-3 py-1.5 text-xs transition ${
-                                idx === activeDirectStream
-                                  ? "bg-white/20 text-white"
-                                  : "text-white/60 hover:bg-white/10 hover:text-white"
-                              }`}
-                            >
-                              {stream.language || (stream.type === "mp4" ? "MP4" : "HLS")}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {isDirect && directEnded && (
-                      <div className="mb-3">
-                        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/50">
-                          Error
-                        </p>
-                        <button
-                          onClick={() => {
-                            setDirectEnded(false);
-                            setDirectStreams([]);
-                            handleServerSelect("direct");
-                          }}
-                          className="w-full rounded px-3 py-1.5 text-xs bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition"
-                        >
-                          Retry Direct Streams
-                        </button>
-                      </div>
-                    )}
                     {isTv && (
                       <div className="mb-3 flex items-center justify-between gap-3">
                         <div>
@@ -1582,7 +999,7 @@ function PlayerPage() {
       )}
 
       {/* Post-play overlay */}
-      {(ended || (directEnded && isDirect && directPlaying)) && (
+      {ended && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/70">
           <div className="flex flex-col items-center gap-4 text-center">
             <p className="text-lg text-white/70">You've finished watching</p>
@@ -1592,7 +1009,6 @@ function PlayerPage() {
                 <button
                   onClick={() => {
                     setEnded(false);
-                    setDirectEnded(false);
                     goToNextEpisode();
                   }}
                   className="rounded bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition"
@@ -1602,22 +1018,12 @@ function PlayerPage() {
               )}
               <button
                 onClick={() => {
-                  if (isDirect && directPlaying) {
-                    const v = directVideoRef.current;
-                    if (v) {
-                      v.currentTime = 0;
-                      v.play().catch(() => {});
-                      setDirectPlayingState(true);
-                      setDirectEnded(false);
-                    }
-                  } else {
-                    const v = videoRef.current;
-                    if (v) {
-                      v.currentTime = 0;
-                      v.play().catch(() => {});
-                      setPlaying(true);
-                      setEnded(false);
-                    }
+                  const v = videoRef.current;
+                  if (v) {
+                    v.currentTime = 0;
+                    v.play().catch(() => {});
+                    setPlaying(true);
+                    setEnded(false);
                   }
                 }}
                 className="rounded bg-white px-6 py-2 text-sm font-semibold text-black hover:bg-white/90 transition"

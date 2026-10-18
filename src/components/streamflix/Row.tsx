@@ -63,8 +63,10 @@ export function Row({
   }, [items.length]);
 
   const cardW = isSm ? SM_CARD_W : BASE_CARD_W;
+  const isTrendingNow = title === "Trending Now";
+  const effectiveCardW = isTrendingNow ? (isSm ? 300 : 220) : cardW;
   const gap = isSm ? SM_GAP : BASE_GAP;
-  const step = cardW + gap;
+  const step = effectiveCardW + gap;
 
   const { start, end, padStart, padEnd } = useMemo(() => {
     if (viewportW <= 0) return { start: 0, end: Math.min(items.length, 6), padStart: 0, padEnd: 0 };
@@ -136,6 +138,7 @@ export function Row({
               movie={m}
               reason={reasons?.[m.id]}
               reasonLink={reasonLinks?.[m.id]}
+              landscape={isTrendingNow}
             />
           ))}
           {padEnd > 0 && <div aria-hidden style={{ width: padEnd }} className="shrink-0" />}

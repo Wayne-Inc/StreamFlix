@@ -11,6 +11,7 @@ export function MovieCard({
   reasonLink,
   fluid = false,
   rank,
+  landscape = false,
 }: {
   movie: Movie;
   progress?: number;
@@ -18,6 +19,7 @@ export function MovieCard({
   reasonLink?: string;
   fluid?: boolean;
   rank?: number;
+  landscape?: boolean;
 }) {
   const navigate = useNavigate();
   const [isDragging, setIsDragging] = useState(false);
@@ -52,7 +54,7 @@ export function MovieCard({
 
   return (
     <div
-      className={`group relative ${fluid ? "w-full" : "w-[175px] sm:w-[220px] shrink-0"}`}
+      className={`group relative ${fluid ? "w-full" : landscape ? "w-[220px] sm:w-[300px] shrink-0" : "w-[175px] sm:w-[220px] shrink-0"}`}
       data-context="movie"
       data-title={movie.title}
       data-url={`/movie/${movie.id}`}
@@ -61,13 +63,13 @@ export function MovieCard({
       onTouchMove={handleTouchMove}
       onTouchEnd={() => setIsDragging(false)}
     >
-      <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-surface shadow-md transition-shadow duration-300 group-hover:shadow-2xl">
-        {movie.poster ? (
+      <div className={`relative ${landscape ? "aspect-video" : "aspect-[2/3]"} overflow-hidden rounded-xl bg-surface shadow-md transition-shadow duration-300 group-hover:shadow-2xl`}>
+        {(landscape ? movie.backdropSm || movie.backdrop : movie.poster) ? (
           <LazyImage
-            src={movie.poster}
+            src={landscape ? movie.backdropSm || movie.backdrop : movie.poster}
             alt={movie.title}
-            width={400}
-            height={600}
+            width={landscape ? 640 : 400}
+            height={landscape ? 360 : 600}
             className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
           />
         ) : (

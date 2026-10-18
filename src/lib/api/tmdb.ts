@@ -218,6 +218,39 @@ export const fetchSimilar = createServerFn({ method: "POST" })
     return (res.results || []).slice(0, 10).map((m: any) => toMovie(m));
   });
 
+function fuzzySearchQueries(query: string): string[] {
+  const words = query.trim().split(/\s+/);
+  const variants = new Set<string>();
+
+  for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
+    const word = words[wordIndex];
+    if (word.length < 4) continue;
+
+    const deletePositions = [...new Set([0, Math.floor((word.length - 1) / 2), word.length - 1])];
+    for (const position of deletePositions) {
+      const withoutCharacter = word.slice(0, position) + word.slice(position + 1);
+      const removed = [...words];
+      removed[wordIndex] = withoutCharacter;
+      variants.add(removed.join(" "));
+    }
+
+    const swapPositions = [...new Set([0, Math.floor((word.length - 2) / 2), word.length - 2])];
+    for (const position of swapPositions) {
+      if (position < word.length - 1) {
+        const swapped = [...words];
+        swapped[wordIndex] =
+          word.slice(0, position) +
+          word[position + 1] +
+          word[position] +
+          word.slice(position + 2);
+        variants.add(swapped.join(" "));
+      }
+    }
+  }
+
+  return [...variants].filter((variant) => variant !== query.trim()).slice(0, 6);
+}
+
 export const searchMovies = createServerFn({ method: "POST" })
   .validator(z.object({ query: z.string().min(1) }))
   .handler(async ({ data }) => {
@@ -227,13 +260,31 @@ export const searchMovies = createServerFn({ method: "POST" })
       tmdbFetch("/search/multi", { query: data.query, page: "2" }),
       tmdbFetch("/search/multi", { query: data.query, page: "3" }),
     ]);
-    const combined = [
+    let combined = [
       ...(res1.results || []),
       ...(res2.results || []),
       ...(res3.results || []),
-    ];
+    ].filter((m: any) => m.media_type === "movie" || m.media_type === "tv");
+
+    if (combined.length === 0) {
+      const fuzzyResponses = await Promise.all(
+        fuzzySearchQueries(data.query).map((query) =>
+          tmdbFetch("/search/multi", { query, page: "1" }).catch(() => ({ results: [] })),
+        ),
+      );
+      const seen = new Set<string>();
+      combined = fuzzyResponses
+        .flatMap((response: any) => response.results || [])
+        .filter((m: any) => {
+          if (m.media_type !== "movie" && m.media_type !== "tv") return false;
+          const key = `${m.media_type}:${m.id}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+    }
+
     return combined
-      .filter((m: any) => m.media_type === "movie" || m.media_type === "tv")
       .map((m: any) => (m.media_type === "tv" ? toTv(m) : toMovie(m)));
   });
 
