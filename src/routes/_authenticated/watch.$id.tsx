@@ -70,15 +70,6 @@ const availableEmbedServers: EmbedServer[] = [
     },
   },
   {
-    id: "autoembed",
-    name: "AutoEmbed",
-    isFrench: false,
-    urls: {
-      movie: "https://player.autoembed.cc/embed/movie/{id}",
-      tv: "https://player.autoembed.cc/embed/tv/{id}/{season}/{episode}",
-    },
-  },
-  {
     id: "2embed",
     name: "2Embed",
     isFrench: false,

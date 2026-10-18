@@ -113,6 +113,7 @@
   scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
 }
 
+
 *::-webkit-scrollbar {
   display: none;
 }

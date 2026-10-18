@@ -218,37 +218,133 @@ export const fetchSimilar = createServerFn({ method: "POST" })
     return (res.results || []).slice(0, 10).map((m: any) => toMovie(m));
   });
 
-function fuzzySearchQueries(query: string): string[] {
-  const words = query.trim().split(/\s+/);
+const COMMON_LETTER_SUBSTITUTIONS: Record<string, string[]> = {
+  a: ["e", "o"],
+  e: ["a", "i"],
+  i: ["y", "e"],
+  o: ["u", "a"],
+  u: ["o", "a"],
+  y: ["i"],
+  c: ["k", "s"],
+  k: ["c"],
+  s: ["z", "c"],
+  z: ["s"],
+  v: ["w", "f"],
+  w: ["v"],
+  m: ["n"],
+  n: ["m"],
+};
+
+const COMMON_VOWELS = ["a", "e", "i", "o", "u"];
+
+export function fuzzySearchQueries(query: string): string[] {
+  const normalizedQuery = query.trim();
+  if (!normalizedQuery) return [];
+
+  const words = normalizedQuery.split(/\s+/);
   const variants = new Set<string>();
 
-  for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
-    const word = words[wordIndex];
-    if (word.length < 4) continue;
+  const addCandidate = (candidateWords: string[]) => {
+    const candidate = candidateWords.join(" ").trim();
+    if (!candidate || candidate === normalizedQuery) return;
+    variants.add(candidate);
+  };
 
-    const deletePositions = [...new Set([0, Math.floor((word.length - 1) / 2), word.length - 1])];
-    for (const position of deletePositions) {
-      const withoutCharacter = word.slice(0, position) + word.slice(position + 1);
-      const removed = [...words];
-      removed[wordIndex] = withoutCharacter;
-      variants.add(removed.join(" "));
+  const generateWordVariants = (word: string): string[] => {
+    const candidates = new Set<string>();
+    if (word.length < 3) return [];
+
+    for (let index = 0; index < word.length; index++) {
+      const without = word.slice(0, index) + word.slice(index + 1);
+      if (without.length >= 2) candidates.add(without);
+
+      for (const replacement of COMMON_LETTER_SUBSTITUTIONS[word[index]] ?? []) {
+        candidates.add(word.slice(0, index) + replacement + word.slice(index + 1));
+      }
+
+      for (const vowel of COMMON_VOWELS) {
+        candidates.add(word.slice(0, index) + vowel + word.slice(index));
+      }
     }
 
-    const swapPositions = [...new Set([0, Math.floor((word.length - 2) / 2), word.length - 2])];
-    for (const position of swapPositions) {
-      if (position < word.length - 1) {
-        const swapped = [...words];
-        swapped[wordIndex] =
-          word.slice(0, position) +
-          word[position + 1] +
-          word[position] +
-          word.slice(position + 2);
-        variants.add(swapped.join(" "));
+    for (let index = 0; index < word.length - 1; index++) {
+      const swapped = word.slice(0, index) + word[index + 1] + word[index] + word.slice(index + 2);
+      if (swapped !== word) candidates.add(swapped);
+    }
+
+    const commonInsertions = [...COMMON_VOWELS, "h", "l", "r", "n", "s", "t"];
+    for (let index = 0; index <= word.length; index++) {
+      for (const insertion of commonInsertions) {
+        candidates.add(word.slice(0, index) + insertion + word.slice(index));
       }
+    }
+
+    return [...candidates].filter((candidate) => candidate.length >= 2 && candidate !== word);
+  };
+
+  for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
+    const baseWord = words[wordIndex];
+    const generatedWords = generateWordVariants(baseWord);
+    for (const candidateWord of generatedWords) {
+      const replaced = [...words];
+      replaced[wordIndex] = candidateWord;
+      addCandidate(replaced);
     }
   }
 
-  return [...variants].filter((variant) => variant !== query.trim()).slice(0, 6);
+  const originalWords = normalizedQuery.split(/\s+/);
+  const scoreVariant = (variant: string) => {
+    const variantWords = variant.split(/\s+/);
+    let score = 0;
+
+    for (let index = 0; index < originalWords.length; index++) {
+      const originalWord = originalWords[index];
+      const variantWord = variantWords[index] ?? "";
+      if (!originalWord || !variantWord) {
+        score -= 1000;
+        continue;
+      }
+
+      if (originalWord === variantWord) {
+        score += 200;
+        continue;
+      }
+
+      let prefix = 0;
+      while (
+        prefix < originalWord.length &&
+        prefix < variantWord.length &&
+        originalWord[prefix] === variantWord[prefix]
+      ) {
+        prefix++;
+      }
+
+      let suffix = 0;
+      while (
+        suffix < originalWord.length - prefix &&
+        suffix < variantWord.length - prefix &&
+        originalWord[originalWord.length - 1 - suffix] ===
+          variantWord[variantWord.length - 1 - suffix]
+      ) {
+        suffix++;
+      }
+
+      score += prefix + suffix;
+      if (originalWord.length === variantWord.length) {
+        score += originalWord.split("").filter((char, charIndex) => char === variantWord[charIndex]).length;
+      }
+    }
+
+    return score;
+  };
+
+  const ordered = [...variants].sort((a, b) => scoreVariant(b) - scoreVariant(a));
+
+  return ordered.slice(0, 18).filter((variant) => {
+    const variantWords = variant.split(/\s+/);
+    if (variantWords.length !== originalWords.length) return false;
+    return variantWords.some((word, index) => word !== originalWords[index]);
+  });
 }
 
 export const searchMovies = createServerFn({ method: "POST" })

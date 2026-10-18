@@ -21,6 +21,9 @@ import {
 } from "firebase/auth";
 import heroImg from "@/assets/hero-1.jpg";
 
+const LAST_SIGN_IN_METHOD_KEY = "sf:lastSignInMethod";
+type SignInMethod = "email" | "google" | "github";
+
 export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({ meta: [{ title: "Sign In — StreamFlix" }] }),
@@ -39,6 +42,21 @@ function AuthPage() {
   const [popupBlocked, setPopupBlocked] = useState(false);
   const [forgotPw, setForgotPw] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [lastSignInMethod, setLastSignInMethod] = useState<SignInMethod | null>(() => {
+    try {
+      const saved = localStorage.getItem(LAST_SIGN_IN_METHOD_KEY);
+      return saved === "email" || saved === "google" || saved === "github" ? saved : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const rememberSignInMethod = (method: SignInMethod) => {
+    setLastSignInMethod(method);
+    try {
+      localStorage.setItem(LAST_SIGN_IN_METHOD_KEY, method);
+    } catch {}
+  };
 
   // Rate limiting
   const checkRateLimit = (): boolean => {
@@ -125,6 +143,7 @@ function AuthPage() {
         try {
           localStorage.removeItem("sf:upgrade_password");
         } catch {}
+        rememberSignInMethod("email");
         try { localStorage.setItem("sf:auth", "1"); } catch {}
         toast.success("Signed in.");
         navigate({ to: "/profiles" });
@@ -201,11 +220,11 @@ function AuthPage() {
           clientId: "1064779147344-63l8ajcotfgjgtcv97u82u1j194lvieo.apps.googleusercontent.com",
         });
         const result = await GoogleSignIn.signIn();
-        console.log("GOOGLE_SIGN_IN_RESULT", JSON.stringify(result));
         const idToken = result.idToken;
         if (idToken) {
           const credential = GoogleAuthProvider.credential(idToken);
         await signInWithCredential(auth, credential);
+        rememberSignInMethod("google");
         try { localStorage.setItem("sf:auth", "1"); } catch {}
         toast.success("Signed in with Google.");
           navigate({ to: "/profiles" });
@@ -220,6 +239,7 @@ function AuthPage() {
       const provider = new GoogleAuthProvider();
       try {
         await signInWithPopup(auth, provider);
+        rememberSignInMethod("google");
         try { localStorage.setItem("sf:auth", "1"); } catch {}
         toast.success("Signed in with Google.");
         navigate({ to: "/profiles" });
@@ -246,6 +266,7 @@ function AuthPage() {
       try {
         const { signInWithGitHubNative } = await import("@/lib/capacitor-github");
         await signInWithGitHubNative();
+        rememberSignInMethod("github");
         try { localStorage.setItem("sf:auth", "1"); } catch {}
         toast.success("Signed in with GitHub.");
         navigate({ to: "/profiles" });
@@ -259,6 +280,7 @@ function AuthPage() {
       const provider = new GithubAuthProvider();
       try {
         await signInWithPopup(auth, provider);
+        rememberSignInMethod("github");
         try { localStorage.setItem("sf:auth", "1"); } catch {}
         toast.success("Signed in with GitHub.");
         navigate({ to: "/profiles" });
@@ -414,9 +436,9 @@ function AuthPage() {
                   busy ||
                   (mode === "signup" && !passwordMeetsPolicy(password))
                 }
-                className="w-full rounded bg-primary py-3 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                className={`w-full rounded border py-3 font-semibold transition-colors disabled:opacity-60 ${mode === "signin" && lastSignInMethod === "email" ? "border-primary bg-primary/15 text-primary ring-1 ring-primary/40" : "border-transparent bg-primary text-primary-foreground hover:bg-primary/90"}`}
               >
-                {busy ? "Please wait…" : mode === "signin" ? "Sign In" : "Create Account"}
+                {busy ? "Please wait…" : mode === "signin" ? `Sign In${lastSignInMethod === "email" ? " · Last used" : ""}` : "Create Account"}
               </button>
             </form>
           )}
@@ -437,16 +459,16 @@ function AuthPage() {
               <button
                 onClick={onGoogle}
                 disabled={busy}
-                className="mt-4 w-full rounded bg-foreground/10 py-3 font-semibold text-foreground hover:bg-foreground/20 disabled:opacity-60"
+                className={`mt-4 w-full rounded border py-3 font-semibold transition-colors disabled:opacity-60 ${mode === "signin" && lastSignInMethod === "google" ? "border-primary bg-primary/15 text-primary ring-1 ring-primary/40" : "border-transparent bg-foreground/10 text-foreground hover:bg-foreground/20"}`}
               >
-                Continue with Google
+                Continue with Google{mode === "signin" && lastSignInMethod === "google" ? " · Last used" : ""}
               </button>
               <button
                 onClick={onGitHub}
                 disabled={busy}
-                className="mt-3 w-full rounded bg-foreground/10 py-3 font-semibold text-foreground hover:bg-foreground/20 disabled:opacity-60"
+                className={`mt-3 w-full rounded border py-3 font-semibold transition-colors disabled:opacity-60 ${mode === "signin" && lastSignInMethod === "github" ? "border-primary bg-primary/15 text-primary ring-1 ring-primary/40" : "border-transparent bg-foreground/10 text-foreground hover:bg-foreground/20"}`}
               >
-                Continue with GitHub
+                Continue with GitHub{mode === "signin" && lastSignInMethod === "github" ? " · Last used" : ""}
               </button>
 
               <p className="mt-8 text-muted-foreground">

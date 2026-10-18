@@ -22,6 +22,8 @@ import {
   ChevronRight,
   ChevronUp,
   ChevronDown,
+  Sparkles,
+  LoaderCircle,
 } from "lucide-react";
 import {
   isKidsProfile,
@@ -51,6 +53,8 @@ import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker
 import { getWatchHistoryFromFirestore } from "@/lib/history-firestore";
 import { TrailerModal } from "@/components/streamflix/TrailerModal";
 import { AgeRatingBadge } from "@/components/streamflix/AgeRatingBadge";
+import { askStreamflixAI } from "@/lib/api/ai";
+import { auth } from "@/lib/firebase";
 
 function MovieSkeleton() {
   return (
@@ -204,6 +208,24 @@ function MoviePage() {
   }, [movie.id]);
 
   const [trailerOpen, setTrailerOpen] = useState(false);
+  const [aiSummary, setAiSummary] = useState("");
+  const [aiSummaryError, setAiSummaryError] = useState("");
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
+
+  const generateAiSummary = async () => {
+    setAiSummaryLoading(true);
+    setAiSummaryError("");
+    try {
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) throw new Error("Please sign in again to generate an AI summary.");
+      const result = await askStreamflixAI({ data: { idToken, mode: "summary", titleId: movie.id } });
+      setAiSummary(result.message);
+    } catch (error) {
+      setAiSummaryError(error instanceof Error ? error.message : "Couldn't generate a summary.");
+    } finally {
+      setAiSummaryLoading(false);
+    }
+  };
 
   const [inList, setInList] = useState(false);
   const [watched, setWatched] = useState(false);
@@ -288,25 +310,25 @@ function MoviePage() {
     getWatchProviders(movie.id, isTv ? "tv" : "movie")
       .then((results: Record<string, { link: string; flatrate?: WatchProvider[]; rent?: WatchProvider[]; buy?: WatchProvider[]; free?: WatchProvider[]; ads?: WatchProvider[] }>) => {
         if (!cancelled) {
-          // Flatten providers from all countries, prefer US
-          const allProviders: WatchProvider[] = [];
+          // Prefer US links, include every available offer type, and de-duplicate
+          // providers that appear in multiple regions or offer categories.
+          const byProvider = new Map<number, WatchProvider>();
           const countries = Object.keys(results).sort((a, b) => a === "US" ? -1 : b === "US" ? 1 : 0);
           for (const country of countries) {
-            const r = results[country];
-            if (r.flatrate) allProviders.push(...r.flatrate);
-            if (r.rent) allProviders.push(...r.rent);
-            if (r.buy) allProviders.push(...r.buy);
-            if (r.free) allProviders.push(...r.free);
-            if (r.ads) allProviders.push(...r.ads);
-          }
-          // Deduplicate by provider_id
-          const byProvider = new Map<number, WatchProvider>();
-          for (const p of allProviders) {
-            if (!byProvider.has(p.provider_id)) {
-              byProvider.set(p.provider_id, p);
+            const offers = results[country];
+            for (const category of [offers.flatrate, offers.rent, offers.buy, offers.free, offers.ads]) {
+              for (const provider of category ?? []) {
+                if (provider.link && !byProvider.has(provider.provider_id)) {
+                  byProvider.set(provider.provider_id, provider);
+                }
+              }
             }
           }
-          setOffers(Array.from(byProvider.values()));
+          setOffers(
+            Array.from(byProvider.values()).sort(
+              (a, b) => a.display_priority - b.display_priority || a.provider_name.localeCompare(b.provider_name),
+            ),
+          );
         }
       })
       .finally(() => {
@@ -451,6 +473,22 @@ function MoviePage() {
                 >
                   {descExpanded ? "Show less" : "Show more"}
                 </button>
+                <button
+                  type="button"
+                  onClick={generateAiSummary}
+                  disabled={aiSummaryLoading}
+                  className="ml-4 inline-flex items-center gap-1.5 text-xs font-medium text-primary transition hover:text-primary/80 disabled:opacity-60"
+                >
+                  {aiSummaryLoading ? <LoaderCircle className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
+                  {aiSummaryLoading ? "Generating…" : aiSummary ? "Refresh AI summary" : "AI summary"}
+                </button>
+                {aiSummary && (
+                  <p className="mt-3 max-w-xl rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm leading-6 text-gray-200">
+                    <span className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-primary"><Sparkles className="size-3.5" /> Spoiler-free AI summary</span>
+                    {aiSummary}
+                  </p>
+                )}
+                {aiSummaryError && <p role="alert" className="mt-2 text-xs text-destructive">{aiSummaryError}</p>}
               </div>
 
               <div className="flex flex-wrap items-center gap-2 pt-2 sm:gap-3">
@@ -525,7 +563,7 @@ function MoviePage() {
 
               <div className="min-w-0 pt-4">
                 <p className="mb-3 text-sm font-semibold text-foreground sm:text-base">Cast</p>
-                <div className="relative min-w-0 max-w-full">
+                  <div className="relative min-w-0 max-w-full" onDragStart={(event) => event.preventDefault()}>
                   {movie.cast.length > 7 && castScroll.left > 2 && (
                     <button
                       type="button"
@@ -564,6 +602,7 @@ function MoviePage() {
                             <img
                               src={movie.directorPfp}
                               alt={movie.director}
+                              draggable={false}
                               className="size-full object-cover"
                             />
                           ) : (
@@ -603,6 +642,7 @@ function MoviePage() {
                               <img
                                 src={movie.castPfp[i]}
                                 alt={name}
+                                draggable={false}
                                 className="size-full object-cover"
                               />
                             ) : (
@@ -715,11 +755,11 @@ function MoviePage() {
       {offersLoading && (
         <section className="px-4 sm:px-8 md:px-12 lg:px-16 py-6">
           <h2 className="mb-3 text-xl font-bold text-foreground">Where to Watch</h2>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
             {Array.from({ length: 7 }).map((_, i) => (
-              <div key={i} className="flex flex-col items-center gap-1.5 rounded-lg border border-border bg-surface p-2 animate-pulse">
-                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-background/50" />
-                <div className="h-2 w-full bg-muted rounded" />
+              <div key={i} className="flex h-[4.625rem] flex-col items-center gap-1.5 rounded-lg border border-border bg-surface p-2 animate-pulse">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-background/50" />
+                <div className="h-3 w-full rounded bg-muted" />
               </div>
             ))}
           </div>
@@ -735,7 +775,7 @@ function MoviePage() {
                 href={offer.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex flex-col items-center gap-1.5 rounded-lg border border-border bg-surface p-2 transition-all hover:border-primary/50 hover:shadow-md"
+                className="group flex h-[5.75rem] flex-col items-center gap-1.5 rounded-lg border border-border bg-surface p-2 transition-all hover:border-primary/50 hover:shadow-md"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-md bg-background/50">
                   {offer.logo_path && (
@@ -776,13 +816,6 @@ function MoviePage() {
           )}
         </section>
       )}
-      {!offersLoading && offers.length === 0 && (
-        <section className="px-4 sm:px-8 md:px-12 lg:px-16 py-8">
-          <h2 className="mb-4 text-2xl font-bold text-foreground">Where to Watch</h2>
-          <p className="text-muted-foreground">No streaming offers found for this title.</p>
-        </section>
-      )}
-
       {filteredSimilar.length > 0 && (
         <div className="space-y-2">
           {(() => {
