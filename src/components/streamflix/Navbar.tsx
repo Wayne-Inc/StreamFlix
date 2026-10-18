@@ -7,19 +7,15 @@ import {
   User,
   Settings,
   Menu,
-  X,
   ArrowRight,
   Users,
   Clock,
-  CalendarDays,
   Lock,
-  Tv,
-  Film,
-  Sparkles,
   Bookmark,
   Home,
-  Compass,
   BarChart3,
+  Sparkles,
+  Crown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Logo } from "./Logo";
@@ -39,7 +35,7 @@ const links = [
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [browseMenuOpen, setBrowseMenuOpen] = useState(false);
   const u = auth.currentUser;
   const [selectedProfile, setSelectedProfile] = useState<{
     id: string;
@@ -71,6 +67,7 @@ export function Navbar() {
   const [searchFocused, setSearchFocused] = useState(false);
   const searchBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchBoxRef = useRef<HTMLDivElement | null>(null);
+  const mobileNavRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const q = searchQ.trim();
@@ -82,7 +79,7 @@ export function Navbar() {
     const t = setTimeout(async () => {
       const res = await suggestTitles(q);
       if (!cancelled) setSearchSuggestions(res.slice(0, 5));
-    }, 250);
+    }, 220);
     return () => {
       cancelled = true;
       clearTimeout(t);
@@ -147,6 +144,34 @@ export function Navbar() {
       try { localStorage.setItem("sf:vip", v ? "1" : "0"); } catch {}
     }).catch(() => {});
   }, [u?.uid]);
+
+  useEffect(() => {
+    const refreshVip = () => setIsVip(localStorage.getItem("sf:vip") === "1");
+    window.addEventListener("sf:vipUpdated", refreshVip);
+    return () => window.removeEventListener("sf:vipUpdated", refreshVip);
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (
+        window.matchMedia("(max-width: 767px)").matches &&
+        mobileNavRef.current &&
+        !mobileNavRef.current.contains(event.target as Node)
+      ) {
+        setMenuOpen(false);
+      }
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [menuOpen]);
 
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 24);
@@ -221,11 +246,11 @@ export function Navbar() {
       <img
         src={selectedProfile.avatarUrl}
         alt=""
-        className={`size-9 sm:size-8 shrink-0 aspect-square rounded-lg object-cover ${vipRing}`}
+        className={`size-7 md:size-8 shrink-0 aspect-square rounded-lg object-cover ${vipRing}`}
       />
     ) : (
       <div
-        className={`grid size-9 sm:size-8 place-items-center rounded-lg bg-gradient-to-br ${selectedProfile.color} text-xs font-bold text-white ${vipRing}`}
+        className={`grid size-7 md:size-8 place-items-center rounded-lg bg-gradient-to-br ${selectedProfile.color} text-xs font-bold text-white ${vipRing}`}
       >
         {selectedProfile.name[0]?.toUpperCase()}
       </div>
@@ -234,23 +259,24 @@ export function Navbar() {
     <img
       src={userData.photoURL}
       alt=""
-      className={`size-9 sm:size-8 shrink-0 aspect-square rounded-lg object-cover ${vipRing}`}
+      className={`size-7 md:size-8 shrink-0 aspect-square rounded-lg object-cover ${vipRing}`}
     />
   ) : (
-    <div className={`grid size-9 sm:size-8 place-items-center rounded-lg bg-gradient-to-br from-rose-500 to-red-700 text-xs font-bold text-white ${vipRing}`}>
+    <div className={`grid size-7 md:size-8 place-items-center rounded-lg bg-gradient-to-br from-rose-500 to-red-700 text-xs font-bold text-white ${vipRing}`}>
       {(userData.email || "?")[0]?.toUpperCase()}
     </div>
   );
 
   return (
+    <>
     <header
-      className={`fixed inset-x-0 top-0 z-50 wco-aware transition-colors duration-300 ${
+      className={`${pathname.startsWith("/watch/") ? "hidden" : "fixed inset-x-0 top-0 z-50 wco-aware transition-colors duration-300"} ${
         scrolled
           ? "bg-background/55 backdrop-blur-md"
           : "bg-gradient-to-b from-black/80 to-transparent"
       }`}
     >
-      <div className="mx-auto flex h-16 items-center gap-6 px-4 sm:px-8">
+      <div className="mx-auto flex h-14 items-center gap-3 px-4 sm:h-16 sm:gap-6 sm:px-8">
         <Logo />
         <nav className="hidden md:flex items-center gap-5 text-sm text-muted-foreground">
           {links.map((l, i) => {
@@ -287,21 +313,35 @@ export function Navbar() {
           >
             Calendar
           </Link>
+          <Link
+            to="/assistant"
+            preload="intent"
+            className={`inline-flex items-center gap-1.5 transition-colors ${
+              pathname === "/assistant" ? "font-semibold text-foreground" : "hover:text-foreground"
+            }`}
+          >
+            <Sparkles className="size-3.5" /> AI Guide
+          </Link>
         </nav>
         <div className="ml-auto flex items-center gap-3">
           <button
-            onClick={() => setMobileNavOpen((v) => !v)}
-            className="md:hidden text-muted-foreground hover:text-foreground"
-            aria-label="Toggle navigation"
+            type="button"
+            onClick={() => setBrowseMenuOpen((open) => !open)}
+            className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground md:hidden"
+            aria-label="Browse menu"
+            aria-expanded={browseMenuOpen}
           >
-            {mobileNavOpen ? <X className="size-6" /> : <Menu className="size-6" />}
+            <Menu className="size-5" />
           </button>
           <div className="relative hidden md:block" ref={searchBoxRef}>
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
               value={searchQ}
-              onChange={(e) => setSearchQ(e.target.value)}
+              onChange={(e) => {
+                setSearchSuggestions([]);
+                setSearchQ(e.target.value);
+              }}
               onFocus={openSearch}
               onBlur={closeSearchSoon}
               onKeyDown={(e) => {
@@ -361,14 +401,12 @@ export function Navbar() {
               </div>
             )}
           </div>
-          <Link
-            to="/search"
-            className="md:hidden inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
-            aria-label="Search"
-          >
-            <Search className="size-5" />
-          </Link>
-          <div className="relative pr-1 sm:pr-0">
+          {isVip && (
+            <span className="hidden items-center gap-1 rounded-full border border-yellow-400/30 bg-yellow-400/10 px-2.5 py-1 text-xs font-semibold text-yellow-300 md:inline-flex">
+              <Crown className="size-3.5" /> VIP
+            </span>
+          )}
+          <div className="relative hidden pr-1 sm:pr-0 md:block">
             <button
               onClick={() => setMenuOpen((v) => !v)}
               className="flex items-center gap-1.5 group p-1 sm:p-0"
@@ -450,51 +488,54 @@ export function Navbar() {
           </div>
         </div>
       </div>
-      {mobileNavOpen && (
-        <div className="md:hidden mx-4 mb-4 rounded-2xl border border-border bg-background/95 backdrop-blur py-4 px-4 animate-fade-in shadow-2xl pb-[env(safe-area-inset-bottom)]">
-          <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Browse
-          </p>
-          <div className="space-y-1">
-            {links.map((l, i) => {
-              const active = pathname === "/browse" && searchKind === l.kind;
-              const Icon = [Home, Tv, Film, Sparkles][i] ?? Film;
-              return (
-                <Link
-                  key={i}
-                  to="/browse"
-                  search={{ kind: l.kind }}
-                  preload="intent"
-                  onClick={() => setMobileNavOpen(false)}
-                  className={`flex items-center gap-3 rounded-md px-2 py-2.5 text-sm transition-colors ${
-                    active
-                      ? "bg-accent text-foreground font-semibold"
-                      : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
-                  }`}
-                >
-                  <Icon className="size-4 text-muted-foreground" /> {l.label}
-                </Link>
-              );
-            })}
+      {browseMenuOpen && (
+        <div className="absolute inset-x-3 top-full z-50 mt-1 rounded-xl border border-border bg-background/95 p-2 shadow-xl backdrop-blur-xl md:hidden">
+          <div className="grid grid-cols-2 gap-1">
+            {links.map((item) => (
+              <Link
+                key={item.kind}
+                to="/browse"
+                search={{ kind: item.kind }}
+                onClick={() => setBrowseMenuOpen(false)}
+                className={`rounded-lg px-3 py-2.5 text-sm ${pathname === "/browse" && searchKind === item.kind ? "bg-accent font-semibold text-foreground" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"}`}
+              >
+                {item.label}
+              </Link>
+            ))}
             <Link
               to="/explore"
-              preload="intent"
-              onClick={() => setMobileNavOpen(false)}
-              className={`flex items-center gap-3 rounded-md px-2 py-2.5 text-sm transition-colors ${
-                pathname.startsWith("/explore")
-                  ? "bg-accent text-foreground font-semibold"
-                  : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
-              }`}
+              onClick={() => setBrowseMenuOpen(false)}
+              className="rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground"
             >
-              <Compass className="size-4 text-muted-foreground" /> Genres
+              Genres
             </Link>
             <Link
               to="/calendar"
-              preload="intent"
-              onClick={() => setMobileNavOpen(false)}
-              className="flex items-center gap-3 rounded-md px-2 py-2.5 text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground transition-colors"
+              onClick={() => setBrowseMenuOpen(false)}
+              className="rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground"
             >
-              <CalendarDays className="size-4" /> Calendar
+              Calendar
+            </Link>
+            <Link
+              to="/assistant"
+              onClick={() => setBrowseMenuOpen(false)}
+              className={`rounded-lg px-3 py-2.5 text-sm ${pathname === "/assistant" ? "bg-accent font-semibold text-foreground" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"}`}
+            >
+              AI Guide
+            </Link>
+            <Link
+              to="/history"
+              onClick={() => setBrowseMenuOpen(false)}
+              className="rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+            >
+              Watch History
+            </Link>
+            <Link
+              to="/mylist"
+              onClick={() => setBrowseMenuOpen(false)}
+              className="rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+            >
+              My List
             </Link>
           </div>
         </div>
@@ -538,5 +579,92 @@ export function Navbar() {
         </div>
       )}
     </header>
+    <nav
+      ref={mobileNavRef}
+      aria-label="Mobile navigation"
+      className={`${pathname.startsWith("/watch/") ? "hidden" : "fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 px-2 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-[0_-8px_30px_rgba(0,0,0,0.25)] backdrop-blur-xl md:hidden"}`}
+    >
+      <div className="mx-auto flex max-w-lg items-center justify-around">
+        <Link
+          to="/browse"
+          search={{ kind: "home" }}
+          aria-label="Home"
+          className={`flex min-w-14 flex-col items-center gap-1 py-1 text-[10px] ${pathname === "/browse" ? "text-foreground" : "text-muted-foreground"}`}
+        >
+          <Home className="size-5" /> Home
+        </Link>
+        <Link
+          to="/search"
+          aria-label="Search"
+          className={`flex min-w-14 flex-col items-center gap-1 py-1 text-[10px] ${pathname === "/search" ? "text-foreground" : "text-muted-foreground"}`}
+        >
+          <Search className="size-5" /> Search
+        </Link>
+        <button
+          type="button"
+          onClick={() => setMenuOpen((open) => !open)}
+          aria-label="Account menu"
+          aria-expanded={menuOpen}
+          className={`flex min-w-14 flex-col items-center gap-1 py-1 text-[10px] ${menuOpen || pathname === "/settings" ? "text-foreground" : "text-muted-foreground"}`}
+        >
+          <span className="relative grid size-7 place-items-center">{profileAvatar}</span>
+          Account
+        </button>
+      </div>
+      {menuOpen && (
+        <div className="absolute bottom-full right-3 z-50 mb-3 w-[min(22rem,calc(100vw-1.5rem))] max-h-[min(28rem,calc(100dvh_-_7rem_-_env(safe-area-inset-bottom)))] overflow-y-auto overscroll-contain rounded-2xl border border-white/10 bg-card/95 shadow-[0_18px_70px_rgba(0,0,0,0.55)] backdrop-blur-2xl animate-fade-in md:hidden">
+          <div className="flex items-center gap-3 border-b border-border/80 bg-gradient-to-br from-primary/10 via-transparent to-transparent px-4 py-4">
+            <div className="shrink-0">{profileAvatar}</div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-foreground">
+                {selectedProfile?.name ?? userData.email ?? "Account"}
+              </p>
+              <p className="truncate text-xs text-muted-foreground">
+                {selectedProfile?.kids ? "Kids profile" : (userData.email ?? "Signed in")}
+              </p>
+            </div>
+            {isVip && (
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-yellow-400/30 bg-yellow-400/10 px-2 py-1 text-[10px] font-semibold text-yellow-300">
+                <Crown className="size-3" /> VIP
+              </span>
+            )}
+          </div>
+          <div className="space-y-1 p-2">
+            {selectedProfile?.kids ? (
+              <button
+                type="button"
+                onClick={handleExitKids}
+                className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                <ArrowRight className="size-4" /> Switch Profile
+              </button>
+            ) : (
+              <Link
+                to="/profiles"
+                onClick={() => setMenuOpen(false)}
+                className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                <Users className="size-4" /> Switch Profile
+              </Link>
+            )}
+            <Link to="/settings" onClick={() => setMenuOpen(false)} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"><Settings className="size-4" /> Account &amp; Devices</Link>
+            <Link to="/history" onClick={() => setMenuOpen(false)} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"><Clock className="size-4" /> Watch History</Link>
+            <Link to="/mylist" onClick={() => setMenuOpen(false)} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"><Bookmark className="size-4" /> My List</Link>
+            <Link to="/stats" onClick={() => setMenuOpen(false)} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"><BarChart3 className="size-4" /> Stats</Link>
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                void signOut();
+              }}
+              className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <LogOut className="size-4" /> Sign out
+            </button>
+          </div>
+        </div>
+      )}
+    </nav>
+    </>
   );
 }
