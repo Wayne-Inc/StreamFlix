@@ -155,6 +155,24 @@ function AuthPage() {
           setBusy(false);
           return;
         }
+        const { executeTurnstile } = await import("@/lib/turnstile");
+        const token = await executeTurnstile("signup");
+        if (!token) {
+          toast.error("Verification failed. Please try again.");
+          setBusy(false);
+          return;
+        }
+        const verifyRes = await fetch("/api/verify-recaptcha", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, action: "signup" }),
+        });
+        const verifyData = await verifyRes.json();
+        if (!verifyData.ok) {
+          toast.error("Verification failed. Please try again.");
+          setBusy(false);
+          return;
+        }
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         if (name.trim()) {
           await updateFirebaseProfile(cred.user, { displayName: name.trim() });
