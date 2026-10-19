@@ -22,7 +22,7 @@ import {
 } from "firebase/auth";
 import heroImg from "@/assets/hero-1.jpg";
 
-const LINKED_SIGN_IN_METHODS_KEY = "sf:linkedSignInMethods";
+const LAST_SIGN_IN_METHOD_KEY = "sf:lastSignInMethod";
 type SignInMethod = "email" | "google" | "github";
 
 export const Route = createFileRoute("/auth")({
