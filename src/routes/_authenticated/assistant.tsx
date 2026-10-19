@@ -78,7 +78,7 @@ function AssistantPage() {
       });
       setMessages((current) => [
         ...current,
-        { role: "assistant", content: result.message },
+        { role: "assistant", content: result.message, recommendations: result.recommendations },
       ]);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The assistant couldn't respond. Try again.");
@@ -143,15 +143,40 @@ function AssistantPage() {
           ) : (
             <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-8 sm:py-8">
               {messages.slice(1).map((message, index) => (
-                <div key={`${index}-${message.role}`} className={message.role === "user" ? 'ml-auto max-w-[90%] sm:max-w-[80%]' : 'mr-auto max-w-[90%] sm:max-w-[80%]'}>
-                  <div className={message.role === "user" ? "rounded-2xl bg-primary px-4 py-3 text-primary-foreground" : "rounded-xl bg-muted/50 p-4"}>
-                    <div className="space-y-2">
-                      <div className="text-sm leading-6">
-                        {message.content}
+                <>
+                  {message.role === "assistant" && message.recommendations && message.recommendations.length > 0 ? (
+                    <>
+                      <div key={`${index}-${message.role}-text`} className={message.role === "user" ? 'ml-auto max-w-[90%] sm:max-w-[80%]' : 'mr-auto max-w-[90%] sm:max-w-[80%]'}>
+                        <div className={message.role === "user" ? "rounded-2xl bg-primary px-4 py-3 text-primary-foreground" : "rounded-xl bg-muted/50 p-4"}>
+                          <div className="space-y-2">
+                            <div className="text-sm leading-6">
+                              {message.content}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div key={`${index}-${message.role}-cards`} className="mx-auto w-full max-w-5xl mt-4 flex flex-wrap gap-4 justify-center">
+                        {message.recommendations.map((rec, recIndex) => (
+                          <MovieCard
+                            key={recIndex}
+                            movie={rec.movie}
+                            reason={rec.reason}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <div key={`${index}-${message.role}`} className={message.role === "user" ? 'ml-auto max-w-[90%] sm:max-w-[80%]' : 'mr-auto max-w-[90%] sm:max-w-[80%]'}>
+                      <div className={message.role === "user" ? "rounded-2xl bg-primary px-4 py-3 text-primary-foreground" : "rounded-xl bg-muted/50 p-4"}>
+                        <div className="space-y-2">
+                          <div className="text-sm leading-6">
+                            {message.content}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
+                  )}
+                </>
               ))}
               {busy && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
