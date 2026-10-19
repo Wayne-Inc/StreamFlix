@@ -79,7 +79,7 @@ function AssistantPage() {
       });
       setMessages((current) => [
         ...current,
-        { role: "assistant", content: result.message, recommendations: result.recommendations },
+        { role: "assistant", content: result.message },
       ]);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The assistant couldn't respond. Try again.");
@@ -144,7 +144,7 @@ function AssistantPage() {
           ) : (
             <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-8 sm:py-8">
               {messages.slice(1).map((message, index) => (
-                <div key={`${index}-${message.role}`} className={message.role === "user" ? "ml-auto max-w-[90%] sm:max-w-[80%]" : "w-full"}>
+                <div key={`${index}-${message.role}`} className={message.role === "user" ? "ml-auto max-w-[90%] sm:max-w-[80%]" : "mr-auto max-w-[90%] sm:max-w-[80%]"}}>
                   <div className={message.role === "user" ? "rounded-2xl bg-primary px-4 py-3 text-primary-foreground" : "rounded-xl bg-muted/50 p-4"}>
                     <div className="space-y-2">
                       <div className="text-sm leading-6">
@@ -152,21 +152,6 @@ function AssistantPage() {
                       </div>
                     </div>
                   </div>
-                  {message.recommendations && message.recommendations.length > 0 && (
-                    <div className="mt-4 space-y-4">
-                      <div className="font-medium text-muted-foreground mb-2">Here are some recommendations:</div>
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        {message.recommendations.map(({ movie, reason }) => (
-                          <div key={movie.id} className="bg-surface rounded-xl border border-border p-4">
-                            <MovieCard movie={movie} className="h-full" />
-                            <div className="mt-3">
-                              <p className="text-sm text-foreground line-clamp-2">{reason}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               ))}
               {busy && (
@@ -250,6 +235,7 @@ function AssistantPage() {
                 />
                 Use my watch history for better picks
               </label>
+              <span className="block mt-1">Your watch history is saved locally in your device's storage.</span>
               <span>Your history is sent only when you opt in. AI responses may be imperfect.</span>
             </div>
           </div>
