@@ -144,7 +144,7 @@ function AssistantPage() {
           ) : (
             <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-8 sm:py-8">
               {messages.slice(1).map((message, index) => (
-                <div key={`${index}-${message.role}`} className={message.role === "user" ? "ml-auto max-w-[90%] sm:max-w-[80%]" : "mr-auto max-w-[90%] sm:max-w-[80%]"}}>
+                <div key={`${index}-${message.role}`} className={message.role === "user" ? "ml-auto max-w-[90%] sm:max-w-[80%]" : "mr-auto max-w-[90%] sm:max-w-[80%]"}>
                   <div className={message.role === "user" ? "rounded-2xl bg-primary px-4 py-3 text-primary-foreground" : "rounded-xl bg-muted/50 p-4"}>
                     <div className="space-y-2">
                       <div className="text-sm leading-6">
