@@ -14,6 +14,7 @@ import {
   GithubAuthProvider,
   signInWithPopup,
   signInWithCredential,
+  linkWithCredential,
   onAuthStateChanged,
   updateProfile as updateFirebaseProfile,
   sendEmailVerification,
@@ -266,7 +267,7 @@ function AuthPage() {
 
               // If no password account exists, we can create/link
               const existingUserCred = await signInWithEmailAndPassword(auth, email, password);
-              await linkCredential(existingUserCred.user, pendingCred);
+              await linkWithCredential(existingUserCred.user, pendingCred);
               rememberSignInMethod("google");
               try { localStorage.setItem("sf:auth", "1"); } catch {}
               toast.success("Accounts linked and signed in with Google.");
@@ -307,7 +308,7 @@ function AuthPage() {
           // If no password account exists, we can create/link
           if (err.email) {
             const existingUserCred = await signInWithEmailAndPassword(auth, err.email, "");
-            await linkCredential(existingUserCred.user, pendingCred);
+            await linkWithCredential(existingUserCred.user, pendingCred);
             rememberSignInMethod("google");
             try { localStorage.setItem("sf:auth", "1"); } catch {}
             toast.success("Accounts linked and signed in with Google.");
@@ -360,7 +361,7 @@ function AuthPage() {
 
           // If no password account exists, we can create/link
           const existingUserCred = await signInWithEmailAndPassword(auth, email, password);
-          await linkCredential(existingUserCred.user, pendingCred);
+          await linkWithCredential(existingUserCred.user, pendingCred);
           rememberSignInMethod("github");
           try { localStorage.setItem("sf:auth", "1"); } catch {}
           toast.success("Accounts linked and signed in with GitHub.");
@@ -397,7 +398,7 @@ function AuthPage() {
           // If no password account exists, we can create/link
           if (err.email) {
             const existingUserCred = await signInWithEmailAndPassword(auth, err.email, "");
-            await linkCredential(existingUserCred.user, pendingCred);
+            await linkWithCredential(existingUserCred.user, pendingCred);
             rememberSignInMethod("github");
             try { localStorage.setItem("sf:auth", "1"); } catch {}
             toast.success("Accounts linked and signed in with GitHub.");

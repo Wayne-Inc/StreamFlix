@@ -166,6 +166,64 @@ function AssistantPage() {
         </div>
 
       </main>
+
+      <div className="pointer-events-none shrink-0 bg-gradient-to-t from-background via-background/85 to-transparent px-4 pb-4 pt-6 sm:px-8">
+        <div className="pointer-events-auto mx-auto w-full max-w-5xl">
+          {hasConversation && (
+            <div className="mb-3 flex flex-wrap gap-2">
+              {suggestions.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void send(suggestion)}
+                  className="rounded-full border border-border bg-background/70 px-3 py-1.5 text-xs text-muted-foreground shadow-sm backdrop-blur-md transition hover:border-primary/50 hover:text-foreground disabled:opacity-50"
+                >
+                  {suggestion}
+                </button>
+              ))}
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void send("", "recommendations")}
+                className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary shadow-sm backdrop-blur-md transition hover:bg-primary/20 disabled:opacity-50"
+              >
+                Surprise me
+              </button>
+            </div>
+          )}
+          <form
+            onSubmit={submit}
+            className="flex items-end gap-2 rounded-[1.75rem] border border-white/10 bg-card/80 p-2 pl-4 shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-xl focus-within:border-primary/50"
+          >
+            <label className="sr-only" htmlFor="assistant-prompt">Describe what you want to watch</label>
+            <textarea
+              id="assistant-prompt"
+              value={prompt}
+              onChange={(event) => setPrompt(event.target.value)}
+              maxLength={500}
+              rows={2}
+              placeholder="I want a mind-bending mystery for tonight…"
+              className="max-h-32 min-h-12 flex-1 resize-none overflow-hidden bg-transparent py-2.5 text-sm outline-none placeholder:text-muted-foreground"
+              style={{ resize: "none" }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  event.currentTarget.form?.requestSubmit();
+                }
+              }}
+            />
+            <button
+              type="submit"
+              disabled={busy || !prompt.trim()}
+              aria-label="Send message"
+              className="grid size-11 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Send className="size-4" />
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }
