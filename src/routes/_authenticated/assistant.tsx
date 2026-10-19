@@ -145,17 +145,26 @@ function AssistantPage() {
             <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-8 sm:py-8">
               {messages.slice(1).map((message, index) => (
                 <div key={`${index}-${message.role}`} className={message.role === "user" ? "ml-auto max-w-[90%] sm:max-w-[80%]" : "w-full"}>
-                  <div className={`px-1 py-1 text-sm leading-6 sm:text-[15px] ${message.role === "user" ? "rounded-2xl bg-primary px-4 py-3 text-primary-foreground" : "text-foreground"}`}>
-                    {message.content}
+                  <div className={message.role === "user" ? "rounded-2xl bg-primary px-4 py-3 text-primary-foreground" : "rounded-xl bg-muted/50 p-4"}>
+                    <div className="space-y-2">
+                      <div className="text-sm leading-6">
+                        {message.content}
+                      </div>
+                    </div>
                   </div>
                   {message.recommendations && message.recommendations.length > 0 && (
-                    <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                      {message.recommendations.map(({ movie, reason }) => (
-                        <div key={movie.id}>
-                          <MovieCard movie={movie} fluid />
-                          <p className="mt-2 text-xs leading-5 text-muted-foreground">{reason}</p>
-                        </div>
-                      ))}
+                    <div className="mt-4 space-y-4">
+                      <div className="font-medium text-muted-foreground mb-2">Here are some recommendations:</div>
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {message.recommendations.map(({ movie, reason }) => (
+                          <div key={movie.id} className="bg-surface rounded-xl border border-border p-4">
+                            <MovieCard movie={movie} className="h-full" />
+                            <div className="mt-3">
+                              <p className="text-sm text-foreground line-clamp-2">{reason}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -166,7 +175,7 @@ function AssistantPage() {
                 </div>
               )}
               {error && (
-                <p role="alert" className="text-sm text-destructive">{error}</p>
+                <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>
               )}
             </div>
           )}

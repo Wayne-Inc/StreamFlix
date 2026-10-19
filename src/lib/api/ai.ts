@@ -175,7 +175,7 @@ export const askStreamflixAI = createServerFn({ method: "POST" })
         runtime: movie.runtime,
       };
       const content = await askModel(
-        "You are StreamFlix's spoiler-free title guide. Write a concise, useful summary from the supplied metadata only. Do not invent plot facts, cast, or themes. Do not reveal twists or the ending. Return only a JSON object with a message string and an empty recommendations array.",
+        "You are StreamFlix's  title guide. Write a concise, useful summary from the supplied metadata only. Do not invent plot facts, cast, or themes. Do not reveal twists or the ending. Return only a JSON object with a message string and an empty recommendations array.",
         JSON.stringify(metadata),
       );
       return { message: parseModelReply(content).message, recommendations: [] };

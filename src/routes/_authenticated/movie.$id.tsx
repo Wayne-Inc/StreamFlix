@@ -484,7 +484,7 @@ function MoviePage() {
                 </button>
                 {aiSummary && (
                   <p className="mt-3 max-w-xl rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm leading-6 text-gray-200">
-                    <span className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-primary"><Sparkles className="size-3.5" /> Spoiler-free AI summary</span>
+                    <span className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-primary"><Sparkles className="size-3.5" />AI summary</span>
                     {aiSummary}
                   </p>
                 )}
