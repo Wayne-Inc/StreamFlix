@@ -141,34 +141,34 @@ function RootShell({ children }: { children: ReactNode }) {
           data-cfasync="false"
           dangerouslySetInnerHTML={{
             __html: `window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('consent', 'default', {
-  ad_user_data: 'denied',
-  ad_personalization: 'denied',
-  ad_storage: 'denied',
-  analytics_storage: 'denied',
-  wait_for_update: 500
-});
-(function () {
-  var c = null;
-  try { c = localStorage.getItem('streamflix:cookieConsent') || null; } catch (e) {}
-  if (!c) {
-    try {
-      var m = document.cookie.match(/(?:^|; )streamflix_cookie_consent=([^;]+)/);
-      c = m ? m[1] : null;
-    } catch (e) {}
-  }
-  if (c === 'accepted') {
-    gtag('consent', 'update', {
-      ad_user_data: 'granted',
-      ad_personalization: 'granted',
-      ad_storage: 'granted',
-      analytics_storage: 'granted'
-    });
-  }
-})();
-gtag('js', new Date());
-gtag('config', 'G-V9783E9S0W');`,
+          function gtag(){dataLayer.push(arguments);}
+          gtag('consent', 'default', {
+            ad_user_data: 'denied',
+            ad_personalization: 'denied',
+            ad_storage: 'denied',
+            analytics_storage: 'denied',
+            wait_for_update: 500
+          });
+          (function () {
+            var c = null;
+            try { c = localStorage.getItem('streamflix:cookieConsent') || null; } catch (e) {}
+            if (!c) {
+              try {
+                var m = document.cookie.match(/(?:^|; )streamflix_cookie_consent=([^;]+)/);
+                c = m ? m[1] : null;
+              } catch (e) {}
+            }
+            if (c === 'accepted') {
+              gtag('consent', 'update', {
+                ad_user_data: 'granted',
+                ad_personalization: 'granted',
+                ad_storage: 'granted',
+                analytics_storage: 'granted'
+              });
+            }
+          })();
+          gtag('js', new Date());
+          gtag('config', 'G-V9783E9S0W');`,
           }}
         />
         {children}
@@ -182,7 +182,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   const initial = useRef(true);
-  const photoSaved = useRef<string | null>(null);
+  const photoSaved = useRef<string | null> = useRef<string | null>(null);
   const offlineRoute = "/offline";
 
   useNavTracker();
@@ -260,6 +260,10 @@ function RootComponent() {
     }
 
     const handleOffline = () => {
+      // If we are on the watch page, do not redirect to offline page.
+      if (window.location.pathname.startsWith('/_authenticated/watch/')) {
+        return;
+      }
       if (window.location.pathname !== offlineRoute) {
         sessionStorage.setItem("sf:returnUrl", window.location.pathname + window.location.search);
         window.location.replace(offlineRoute);
