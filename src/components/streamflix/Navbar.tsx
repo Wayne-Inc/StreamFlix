@@ -320,7 +320,7 @@ export function Navbar() {
               pathname === "/assistant" ? "font-semibold text-foreground" : "hover:text-foreground"
             }`}
           >
-            <Sparkles className="size-3.5" /> AI Guide
+            <Sparkles className="size-3.5" /> AI
           </Link>
         </nav>
         <div className="ml-auto flex items-center gap-3">
@@ -595,10 +595,10 @@ export function Navbar() {
         </Link>
         <Link
           to="/assistant"
-          aria-label="AI Guide"
+          aria-label="AI"
           className={`flex min-w-14 flex-col items-center gap-1 py-1 text-[10px] ${pathname === "/assistant" ? "text-foreground" : "text-muted-foreground"}`}
         >
-          <Sparkles className="size-5" /> AI Guide
+          <Sparkles className="size-5" /> AI 
         </Link>
         <button
           type="button"

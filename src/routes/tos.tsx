@@ -138,16 +138,6 @@ function TermsOfServicePage() {
         </section>
 
         <section className="space-y-2 sm:space-y-4">
-          <h2 className="text-base sm:text-2xl font-semibold">Governing Law</h2>
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            These Terms shall be governed by and construed in accordance with the laws of the
-            jurisdiction in which Samwel Wayne operates, without regard to conflict-of-law
-            principles. Any disputes arising under these Terms shall be resolved in the competent
-            courts of that jurisdiction.
-          </p>
-        </section>
-
-        <section className="space-y-2 sm:space-y-4">
           <h2 className="text-base sm:text-2xl font-semibold">Changes to These Terms</h2>
           <p className="text-sm leading-relaxed text-muted-foreground">
             We may update these Terms from time to time. We will notify you of material changes by

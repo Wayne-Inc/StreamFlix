@@ -63,11 +63,18 @@ function enforceRateLimit(uid: string) {
   entry.count++;
 }
 
+function envValue(name: string): string {
+  const fromProcess = process.env[name];
+  if (fromProcess) return fromProcess;
+  const fromVite = (import.meta.env as Record<string, string | undefined>)[name];
+  return fromVite ?? "";
+}
+
 function getAiConfig() {
   return {
-    apiKey: process.env.NVIDIA_API_KEY ?? process.env.NVIDIA_NIM_API_KEY ?? "",
-    baseUrl: (process.env.NVIDIA_BASE_URL ?? "https://integrate.api.nvidia.com/v1").replace(/\/+$/, ""),
-    model: process.env.NVIDIA_MODEL ?? "nvidia/llama-3.1-nemotron-70b-instruct",
+    apiKey: envValue("NVIDIA_API_KEY") || envValue("NVIDIA_NIM_API_KEY"),
+    baseUrl: (envValue("NVIDIA_BASE_URL") || "https://integrate.api.nvidia.com/v1").replace(/\/+$/, ""),
+    model: envValue("NVIDIA_MODEL") || "nvidia/llama-3.3-nemotron-super-49b-v1",
   };
 }
 
@@ -128,7 +135,6 @@ async function askModel(systemPrompt: string, userPrompt: string): Promise<strin
       model: config.model,
       temperature: 0.6,
       max_tokens: 900,
-      response_format: { type: "json_object" },
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
