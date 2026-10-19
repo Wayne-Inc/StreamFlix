@@ -78,6 +78,19 @@ self.addEventListener("notificationclick", (event) => {
 
 export default defineConfig(({ command, mode }): UserConfig => {
   const env = loadEnv(mode, process.cwd(), "");
+  for (const key of [
+    "NVIDIA_API_KEY",
+    "NVIDIA_NIM_API_KEY",
+    "NVIDIA_BASE_URL",
+    "NVIDIA_MODEL",
+    "TURNSTILE_SECRET_KEY",
+    "FIREBASE_CLIENT_EMAIL",
+    "FIREBASE_PRIVATE_KEY",
+    "CRON_SECRET",
+    "WAYBACK_ARCHIVE_KEY",
+  ]) {
+    if (env[key] && !process.env[key]) process.env[key] = env[key];
+  }
   return {
     css: { transformer: "lightningcss" },
     resolve: {
