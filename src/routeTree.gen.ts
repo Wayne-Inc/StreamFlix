@@ -25,7 +25,6 @@ import { Route as AuthenticatedMylistRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedProfilesRouteImport } from './routes/_authenticated/profiles'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
-import { Route as AuthenticatedStatsRouteImport } from './routes/_authenticated/stats'
 import { Route as ApiArchiveRouteImport } from './routes/api/archive'
 import { Route as ApiClientIpRouteImport } from './routes/api/client-ip'
 import { Route as ApiProxyRouteImport } from './routes/api/proxy'
@@ -117,11 +116,6 @@ const AuthenticatedSearchRoute = AuthenticatedSearchRouteImport.update({
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedStatsRoute = AuthenticatedStatsRouteImport.update({
-  id: '/stats',
-  path: '/stats',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const ApiArchiveRoute = ApiArchiveRouteImport.update({

@@ -468,12 +468,6 @@ export function Navbar() {
                   >
                     <Bookmark className="size-4 text-muted-foreground" /> My List
                   </Link>
-                  <Link
-                    to="/stats"
-                    className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-accent"
-                  >
-                    <BarChart3 className="size-4 text-muted-foreground" /> Stats
-                  </Link>
                 </div>
                 <div className="border-t border-border py-1">
                   <button
@@ -650,7 +644,6 @@ export function Navbar() {
             <Link to="/settings" onClick={() => setMenuOpen(false)} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"><Settings className="size-4" /> Account &amp; Devices</Link>
             <Link to="/history" onClick={() => setMenuOpen(false)} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"><Clock className="size-4" /> Watch History</Link>
             <Link to="/mylist" onClick={() => setMenuOpen(false)} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"><Bookmark className="size-4" /> My List</Link>
-            <Link to="/stats" onClick={() => setMenuOpen(false)} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"><BarChart3 className="size-4" /> Stats</Link>
             <button
               type="button"
               onClick={() => {
