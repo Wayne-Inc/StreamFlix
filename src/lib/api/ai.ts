@@ -74,7 +74,7 @@ function getAiConfig() {
   return {
     apiKey: envValue("NVIDIA_API_KEY") || envValue("NVIDIA_NIM_API_KEY"),
     baseUrl: (envValue("NVIDIA_BASE_URL") || "https://integrate.api.nvidia.com/v1").replace(/\/+$/, ""),
-    model: envValue("NVIDIA_MODEL") || "nvidia/llama-3.3-nemotron-super-49b-v1",
+    model: envValue("NVIDIA_MODEL") || "nvidia/nemotron-3-ultra-550b-a55b",
   };
 }
 

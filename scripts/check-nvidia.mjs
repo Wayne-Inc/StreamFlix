@@ -4,7 +4,7 @@ const text = readFileSync(new URL("../.env.local", import.meta.url), "utf8");
 const key = [...text.matchAll(/^NVIDIA_API_KEY=(.*)$/gm)].at(-1)?.[1]?.trim().replace(/^["']|["']$/g, "");
 const model =
   [...text.matchAll(/^NVIDIA_MODEL=(.*)$/gm)].at(-1)?.[1]?.trim().replace(/^["']|["']$/g, "") ||
-  "nvidia/llama-3.3-nemotron-super-49b-v1";
+  "nvidia/nemotron-3-ultra-550b-a55b";
 
 if (!key) {
   console.log("missing-key");

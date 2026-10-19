@@ -67,7 +67,7 @@ Copy `.env.example` to `.env` and fill in your credentials:
 | `TMDB_API_KEY` | TMDB API key (server-side) |
 | `VITE_TMDB_API_KEY` | TMDB API key (also accepted client-side, falls back to `TMDB_API_KEY`) |
 | `NVIDIA_API_KEY` | NVIDIA NIM API key for StreamFlix AI (server-side only) |
-| `NVIDIA_MODEL` | NVIDIA model name (defaults to `nvidia/llama-3.3-nemotron-super-49b-v1`) |
+| `NVIDIA_MODEL` | NVIDIA model name (defaults to `nvidia/nemotron-3-ultra-550b-a55b`) |
 | `NVIDIA_BASE_URL` | OpenAI-compatible NVIDIA API base URL (defaults to `https://integrate.api.nvidia.com/v1`) |
 | `VITE_SITE_URL` | Public site URL (e.g. `https://streamflix.dpdns.org`) |
 | `CRON_SECRET` | Bearer secret that authorizes the `/api/release-notifications-cron` endpoint (also a GitHub Actions secret) |
