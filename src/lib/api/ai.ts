@@ -111,9 +111,9 @@ function parseModelReply(raw: string): { message: string; picks: { id: string; r
       message: typeof parsed.message === "string" ? parsed.message.slice(0, 1200) : "",
       picks: Array.isArray(parsed.recommendations)
         ? parsed.recommendations
-            .filter((item: any) => item && typeof item.id === "string")
+            .filter((item: any) => item && typeof item.movieId === "string")
             .slice(0, 8)
-            .map((item: any) => ({ id: item.id.slice(0, 32), reason: String(item.reason ?? "A match for your request.").slice(0, 180) }))
+            .map((item: any) => ({ id: item.movieId.slice(0, 32), reason: String(item.reason ?? "A match for your request.").slice(0, 180) }))
         : [],
     };
   } catch {
