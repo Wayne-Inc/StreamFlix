@@ -386,23 +386,29 @@ function AuthPage() {
           // Get the pending credential
           const pendingCred = err.credential;
 
-          // Fetch the existing account's email
-          const methods = await fetchSignInMethodsForEmail(auth, err.email);
-          if (methods.includes("password")) {
-            // Prompt user to sign in with existing provider then link
-            toast.error("An account already exists with this email. Please sign in with your existing provider to link accounts.");
-            setBusy(false);
-            return;
-          }
+          // Fetch the existing account's email (if available)
+          const email = err.email;
+          if (email) {
+            const methods = await fetchSignInMethodsForEmail(auth, email);
+            if (methods.includes("password")) {
+              // Prompt user to sign in with existing provider then link
+              toast.error("An account already exists with this email. Please sign in with your existing provider to link accounts.");
+              setBusy(false);
+              return;
+            }
 
-          // If no password account exists, we can create/link
-          if (err.email) {
-            const existingUserCred = await signInWithEmailAndPassword(auth, err.email, "");
+            // If no password account exists, we can create/link
+            const existingUserCred = await signInWithEmailAndPassword(auth, email, "");
             await linkWithCredential(existingUserCred.user, pendingCred);
             rememberSignInMethod("github");
             try { localStorage.setItem("sf:auth", "1"); } catch {}
             toast.success("Accounts linked and signed in with GitHub.");
             navigate({ to: "/profiles" });
+            return;
+          } else {
+            // Fallback if email is not available in error
+            toast.error("GitHub sign-in failed: unable to retrieve email from account. Please try signing in with email/password instead.");
+            setBusy(false);
             return;
           }
         }
