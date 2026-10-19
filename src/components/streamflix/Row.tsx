@@ -64,7 +64,7 @@ export function Row({
 
   const cardW = isSm ? SM_CARD_W : BASE_CARD_W;
   const isTrendingNow = title === "Trending Now";
-  const effectiveCardW = isTrendingNow ? (isSm ? 300 : 220) : cardW;
+  const effectiveCardW = isTrendingNow ? (isSm ? 380 : 280) : cardW;
   const gap = isSm ? SM_GAP : BASE_GAP;
   const step = effectiveCardW + gap;
 
