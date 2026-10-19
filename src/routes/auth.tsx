@@ -18,10 +18,11 @@ import {
   updateProfile as updateFirebaseProfile,
   sendEmailVerification,
   sendPasswordResetEmail,
+  fetchSignInMethodsForEmail,
 } from "firebase/auth";
 import heroImg from "@/assets/hero-1.jpg";
 
-const LAST_SIGN_IN_METHOD_KEY = "sf:lastSignInMethod";
+const LINKED_SIGN_IN_METHODS_KEY = "sf:linkedSignInMethods";
 type SignInMethod = "email" | "google" | "github";
 
 export const Route = createFileRoute("/auth")({
@@ -241,12 +242,39 @@ function AuthPage() {
         const idToken = result.idToken;
         if (idToken) {
           const credential = GoogleAuthProvider.credential(idToken);
-        await signInWithCredential(auth, credential);
-        rememberSignInMethod("google");
-        try { localStorage.setItem("sf:auth", "1"); } catch {}
-        toast.success("Signed in with Google.");
-          navigate({ to: "/profiles" });
-          return;
+          try {
+            const userCred = await signInWithCredential(auth, credential);
+            rememberSignInMethod("google");
+            try { localStorage.setItem("sf:auth", "1"); } catch {}
+            toast.success("Signed in with Google.");
+            navigate({ to: "/profiles" });
+            return;
+          } catch (error: any) {
+            // Handle account exists with different credential
+            if (error.code === "auth/account-exists-with-different-credential") {
+              // Get the pending credential
+              const pendingCred = error.credential;
+
+              // Fetch the existing account's email
+              const methods = await fetchSignInMethodsForEmail(auth, email);
+              if (methods.includes("password")) {
+                // Prompt user to sign in with existing provider then link
+                toast.error("An account already exists with this email. Please sign in with your existing provider to link accounts.");
+                setBusy(false);
+                return;
+              }
+
+              // If no password account exists, we can create/link
+              const existingUserCred = await signInWithEmailAndPassword(auth, email, password);
+              await linkCredential(existingUserCred.user, pendingCred);
+              rememberSignInMethod("google");
+              try { localStorage.setItem("sf:auth", "1"); } catch {}
+              toast.success("Accounts linked and signed in with Google.");
+              navigate({ to: "/profiles" });
+              return;
+            }
+            throw error;
+          }
         }
         toast.error("Google sign-in failed: no token received.");
       } catch (pluginErr: any) {
@@ -256,12 +284,38 @@ function AuthPage() {
     } else {
       const provider = new GoogleAuthProvider();
       try {
-        await signInWithPopup(auth, provider);
+        const userCred = await signInWithPopup(auth, provider);
         rememberSignInMethod("google");
         try { localStorage.setItem("sf:auth", "1"); } catch {}
         toast.success("Signed in with Google.");
         navigate({ to: "/profiles" });
       } catch (err: any) {
+        // Handle account exists with different credential
+        if (err.code === "auth/account-exists-with-different-credential") {
+          // Get the pending credential
+          const pendingCred = err.credential;
+
+          // Fetch the existing account's email
+          const methods = await fetchSignInMethodsForEmail(auth, err.email);
+          if (methods.includes("password")) {
+            // Prompt user to sign in with existing provider then link
+            toast.error("An account already exists with this email. Please sign in with your existing provider to link accounts.");
+            setBusy(false);
+            return;
+          }
+
+          // If no password account exists, we can create/link
+          if (err.email) {
+            const existingUserCred = await signInWithEmailAndPassword(auth, err.email, "");
+            await linkCredential(existingUserCred.user, pendingCred);
+            rememberSignInMethod("google");
+            try { localStorage.setItem("sf:auth", "1"); } catch {}
+            toast.success("Accounts linked and signed in with Google.");
+            navigate({ to: "/profiles" });
+            return;
+          }
+        }
+
         if (err?.code === "auth/popup-blocked") {
           setPopupBlocked(true);
         } else if (err?.code !== "auth/popup-closed-by-user") {
@@ -290,6 +344,29 @@ function AuthPage() {
         navigate({ to: "/profiles" });
         return;
       } catch (err: any) {
+        // Handle account exists with different credential
+        if (err.code === "auth/account-exists-with-different-credential") {
+          // Get the pending credential
+          const pendingCred = err.credential;
+
+          // Fetch the existing account's email
+          const methods = await fetchSignInMethodsForEmail(auth, email);
+          if (methods.includes("password")) {
+            // Prompt user to sign in with existing provider then link
+            toast.error("An account already exists with this email. Please sign in with your existing provider to link accounts.");
+            setBusy(false);
+            return;
+          }
+
+          // If no password account exists, we can create/link
+          const existingUserCred = await signInWithEmailAndPassword(auth, email, password);
+          await linkCredential(existingUserCred.user, pendingCred);
+          rememberSignInMethod("github");
+          try { localStorage.setItem("sf:auth", "1"); } catch {}
+          toast.success("Accounts linked and signed in with GitHub.");
+          navigate({ to: "/profiles" });
+          return;
+        }
         toast.error(err?.message ?? "GitHub sign-in failed");
       }
       setBusy(false);
@@ -297,12 +374,38 @@ function AuthPage() {
       // Web: popup flow
       const provider = new GithubAuthProvider();
       try {
-        await signInWithPopup(auth, provider);
+        const userCred = await signInWithPopup(auth, provider);
         rememberSignInMethod("github");
         try { localStorage.setItem("sf:auth", "1"); } catch {}
         toast.success("Signed in with GitHub.");
         navigate({ to: "/profiles" });
       } catch (err: any) {
+        // Handle account exists with different credential
+        if (err.code === "auth/account-exists-with-different-credential") {
+          // Get the pending credential
+          const pendingCred = err.credential;
+
+          // Fetch the existing account's email
+          const methods = await fetchSignInMethodsForEmail(auth, err.email);
+          if (methods.includes("password")) {
+            // Prompt user to sign in with existing provider then link
+            toast.error("An account already exists with this email. Please sign in with your existing provider to link accounts.");
+            setBusy(false);
+            return;
+          }
+
+          // If no password account exists, we can create/link
+          if (err.email) {
+            const existingUserCred = await signInWithEmailAndPassword(auth, err.email, "");
+            await linkCredential(existingUserCred.user, pendingCred);
+            rememberSignInMethod("github");
+            try { localStorage.setItem("sf:auth", "1"); } catch {}
+            toast.success("Accounts linked and signed in with GitHub.");
+            navigate({ to: "/profiles" });
+            return;
+          }
+        }
+
         if (err?.code === "auth/popup-blocked") {
           setPopupBlocked(true);
         } else if (err?.code !== "auth/popup-closed-by-user") {
@@ -454,7 +557,7 @@ function AuthPage() {
                   busy ||
                   (mode === "signup" && !passwordMeetsPolicy(password))
                 }
-                className={`w-full rounded border py-3 font-semibold transition-colors disabled:opacity-60 ${mode === "signin" && lastSignInMethod === "email" ? "border-primary bg-primary/15 text-primary ring-1 ring-primary/40" : "border-transparent bg-primary text-primary-foreground hover:bg-primary/90"}`}
+                className={`w-full rounded border py-3 font-semibold disabled:opacity-60 ${mode === "signin" && lastSignInMethod === "email" ? "border-primary bg-primary/15 text-primary ring-1 ring-primary/40 hover:bg-primary/20 active:bg-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50" : "border-transparent bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"}`}
               >
                 {busy ? "Please wait…" : mode === "signin" ? `Sign In${lastSignInMethod === "email" ? " · Last used" : ""}` : "Create Account"}
               </button>
@@ -477,14 +580,14 @@ function AuthPage() {
               <button
                 onClick={onGoogle}
                 disabled={busy}
-                className={`mt-4 w-full rounded border py-3 font-semibold transition-colors disabled:opacity-60 ${mode === "signin" && lastSignInMethod === "google" ? "border-primary bg-primary/15 text-primary ring-1 ring-primary/40" : "border-transparent bg-foreground/10 text-foreground hover:bg-foreground/20"}`}
+                className={`mt-4 w-full rounded border py-3 font-semibold disabled:opacity-60 ${mode === "signin" && lastSignInMethod === "google" ? "border-primary bg-primary/15 text-primary ring-1 ring-primary/40 hover:bg-primary/20 active:bg-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50" : "border-transparent bg-foreground/10 text-foreground hover:bg-foreground/20 active:bg-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50"}`}
               >
                 Continue with Google{mode === "signin" && lastSignInMethod === "google" ? " · Last used" : ""}
               </button>
               <button
                 onClick={onGitHub}
                 disabled={busy}
-                className={`mt-3 w-full rounded border py-3 font-semibold transition-colors disabled:opacity-60 ${mode === "signin" && lastSignInMethod === "github" ? "border-primary bg-primary/15 text-primary ring-1 ring-primary/40" : "border-transparent bg-foreground/10 text-foreground hover:bg-foreground/20"}`}
+                className={`mt-3 w-full rounded border py-3 font-semibold disabled:opacity-60 ${mode === "signin" && lastSignInMethod === "github" ? "border-primary bg-primary/15 text-primary ring-1 ring-primary/40 hover:bg-primary/20 active:bg-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50" : "border-transparent bg-foreground/10 text-foreground hover:bg-foreground/20 active:bg-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50"}`}
               >
                 Continue with GitHub{mode === "signin" && lastSignInMethod === "github" ? " · Last used" : ""}
               </button>
