@@ -257,7 +257,6 @@ export interface FileRoutesById {
   '/_authenticated/profiles': typeof AuthenticatedProfilesRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
-  '/_authenticated/stats': typeof AuthenticatedStatsRoute
   '/api/archive': typeof ApiArchiveRoute
   '/api/client-ip': typeof ApiClientIpRoute
   '/api/proxy': typeof ApiProxyRoute
@@ -289,7 +288,6 @@ export interface FileRouteTypes {
     | '/profiles'
     | '/search'
     | '/settings'
-    | '/stats'
     | '/api/archive'
     | '/api/client-ip'
     | '/api/proxy'
@@ -318,7 +316,6 @@ export interface FileRouteTypes {
     | '/profiles'
     | '/search'
     | '/settings'
-    | '/stats'
     | '/api/archive'
     | '/api/client-ip'
     | '/api/proxy'
@@ -349,7 +346,6 @@ export interface FileRouteTypes {
     | '/_authenticated/profiles'
     | '/_authenticated/search'
     | '/_authenticated/settings'
-    | '/_authenticated/stats'
     | '/api/archive'
     | '/api/client-ip'
     | '/api/proxy'
@@ -493,13 +489,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/stats': {
-      id: '/_authenticated/stats'
-      path: '/stats'
-      fullPath: '/stats'
-      preLoaderRoute: typeof AuthenticatedStatsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/api/archive': {
       id: '/api/archive'
       path: '/api/archive'
@@ -611,7 +600,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfilesRoute: typeof AuthenticatedProfilesRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
-  AuthenticatedStatsRoute: typeof AuthenticatedStatsRoute
   AuthenticatedMovieIdRoute: typeof AuthenticatedMovieIdRoute
   AuthenticatedPersonIdRoute: typeof AuthenticatedPersonIdRoute
   AuthenticatedWatchIdRoute: typeof AuthenticatedWatchIdRoute

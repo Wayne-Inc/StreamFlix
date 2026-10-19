@@ -182,7 +182,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   const initial = useRef(true);
-  const photoSaved = useRef<string | null> = useRef<string | null>(null);
+  const photoSaved = useRef<string | null>(null);
   const offlineRoute = "/offline";
 
   useNavTracker();
