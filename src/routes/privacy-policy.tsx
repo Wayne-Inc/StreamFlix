@@ -81,11 +81,6 @@ function PrivacyPolicyPage() {
               the contents of the message and/or attachments you may send us, and any other
               information you may choose to provide.
             </li>
-            <li>
-              <strong>Transaction Data:</strong> Information about purchases and other financial
-              transactions, including payment card information (which is processed directly by
-              our payment partners).
-            </li>
           </ul>
         </section>
 
