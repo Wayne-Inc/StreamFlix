@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FormEvent, useMemo, useState } from "react";
-import { Bot, LoaderCircle, Send, Sparkles, WandSparkles } from "lucide-react";
-import { Footer } from "@/components/streamflix/Footer";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { LoaderCircle, Send, Sparkles } from "lucide-react";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import { Navbar } from "@/components/streamflix/Navbar";
+import { Checkbox } from "@/components/ui/checkbox";
 import { askStreamflixAI } from "@/lib/api/ai";
 import { getWatchHistory } from "@/lib/continue-watching";
 import { auth } from "@/lib/firebase";
@@ -27,6 +27,7 @@ function AssistantPage() {
   const [includeHistory, setIncludeHistory] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const threadRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<AssistantMessage[]>([
     {
       role: "assistant",
@@ -35,6 +36,14 @@ function AssistantPage() {
         : "Hi! Tell me what you’re in the mood for, and I’ll find movies and shows that fit.",
     },
   ]);
+
+  const hasConversation = messages.length > 1;
+
+  useEffect(() => {
+    const thread = threadRef.current;
+    if (!thread) return;
+    thread.scrollTo({ top: thread.scrollHeight, behavior: "smooth" });
+  }, [messages, busy, error]);
 
   const historyForRequest = () => {
     if (!includeHistory || kidsMode) return [];
@@ -92,84 +101,151 @@ function AssistantPage() {
     : ["A clever mystery without too much violence", "Something uplifting and under two hours", "A sci-fi show with great characters"];
 
   return (
-    <div className="min-h-dvh bg-background text-foreground">
+    <div className="flex h-dvh flex-col overflow-hidden bg-background text-foreground">
       <Navbar />
-      <main className="mx-auto max-w-6xl px-4 pb-24 pt-24 sm:px-8 md:pt-28">
-        <section className="relative mb-8 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-primary/20 via-card to-card p-6 shadow-2xl sm:p-9">
-          <div className="absolute -right-10 -top-16 size-56 rounded-full bg-primary/20 blur-3xl" />
-          <div className="relative flex items-start gap-4">
-            <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-              <WandSparkles className="size-6" />
-            </div>
-            <div>
-              <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-primary">StreamFlix AI</p>
-              <h1 className="text-3xl font-black tracking-tight sm:text-4xl">Your next favorite starts here.</h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-                Describe a mood, a plot, or the kind of night you’re planning. Get grounded picks from the StreamFlix catalog, with a reason for every match.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="mx-auto max-w-4xl overflow-hidden rounded-2xl border border-border bg-card/70 shadow-xl">
-          <div className="flex items-center gap-3 border-b border-border px-5 py-4">
-            <div className="grid size-9 place-items-center rounded-full bg-primary/15 text-primary"><Bot className="size-5" /></div>
-            <div>
-              <h2 className="text-sm font-semibold">Movie & TV guide</h2>
-              <p className="text-xs text-muted-foreground">Powered by NVIDIA Nemotron</p>
-            </div>
-            <Sparkles className="ml-auto size-4 text-primary" />
-          </div>
-
-          <div className="max-h-[52vh] min-h-72 space-y-5 overflow-y-auto px-4 py-5 sm:px-6" aria-live="polite">
-            {messages.map((message, index) => (
-              <div key={`${index}-${message.role}`} className={message.role === "user" ? "ml-auto max-w-[90%] sm:max-w-[75%]" : "max-w-full"}>
-                <div className={`rounded-2xl px-4 py-3 text-sm leading-6 ${message.role === "user" ? "ml-auto w-fit bg-primary text-primary-foreground" : "border border-border bg-background/70 text-foreground"}`}>
-                  {message.content}
-                </div>
-                {message.recommendations && message.recommendations.length > 0 && (
-                  <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                    {message.recommendations.map(({ movie, reason }) => (
-                      <div key={movie.id}>
-                        <MovieCard movie={movie} fluid />
-                        <p className="mt-2 text-xs leading-5 text-muted-foreground">{reason}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
+      <main className="flex min-h-0 flex-1 flex-col pt-14 sm:pt-16 pb-[calc(4.25rem+env(safe-area-inset-bottom))] md:pb-0">
+        <div
+          ref={threadRef}
+          className="min-h-0 flex-1 overflow-y-auto"
+          aria-live="polite"
+        >
+          {!hasConversation ? (
+            <div className="flex min-h-full flex-col items-center justify-center px-5 py-10 text-center sm:px-8">
+              <div className="mb-5 grid size-16 place-items-center rounded-full bg-primary/15 text-primary">
+                <Sparkles className="size-8" />
               </div>
-            ))}
-            {busy && <div className="flex items-center gap-2 text-sm text-muted-foreground"><LoaderCircle className="size-4 animate-spin" /> Finding a great match…</div>}
-            {error && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>}
-          </div>
-
-          <div className="border-t border-border bg-background/50 p-4 sm:p-5">
-            <div className="mb-3 flex flex-wrap gap-2">
-              {suggestions.map((suggestion) => (
-                <button key={suggestion} type="button" disabled={busy} onClick={() => void send(suggestion)} className="rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground transition hover:border-primary/50 hover:text-foreground disabled:opacity-50">
-                  {suggestion}
+              <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-primary">StreamFlix AI</p>
+              <h1 className="max-w-xl text-3xl font-black tracking-tight sm:text-5xl">Your next favorite starts here.</h1>
+              <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
+                {messages[0]?.content}
+              </p>
+              <div className="mt-8 flex max-w-2xl flex-wrap justify-center gap-2">
+                {suggestions.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void send(suggestion)}
+                    className="rounded-full border border-border px-4 py-2 text-sm text-muted-foreground transition hover:border-primary/50 hover:text-foreground disabled:opacity-50"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void send("", "recommendations")}
+                  className="rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-medium text-primary transition hover:bg-primary/20 disabled:opacity-50"
+                >
+                  Surprise me
                 </button>
-              ))}
-              <button type="button" disabled={busy} onClick={() => void send("", "recommendations")} className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition hover:bg-primary/20 disabled:opacity-50">
-                Surprise me
-              </button>
+              </div>
             </div>
-            <form onSubmit={submit} className="flex items-end gap-2 rounded-2xl border border-border bg-card p-2 focus-within:border-primary/60">
+          ) : (
+            <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-8 sm:py-8">
+              {messages.slice(1).map((message, index) => (
+                <div key={`${index}-${message.role}`} className={message.role === "user" ? "ml-auto max-w-[90%] sm:max-w-[80%]" : "w-full"}>
+                  <div className={`px-1 py-1 text-sm leading-6 sm:text-[15px] ${message.role === "user" ? "rounded-2xl bg-primary px-4 py-3 text-primary-foreground" : "text-foreground"}`}>
+                    {message.content}
+                  </div>
+                  {message.recommendations && message.recommendations.length > 0 && (
+                    <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      {message.recommendations.map(({ movie, reason }) => (
+                        <div key={movie.id}>
+                          <MovieCard movie={movie} fluid />
+                          <p className="mt-2 text-xs leading-5 text-muted-foreground">{reason}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {busy && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <LoaderCircle className="size-4 animate-spin" /> Finding a great match…
+                </div>
+              )}
+              {error && (
+                <p role="alert" className="text-sm text-destructive">{error}</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="pointer-events-none shrink-0 bg-gradient-to-t from-background via-background/85 to-transparent px-4 pb-4 pt-6 sm:px-8">
+          <div className="pointer-events-auto mx-auto w-full max-w-5xl">
+            {hasConversation && (
+              <div className="mb-3 flex flex-wrap gap-2">
+                {suggestions.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void send(suggestion)}
+                    className="rounded-full border border-border bg-background/70 px-3 py-1.5 text-xs text-muted-foreground shadow-sm backdrop-blur-md transition hover:border-primary/50 hover:text-foreground disabled:opacity-50"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void send("", "recommendations")}
+                  className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary shadow-sm backdrop-blur-md transition hover:bg-primary/20 disabled:opacity-50"
+                >
+                  Surprise me
+                </button>
+              </div>
+            )}
+            <form
+              onSubmit={submit}
+              className="flex items-end gap-2 rounded-[1.75rem] border border-white/10 bg-card/80 p-2 pl-4 shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-xl focus-within:border-primary/50"
+            >
               <label className="sr-only" htmlFor="assistant-prompt">Describe what you want to watch</label>
-              <textarea id="assistant-prompt" value={prompt} onChange={(event) => setPrompt(event.target.value)} maxLength={500} rows={2} placeholder="I want a mind-bending mystery for tonight…" className="max-h-32 min-h-12 flex-1 resize-y bg-transparent px-2 py-2 text-sm outline-none placeholder:text-muted-foreground" onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }} />
-              <button type="submit" disabled={busy || !prompt.trim()} aria-label="Send message" className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"><Send className="size-4" /></button>
+              <textarea
+                id="assistant-prompt"
+                value={prompt}
+                onChange={(event) => setPrompt(event.target.value)}
+                maxLength={500}
+                rows={2}
+                placeholder="I want a mind-bending mystery for tonight…"
+                className="max-h-32 min-h-12 flex-1 resize-none overflow-hidden bg-transparent py-2.5 text-sm outline-none placeholder:text-muted-foreground"
+                style={{ resize: "none" }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    event.currentTarget.form?.requestSubmit();
+                  }
+                }}
+              />
+              <button
+                type="submit"
+                disabled={busy || !prompt.trim()}
+                aria-label="Send message"
+                className="grid size-11 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Send className="size-4" />
+              </button>
             </form>
-            <div className="mt-3 flex flex-col gap-2 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-              <label className={`inline-flex items-center gap-2 ${kidsMode ? "opacity-50" : ""}`}>
-                <input type="checkbox" checked={includeHistory && !kidsMode} disabled={kidsMode} onChange={(event) => setIncludeHistory(event.target.checked)} className="accent-primary" />
+            <div className="mt-3 flex flex-col gap-2 px-1 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+              <label
+                htmlFor="assistant-history"
+                className={`inline-flex cursor-pointer items-center gap-2.5 select-none ${kidsMode ? "cursor-not-allowed opacity-50" : "hover:text-foreground"}`}
+              >
+                <Checkbox
+                  id="assistant-history"
+                  checked={includeHistory && !kidsMode}
+                  disabled={kidsMode}
+                  onCheckedChange={(checked) => setIncludeHistory(checked === true)}
+                  className="size-5 rounded-md border-white/25 shadow-none data-[state=checked]:border-primary"
+                />
                 Use my watch history for better picks
               </label>
               <span>Your history is sent only when you opt in. AI responses may be imperfect.</span>
             </div>
           </div>
-        </section>
+        </div>
       </main>
-      <Footer />
     </div>
   );
 }
