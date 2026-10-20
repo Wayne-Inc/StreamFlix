@@ -9,6 +9,7 @@ import {
   limit as fLimit,
 } from "firebase/firestore";
 import { db, auth } from "./firebase";
+import { getSelectedProfile } from "./selected-profile";
 import type { Movie } from "./types";
 
 const CW_COLLECTION = "continue_watching";
@@ -43,13 +44,7 @@ export type FirestoreContinueItem = {
 
 function getSelectedProfileId(): string | null {
   if (typeof window === "undefined") return null;
-  try {
-    const raw = window.localStorage.getItem("sf:selectedProfile");
-    if (!raw) return null;
-    return JSON.parse(raw).id ?? null;
-  } catch {
-    return null;
-  }
+  return getSelectedProfile()?.id ?? null;
 }
 
 function makeDocId(movieId: string, season?: number, episode?: number) {

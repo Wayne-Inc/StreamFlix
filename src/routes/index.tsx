@@ -4,6 +4,7 @@ import { ChevronRight, Play, ChevronDown, Mail, Instagram, Tv, Smartphone, Monit
 import { Logo } from "@/components/streamflix/Logo";
 import { ContactEmail } from "@/components/streamflix/ContactEmail";
 import { isInApp } from "@/lib/app-downloads";
+import { getSelectedProfile } from "@/lib/selected-profile";
 import { tmdbFetch, toMovie } from "@/lib/api/tmdb.server";
 import type { Movie } from "@/lib/types";
 import heroImg from "@/assets/landing.jpg";
@@ -14,6 +15,8 @@ export const Route = createFileRoute("/")({
     // Instant redirect from localStorage cache — no flash
     try {
       if (localStorage.getItem("sf:auth") === "1") {
+        // Profile picked earlier in this session: skip selection.
+        if (getSelectedProfile()) throw redirect({ to: "/browse" });
         throw redirect({ to: "/profiles" });
       }
     } catch (e) {
@@ -30,6 +33,7 @@ export const Route = createFileRoute("/")({
     });
     if (user) {
       try { localStorage.setItem("sf:auth", "1"); } catch {}
+      if (getSelectedProfile()) throw redirect({ to: "/browse" });
       throw redirect({ to: "/profiles" });
     }
   },

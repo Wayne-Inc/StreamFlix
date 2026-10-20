@@ -12,16 +12,11 @@ import {
 } from "firebase/firestore";
 import { getDeviceId } from "@/lib/device-tracking";
 import { hasConsent } from "@/lib/consent";
+import { getSelectedProfile } from "@/lib/selected-profile";
 
 function getSelectedProfileId(): string | null {
   if (typeof window === "undefined") return null;
-  try {
-    const raw = localStorage.getItem("sf:selectedProfile");
-    if (!raw) return null;
-    return JSON.parse(raw).id ?? null;
-  } catch {
-    return null;
-  }
+  return getSelectedProfile()?.id ?? null;
 }
 
 export async function startSession(movieId: string): Promise<string | null> {

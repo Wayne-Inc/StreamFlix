@@ -28,6 +28,7 @@ import {
 } from "@/lib/profiles";
 import { getFavoriteGenres, setFavoriteGenres, GENRE_OPTIONS } from "@/lib/favorite-genres";
 import { isKidsProfile } from "@/lib/kids-mode";
+import { setSelectedProfile } from "@/lib/selected-profile";
 
 function isValidAvatarUrl(url: string): boolean {
   if (!url) return false;
@@ -157,16 +158,13 @@ function ProfilesPage() {
 
   const selectProfile = (p: Profile) => {
     try {
-      localStorage.setItem(
-        "sf:selectedProfile",
-        JSON.stringify({
-          id: p.id,
-          name: p.name,
-          color: p.color,
-          avatarUrl: p.avatarUrl,
-          kids: p.kids,
-        }),
-      );
+      setSelectedProfile({
+        id: p.id,
+        name: p.name,
+        color: p.color,
+        avatarUrl: p.avatarUrl,
+        kids: p.kids,
+      });
       window.dispatchEvent(new Event("profileChanged"));
     } catch {}
     navigate({ to: "/browse" });

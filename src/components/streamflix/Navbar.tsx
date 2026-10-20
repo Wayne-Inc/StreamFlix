@@ -23,6 +23,7 @@ import { auth, db } from "@/lib/firebase";
 import { signOut as firebaseSignOut } from "firebase/auth";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { profileHasPin, verifyProfilePin } from "@/lib/profiles";
+import { getSelectedProfile, clearSelectedProfile } from "@/lib/selected-profile";
 import { suggestTitles } from "@/lib/streamflix-data";
 
 const links = [
@@ -113,17 +114,7 @@ export function Navbar() {
   );
 
   const loadProfile = () => {
-    try {
-      const raw = localStorage.getItem("sf:selectedProfile");
-      if (raw) {
-        const p = JSON.parse(raw);
-        setSelectedProfile(p);
-      } else {
-        setSelectedProfile(null);
-      }
-    } catch {
-      setSelectedProfile(null);
-    }
+    setSelectedProfile(getSelectedProfile());
   };
 
   useEffect(() => {
@@ -209,11 +200,11 @@ export function Navbar() {
         setExitKidsPin("");
         setExitKidsOpen(true);
       } else {
-        localStorage.removeItem("sf:selectedProfile");
+        clearSelectedProfile();
         router.navigate({ to: "/profiles" });
       }
     } catch {
-      localStorage.removeItem("sf:selectedProfile");
+      clearSelectedProfile();
       router.navigate({ to: "/profiles" });
     }
   };
@@ -228,7 +219,7 @@ export function Navbar() {
       if (ok) {
         setExitKidsOpen(false);
         setExitKidsPin("");
-        localStorage.removeItem("sf:selectedProfile");
+        clearSelectedProfile();
         router.navigate({ to: "/profiles" });
       } else {
         toast.error("Incorrect PIN");

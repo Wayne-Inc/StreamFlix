@@ -1,4 +1,5 @@
 import type { Movie } from "./types";
+import { getSelectedProfile } from "./selected-profile";
 
 const RATING_TIERS: Record<string, number> = {
   G: 0,
@@ -25,13 +26,7 @@ export function isRatingBlockedForKids(rating: string | undefined): boolean {
 
 export function isKidsProfile(): boolean {
   if (typeof window === "undefined") return false;
-  try {
-    const raw = localStorage.getItem("sf:selectedProfile");
-    if (!raw) return false;
-    return JSON.parse(raw).kids ?? false;
-  } catch {
-    return false;
-  }
+  return getSelectedProfile()?.kids ?? false;
 }
 
 export function isGenreBlockedForKids(genreIds: number[]): boolean {

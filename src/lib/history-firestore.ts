@@ -9,6 +9,7 @@ import {
   limit as fLimit,
 } from "firebase/firestore";
 import { db, auth } from "./firebase";
+import { getSelectedProfile } from "./selected-profile";
 import type { WatchHistoryItem } from "./continue-watching";
 
 const HISTORY_COLLECTION = "watch_history";
@@ -22,13 +23,7 @@ type FirestoreHistoryItem = WatchHistoryItem & {
 
 function getSelectedProfileId(): string | null {
   if (typeof window === "undefined") return null;
-  try {
-    const raw = window.localStorage.getItem("sf:selectedProfile");
-    if (!raw) return null;
-    return JSON.parse(raw).id ?? null;
-  } catch {
-    return null;
-  }
+  return getSelectedProfile()?.id ?? null;
 }
 
 function makeDocId(id: string) {

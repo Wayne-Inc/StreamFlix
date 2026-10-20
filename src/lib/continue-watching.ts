@@ -1,4 +1,5 @@
 import type { Movie } from "./types";
+import { getSelectedProfile } from "./selected-profile";
 import {
   saveHistoryToFirestore,
   removeHistoryFromFirestore,
@@ -40,13 +41,7 @@ export type WatchHistoryItem = ContinueItem & {
 
 export function getSelectedProfileId(): string | null {
   if (typeof window === "undefined") return null;
-  try {
-    const raw = window.localStorage.getItem("sf:selectedProfile");
-    if (!raw) return null;
-    return JSON.parse(raw).id ?? null;
-  } catch {
-    return null;
-  }
+  return getSelectedProfile()?.id ?? null;
 }
 
 function getKey(): string {

@@ -261,7 +261,7 @@ function RootComponent() {
 
     const handleOffline = () => {
       // If we are on the watch page, do not redirect to offline page.
-      if (window.location.pathname.startsWith('/_authenticated/watch/')) {
+      if (/^\/watch\/[^/]+/.test(window.location.pathname)) {
         return;
       }
       if (window.location.pathname !== offlineRoute) {
