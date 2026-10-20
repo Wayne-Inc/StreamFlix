@@ -50,8 +50,10 @@ export const Route = createFileRoute("/api/verify-recaptcha")({
             );
           }
 
-          // Optionally verify action
-          if (data.action !== action) {
+          // Validate the action only when Turnstile echoed one back. The action is
+          // only present when the widget was rendered with an `action` option, so a
+          // missing action must not be treated as a mismatch.
+          if (action && typeof data.action === "string" && data.action !== action) {
             return new Response(JSON.stringify({ ok: false, reasons: ["action_mismatch"] }), {
               status: 200,
               headers: { "Content-Type": "application/json" },
