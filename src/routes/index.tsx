@@ -1,10 +1,11 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronRight, Play, ChevronDown, Mail, Instagram, Tv, Smartphone, Monitor, Shield, Zap, Globe, ChevronLeft, Download, Github } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
 import { ContactEmail } from "@/components/streamflix/ContactEmail";
 import { isInApp } from "@/lib/app-downloads";
 import { getSelectedProfile } from "@/lib/selected-profile";
+import { canPromptInstall, promptInstall, isPWAInstalled } from "@/lib/pwa";
 import { tmdbFetch, toMovie } from "@/lib/api/tmdb.server";
 import type { Movie } from "@/lib/types";
 import heroImg from "@/assets/landing.jpg";
@@ -87,6 +88,29 @@ function Landing() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [showInstall, setShowInstall] = useState(false);
+  const [installing, setInstalling] = useState(false);
+
+  useEffect(() => {
+    if (isInApp() || isPWAInstalled()) return;
+    setShowInstall(canPromptInstall());
+    const check = () => setShowInstall(canPromptInstall());
+    window.addEventListener("beforeinstallprompt", check as EventListener);
+    window.addEventListener("appinstalled", check as EventListener);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", check as EventListener);
+      window.removeEventListener("appinstalled", check as EventListener);
+    };
+  }, []);
+
+  const handleInstall = async () => {
+    if (installing) return;
+    setInstalling(true);
+    const res = await promptInstall();
+    setInstalling(false);
+    if (res === "unavailable") setShowInstall(false);
+  };
+
 
   const checkScroll = () => {
     const el = scrollContainerRef.current;
@@ -143,7 +167,16 @@ function Landing() {
               >
                 <Play className="size-5 fill-current" /> Start Watching
               </Link>
-              {!isInApp() && (
+              {!isInApp() && !isPWAInstalled() && showInstall && (
+                <button
+                  onClick={handleInstall}
+                  disabled={installing}
+                  className="inline-flex items-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-6 py-3 text-base font-semibold text-primary hover:bg-primary/20 transition-colors disabled:opacity-50"
+                >
+                  <Download className="size-5" /> {installing ? "Installing..." : "Install App"}
+                </button>
+              )}
+              {!isInApp() && !isPWAInstalled() && !showInstall && (
                 <a
                   href="https://github.com/Wayne-Inc/StreamFlix/releases"
                   target="_blank"

@@ -29,6 +29,7 @@ import {
 import { getFavoriteGenres, setFavoriteGenres, GENRE_OPTIONS } from "@/lib/favorite-genres";
 import { isKidsProfile } from "@/lib/kids-mode";
 import { setSelectedProfile } from "@/lib/selected-profile";
+import { ConfirmDialog } from "@/components/streamflix/ConfirmDialog";
 
 function isValidAvatarUrl(url: string): boolean {
   if (!url) return false;
@@ -537,6 +538,8 @@ function ProfileEditor({
     setRemovePinBusy(false);
   };
 
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
   const remove = async () => {
     if (!existing) return;
     const u = auth.currentUser;
@@ -545,11 +548,18 @@ function ProfileEditor({
       toast.error("You must keep at least one profile");
       return;
     }
-    if (!confirm(`Delete profile "${existing.name}"?`)) return;
+    setDeleteOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!existing) return;
+    const u = auth.currentUser;
+    if (!u) return;
     setBusy(true);
     try {
       await deleteProfile(u.uid, existing.id);
       toast.success("Profile deleted");
+      setDeleteOpen(false);
       onSaved();
     } catch (e: any) {
       toast.error(e?.message ?? "Couldn't delete");
@@ -778,6 +788,16 @@ function ProfileEditor({
           </div>
         </div>
       </div>
+      <ConfirmDialog
+        open={deleteOpen}
+        title="Delete profile"
+        description={`Delete profile "${existing?.name}"? This action cannot be undone.`}
+        confirmLabel={busy ? "Deleting..." : "Delete"}
+        destructive
+        busy={busy}
+        onConfirm={confirmDelete}
+        onCancel={() => !busy && setDeleteOpen(false)}
+      />
     </div>
   );
 }
