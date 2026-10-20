@@ -1,7 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const SCORE_THRESHOLD = 0.5; // Keeping for compatibility, but Turnstile doesn't use scores
-
 export const Route = createFileRoute("/api/verify-recaptcha")({
   server: {
     handlers: {
@@ -17,7 +15,9 @@ export const Route = createFileRoute("/api/verify-recaptcha")({
             });
           }
 
-          const secretKey = process.env.TURNSTILE_SECRET_KEY || (import.meta as any).env?.TURNSTILE_SECRET_KEY;
+          const secretKey =
+            process.env.TURNSTILE_SECRET_KEY ||
+            (import.meta.env as Record<string, string | undefined>).TURNSTILE_SECRET_KEY;
           if (!secretKey) {
             console.error("TURNSTILE_SECRET_KEY env var not set");
             return new Response(JSON.stringify({ ok: false, error: "Server config error" }), {
@@ -35,7 +35,7 @@ export const Route = createFileRoute("/api/verify-recaptcha")({
                 secret: secretKey,
                 response: token,
               }),
-            }
+            },
           );
 
           const data = await verifyRes.json();
@@ -44,7 +44,6 @@ export const Route = createFileRoute("/api/verify-recaptcha")({
             return new Response(
               JSON.stringify({
                 ok: false,
-                score: 0,
                 reasons: data["error-codes"] || [],
               }),
               { status: 200, headers: { "Content-Type": "application/json" } },
@@ -53,17 +52,16 @@ export const Route = createFileRoute("/api/verify-recaptcha")({
 
           // Optionally verify action
           if (data.action !== action) {
-            return new Response(
-              JSON.stringify({ ok: false, score: 0, reasons: ["action_mismatch"] }),
-              { status: 200, headers: { "Content-Type": "application/json" } },
-            );
+            return new Response(JSON.stringify({ ok: false, reasons: ["action_mismatch"] }), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            });
           }
 
-          // Turnstile doesn't provide a score, so we'll use 1 for success to maintain compatibility
-          return new Response(
-            JSON.stringify({ ok: true, score: 1, reasons: [] }),
-            { status: 200, headers: { "Content-Type": "application/json" } },
-          );
+          return new Response(JSON.stringify({ ok: true, reasons: [] }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
         } catch (err) {
           console.error("Turnstile verification error:", err);
           return new Response(JSON.stringify({ ok: false, error: "Internal error" }), {

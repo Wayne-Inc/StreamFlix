@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { LoaderCircle, Send, Sparkles } from "lucide-react";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import { Navbar } from "@/components/streamflix/Navbar";
@@ -100,32 +100,32 @@ function AssistantPage() {
     : ["A clever mystery without too much violence", "Something uplifting and under two hours", "A sci-fi show with great characters"];
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-background text-foreground">
+    <div className="flex h-[calc(100dvh-env(safe-area-inset-bottom,0px))] flex-col overflow-hidden bg-background text-foreground">
       <Navbar />
-      <main className="flex min-h-0 flex-1 flex-col pt-14 sm:pt-16 pb-[calc(4.25rem+env(safe-area-inset-bottom))] md:pb-0">
+      <main className="flex min-h-0 flex-1 flex-col pt-14 sm:pt-16">
         <div
           ref={threadRef}
-          className="min-h-0 flex-1 overflow-y-auto"
+          className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain"
           aria-live="polite"
         >
           {!hasConversation ? (
-            <div className="flex min-h-full flex-col items-center justify-center px-5 py-10 text-center sm:px-8">
-              <div className="mb-5 grid size-16 place-items-center rounded-full bg-primary/15 text-primary">
-                <Sparkles className="size-8" />
+            <div className="flex min-h-full flex-col items-center justify-center px-5 py-6 text-center sm:px-8 sm:py-10">
+              <div className="mb-4 grid size-12 place-items-center rounded-full bg-primary/15 text-primary sm:mb-5 sm:size-16">
+                <Sparkles className="size-6 sm:size-8" />
               </div>
               <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-primary">StreamFlix AI</p>
-              <h1 className="max-w-xl text-3xl font-black tracking-tight sm:text-5xl">Your next favorite starts here.</h1>
-              <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
+              <h1 className="max-w-xl text-2xl font-black tracking-tight sm:text-5xl">Your next favorite starts here.</h1>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:mt-4 sm:text-base">
                 {messages[0]?.content}
               </p>
-              <div className="mt-8 flex max-w-2xl flex-wrap justify-center gap-2">
+              <div className="mt-6 flex max-w-2xl flex-wrap justify-center gap-2 sm:mt-8">
                 {suggestions.map((suggestion) => (
                   <button
                     key={suggestion}
                     type="button"
                     disabled={busy}
                     onClick={() => void send(suggestion)}
-                    className="rounded-full border border-border px-4 py-2 text-sm text-muted-foreground transition hover:border-primary/50 hover:text-foreground disabled:opacity-50"
+                    className="rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground transition hover:border-primary/50 hover:text-foreground disabled:opacity-50 sm:px-4 sm:py-2 sm:text-sm"
                   >
                     {suggestion}
                   </button>
@@ -134,57 +134,55 @@ function AssistantPage() {
                   type="button"
                   disabled={busy}
                   onClick={() => void send("", "recommendations")}
-                  className="rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-medium text-primary transition hover:bg-primary/20 disabled:opacity-50"
+                  className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition hover:bg-primary/20 disabled:opacity-50 sm:px-4 sm:py-2 sm:text-sm"
                 >
                   Surprise me
                 </button>
               </div>
             </div>
           ) : (
-            <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 sm:px-8 sm:py-8">
+            <div className="mx-auto w-full max-w-5xl space-y-4 px-4 py-6 sm:space-y-6 sm:px-8 sm:py-8">
               {messages.slice(1).map((message, index) => (
-                <>
+                <Fragment key={`${index}-${message.role}`}>
                   {message.role === "assistant" && message.recommendations && message.recommendations.length > 0 ? (
                     <>
-                      <div key={`${index}-${message.role}-text`} className={message.role === "user" ? 'ml-auto max-w-[90%] sm:max-w-[80%]' : 'mr-auto max-w-[90%] sm:max-w-[80%]'}>
+                      <div className={message.role === "user" ? "ml-auto max-w-[90%] sm:max-w-[80%]" : "mr-auto max-w-[90%] sm:max-w-[80%]"}>
                         <div className={message.role === "user" ? "rounded-2xl bg-primary px-4 py-3 text-primary-foreground" : "rounded-xl bg-muted/50 p-4"}>
                           <div className="space-y-2">
-                            <div className="text-sm leading-6">
+                            <div className="break-words whitespace-pre-wrap text-sm leading-6">
                               {message.content}
                             </div>
                           </div>
                         </div>
                       </div>
-                      <div key={`${index}-${message.role}-cards`} className="mx-auto w-full max-w-5xl mt-4 flex flex-wrap gap-4 justify-center">
+                      <div className="-mx-4 mt-0 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:justify-center">
                         {message.recommendations.map((rec, recIndex) => (
-                          <MovieCard
-                            key={recIndex}
-                            movie={rec.movie}
-                            reason={rec.reason}
-                          />
+                          <div key={rec.movie.id ?? recIndex} className="snap-start shrink-0">
+                            <MovieCard movie={rec.movie} reason={rec.reason} />
+                          </div>
                         ))}
                       </div>
                     </>
                   ) : (
-                    <div key={`${index}-${message.role}`} className={message.role === "user" ? 'ml-auto max-w-[90%] sm:max-w-[80%]' : 'mr-auto max-w-[90%] sm:max-w-[80%]'}>
+                    <div className={message.role === "user" ? "ml-auto max-w-[90%] sm:max-w-[80%]" : "mr-auto max-w-[90%] sm:max-w-[80%]"}>
                       <div className={message.role === "user" ? "rounded-2xl bg-primary px-4 py-3 text-primary-foreground" : "rounded-xl bg-muted/50 p-4"}>
                         <div className="space-y-2">
-                          <div className="text-sm leading-6">
+                          <div className="break-words whitespace-pre-wrap text-sm leading-6">
                             {message.content}
                           </div>
                         </div>
                       </div>
                     </div>
                   )}
-                </>
+                </Fragment>
               ))}
               {busy && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="mr-auto flex max-w-[90%] items-center gap-2 rounded-xl bg-muted/50 p-4 text-sm text-muted-foreground sm:max-w-[80%]">
                   <LoaderCircle className="size-4 animate-spin" /> Finding a great match…
                 </div>
               )}
               {error && (
-                <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>
+                <p role="alert" className="text-sm text-destructive">{error}</p>
               )}
             </div>
           )}
@@ -192,17 +190,17 @@ function AssistantPage() {
 
       </main>
 
-      <div className="pointer-events-none shrink-0 bg-gradient-to-t from-background via-background/85 to-transparent px-4 pb-4 pt-6 sm:px-8">
+      <div className="pointer-events-none shrink-0 bg-gradient-to-t from-background via-background/95 to-transparent px-4 pt-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:px-8 md:pb-4">
         <div className="pointer-events-auto mx-auto w-full max-w-5xl">
           {hasConversation && (
-            <div className="mb-3 flex flex-wrap gap-2">
+            <div className="mb-2 flex flex-nowrap gap-2 overflow-x-auto scrollbar-hide overscroll-x-contain sm:flex-wrap sm:overflow-visible">
               {suggestions.map((suggestion) => (
                 <button
                   key={suggestion}
                   type="button"
                   disabled={busy}
                   onClick={() => void send(suggestion)}
-                  className="rounded-full border border-border bg-background/70 px-3 py-1.5 text-xs text-muted-foreground shadow-sm backdrop-blur-md transition hover:border-primary/50 hover:text-foreground disabled:opacity-50"
+                  className="shrink-0 whitespace-nowrap rounded-full border border-border bg-background/70 px-3 py-1.5 text-xs text-muted-foreground shadow-sm backdrop-blur-md transition hover:border-primary/50 hover:text-foreground disabled:opacity-50"
                 >
                   {suggestion}
                 </button>
@@ -211,7 +209,7 @@ function AssistantPage() {
                 type="button"
                 disabled={busy}
                 onClick={() => void send("", "recommendations")}
-                className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary shadow-sm backdrop-blur-md transition hover:bg-primary/20 disabled:opacity-50"
+                className="shrink-0 whitespace-nowrap rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary shadow-sm backdrop-blur-md transition hover:bg-primary/20 disabled:opacity-50"
               >
                 Surprise me
               </button>
@@ -225,12 +223,15 @@ function AssistantPage() {
             <textarea
               id="assistant-prompt"
               value={prompt}
-              onChange={(event) => setPrompt(event.target.value)}
+              onChange={(event) => {
+                setPrompt(event.target.value);
+                event.target.style.height = "auto";
+                event.target.style.height = `${Math.min(event.target.scrollHeight, 128)}px`;
+              }}
               maxLength={500}
-              rows={2}
+              rows={1}
               placeholder="I want a mind-bending mystery for tonight…"
-              className="max-h-32 min-h-12 flex-1 resize-none overflow-hidden bg-transparent py-2.5 text-sm outline-none placeholder:text-muted-foreground"
-              style={{ resize: "none" }}
+              className="max-h-32 min-h-11 flex-1 resize-none overflow-y-auto bg-transparent py-2.5 text-sm outline-none placeholder:text-muted-foreground"
               onKeyDown={(event) => {
                 if (event.key === "Enter" && !event.shiftKey) {
                   event.preventDefault();
