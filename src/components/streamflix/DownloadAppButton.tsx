@@ -1,7 +1,7 @@
 import { Download } from "lucide-react";
 import { useEffect, useState } from "react";
 import { isInApp } from "@/lib/app-downloads";
-import { canPromptInstall, hasInstalledPWA, promptInstall } from "@/lib/pwa";
+import { canPromptInstall, isPWAInstalled, promptInstall } from "@/lib/pwa";
 
 const FALLBACK_URL = "https://github.com/Wayne-Inc/StreamFlix/releases";
 
@@ -19,7 +19,7 @@ export function DownloadAppButton({ className, iconClassName = "size-5" }: Downl
   useEffect(() => {
     const check = () => {
       setCanInstall(canPromptInstall());
-      setInstalled(hasInstalledPWA());
+      setInstalled(isPWAInstalled());
       setChecked(true);
     };
     check();
