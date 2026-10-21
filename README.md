@@ -87,22 +87,6 @@ Copy `.env.example` to `.env` and fill in your credentials:
 | `npm run electron:build` | Build Electron installers into `release/` |
 | `npm run desktop` | Open the app in Edge as a PWA-style window |
 
-## Desktop (Electron)
-
-- Dev: `npm run electron:dev` (loads `http://localhost:8080`)
-- Prod: `npm run electron:build` (loads `https://streamflix.dpdns.org/`)
-- Override the URL anytime: `ELECTRON_START_URL=https://streamflix.dpdns.org/ npx electron .`
-
-## Mobile (Capacitor / Android)
-
-The mobile app is a Capacitor WebView wrapper around the deployed site.
-
-- `npm run mobile:sync` — re-sync native project after config/plugin changes
-- `npm run mobile:open` — open `android/` in Android Studio
-- `npm run mobile:build` — build an APK
-
-> Note: web changes in `src/` only appear in the app after the site is rebuilt and redeployed.
-
 ## License
 
 [MIT](LICENSE)
