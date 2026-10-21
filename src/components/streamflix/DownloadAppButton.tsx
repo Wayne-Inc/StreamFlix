@@ -3,8 +3,6 @@ import { useEffect, useState } from "react";
 import { isInApp } from "@/lib/app-downloads";
 import { canPromptInstall, isPWAInstalled, promptInstall } from "@/lib/pwa";
 
-const FALLBACK_URL = "https://github.com/Wayne-Inc/StreamFlix/releases";
-
 interface DownloadAppButtonProps {
   className?: string;
   iconClassName?: string;
@@ -31,32 +29,21 @@ export function DownloadAppButton({ className, iconClassName = "size-5" }: Downl
     };
   }, []);
 
-  if (!checked || isInApp() || installed) return null;
+  if (!checked || isInApp() || installed || !canInstall) return null;
 
   const handleInstall = async () => {
     if (installing) return;
     setInstalling(true);
-    const result = await promptInstall();
+    await promptInstall();
     setInstalling(false);
     setCanInstall(canPromptInstall());
-    if (result === "unavailable") {
-      window.open(FALLBACK_URL, "_blank", "noopener,noreferrer");
-    }
+    setInstalled(isPWAInstalled());
   };
-
-  if (!canInstall) {
-    return (
-      <a href={FALLBACK_URL} target="_blank" rel="noopener noreferrer" className={className}>
-        <Download className={iconClassName} />
-        Download the App
-      </a>
-    );
-  }
 
   return (
     <button type="button" onClick={handleInstall} disabled={installing} className={className}>
       <Download className={iconClassName} />
-      {installing ? "Opening..." : "Download the App"}
+      {installing ? "Installing..." : "Install App"}
     </button>
   );
 }
