@@ -328,6 +328,10 @@ function Landing() {
             <Link to="/privacy-policy" className="hover:text-foreground transition-colors">
               Privacy Policy
             </Link>
+            <DownloadAppButton
+              iconClassName="size-4"
+              className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors disabled:opacity-50"
+            />
           </div>
           <p className="mt-6 text-xs">Made by Wayne Inc</p>
         </div>
