@@ -5,10 +5,9 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 }
 
-export async function registerSW() {
-  if (!("serviceWorker" in navigator)) return;
-
-  // Capture PWA install prompt
+if (typeof window !== "undefined") {
+  // Capture the install prompt as early as the module loads so UI buttons
+  // can open it at any time.
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     deferredPrompt = e as BeforeInstallPromptEvent;
@@ -17,6 +16,10 @@ export async function registerSW() {
   window.addEventListener("appinstalled", () => {
     deferredPrompt = null;
   });
+}
+
+export async function registerSW() {
+  if (!("serviceWorker" in navigator)) return;
 
   // Register your main service worker (for caching/offline)
   const registerMainSW = () => {

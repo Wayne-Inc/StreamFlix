@@ -501,20 +501,6 @@ export function Navbar() {
             >
               Calendar
             </Link>
-            <Link
-              to="/history"
-              onClick={() => setBrowseMenuOpen(false)}
-              className="rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground"
-            >
-              Watch History
-            </Link>
-            <Link
-              to="/mylist"
-              onClick={() => setBrowseMenuOpen(false)}
-              className="rounded-lg px-3 py-2.5 text-sm text-muted-foreground hover:bg-accent/60 hover:text-foreground"
-            >
-              My List
-            </Link>
           </div>
         </div>
       )}
