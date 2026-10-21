@@ -87,7 +87,6 @@ export default defineConfig(({ command, mode }): UserConfig => {
     "FIREBASE_CLIENT_EMAIL",
     "FIREBASE_PRIVATE_KEY",
     "CRON_SECRET",
-    "WAYBACK_ARCHIVE_KEY",
   ]) {
     if (env[key] && !process.env[key]) process.env[key] = env[key];
   }
@@ -124,7 +123,7 @@ export default defineConfig(({ command, mode }): UserConfig => {
     ],
     build: {
       rollupOptions: {
-        external: ["@capacitor/push-notifications"],
+        external: [],
         output: {
           manualChunks(id) {
             if (id.includes("node_modules/firebase/") || id.includes("node_modules/@firebase/")) {

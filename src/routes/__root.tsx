@@ -16,7 +16,7 @@ import appCss from "../styles.css?url";
 import { registerSW } from "../lib/pwa";
 import { Toaster } from "@/components/ui/sonner";
 import { CookieConsent } from "@/components/streamflix/CookieConsent";
-import { CustomTitleBar } from "@/components/streamflix/CustomTitleBar";
+
 import { GlobalContextMenu } from "@/components/streamflix/GlobalContextMenu";
 import { ScreenSaver } from "@/components/streamflix/ScreenSaver";
 import { auth, db } from "@/lib/firebase";
@@ -194,9 +194,6 @@ function RootComponent() {
   }, [pathname]);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && window.electronAPI) {
-      document.body.classList.add("electron-app");
-    }
     registerSW();
 
     const handleExternalLink = async (e: MouseEvent) => {
@@ -212,12 +209,7 @@ function RootComponent() {
       if (isMailto) return; // Let the browser/app handle mailto natively
       if (!isExternalHttp) return;
       e.preventDefault();
-      try {
-        const { Browser } = await import("@capacitor/browser");
-        await Browser.open({ url: href, toolbarColor: "#09090b", presentationStyle: "popover" });
-      } catch {
-        window.location.href = href;
-      }
+      window.location.href = href;
     };
     document.addEventListener("click", handleExternalLink, true);
 
@@ -293,7 +285,6 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ReduceMotionProvider>
         <GlobalContextMenu>
-          <CustomTitleBar />
           <div className="wco-titlebar-padding">
             <Toaster />
             <Outlet />

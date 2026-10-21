@@ -46,19 +46,6 @@ export async function shareContent(input: ShareInput): Promise<"shared" | "copie
     }
   }
 
-  // Capacitor native share
-  try {
-    if (typeof window !== "undefined" && (window as any).Capacitor?.isNativePlatform?.()) {
-      const { Share } = await import("@capacitor/share");
-      await Share.share({
-        title: shareTitle,
-        text: shareText,
-        url: shareUrl,
-      });
-      return "shared";
-    }
-  } catch {}
-
   // Clipboard fallback
   if (shareUrl && typeof navigator.clipboard?.writeText === "function") {
     await navigator.clipboard.writeText(shareUrl);

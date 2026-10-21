@@ -33,6 +33,10 @@ release
 # Generated
 public/firebase-messaging-sw.js
 
+# Notification testing folders
+notification-test/
+notification-backend/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

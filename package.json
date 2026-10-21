@@ -2,7 +2,6 @@
   "name": "streamflix",
   "version": "2.5.0",
   "private": true,
-  "main": "electron/main.cjs",
   "sideEffects": false,
   "type": "module",
   "scripts": {
@@ -12,18 +11,9 @@
     "preview": "vite preview",
     "sitemap": "node scripts/generate-sitemap.mjs",
     "lint": "eslint .",
-    "format": "prettier --write .",
-    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:8080 && electron .\"",
-    "desktop": "concurrently \"npm run dev\" \"wait-on http://localhost:8080 && start msedge --app=http://localhost:8080\"",
-    "electron:build": "vite build && electron-builder"
+    "format": "prettier --write ."
   },
   "dependencies": {
-    "@capacitor/browser": "^8.0.4",
-    "@capacitor-firebase/authentication": "^8.4.0",
-    "@capacitor/core": "^8.5.0",
-    "@capacitor/push-notifications": "^8.1.2",
-    "@capacitor/share": "^8.0.1",
-    "@capawesome/capacitor-google-sign-in": "^0.1.2",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -62,7 +52,6 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
-    "electron-updater": "^6.8.9",
     "embla-carousel-react": "^8.6.0",
     "firebase": "^12.15.0",
     "hls.js": "^1.7.0",
@@ -83,18 +72,11 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@capacitor/android": "^8.5.0",
-    "@capacitor/app": "^8.1.1",
-    "@capacitor/cli": "^8.4.2",
-    "@capacitor/status-bar": "^8.0.3",
     "@eslint/js": "^9.32.0",
     "@types/node": "^22.16.5",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.0.4",
-    "concurrently": "^10.0.4",
-    "electron": "^43.2.0",
-    "electron-builder": "^26.15.3",
     "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.6",
@@ -107,25 +89,7 @@
     "prettier": "^3.7.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
-    "vite": "^7.3.1",
-    "wait-on": "^9.1.0"
-  },
-  "build": {
-    "appId": "com.itiswayneee.streamflix",
-    "productName": "Streamflix",
-    "directories": {
-      "output": "release"
-    },
-    "files": [
-      "dist/**/*",
-      "electron/**/*",
-      "package.json"
-    ],
-    "publish": {
-      "provider": "github",
-      "owner": "Wayne-Inc",
-      "repo": "StreamFlix"
-    }
+    "vite": "^7.3.1"
   },
   "overrides": {
     "fast-xml-parser": "^5.11.0",

@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as AuthRouteImport } from './routes/auth'
 import { Route as OfflineRouteImport } from './routes/offline'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as TosRouteImport } from './routes/tos'
@@ -24,8 +23,6 @@ import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedMylistRouteImport } from './routes/_authenticated/mylist'
 import { Route as AuthenticatedProfilesRouteImport } from './routes/_authenticated/profiles'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
-import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
-import { Route as ApiArchiveRouteImport } from './routes/api/archive'
 import { Route as ApiClientIpRouteImport } from './routes/api/client-ip'
 import { Route as ApiProxyRouteImport } from './routes/api/proxy'
 import { Route as ApiReleaseNotificationsCronRouteImport } from './routes/api/release-notifications-cron'
@@ -45,11 +42,6 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OfflineRoute = OfflineRouteImport.update({
@@ -113,16 +105,6 @@ const AuthenticatedSearchRoute = AuthenticatedSearchRouteImport.update({
   path: '/search',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const ApiArchiveRoute = ApiArchiveRouteImport.update({
-  id: '/api/archive',
-  path: '/api/archive',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiClientIpRoute = ApiClientIpRouteImport.update({
   id: '/api/client-ip',
   path: '/api/client-ip',
@@ -150,9 +132,9 @@ const ApiVerifyRecaptchaRoute = ApiVerifyRecaptchaRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthActionRoute = AuthActionRouteImport.update({
-  id: '/action',
-  path: '/action',
-  getParentRoute: () => AuthRoute,
+  id: '/auth/action',
+  path: '/auth/action',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedExploreIndexRoute =
   AuthenticatedExploreIndexRouteImport.update({
@@ -184,7 +166,6 @@ const AuthenticatedWatchIdRoute = AuthenticatedWatchIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRouteWithChildren
   '/offline': typeof OfflineRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/tos': typeof TosRoute
@@ -197,8 +178,6 @@ export interface FileRoutesByFullPath {
   '/mylist': typeof AuthenticatedMylistRoute
   '/profiles': typeof AuthenticatedProfilesRoute
   '/search': typeof AuthenticatedSearchRoute
-  '/settings': typeof AuthenticatedSettingsRoute
-  '/api/archive': typeof ApiArchiveRoute
   '/api/client-ip': typeof ApiClientIpRoute
   '/api/proxy': typeof ApiProxyRoute
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
@@ -213,7 +192,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRouteWithChildren
   '/offline': typeof OfflineRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/tos': typeof TosRoute
@@ -225,8 +203,6 @@ export interface FileRoutesByTo {
   '/mylist': typeof AuthenticatedMylistRoute
   '/profiles': typeof AuthenticatedProfilesRoute
   '/search': typeof AuthenticatedSearchRoute
-  '/settings': typeof AuthenticatedSettingsRoute
-  '/api/archive': typeof ApiArchiveRoute
   '/api/client-ip': typeof ApiClientIpRoute
   '/api/proxy': typeof ApiProxyRoute
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
@@ -243,7 +219,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/auth': typeof AuthRouteWithChildren
   '/offline': typeof OfflineRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/tos': typeof TosRoute
@@ -256,8 +231,6 @@ export interface FileRoutesById {
   '/_authenticated/mylist': typeof AuthenticatedMylistRoute
   '/_authenticated/profiles': typeof AuthenticatedProfilesRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
-  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
-  '/api/archive': typeof ApiArchiveRoute
   '/api/client-ip': typeof ApiClientIpRoute
   '/api/proxy': typeof ApiProxyRoute
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
@@ -274,7 +247,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/auth'
     | '/offline'
     | '/privacy-policy'
     | '/tos'
@@ -287,8 +259,6 @@ export interface FileRouteTypes {
     | '/mylist'
     | '/profiles'
     | '/search'
-    | '/settings'
-    | '/api/archive'
     | '/api/client-ip'
     | '/api/proxy'
     | '/api/release-notifications-cron'
@@ -303,7 +273,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/auth'
     | '/offline'
     | '/privacy-policy'
     | '/tos'
@@ -315,8 +284,6 @@ export interface FileRouteTypes {
     | '/mylist'
     | '/profiles'
     | '/search'
-    | '/settings'
-    | '/api/archive'
     | '/api/client-ip'
     | '/api/proxy'
     | '/api/release-notifications-cron'
@@ -332,7 +299,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
-    | '/auth'
     | '/offline'
     | '/privacy-policy'
     | '/tos'
@@ -345,8 +311,6 @@ export interface FileRouteTypes {
     | '/_authenticated/mylist'
     | '/_authenticated/profiles'
     | '/_authenticated/search'
-    | '/_authenticated/settings'
-    | '/api/archive'
     | '/api/client-ip'
     | '/api/proxy'
     | '/api/release-notifications-cron'
@@ -363,16 +327,15 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  AuthRoute: typeof AuthRouteWithChildren
   OfflineRoute: typeof OfflineRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   TosRoute: typeof TosRoute
-  ApiArchiveRoute: typeof ApiArchiveRoute
   ApiClientIpRoute: typeof ApiClientIpRoute
   ApiProxyRoute: typeof ApiProxyRoute
   ApiReleaseNotificationsCronRoute: typeof ApiReleaseNotificationsCronRoute
   ApiSendNotificationRoute: typeof ApiSendNotificationRoute
   ApiVerifyRecaptchaRoute: typeof ApiVerifyRecaptchaRoute
+  AuthActionRoute: typeof AuthActionRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -389,13 +352,6 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/offline': {
@@ -482,20 +438,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSearchRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/api/archive': {
-      id: '/api/archive'
-      path: '/api/archive'
-      fullPath: '/api/archive'
-      preLoaderRoute: typeof ApiArchiveRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/client-ip': {
       id: '/api/client-ip'
       path: '/api/client-ip'
@@ -533,10 +475,10 @@ declare module '@tanstack/react-router' {
     }
     '/auth/action': {
       id: '/auth/action'
-      path: '/action'
+      path: '/auth/action'
       fullPath: '/auth/action'
       preLoaderRoute: typeof AuthActionRouteImport
-      parentRoute: typeof AuthRoute
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/explore/': {
       id: '/_authenticated/explore/'
@@ -599,7 +541,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMylistRoute: typeof AuthenticatedMylistRoute
   AuthenticatedProfilesRoute: typeof AuthenticatedProfilesRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
-  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedMovieIdRoute: typeof AuthenticatedMovieIdRoute
   AuthenticatedPersonIdRoute: typeof AuthenticatedPersonIdRoute
   AuthenticatedWatchIdRoute: typeof AuthenticatedWatchIdRoute
@@ -615,7 +556,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMylistRoute: AuthenticatedMylistRoute,
   AuthenticatedProfilesRoute: AuthenticatedProfilesRoute,
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
-  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedMovieIdRoute: AuthenticatedMovieIdRoute,
   AuthenticatedPersonIdRoute: AuthenticatedPersonIdRoute,
   AuthenticatedWatchIdRoute: AuthenticatedWatchIdRoute,
@@ -624,29 +564,18 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
-interface AuthRouteChildren {
-  AuthActionRoute: typeof AuthActionRoute
-}
-
-const AuthRouteChildren: AuthRouteChildren = {
-  AuthActionRoute: AuthActionRoute,
-}
-
-const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  AuthRoute: AuthRouteWithChildren,
   OfflineRoute: OfflineRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   TosRoute: TosRoute,
-  ApiArchiveRoute: ApiArchiveRoute,
   ApiClientIpRoute: ApiClientIpRoute,
   ApiProxyRoute: ApiProxyRoute,
   ApiReleaseNotificationsCronRoute: ApiReleaseNotificationsCronRoute,
   ApiSendNotificationRoute: ApiSendNotificationRoute,
   ApiVerifyRecaptchaRoute: ApiVerifyRecaptchaRoute,
+  AuthActionRoute: AuthActionRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

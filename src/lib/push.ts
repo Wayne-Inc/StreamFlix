@@ -49,34 +49,11 @@ function getMessagingInstance(): Promise<Messaging | null> {
 }
 
 // ---------------------------------------------------------------------------
-// Platform detection
-// ---------------------------------------------------------------------------
-
-function isCapacitor(): boolean {
-  if (typeof window === "undefined") return false;
-  const w = window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } };
-  return typeof w.Capacitor?.isNativePlatform === "function" && w.Capacitor.isNativePlatform();
-}
-
-function isElectron(): boolean {
-  return typeof window !== "undefined" && "electronAPI" in window;
-}
-
-// ---------------------------------------------------------------------------
 // checkPushSupport — returns the specific reason push won't work
 // ---------------------------------------------------------------------------
 
 export async function checkPushSupport(): Promise<{ ok: boolean; reason?: string }> {
   if (typeof window === "undefined") return { ok: false, reason: "Server-side rendering" };
-
-  // Capacitor: uses native FCM, always supported if google-services.json is present
-  if (isCapacitor()) return { ok: true };
-
-  // Electron: uses native Notification API — supported in packaged builds
-  if (isElectron()) {
-    if (typeof Notification !== "undefined") return { ok: true };
-    return { ok: false, reason: "Desktop notifications not available in this build" };
-  }
 
   // Web browser
   if (!("serviceWorker" in navigator)) return { ok: false, reason: "Service Workers not supported" };
@@ -117,106 +94,6 @@ async function saveTokenToFirestore(token: string, platform: string): Promise<vo
     },
     { merge: true },
   );
-}
-
-async function ensureCapacitorPush(): Promise<PushStatus> {
-  const user = auth.currentUser;
-  if (!user) {
-    console.warn("Capacitor push: No authenticated user");
-    return "unavailable";
-  }
-  try {
-    // Capacitor is an optional target dependency and may not be installed for web builds.
-    // @ts-expect-error The Capacitor plugin is unavailable in non-Capacitor builds.
-    const { PushNotifications } = await import("@capacitor/push-notifications");
-
-    // Ask Android for permission only when the native plugin says it is promptable.
-    let perm = await PushNotifications.checkPermissions();
-    if (perm.receive === "prompt" || perm.receive === "prompt-with-rationale") {
-      perm = await PushNotifications.requestPermissions();
-    }
-    if (perm.receive !== "granted") {
-      console.warn("Capacitor push: Notification permission denied");
-      return "denied";
-    }
-
-    // Wait for listener registration before registering so a fast native response is not missed.
-    let registrationResolve: (status: PushStatus) => void = () => {};
-    const registrationResult = new Promise<PushStatus>((resolve) => {
-      registrationResolve = resolve;
-    });
-    const timeout = setTimeout(() => registrationResolve("unavailable"), 10000);
-
-    await PushNotifications.addListener("registration", async (token: { value: string }) => {
-      clearTimeout(timeout);
-      try {
-        await saveTokenToFirestore(token.value, "android");
-      } catch (error) {
-        // Native registration succeeded; retrying persistence should not make the
-        // permission flow appear unavailable to the user.
-        console.error("Capacitor push: Failed to save registration token:", error);
-      }
-      console.log("Capacitor push: Subscription granted");
-      registrationResolve("granted");
-    });
-
-    await PushNotifications.addListener("registrationError", (err: unknown) => {
-      clearTimeout(timeout);
-      console.error("Capacitor push registration error:", err);
-      registrationResolve("unavailable");
-    });
-
-    try {
-      await PushNotifications.register();
-    } catch (error) {
-      clearTimeout(timeout);
-      console.error("Capacitor push registration failed:", error);
-      registrationResolve("unavailable");
-    }
-
-    return registrationResult;
-  } catch (e) {
-    console.error("Capacitor push: Failed to subscribe:", e);
-    return "unavailable";
-  }
-}
-
-async function setupCapacitorPushListeners(): Promise<void> {
-  try {
-    // @ts-expect-error The plugin may not be installed for non-Capacitor builds.
-    const { PushNotifications } = await import("@capacitor/push-notifications");
-    await PushNotifications.addListener(
-      "pushNotificationReceived",
-      (notification: { title?: string; body?: string }) => {
-        showPushNotification(notification.title ?? "StreamFlix", {
-          description: notification.body ?? "",
-          duration: 6000,
-        });
-      },
-    );
-    await PushNotifications.addListener(
-      "pushNotificationActionPerformed",
-      (action: { notification: { data?: Record<string, string> } }) => {
-        const movieId = action.notification.data?.movie_id;
-        if (movieId) window.location.href = `/movie/${movieId}`;
-      },
-    );
-  } catch (error) {
-    console.error("Failed to setup Capacitor push notifications:", error);
-  }
-}
-
-export async function requestCapacitorNotificationPermission(): Promise<boolean> {
-  if (!isCapacitor()) return false;
-  try {
-    // @ts-expect-error The plugin may not be installed for non-Capacitor builds.
-    const { PushNotifications } = await import("@capacitor/push-notifications");
-    const permission = await PushNotifications.requestPermissions();
-    return permission.receive === "granted";
-  } catch (error) {
-    console.error("Failed to request Capacitor notification permission:", error);
-    return false;
-  }
 }
 
 // Validate VAPID key - pass it through as-is since Firebase SDK should handle the format
@@ -328,66 +205,16 @@ async function ensureWebPush(): Promise<PushStatus> {
   }
 }
 
-async function ensureElectronPush(): Promise<PushStatus> {
-  const user = auth.currentUser;
-  if (!user) {
-    console.warn("Electron push: No authenticated user");
-    return "unavailable";
-  }
-  try {
-    // Electron's renderer has the Notification API in packaged builds
-    if (typeof Notification === "undefined") {
-      console.warn("Electron push: Notification API not available");
-      return "unavailable";
-    }
-    let permission = Notification.permission;
-    if (permission === "default") {
-      permission = await Notification.requestPermission();
-    }
-    if (permission !== "granted") {
-      console.warn("Electron push: Notification permission denied");
-      return "denied";
-    }
-
-    // Try web FCM first (works if service worker is available)
-    const messaging = await getMessagingInstance();
-    if (messaging) {
-      const vapidKey = (import.meta as ImportMeta & {
-        env?: { VITE_FIREBASE_VAPID_KEY?: string };
-      }).env?.VITE_FIREBASE_VAPID_KEY;
-      if (vapidKey) {
-        const token = await getToken(messaging, { vapidKey });
-        if (token) {
-          await saveTokenToFirestore(token, "electron");
-          console.log("Electron push: Subscription granted via FCM");
-          return "granted";
-        }
-      }
-    }
-
-    // Fallback: save a synthetic token based on device ID so server can track this device
-    const syntheticToken = `electron-${getDeviceId()}`;
-    await saveTokenToFirestore(syntheticToken, "electron");
-    console.log("Electron push: Subscription granted via synthetic token");
-    return "granted";
-  } catch (error) {
-    console.error("Electron push: Failed to subscribe:", error);
-    return "unavailable";
-  }
-}
-
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
 export async function ensurePushSubscription(): Promise<PushStatus> {
-  if (isCapacitor()) return ensureCapacitorPush();
-  if (isElectron()) return ensureElectronPush();
   return ensureWebPush();
 }
 
 // ---------------------------------------------------------------------------
-// Foreground push handler (web + Electron)
+// Foreground push handler
 // ---------------------------------------------------------------------------
 
 let foregroundStarted = false;
@@ -396,13 +223,7 @@ export function setupForegroundPush(): void {
   if (foregroundStarted) return;
   foregroundStarted = true;
 
-  // Capacitor handles foreground notifications via native listeners
-  if (isCapacitor()) {
-    void setupCapacitorPushListeners();
-    return;
-  }
-
-  // Web / Electron: use Firebase Messaging onMessage
+  // Web: use Firebase Messaging onMessage
   getMessagingInstance()
     .then((messaging) => {
       if (!messaging) {

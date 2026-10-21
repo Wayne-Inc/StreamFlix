@@ -320,16 +320,6 @@ function PlayerPage() {
       return;
     }
     // Second check: actually try to request PiP on a dummy video to verify it works
-    // (only on web, not Capacitor where we use native PiP)
-    const inNativeApp = isMobileApp();
-    if (inNativeApp) {
-      // On Capacitor, trust the native bridge
-      const { enterPipModeNative } = await import("@/lib/mobile");
-      const nativeSupports = window.NativeBridge?.isPipSupported?.() ?? false;
-      setPipSupported(nativeSupports);
-      return;
-    }
-    // On web, test with a hidden video element
     try {
       const testVideo = document.createElement("video");
       testVideo.src = "data:video/mp4;base64,AAAAIGZ0eXBtcDQyAAAAAG1wNDJpc21vbXAyAAAAHG1vb2YAAABsbXZoZAAAAPNtZGF0YQ==";
