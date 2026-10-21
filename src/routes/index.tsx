@@ -21,7 +21,7 @@ import { DownloadAppButton } from "@/components/streamflix/DownloadAppButton";
 import { getSelectedProfile } from "@/lib/selected-profile";
 import { tmdbFetch, toMovie } from "@/lib/api/tmdb.server";
 import type { Movie } from "@/lib/types";
-import heroImg from "@/assets/landing.jpg";
+import heroImg from "@/assets/landing.png";
 
 export const Route = createFileRoute("/")({
   beforeLoad: async () => {
