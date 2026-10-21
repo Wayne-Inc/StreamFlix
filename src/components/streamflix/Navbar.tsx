@@ -546,7 +546,7 @@ export function Navbar() {
     <nav
       ref={mobileNavRef}
       aria-label="Mobile navigation"
-      className={`${pathname.startsWith("/watch/") ? "hidden" : "fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 px-2 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-[0_-8px_30px_rgba(0,0,0,0.25)] backdrop-blur-xl md:hidden"}`}
+      className={`${pathname.startsWith("/watch/") ? "hidden" : "fixed bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] left-3 right-3 z-50 rounded-2xl border border-white/10 bg-background/60 px-2 pt-1.5 pb-1.5 shadow-[0_10px_40px_rgba(0,0,0,0.45)] backdrop-blur-2xl md:hidden"}`}
     >
       <div className="mx-auto flex max-w-lg items-center justify-around">
         <Link

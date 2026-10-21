@@ -5,7 +5,7 @@ import { ContactEmail } from "@/components/streamflix/ContactEmail";
 
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-background px-4 sm:px-8 py-6 text-sm text-muted-foreground">
+    <footer className="border-t border-border bg-background px-4 pb-28 pt-6 text-sm text-muted-foreground sm:px-8 sm:pb-6">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-5 sm:flex-row sm:justify-between">
         <p className="text-center text-xs sm:text-left sm:text-sm">
           Made by Wayne Inc
