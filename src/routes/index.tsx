@@ -18,7 +18,6 @@ import {
 import { Logo } from "@/components/streamflix/Logo";
 import { ContactEmail } from "@/components/streamflix/ContactEmail";
 import { DownloadAppButton } from "@/components/streamflix/DownloadAppButton";
-import { getSelectedProfile } from "@/lib/selected-profile";
 import { tmdbFetch, toMovie } from "@/lib/api/tmdb.server";
 import type { Movie } from "@/lib/types";
 import heroImg from "@/assets/landing.png";
@@ -29,9 +28,7 @@ export const Route = createFileRoute("/")({
     // Instant redirect from localStorage cache — no flash
     try {
       if (localStorage.getItem("sf:auth") === "1") {
-        // Profile picked earlier in this session: skip selection.
-        if (getSelectedProfile()) throw redirect({ to: "/browse" });
-        throw redirect({ to: "/profiles" });
+        throw redirect({ to: "/browse" });
       }
     } catch (e) {
       if (e && typeof e === "object" && "isRedirect" in e) throw e;
@@ -47,8 +44,7 @@ export const Route = createFileRoute("/")({
     });
     if (user) {
       try { localStorage.setItem("sf:auth", "1"); } catch {}
-      if (getSelectedProfile()) throw redirect({ to: "/browse" });
-      throw redirect({ to: "/profiles" });
+      throw redirect({ to: "/browse" });
     }
   },
   loader: async () => {
