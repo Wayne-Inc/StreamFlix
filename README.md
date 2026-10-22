@@ -16,7 +16,6 @@ A free, Netflix-style streaming web app. Browse an ever-changing catalog of movi
 - **Kids mode** — filter content per profile.
 - **Personalized recommendations** — seeded from favorites and watch history.
 - **Accounts** — email/password and Google sign-in, password policy enforcement, device tracking.
-- **Desktop & Mobile** — Electron desktop build and a Capacitor-based Android wrapper around the live site.
 
 ## Tech Stack
 
@@ -27,8 +26,6 @@ A free, Netflix-style streaming web app. Browse an ever-changing catalog of movi
 | Build | Vite 7, TypeScript 5, Nitro (Vercel preset) |
 | Auth & data | Firebase Auth, Firebase Firestore |
 | Content API | TMDB (The Movie Database) |
-| Desktop | Electron |
-| Mobile | Capacitor (Android) |
 | Deploy | Vercel |
 
 ## Getting Started
