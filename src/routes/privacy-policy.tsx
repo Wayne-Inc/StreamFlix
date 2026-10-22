@@ -75,12 +75,6 @@ function PrivacyPolicyPage() {
               <strong>Analytics Data:</strong> We may use third-party analytics services to
               understand how our service is used.
             </li>
-            <li>
-              <strong>Communications:</strong> If you contact us directly, we may receive
-              additional information about you such as your name, email address, phone number,
-              the contents of the message and/or attachments you may send us, and any other
-              information you may choose to provide.
-            </li>
           </ul>
         </section>
 
@@ -93,7 +87,6 @@ function PrivacyPolicyPage() {
             <li>Provide, maintain, and improve our service.</li>
             <li>Personalize your experience and recommend content.</li>
             <li>Communicate with you about your account, service updates, and promotional offers.</li>
-            <li>Process transactions and prevent fraud.</li>
             <li>Enable security verification through Cloudflare Turnstile to protect against bots and abuse.</li>
             <li>Monitor and analyze usage trends to enhance platform performance.</li>
             <li>Detect, prevent, and address technical issues, fraud, or other harmful activities.</li>
