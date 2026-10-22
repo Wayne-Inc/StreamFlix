@@ -112,19 +112,25 @@ function MovieSkeleton() {
 
 export const Route = createFileRoute("/_authenticated/movie/$id")({
   loader: async ({ params }) => {
-    const extraGenres = ["27", "878", "35", "53"];
-    const [movie, similar, recommendations, logo, ...genreResults] = await Promise.all([
+    const [movie, similar, recommendations, logo] = await Promise.all([
       movieById(params.id),
       loadSimilar(params.id),
       loadRecommendations(params.id),
       fetchTitleLogo({ data: { id: params.id } }).catch(() => null),
-      ...extraGenres.map((g) => discoverByGenre({ data: { genreId: g } })),
     ]);
     if (!movie) throw notFound();
-    const genreRows = extraGenres.map((g, i) => ({
-      genreId: g,
+    
+    // Fetch movies for each genre the current movie belongs to
+    const movieGenreIds = movie.genreIds.map(String);
+    const genreResults = await Promise.all(
+      movieGenreIds.map((gid) => discoverByGenre({ data: { genreId: gid } }).catch(() => []))
+    );
+    
+    const genreRows = movieGenreIds.map((gid, i) => ({
+      genreId: gid,
       items: (genreResults[i] || []).filter((m: any) => m.id !== params.id).slice(0, 12),
     }));
+    
     return { movie, similar, genreRows, recommendations, logo };
   },
   head: ({ loaderData }) => {
@@ -834,14 +840,15 @@ function MoviePage() {
 
       {filteredRecommendations.length > 0 && (
         <div className="space-y-2 pb-4">
-          <Row title="Recommended" items={filteredRecommendations} />
+          <Row title={`Similar to ${movie.title}`} items={filteredRecommendations} />
         </div>
       )}
 
       <div className="space-y-2 pb-10">
         {filteredGenreRows.map((gr) => {
-          const label = genreLabels[gr.genreId] || "Others You May Like";
-          return <Row key={gr.genreId} title={`${label} Movies`} items={gr.items} />;
+          // Use the genre name from the movie's genreIds/genres if available
+          const genreName = movie.genres[movie.genreIds.indexOf(Number(gr.genreId))] || genreLabels[gr.genreId] || "Movies";
+          return <Row key={gr.genreId} title={`${genreName} Movies`} items={gr.items} />;
         })}
       </div>
 

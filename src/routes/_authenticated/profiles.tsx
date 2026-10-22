@@ -7,6 +7,7 @@ import {
   Lock,
   Upload,
   Github,
+  Settings,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -244,8 +245,15 @@ function ProfilesPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-background via-background/60 to-background" />
         </div>
       )}
-      <header className="absolute inset-x-0 top-0 px-4 sm:px-12 py-5 z-10">
+      <header className="absolute inset-x-0 top-0 px-4 sm:px-12 py-5 z-10 flex items-center justify-between">
         <Logo />
+        <button
+          onClick={() => navigate({ to: "/settings" })}
+          className="rounded-lg p-2 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          aria-label="Settings"
+        >
+          <Settings className="size-5" />
+        </button>
       </header>
       <div className="relative z-20 w-full max-w-4xl px-4 text-center">
         <h1 className="text-3xl font-medium sm:text-5xl">
