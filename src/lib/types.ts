@@ -6,6 +6,7 @@ export type Movie = {
   releaseDate?: string;
   rating: string;
   runtime: string;
+  runtimeMinutes?: number;
   genres: string[];
   genreIds: number[];
   poster: string;

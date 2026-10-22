@@ -30,6 +30,7 @@ import {
   fetchUpcomingCalendar,
   fetchAiringCalendar,
   enrichCertifications as enrichCertificationsFn,
+  enrichRuntimes as enrichRuntimesFn,
 } from "./api/tmdb";
 import { fetchWatchProviders } from "./api/tmdb";
 import type { WatchProvider } from "./api/tmdb.server";
@@ -66,8 +67,27 @@ const HOME_GENRES = [
   { id: "37", name: "Western" },
 ];
 
-async function loadHome() {
-  const [
+/** Enrich hero slides with exact age ratings and runtimes from TMDB. */
+async function enrichHeroSlides(items: Movie[]): Promise<Movie[]> {
+  const [withRatings, withRuntimes] = await Promise.all([
+    enrichCertificationsFn({ data: { items } }).catch(() => items),
+    enrichRuntimesFn({ data: { items } }).catch(() => items),
+  ]);
+  const runtimeById = new Map<string, Movie>(
+    (withRuntimes as Movie[]).map((m) => [m.id, m]),
+  );
+  return (withRatings as Movie[]).map((m) => {
+    const enriched = runtimeById.get(m.id);
+    if (!enriched) return m;
+    return {
+      ...m,
+      runtime: enriched.runtime || m.runtime,
+      runtimeMinutes: enriched.runtimeMinutes ?? m.runtimeMinutes,
+    };
+  });
+}
+
+async function loadHome() {  const [
     trendingAllWeek,
     nowPlaying,
     topRated,
@@ -96,7 +116,7 @@ async function loadHome() {
   const genreGroups = HOME_GENRES.map((g, i) => ({ id: g.id, name: g.name, items: genreItems[i] }));
 
   return {
-    heroSlides: await enrichCertificationsFn({ data: { items: trendingAllWeek.slice(0, 5) } }),
+    heroSlides: await enrichHeroSlides(trendingAllWeek.slice(0, 5)),
     top10Today,
     top10TrendingWeek,
     genreGroups,
@@ -132,7 +152,7 @@ async function loadMovies() {
     discoverByGenre({ data: { genreId: "99" } }),
   ]);
   return {
-    heroSlides: await enrichCertificationsFn({ data: { items: popular.slice(0, 3) } }),
+    heroSlides: await enrichHeroSlides(popular.slice(0, 3)),
     top10Today: [],
     genreGroups: [],
     rows: [
@@ -157,7 +177,7 @@ async function loadTv() {
     fetchAiringTv(),
   ]);
   return {
-    heroSlides: await enrichCertificationsFn({ data: { items: trending.slice(0, 3) } }),
+    heroSlides: await enrichHeroSlides(trending.slice(0, 3)),
     top10Today: [],
     genreGroups: [],
     rows: [
@@ -202,7 +222,7 @@ async function loadNew() {
     : comingSoon;
 
   return {
-    heroSlides: await enrichCertificationsFn({ data: { items: featured.slice(0, 3) } }),
+    heroSlides: await enrichHeroSlides(featured.slice(0, 3)),
     top10Today: [],
     genreGroups: [],
     rows: [

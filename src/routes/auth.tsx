@@ -36,6 +36,18 @@ const FEDERATED_PROVIDERS: Record<string, LinkProvider> = {
   "github.com": "github",
 };
 
+// The error Firebase raises for `auth/account-exists-with-different-credential`.
+type AuthLinkError = Error & {
+  code?: string;
+  email?: string | null;
+  credential?: AuthCredential;
+};
+
+function asAuthError(e: unknown): AuthLinkError {
+  if (e && typeof e === "object") return e as AuthLinkError;
+  return new Error(typeof e === "string" ? e : "Unknown error");
+}
+
 export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({ meta: [{ title: "Sign In — StreamFlix" }] }),
@@ -76,6 +88,14 @@ function AuthPage() {
     try {
       localStorage.setItem(LAST_SIGN_IN_METHOD_KEY, method);
     } catch {}
+  };
+
+  const markSignedIn = () => {
+    try {
+      localStorage.setItem("sf:auth", "1");
+    } catch (err) {
+      console.warn("Could not persist the signed-in flag", err);
+    }
   };
 
   // Rate limiting
@@ -255,9 +275,7 @@ function AuthPage() {
   ) => {
     await linkWithCredential(signedInUser, credential);
     rememberSignInMethod(provider);
-    try {
-      localStorage.setItem("sf:auth", "1");
-    } catch {}
+    markSignedIn();
     setLinkRequest(null);
     setLinkPassword("");
     toast.success(`Accounts linked — signed in with ${providerLabel(provider)}.`);
@@ -266,12 +284,12 @@ function AuthPage() {
 
   // The provider sign-in failed because an account already exists for that
   // email. Work out how to link it instead of guessing a password.
-  const startLinking = async (err: any, provider: LinkProvider) => {
-    const credential = err?.credential as AuthCredential | undefined;
-    const mail = (err?.email as string | undefined) ?? "";
+  const startLinking = async (err: AuthLinkError, provider: LinkProvider) => {
+    const credential = err.credential;
+    const mail = err.email ?? "";
     if (!credential || !mail) {
       toast.error(
-        `${providerLabel(provider)} sign-in could not be linked: ${err?.message ?? "the existing account could not be identified"}. Sign in with email and password instead.`,
+        `${providerLabel(provider)} sign-in could not be linked: ${err.message ?? "the existing account could not be identified"}. Sign in with email and password instead.`,
       );
       return;
     }
@@ -307,10 +325,11 @@ function AuthPage() {
           ? await signInWithPopup(auth, new GoogleAuthProvider())
           : await signInWithPopup(auth, new GithubAuthProvider());
       await completeLink(credential, provider, result.user);
-    } catch (linkErr: any) {
-      if (linkErr?.code === "auth/popup-closed-by-user") return;
+    } catch (linkErr) {
+      const failure = asAuthError(linkErr);
+      if (failure.code === "auth/popup-closed-by-user") return;
       toast.error(
-        `Could not link ${providerLabel(provider)}: ${linkErr?.message ?? "linking failed"}. Nothing was changed on your account.`,
+        `Could not link ${providerLabel(provider)}: ${failure.message || "linking failed"}. Nothing was changed on your account.`,
       );
     }
   };
@@ -326,16 +345,17 @@ function AuthPage() {
     try {
       const cred = await signInWithEmailAndPassword(auth, linkRequest.email, linkPassword);
       await completeLink(linkRequest.credential, linkRequest.provider, cred.user);
-    } catch (err: any) {
+    } catch (err) {
+      const failure = asAuthError(err);
       if (
-        err?.code === "auth/invalid-credential" ||
-        err?.code === "auth/wrong-password" ||
-        err?.code === "auth/user-not-found"
+        failure.code === "auth/invalid-credential" ||
+        failure.code === "auth/wrong-password" ||
+        failure.code === "auth/user-not-found"
       ) {
         toast.error("Incorrect password for that account.");
       } else {
         toast.error(
-          `Could not link the account: ${err?.message ?? "linking failed"}. Nothing was changed on your account.`,
+          `Could not link the account: ${failure.message || "linking failed"}. Nothing was changed on your account.`,
         );
       }
     } finally {

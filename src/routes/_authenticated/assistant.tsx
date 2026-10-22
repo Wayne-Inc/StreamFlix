@@ -161,8 +161,8 @@ function AssistantPage() {
                 <Fragment key={`${index}-${message.role}`}>
                   {message.role === "assistant" && message.recommendations && message.recommendations.length > 0 ? (
                     <>
-                      <div className={message.role === "user" ? "ml-auto max-w-[90%] sm:max-w-[80%]" : "mr-auto max-w-[90%] sm:max-w-[80%]"}>
-                        <div className={message.role === "user" ? "rounded-2xl bg-primary px-4 py-3 text-primary-foreground" : "rounded-xl bg-muted/50 p-4"}>
+                      <div className="mr-auto max-w-[90%] sm:max-w-[80%]">
+                        <div className="rounded-xl bg-muted/50 p-4">
                           <div className="space-y-2">
                             <div className="break-words whitespace-pre-wrap text-sm leading-6">
                               {message.content}

@@ -1,4 +1,5 @@
-const SCOPES = "https://www.googleapis.com/auth/datastore https://www.googleapis.com/auth/firebase.messaging";
+const SCOPES =
+  "https://www.googleapis.com/auth/datastore https://www.googleapis.com/auth/firebase.messaging";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const JWT_AUDIENCE = "https://oauth2.googleapis.com/token";
 
@@ -44,7 +45,11 @@ async function signRs256(payload: Record<string, unknown>, pem: string): Promise
   const body = base64UrlEncode(encoder.encode(JSON.stringify(payload)));
   const signingInput = `${header}.${body}`;
   const key = await getPrivateKey(pem);
-  const signature = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, encoder.encode(signingInput));
+  const signature = await crypto.subtle.sign(
+    "RSASSA-PKCS1-v1_5",
+    key,
+    encoder.encode(signingInput),
+  );
   return `${signingInput}.${base64UrlEncode(new Uint8Array(signature))}`;
 }
 
@@ -97,7 +102,12 @@ function firestoreUrl(projectId: string, collection?: string, docId?: string): s
   return base;
 }
 
-type FirestoreDoc = { name: string; fields: Record<string, unknown>; createTime: string; updateTime: string };
+type FirestoreDoc = {
+  name: string;
+  fields: Record<string, unknown>;
+  createTime: string;
+  updateTime: string;
+};
 
 function parseFirestoreValue(v: Record<string, unknown>): unknown {
   if ("stringValue" in v) return v.stringValue;
@@ -106,14 +116,20 @@ function parseFirestoreValue(v: Record<string, unknown>): unknown {
   if ("booleanValue" in v) return v.booleanValue;
   if ("nullValue" in v) return null;
   if ("timestampValue" in v) return v.timestampValue;
-  if ("arrayValue" in v) return (v.arrayValue as { values?: Record<string, unknown>[] }).values?.map(parseFirestoreValue) ?? [];
-  if ("mapValue" in v) return parseFirestoreFields((v.mapValue as { fields?: Record<string, unknown> }).fields ?? {});
+  if ("arrayValue" in v)
+    return (
+      (v.arrayValue as { values?: Record<string, unknown>[] }).values?.map(parseFirestoreValue) ??
+      []
+    );
+  if ("mapValue" in v)
+    return parseFirestoreFields((v.mapValue as { fields?: Record<string, unknown> }).fields ?? {});
   return v;
 }
 
 function parseFirestoreFields(fields: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(fields)) out[k] = parseFirestoreValue(v as Record<string, unknown>);
+  for (const [k, v] of Object.entries(fields))
+    out[k] = parseFirestoreValue(v as Record<string, unknown>);
   return out;
 }
 
@@ -130,7 +146,8 @@ export async function runFirestoreQuery(
           fieldFilter: {
             field: { fieldPath: filters[0].field },
             op: "EQUAL",
-            value: filters[0].value === null ? { nullValue: null } : { stringValue: filters[0].value },
+            value:
+              filters[0].value === null ? { nullValue: null } : { stringValue: filters[0].value },
           },
         }
       : {
@@ -152,7 +169,10 @@ export async function runFirestoreQuery(
     body: JSON.stringify({ structuredQuery: { from: [{ collectionId: collection }], where } }),
   });
   if (!res.ok) throw new Error(`Firestore query failed: ${res.status} ${await res.text()}`);
-  const rows = (await res.json()) as Array<{ document?: FirestoreDoc; error?: { message: string } }>;
+  const rows = (await res.json()) as Array<{
+    document?: FirestoreDoc;
+    error?: { message: string };
+  }>;
   return rows
     .filter((r) => r.document)
     .map((r) => {
@@ -174,7 +194,8 @@ export async function updateFirestoreDoc(
   for (const [k, v] of Object.entries(fields)) {
     if (v === null || v === undefined) body[k] = { nullValue: null };
     else if (typeof v === "string") body[k] = { stringValue: v };
-    else if (typeof v === "number") body[k] = Number.isInteger(v) ? { integerValue: v } : { doubleValue: v };
+    else if (typeof v === "number")
+      body[k] = Number.isInteger(v) ? { integerValue: v } : { doubleValue: v };
     else if (typeof v === "boolean") body[k] = { booleanValue: v };
     else if (v instanceof Date) body[k] = { timestampValue: v.toISOString() };
     else body[k] = { stringValue: JSON.stringify(v) };
@@ -199,24 +220,21 @@ export async function sendFcmMulticast(
   let failureCount = 0;
 
   for (const t of tokens) {
-    const res = await fetch(
-      `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,
-      {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: {
-            token: t,
-            notification,
-            data,
-            webpush: {
-              fcmOptions: { link: data.url || "/" },
-              notification: { icon: "/icon.png", badge: "/icon.png" },
-            },
+    const res = await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: {
+          token: t,
+          notification,
+          data,
+          webpush: {
+            fcmOptions: { link: data.url || "/" },
+            notification: { icon: "/icon.png", badge: "/icon.png" },
           },
-        }),
-      },
-    );
+        },
+      }),
+    });
     if (res.ok) successCount++;
     else failureCount++;
   }

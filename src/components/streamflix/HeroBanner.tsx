@@ -134,9 +134,11 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
                 rating={s.rating}
                 className="rounded-full px-3 py-1.5 text-sm backdrop-blur-lg"
               />
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-muted-foreground backdrop-blur-lg">
-                <Clock className="size-3.5" /> {s.runtime}
-              </span>
+              {s.runtime && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-muted-foreground backdrop-blur-lg">
+                  <Clock className="size-3.5" /> {s.runtime}
+                </span>
+              )}
             </div>
             <p className="hidden md:block mx-auto md:mx-0 text-lg lg:text-xl text-gray-200 leading-relaxed max-w-xl">
               {description}

@@ -1,4 +1,5 @@
 import { getServerConfig } from "../config.server";
+import { formatRuntime } from "../runtime";
 import type { Movie } from "../types";
 
 const TMDB_BASE = "https://api.themoviedb.org/3";
@@ -91,7 +92,8 @@ export function toMovie(m: any): Movie {
     year: m.release_date ? new Date(m.release_date).getFullYear() : new Date().getFullYear(),
     releaseDate: m.release_date ?? undefined,
     rating: extractCertification(m),
-    runtime: m.runtime ? `${Math.floor(m.runtime / 60)}h ${m.runtime % 60}m` : "2h",
+    runtime: formatRuntime(m.runtime),
+    runtimeMinutes: typeof m.runtime === "number" && m.runtime > 0 ? m.runtime : undefined,
     genres: (m.genres || []).map((g: any) => g.name),
     genreIds: m.genre_ids || (m.genres || []).map((g: any) => g.id),
     poster: m.poster_path ? `${IMG_BASE}w500${m.poster_path}` : "",
@@ -165,6 +167,53 @@ export async function enrichCertifications(items: Movie[]): Promise<Movie[]> {
   );
 }
 
+const RUNTIME_CONCURRENCY = 8;
+
+async function fetchRuntimeMinutes(id: string): Promise<number | undefined> {
+  const isTv = id.startsWith("tv-");
+  const tmdbId = isTv ? id.slice(3) : id;
+  const data = await tmdbFetch(`/${isTv ? "tv" : "movie"}/${tmdbId}`);
+  if (isTv) {
+    const ep = Array.isArray(data.episode_run_time) ? data.episode_run_time[0] : null;
+    return typeof ep === "number" && ep > 0 ? ep : undefined;
+  }
+  return typeof data.runtime === "number" && data.runtime > 0 ? data.runtime : undefined;
+}
+
+/**
+ * Fill in exact runtimes for titles whose list endpoints don't include them,
+ * by fetching the TMDB details endpoint (results are cached by tmdbFetch).
+ */
+export async function enrichRuntimes(items: Movie[]): Promise<Movie[]> {
+  const targets = items.filter((m) => !m.runtimeMinutes);
+  if (!targets.length) return items;
+
+  const runtimeMap = new Map<string, number>();
+  for (let i = 0; i < targets.length; i += RUNTIME_CONCURRENCY) {
+    const batch = targets.slice(i, i + RUNTIME_CONCURRENCY);
+    const results = await Promise.allSettled(
+      batch.map((m) => fetchRuntimeMinutes(m.id).then((minutes) => ({ id: m.id, minutes }))),
+    );
+    for (const r of results) {
+      if (r.status === "fulfilled" && r.value.minutes) {
+        runtimeMap.set(r.value.id, r.value.minutes);
+      }
+    }
+  }
+
+  if (!runtimeMap.size) return items;
+
+  return items.map((m) => {
+    const minutes = runtimeMap.get(m.id);
+    if (!minutes) return m;
+    return {
+      ...m,
+      runtimeMinutes: minutes,
+      runtime: m.id.startsWith("tv-") ? `${minutes}m / ep` : formatRuntime(minutes),
+    };
+  });
+}
+
 export function toTv(m: any): Movie {
   const credits = m.credits;
   const castRaw = (credits?.cast || []).slice(0, 20);
@@ -196,6 +245,7 @@ export function toTv(m: any): Movie {
       : m.number_of_seasons
         ? `${m.number_of_seasons} season${m.number_of_seasons > 1 ? "s" : ""}`
         : "Series",
+    runtimeMinutes: typeof epRuntime === "number" && epRuntime > 0 ? epRuntime : undefined,
     genres: (m.genres || []).map((g: any) => g.name),
     genreIds: m.genre_ids || (m.genres || []).map((g: any) => g.id),
     poster: m.poster_path ? `${IMG_BASE}w500${m.poster_path}` : "",
