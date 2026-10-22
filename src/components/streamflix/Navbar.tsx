@@ -184,6 +184,14 @@ export function Navbar() {
   }, [u]);
 
   const signOut = async () => {
+    // Drop this device's push token before the session ends, otherwise the
+    // device keeps receiving notifications for this account.
+    try {
+      const { removePushSubscription } = await import("@/lib/push");
+      await removePushSubscription();
+    } catch (err) {
+      console.warn("Could not remove the push subscription for this device", err);
+    }
     await firebaseSignOut(auth);
     toast.success("Signed out");
     router.navigate({ to: "/auth", replace: true });

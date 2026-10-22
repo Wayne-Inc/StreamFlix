@@ -1,11 +1,22 @@
-// Firebase Messaging is an optional runtime dependency in some targets, and
-// its package declaration is not exposed by the installed Firebase typings.
-// @ts-expect-error Firebase Messaging may be unavailable in non-web builds.
-import { getMessaging, getToken, onMessage, isSupported, type Messaging, type MessagePayload } from "firebase/messaging";
-// Firestore is an optional runtime dependency in some targets, and its package
-// declaration is not exposed by the installed Firebase typings.
-// @ts-expect-error Firebase Firestore may be unavailable in non-web builds.
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import {
+  getMessaging,
+  getToken,
+  onMessage,
+  isSupported,
+  deleteToken,
+  type Messaging,
+  type MessagePayload,
+} from "firebase/messaging";
+import {
+  doc,
+  setDoc,
+  serverTimestamp,
+  collection,
+  deleteDoc,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
 import { auth, db } from "./firebase";
 import { getDeviceId } from "./device-tracking";
 import { toast } from "sonner";
@@ -211,6 +222,32 @@ async function ensureWebPush(): Promise<PushStatus> {
 
 export async function ensurePushSubscription(): Promise<PushStatus> {
   return ensureWebPush();
+}
+
+// Removes this device's FCM token (locally and in Firestore) so a signed-out
+// device stops receiving notifications for the account it was signed in to.
+export async function removePushSubscription(): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) return;
+  const messaging = await getMessagingInstance();
+  if (messaging) {
+    try {
+      await deleteToken(messaging);
+    } catch (error) {
+      console.warn("Push: failed to delete FCM token", error);
+    }
+  }
+  try {
+    const q = query(
+      collection(db, "fcm_tokens"),
+      where("user_id", "==", user.uid),
+      where("device_id", "==", getDeviceId()),
+    );
+    const snap = await getDocs(q);
+    await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
+  } catch (error) {
+    console.warn("Push: failed to remove stored FCM tokens", error);
+  }
 }
 
 // ---------------------------------------------------------------------------

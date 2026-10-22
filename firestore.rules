@@ -13,18 +13,22 @@ service cloud.firestore {
       // SUB-COLLECTION: users/{userId}/profiles/{profileId}
       // ============================================
       match /profiles/{profileId} {
-        // Users can CRUD their own profiles
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        // Users can read/delete their own profiles.
+        // NOTE: `allow read, write` used to sit next to the validated rule below.
+        // Firestore ORs `allow` statements, so the strict rule was dead code.
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow delete: if request.auth != null && request.auth.uid == userId;
 
         // Fields validation on create/update
         allow create, update: if request.auth != null
           && request.auth.uid == userId
-          && request.resource.data.keys().hasOnly(['name', 'color', 'kids', 'avatarUrl', 'pinHash', 'createdAt', 'updatedAt'])
+          && request.resource.data.keys().hasOnly(['name', 'color', 'kids', 'avatarUrl', 'pinHash', 'createdAt', 'updatedAt', 'userId'])
+          && request.resource.data.userId == request.auth.uid
           && (request.resource.data.name is string && request.resource.data.name.size() <= 50)
           && (request.resource.data.color is string)
           && (request.resource.data.kids is bool)
-          && (request.resource.data.avatarUrl == null || request.resource.data.avatarUrl is string)
-          && (request.resource.data.pinHash == null || request.resource.data.pinHash is string);
+          && (!('avatarUrl' in request.resource.data) || request.resource.data.avatarUrl is string)
+          && (!('pinHash' in request.resource.data) || request.resource.data.pinHash is string);
       }
 
       // ============================================
@@ -187,13 +191,29 @@ service cloud.firestore {
     // Used for avatar sync and VIP check
     // ============================================
     match /profiles/{userId} {
-      // Users can read/write their own profile
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Users can read/delete their own profile.
+      // NOTE: the validated rule below was previously OR-ed away by a blanket
+      // `allow read, write`, so it never actually ran.
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow delete: if request.auth != null && request.auth.uid == userId;
 
       allow create, update: if request.auth != null
         && request.auth.uid == userId
-        && request.resource.data.keys().hasOnly(['avatar_url', 'updated_at'])
-        && (request.resource.data.avatar_url == null || request.resource.data.avatar_url is string);
+        && request.resource.data.keys().hasOnly(['avatar_url', 'display_name', 'show_google_pfp', 'updated_at'])
+        && (!('avatar_url' in request.resource.data) || request.resource.data.avatar_url is string)
+        && (!('display_name' in request.resource.data) || request.resource.data.display_name is string)
+        && (!('show_google_pfp' in request.resource.data) || request.resource.data.show_google_pfp is bool);
+    }
+
+    // ============================================
+    // MOVIE SOURCES (root collection)
+    // Read-only catalog of playable sources, written by admin tooling.
+    // Without this rule the catch-all below denies every read and the app
+    // silently gets `null` back from getVideoSource()/listVideoSources().
+    // ============================================
+    match /movie_sources/{tmdbId} {
+      allow read: if request.auth != null;
+      allow write: if false;
     }
 
     // ============================================

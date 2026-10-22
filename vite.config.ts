@@ -18,8 +18,8 @@ function firebaseMessagingSW(env: Record<string, string>): Plugin {
       messagingSenderId: get("VITE_FIREBASE_MESSAGING_SENDER_ID"),
       appId: get("VITE_FIREBASE_APP_ID"),
     };
-    const sw = `importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js");
-importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js");
+    const sw = `importScripts("https://www.gstatic.com/firebasejs/12.15.0/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/12.15.0/firebase-messaging-compat.js");
 
 firebase.initializeApp(${JSON.stringify(config, null, 2)});
 

@@ -6,6 +6,7 @@ import { Logo } from "@/components/streamflix/Logo";
 import { auth } from "@/lib/firebase";
 import { passwordMeetsPolicy } from "@/lib/password";
 import { PasswordPolicyChecklist } from "@/components/streamflix/PasswordPolicyChecklist";
+import { PasswordStrengthMeter } from "@/components/streamflix/PasswordStrengthMeter";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -19,11 +20,21 @@ import {
   sendEmailVerification,
   sendPasswordResetEmail,
   fetchSignInMethodsForEmail,
+  type AuthCredential,
+  type User,
 } from "firebase/auth";
 import heroImg from "@/assets/hero-1.jpg";
 
 const LAST_SIGN_IN_METHOD_KEY = "sf:lastSignInMethod";
 type SignInMethod = "email" | "google" | "github";
+type LinkProvider = "google" | "github";
+
+const providerLabel = (p: LinkProvider) => (p === "google" ? "Google" : "GitHub");
+
+const FEDERATED_PROVIDERS: Record<string, LinkProvider> = {
+  "google.com": "google",
+  "github.com": "github",
+};
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -43,6 +54,14 @@ function AuthPage() {
   const [popupBlocked, setPopupBlocked] = useState(false);
   const [forgotPw, setForgotPw] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [linkRequest, setLinkRequest] = useState<{
+    credential: AuthCredential;
+    email: string;
+    provider: LinkProvider;
+  } | null>(null);
+  const [linkPassword, setLinkPassword] = useState("");
+  const [linkShowPw, setLinkShowPw] = useState(false);
+  const [linkBusy, setLinkBusy] = useState(false);
   const [lastSignInMethod, setLastSignInMethod] = useState<SignInMethod | null>(() => {
     try {
       const saved = localStorage.getItem(LAST_SIGN_IN_METHOD_KEY);
@@ -92,7 +111,9 @@ function AuthPage() {
       const onUpgrade =
         typeof window !== "undefined" && window.location.pathname === "/force-password";
       if (user && user.emailVerified && !pending && !onUpgrade) {
-        try { localStorage.setItem("sf:auth", "1"); } catch {}
+        try {
+          localStorage.setItem("sf:auth", "1");
+        } catch {}
         navigate({ to: "/profiles" });
       }
     });
@@ -145,7 +166,9 @@ function AuthPage() {
           localStorage.removeItem("sf:upgrade_password");
         } catch {}
         rememberSignInMethod("email");
-        try { localStorage.setItem("sf:auth", "1"); } catch {}
+        try {
+          localStorage.setItem("sf:auth", "1");
+        } catch {}
         toast.success("Signed in.");
         navigate({ to: "/profiles" });
       } else {
@@ -225,6 +248,106 @@ function AuthPage() {
     }
   };
 
+  const completeLink = async (
+    credential: AuthCredential,
+    provider: LinkProvider,
+    signedInUser: User,
+  ) => {
+    await linkWithCredential(signedInUser, credential);
+    rememberSignInMethod(provider);
+    try {
+      localStorage.setItem("sf:auth", "1");
+    } catch {}
+    setLinkRequest(null);
+    setLinkPassword("");
+    toast.success(`Accounts linked — signed in with ${providerLabel(provider)}.`);
+    navigate({ to: "/profiles" });
+  };
+
+  // The provider sign-in failed because an account already exists for that
+  // email. Work out how to link it instead of guessing a password.
+  const startLinking = async (err: any, provider: LinkProvider) => {
+    const credential = err?.credential as AuthCredential | undefined;
+    const mail = (err?.email as string | undefined) ?? "";
+    if (!credential || !mail) {
+      toast.error(
+        `${providerLabel(provider)} sign-in could not be linked: ${err?.message ?? "the existing account could not be identified"}. Sign in with email and password instead.`,
+      );
+      return;
+    }
+
+    let methods: string[] = [];
+    try {
+      methods = await fetchSignInMethodsForEmail(auth, mail);
+    } catch {
+      toast.error(
+        "Could not look up the existing account for this email. Sign in with email and password instead.",
+      );
+      return;
+    }
+
+    if (methods.includes("password")) {
+      setLinkRequest({ credential, email: mail, provider });
+      setLinkPassword("");
+      return;
+    }
+
+    const existing = methods.map((m) => FEDERATED_PROVIDERS[m]).find((m): m is LinkProvider => !!m);
+    if (!existing) {
+      toast.error(
+        `An account already exists for ${mail} with a sign-in method that can't be linked automatically. Sign in with that method first, then link ${providerLabel(provider)}.`,
+      );
+      return;
+    }
+
+    // Re-authenticate with the provider that owns the existing account, then link.
+    try {
+      const result =
+        existing === "google"
+          ? await signInWithPopup(auth, new GoogleAuthProvider())
+          : await signInWithPopup(auth, new GithubAuthProvider());
+      await completeLink(credential, provider, result.user);
+    } catch (linkErr: any) {
+      if (linkErr?.code === "auth/popup-closed-by-user") return;
+      toast.error(
+        `Could not link ${providerLabel(provider)}: ${linkErr?.message ?? "linking failed"}. Nothing was changed on your account.`,
+      );
+    }
+  };
+
+  const onSubmitLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!linkRequest) return;
+    if (!linkPassword) {
+      toast.error("Enter the password for the existing account.");
+      return;
+    }
+    setLinkBusy(true);
+    try {
+      const cred = await signInWithEmailAndPassword(auth, linkRequest.email, linkPassword);
+      await completeLink(linkRequest.credential, linkRequest.provider, cred.user);
+    } catch (err: any) {
+      if (
+        err?.code === "auth/invalid-credential" ||
+        err?.code === "auth/wrong-password" ||
+        err?.code === "auth/user-not-found"
+      ) {
+        toast.error("Incorrect password for that account.");
+      } else {
+        toast.error(
+          `Could not link the account: ${err?.message ?? "linking failed"}. Nothing was changed on your account.`,
+        );
+      }
+    } finally {
+      setLinkBusy(false);
+    }
+  };
+
+  const cancelLink = () => {
+    setLinkRequest(null);
+    setLinkPassword("");
+  };
+
   const onGoogle = async () => {
     setBusy(true);
     setPopupBlocked(false);
@@ -232,34 +355,17 @@ function AuthPage() {
     try {
       const userCred = await signInWithPopup(auth, provider);
       rememberSignInMethod("google");
-      try { localStorage.setItem("sf:auth", "1"); } catch {}
+      try {
+        localStorage.setItem("sf:auth", "1");
+      } catch {}
       toast.success("Signed in with Google.");
       navigate({ to: "/profiles" });
     } catch (err: any) {
       // Handle account exists with different credential
-      if (err.code === "auth/account-exists-with-different-credential") {
-        // Get the pending credential
-        const pendingCred = err.credential;
-
-        // Fetch the existing account's email
-        const methods = await fetchSignInMethodsForEmail(auth, err.email);
-        if (methods.includes("password")) {
-          // Prompt user to sign in with existing provider then link
-          toast.error("An account already exists with this email. Please sign in with your existing provider to link accounts.");
-          setBusy(false);
-          return;
-        }
-
-        // If no password account exists, we can create/link
-        if (err.email) {
-          const existingUserCred = await signInWithEmailAndPassword(auth, err.email, "");
-          await linkWithCredential(existingUserCred.user, pendingCred);
-          rememberSignInMethod("google");
-          try { localStorage.setItem("sf:auth", "1"); } catch {}
-          toast.success("Accounts linked and signed in with Google.");
-          navigate({ to: "/profiles" });
-          return;
-        }
+      if (err?.code === "auth/account-exists-with-different-credential") {
+        await startLinking(err, "google");
+        setBusy(false);
+        return;
       }
 
       if (err?.code === "auth/popup-blocked") {
@@ -278,40 +384,17 @@ function AuthPage() {
     try {
       const userCred = await signInWithPopup(auth, provider);
       rememberSignInMethod("github");
-      try { localStorage.setItem("sf:auth", "1"); } catch {}
+      try {
+        localStorage.setItem("sf:auth", "1");
+      } catch {}
       toast.success("Signed in with GitHub.");
       navigate({ to: "/profiles" });
     } catch (err: any) {
       // Handle account exists with different credential
-      if (err.code === "auth/account-exists-with-different-credential") {
-        // Get the pending credential
-        const pendingCred = err.credential;
-
-        // Fetch the existing account's email (if available)
-        const email = err.email;
-        if (email) {
-          const methods = await fetchSignInMethodsForEmail(auth, email);
-          if (methods.includes("password")) {
-            // Prompt user to sign in with existing provider then link
-            toast.error("An account already exists with this email. Please sign in with your existing provider to link accounts.");
-            setBusy(false);
-            return;
-          }
-
-          // If no password account exists, we can create/link
-          const existingUserCred = await signInWithEmailAndPassword(auth, email, "");
-          await linkWithCredential(existingUserCred.user, pendingCred);
-          rememberSignInMethod("github");
-          try { localStorage.setItem("sf:auth", "1"); } catch {}
-          toast.success("Accounts linked and signed in with GitHub.");
-          navigate({ to: "/profiles" });
-          return;
-        } else {
-          // Fallback if email is not available in error
-          toast.error("GitHub sign-in failed: unable to retrieve email from account. Please try signing in with email/password instead.");
-          setBusy(false);
-          return;
-        }
+      if (err?.code === "auth/account-exists-with-different-credential") {
+        await startLinking(err, "github");
+        setBusy(false);
+        return;
       }
 
       if (err?.code === "auth/popup-blocked") {
@@ -342,7 +425,56 @@ function AuthPage() {
           <h1 className="text-3xl font-bold">
             {forgotPw ? "Reset Password" : mode === "signin" ? "Sign In" : "Create Account"}
           </h1>
-          {forgotPw ? (
+          {linkRequest ? (
+            <div className="mt-6 space-y-4 rounded-md border border-amber-500/40 bg-amber-500/10 p-4">
+              <div>
+                <p className="text-sm font-semibold text-amber-400">
+                  An account already exists for {linkRequest.email}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Enter the password for that account to link it with{" "}
+                  {providerLabel(linkRequest.provider)}. Nothing is changed until the link succeeds.
+                </p>
+              </div>
+              <form className="space-y-3" onSubmit={onSubmitLink}>
+                <div className="relative">
+                  <input
+                    required
+                    type={linkShowPw ? "text" : "password"}
+                    placeholder="Existing account password"
+                    aria-label="Existing account password"
+                    value={linkPassword}
+                    onChange={(e) => setLinkPassword(e.target.value)}
+                    autoComplete="current-password"
+                    className="w-full rounded bg-neutral-800 px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setLinkShowPw((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label="Toggle password"
+                  >
+                    {linkShowPw ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+                  </button>
+                </div>
+                <button
+                  disabled={linkBusy}
+                  className="w-full rounded bg-primary py-3 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                >
+                  {linkBusy
+                    ? "Linking…"
+                    : `Link and sign in with ${providerLabel(linkRequest.provider)}`}
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelLink}
+                  className="w-full text-sm text-muted-foreground hover:text-foreground"
+                >
+                  Cancel
+                </button>
+              </form>
+            </div>
+          ) : forgotPw ? (
             <form className="mt-6 space-y-4" onSubmit={onForgotPassword}>
               <p className="text-sm text-muted-foreground">
                 Enter your email address and we'll send you a link to reset your password.
@@ -454,19 +586,24 @@ function AuthPage() {
 
               {mode === "signup" && password && (
                 <div className="animate-checklist-drop space-y-2 rounded-md border border-border/60 bg-neutral-900/40 p-3">
-                  <p className="text-xs font-medium text-muted-foreground">Password requirements</p>
+                  <p className="text-xs font-medium text-muted-foreground">Password strength</p>
+                  <PasswordStrengthMeter password={password} />
+                  <p className="pt-1 text-xs font-medium text-muted-foreground">
+                    Password requirements
+                  </p>
                   <PasswordPolicyChecklist password={password} />
                 </div>
               )}
 
               <button
-                disabled={
-                  busy ||
-                  (mode === "signup" && !passwordMeetsPolicy(password))
-                }
+                disabled={busy || (mode === "signup" && !passwordMeetsPolicy(password))}
                 className={`w-full rounded border py-3 font-semibold disabled:opacity-60 ${mode === "signin" && lastSignInMethod === "email" ? "border-primary bg-primary/15 text-primary ring-1 ring-primary/40 hover:bg-primary/20 active:bg-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50" : "border-transparent bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"}`}
               >
-                {busy ? "Please wait…" : mode === "signin" ? `Sign In${lastSignInMethod === "email" ? " · Last used" : ""}` : "Create Account"}
+                {busy
+                  ? "Please wait…"
+                  : mode === "signin"
+                    ? `Sign In${lastSignInMethod === "email" ? " · Last used" : ""}`
+                    : "Create Account"}
               </button>
             </form>
           )}
@@ -489,14 +626,16 @@ function AuthPage() {
                 disabled={busy}
                 className={`mt-4 w-full rounded border py-3 font-semibold disabled:opacity-60 ${mode === "signin" && lastSignInMethod === "google" ? "border-primary bg-primary/15 text-primary ring-1 ring-primary/40 hover:bg-primary/20 active:bg-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50" : "border-transparent bg-foreground/10 text-foreground hover:bg-foreground/20 active:bg-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50"}`}
               >
-                Continue with Google{mode === "signin" && lastSignInMethod === "google" ? " · Last used" : ""}
+                Continue with Google
+                {mode === "signin" && lastSignInMethod === "google" ? " · Last used" : ""}
               </button>
               <button
                 onClick={onGitHub}
                 disabled={busy}
                 className={`mt-3 w-full rounded border py-3 font-semibold disabled:opacity-60 ${mode === "signin" && lastSignInMethod === "github" ? "border-primary bg-primary/15 text-primary ring-1 ring-primary/40 hover:bg-primary/20 active:bg-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50" : "border-transparent bg-foreground/10 text-foreground hover:bg-foreground/20 active:bg-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50"}`}
               >
-                Continue with GitHub{mode === "signin" && lastSignInMethod === "github" ? " · Last used" : ""}
+                Continue with GitHub
+                {mode === "signin" && lastSignInMethod === "github" ? " · Last used" : ""}
               </button>
 
               <p className="mt-8 text-muted-foreground">

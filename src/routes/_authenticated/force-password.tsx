@@ -11,6 +11,7 @@ import {
 } from "firebase/auth";
 import { passwordMeetsPolicy } from "@/lib/password";
 import { PasswordPolicyChecklist } from "@/components/streamflix/PasswordPolicyChecklist";
+import { PasswordStrengthMeter } from "@/components/streamflix/PasswordStrengthMeter";
 
 export const Route = createFileRoute("/_authenticated/force-password")({
   ssr: false,
@@ -141,7 +142,11 @@ function ForcePasswordPage() {
             </div>
           </div>
           <div className="rounded-md border border-border/60 bg-neutral-900/40 p-3">
-            <p className="mb-2 text-xs font-medium text-muted-foreground">Password requirements</p>
+            <p className="mb-2 text-xs font-medium text-muted-foreground">Password strength</p>
+            <PasswordStrengthMeter password={newPw} />
+            <p className="mb-2 mt-3 text-xs font-medium text-muted-foreground">
+              Password requirements
+            </p>
             <PasswordPolicyChecklist password={newPw} />
           </div>
           <button

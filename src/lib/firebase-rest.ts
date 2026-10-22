@@ -1,8 +1,24 @@
-// import { importPKCS8, SignJWT } from "jose";
-
 const SCOPES = "https://www.googleapis.com/auth/datastore https://www.googleapis.com/auth/firebase.messaging";
+const TOKEN_URL = "https://oauth2.googleapis.com/token";
+const JWT_AUDIENCE = "https://oauth2.googleapis.com/token";
+
+type CachedToken = { token: string; expires: number };
+
+let cachedToken: CachedToken | undefined;
+let cachedPrivateKey: CryptoKey | undefined;
+
+function base64UrlEncode(bytes: Uint8Array): string {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
 
 async function pkcs8PemToCryptoKey(pem: string): Promise<CryptoKey> {
+  if (!pem.includes("-----BEGIN PRIVATE KEY-----")) {
+    throw new Error(
+      "FIREBASE_PRIVATE_KEY is not a PKCS#8 PEM key (expected a '-----BEGIN PRIVATE KEY-----' block).",
+    );
+  }
   const pemContents = pem
     .replace(/-----BEGIN PRIVATE KEY-----/, "")
     .replace(/-----END PRIVATE KEY-----/, "")
@@ -17,33 +33,59 @@ async function pkcs8PemToCryptoKey(pem: string): Promise<CryptoKey> {
   );
 }
 
+async function getPrivateKey(pem: string): Promise<CryptoKey> {
+  if (!cachedPrivateKey) cachedPrivateKey = await pkcs8PemToCryptoKey(pem);
+  return cachedPrivateKey;
+}
+
+async function signRs256(payload: Record<string, unknown>, pem: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const header = base64UrlEncode(encoder.encode(JSON.stringify({ alg: "RS256", typ: "JWT" })));
+  const body = base64UrlEncode(encoder.encode(JSON.stringify(payload)));
+  const signingInput = `${header}.${body}`;
+  const key = await getPrivateKey(pem);
+  const signature = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, encoder.encode(signingInput));
+  return `${signingInput}.${base64UrlEncode(new Uint8Array(signature))}`;
+}
+
 async function getAccessToken(): Promise<string> {
   const now = Date.now();
   if (cachedToken && cachedToken.expires > now + 60_000) return cachedToken.token;
 
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
-  if (!clientEmail || !privateKey) throw new Error("Missing FIREBASE_CLIENT_EMAIL or FIREBASE_PRIVATE_KEY");
+  if (!clientEmail || !privateKey) {
+    throw new Error("Missing FIREBASE_CLIENT_EMAIL or FIREBASE_PRIVATE_KEY");
+  }
 
-  const key = await pkcs8PemToCryptoKey(privateKey);
   const iat = Math.floor(now / 1000);
-  const jwt = await new SignJWT({
-    iss: clientEmail,
-    scope: SCOPES,
-    aud: "https://oauth2.googleapis.com/token",
-    iat,
-    exp: iat + 3600,
-  })
-    .setProtectedHeader({ alg: "RS256" })
-    .sign(key);
+  const jwt = await signRs256(
+    {
+      iss: clientEmail,
+      sub: clientEmail,
+      scope: SCOPES,
+      aud: JWT_AUDIENCE,
+      iat,
+      exp: iat + 3600,
+    },
+    privateKey,
+  );
 
-  const res = await fetch("https://oauth2.googleapis.com/token", {
+  const res = await fetch(TOKEN_URL, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion: jwt,
+    }).toString(),
   });
-  if (!res.ok) throw new Error(`Token exchange failed: ${res.status} ${await res.text()}`);
+  if (!res.ok) {
+    throw new Error(`Token exchange failed: ${res.status} ${await res.text()}`);
+  }
   const data = (await res.json()) as { access_token: string; expires_in: number };
+  if (!data?.access_token) {
+    throw new Error("Token exchange returned no access_token.");
+  }
   cachedToken = { token: data.access_token, expires: now + data.expires_in * 1000 };
   return cachedToken.token;
 }
