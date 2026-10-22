@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
-import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { getGenres, searchByGenre } from "@/lib/streamflix-data";
 import type { Movie } from "@/lib/types";
 import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
@@ -59,13 +60,16 @@ function ExploreGenrePage() {
   const { genreId, genres, items } = Route.useLoaderData();
   const { q } = Route.useSearch();
   const [page, setPage] = useState(1);
+  const [showAllGenres, setShowAllGenres] = useState(false);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const kidsMode = isKidsProfile();
   const safeGenres = genres;
   const safeItems = kidsMode ? filterKidsContent(items) : items;
   const genreName = safeGenres.find((g) => String(g.id) === genreId)?.name || q || "Explore";
   const hero = safeItems[0];
+  const visibleGenres = isMobile && !showAllGenres ? safeGenres.slice(0, 6) : safeGenres;
 
   const pageCount = Math.max(1, Math.ceil(safeItems.length / 24));
   const visible = safeItems.slice((page - 1) * 24, page * 24);
@@ -97,7 +101,7 @@ function ExploreGenrePage() {
       <main className="mx-auto max-w-[1800px] px-4 pb-16 sm:px-8">
         {/* Mood chips */}
         <div className="mt-8 flex flex-wrap gap-2">
-          {safeGenres.map((g) => {
+          {visibleGenres.map((g) => {
             const active = String(g.id) === genreId;
             return (
               <Link
@@ -117,6 +121,23 @@ function ExploreGenrePage() {
             );
           })}
         </div>
+        {isMobile && safeGenres.length > 6 && (
+          <button
+            type="button"
+            onClick={() => setShowAllGenres((v) => !v)}
+            className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:border-primary"
+          >
+            {showAllGenres ? (
+              <>
+                <ChevronUp className="size-4" /> Show fewer genres
+              </>
+            ) : (
+              <>
+                <ChevronDown className="size-4" /> Show all genres ({safeGenres.length})
+              </>
+            )}
+          </button>
+        )}
 
         {safeItems.length > 0 ? (
           <div className="mt-8">

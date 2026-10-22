@@ -26,6 +26,15 @@ service cloud.firestore {
           && (request.resource.data.avatarUrl == null || request.resource.data.avatarUrl is string)
           && (request.resource.data.pinHash == null || request.resource.data.pinHash is string);
       }
+
+      // ============================================
+      // OTHER SUB-COLLECTIONS (legacy per-user data)
+      // Owners may read and delete their own data. Writes are validated by
+      // the dedicated top-level collection rules below.
+      // ============================================
+      match /{subcollection}/{docId} {
+        allow read, delete: if request.auth != null && request.auth.uid == userId;
+      }
     }
 
     // ============================================
@@ -36,6 +45,10 @@ service cloud.firestore {
       allow read, write: if request.auth != null
         && docId.matches('^[^_]+_[^_]+_.*$')
         && docId.split('_')[0] == request.auth.uid;
+
+      // Owners may list and delete their own documents (account deletion).
+      allow read, delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
 
       // Validate fields on write
       allow create, update: if request.auth != null
@@ -55,6 +68,10 @@ service cloud.firestore {
       allow read, write: if request.auth != null
         && docId.matches('^[^_]+_[^_]+_.*$')
         && docId.split('_')[0] == request.auth.uid;
+
+      // Owners may list and delete their own documents (account deletion).
+      allow read, delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
 
       allow create, update: if request.auth != null
         && request.resource.data.userId == request.auth.uid
@@ -77,6 +94,10 @@ service cloud.firestore {
         && docId.matches('^[^_]+_[^_]+_.*$')
         && docId.split('_')[0] == request.auth.uid;
 
+      // Owners may list and delete their own documents (account deletion).
+      allow read, delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+
       allow create, update: if request.auth != null
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.profileId == resource.data.profileId
@@ -90,11 +111,15 @@ service cloud.firestore {
     // Doc ID = token
     // ============================================
     match /fcm_tokens/{token} {
-      // Users can write their own tokens
-      allow write: if request.auth != null
+      // Users can create/update their own tokens
+      allow create, update: if request.auth != null
         && request.resource.data.user_id == request.auth.uid
         && request.resource.data.device_id is string
         && request.resource.data.platform is string;
+
+      // Users can delete their own tokens (sign out / account deletion)
+      allow delete: if request.auth != null
+        && resource.data.user_id == request.auth.uid;
 
       // Users can read their own tokens (for debugging)
       allow read: if request.auth != null

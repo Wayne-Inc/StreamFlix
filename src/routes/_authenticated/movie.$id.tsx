@@ -47,13 +47,14 @@ import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { Row } from "@/components/streamflix/Row";
 import { Skeleton } from "@/components/ui/skeleton";
-import { movieById, loadSimilar, loadRecommendations, getWatchProviders, type WatchProvider } from "@/lib/streamflix-data";
+import { movieById, loadSimilar, loadRecommendations, getWatchProviders, getGenres, type WatchProvider } from "@/lib/streamflix-data";
 import { discoverByGenre, fetchTitleLogo, fetchTvSeason } from "@/lib/api/tmdb";
 import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
 import { getWatchHistoryFromFirestore } from "@/lib/history-firestore";
 import { TrailerModal } from "@/components/streamflix/TrailerModal";
 import { AgeRatingBadge } from "@/components/streamflix/AgeRatingBadge";
 import { askStreamflixAI } from "@/lib/api/ai";
+import { AI_ERROR_MESSAGES, aiErrorMessage } from "@/lib/ai-errors";
 import { auth } from "@/lib/firebase";
 
 function MovieSkeleton() {
@@ -112,26 +113,57 @@ function MovieSkeleton() {
 
 export const Route = createFileRoute("/_authenticated/movie/$id")({
   loader: async ({ params }) => {
-    const [movie, similar, recommendations, logo] = await Promise.all([
+    const [movie, similar, recommendations, logo, genres] = await Promise.all([
       movieById(params.id),
       loadSimilar(params.id),
       loadRecommendations(params.id),
       fetchTitleLogo({ data: { id: params.id } }).catch(() => null),
+      getGenres(),
     ]);
     if (!movie) throw notFound();
-    
+
     // Fetch movies for each genre the current movie belongs to
     const movieGenreIds = movie.genreIds.map(String);
     const genreResults = await Promise.all(
-      movieGenreIds.map((gid) => discoverByGenre({ data: { genreId: gid } }).catch(() => []))
+      movieGenreIds.map((gid) => discoverByGenre({ data: { genreId: gid } }).catch(() => [])),
     );
-    
-    const genreRows = movieGenreIds.map((gid, i) => ({
-      genreId: gid,
-      items: (genreResults[i] || []).filter((m: any) => m.id !== params.id).slice(0, 12),
-    }));
-    
-    return { movie, similar, genreRows, recommendations, logo };
+
+    const otherGenreIds = genres
+      .map((g) => String(g.id))
+      .filter((gid) => !movieGenreIds.includes(gid));
+
+    const rows: { genreId: string; items: any[] }[] = [];
+    const usedGenreIds = new Set<string>();
+
+    const takeGenre = async (gid: string) => {
+      const index = movieGenreIds.indexOf(gid);
+      const source =
+        index >= 0
+          ? genreResults[index]
+          : await discoverByGenre({ data: { genreId: gid } }).catch(() => []);
+      return (source || []).filter((m: any) => m.id !== params.id).slice(0, 12);
+    };
+
+    for (const gid of movieGenreIds) {
+      const items = await takeGenre(gid);
+      if (items.length > 0) {
+        rows.push({ genreId: gid, items });
+        usedGenreIds.add(gid);
+      }
+    }
+
+    // Ensure there are always 3 genre rows, filling with other genres.
+    for (const gid of otherGenreIds) {
+      if (rows.length >= 3) break;
+      if (usedGenreIds.has(gid)) continue;
+      const items = await takeGenre(gid);
+      if (items.length > 0) {
+        rows.push({ genreId: gid, items });
+        usedGenreIds.add(gid);
+      }
+    }
+
+    return { movie, similar, genreRows: rows, recommendations, logo, genres };
   },
   head: ({ loaderData }) => {
     const movie = loaderData?.movie;
@@ -175,7 +207,7 @@ export const Route = createFileRoute("/_authenticated/movie/$id")({
 });
 
 function MoviePage() {
-  const { movie, similar, genreRows, recommendations, logo } = Route.useLoaderData();
+  const { movie, similar, genreRows, recommendations, logo, genres } = Route.useLoaderData();
   const genreLabels: Record<string, string> = {
     "27": "Horror",
     "878": "Sci-Fi",
@@ -223,11 +255,15 @@ function MoviePage() {
     setAiSummaryError("");
     try {
       const idToken = await auth.currentUser?.getIdToken();
-      if (!idToken) throw new Error("Please sign in again to generate an AI summary.");
+      if (!idToken) throw new Error(AI_ERROR_MESSAGES.auth);
       const result = await askStreamflixAI({ data: { idToken, mode: "summary", titleId: movie.id } });
+      if (!result.ok) {
+        setAiSummaryError(result.message);
+        return;
+      }
       setAiSummary(result.message);
     } catch (error) {
-      setAiSummaryError(error instanceof Error ? error.message : "Couldn't generate a summary.");
+      setAiSummaryError(aiErrorMessage(error));
     } finally {
       setAiSummaryLoading(false);
     }
@@ -494,7 +530,12 @@ function MoviePage() {
                     {aiSummary}
                   </p>
                 )}
-                {aiSummaryError && <p role="alert" className="mt-2 text-xs text-destructive">{aiSummaryError}</p>}
+                {aiSummaryError && (
+                  <p role="alert" className="mt-2 text-xs leading-5 text-destructive">
+                    <span className="font-semibold">Something went wrong on our side. </span>
+                    {aiSummaryError}
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-wrap items-center gap-2 pt-2 sm:gap-3">
@@ -846,8 +887,12 @@ function MoviePage() {
 
       <div className="space-y-2 pb-10">
         {filteredGenreRows.map((gr) => {
-          // Use the genre name from the movie's genreIds/genres if available
-          const genreName = movie.genres[movie.genreIds.indexOf(Number(gr.genreId))] || genreLabels[gr.genreId] || "Movies";
+          // Use the genre name from the available genres, then the movie's own labels.
+          const genreName =
+            genres.find((g: { id: number; name: string }) => String(g.id) === gr.genreId)?.name ||
+            movie.genres[movie.genreIds.indexOf(Number(gr.genreId))] ||
+            genreLabels[gr.genreId] ||
+            "Movies";
           return <Row key={gr.genreId} title={`${genreName} Movies`} items={gr.items} />;
         })}
       </div>

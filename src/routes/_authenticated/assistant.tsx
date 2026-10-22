@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Fragment, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { LoaderCircle, Send, Sparkles } from "lucide-react";
+import { LoaderCircle, RotateCcw, Send, Sparkles, TriangleAlert } from "lucide-react";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { askStreamflixAI } from "@/lib/api/ai";
+import { AI_ERROR_MESSAGES, aiErrorMessage } from "@/lib/ai-errors";
 import { getWatchHistory } from "@/lib/continue-watching";
 import { auth } from "@/lib/firebase";
 import { isKidsProfile } from "@/lib/kids-mode";
@@ -26,6 +27,10 @@ function AssistantPage() {
   const [prompt, setPrompt] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [failedRequest, setFailedRequest] = useState<{
+    text: string;
+    mode: "chat" | "recommendations";
+  } | null>(null);
   const threadRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<AssistantMessage[]>([
     {
@@ -51,18 +56,24 @@ function AssistantPage() {
       .map((item) => ({ title: item.title, genres: (item.genres ?? []).slice(0, 8) }));
   };
 
-  const send = async (text: string, mode: "chat" | "recommendations" = "chat") => {
+  const send = async (
+    text: string,
+    mode: "chat" | "recommendations" = "chat",
+    options?: { keepUserMessage?: boolean },
+  ) => {
     const request = text.trim();
     if (busy || (!request && mode === "chat")) return;
-    const userMessage: AssistantMessage | null = request ? { role: "user", content: request } : null;
+    const userMessage: AssistantMessage | null =
+      request && !options?.keepUserMessage ? { role: "user", content: request } : null;
     const previous = messages;
     if (userMessage) setMessages((current) => [...current, userMessage]);
     setPrompt("");
     setError("");
+    setFailedRequest(null);
     setBusy(true);
     try {
       const idToken = await auth.currentUser?.getIdToken();
-      if (!idToken) throw new Error("Please sign in again to use the AI assistant.");
+      if (!idToken) throw new Error(AI_ERROR_MESSAGES.auth);
       const result = await askStreamflixAI({
         data: {
           idToken,
@@ -76,15 +87,19 @@ function AssistantPage() {
             .map(({ role, content }) => ({ role, content })),
         },
       });
+      if (!result.ok) {
+        setError(result.message);
+        setFailedRequest({ text: request, mode });
+        return;
+      }
       setMessages((current) => [
         ...current,
         { role: "assistant", content: result.message, recommendations: result.recommendations },
       ]);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "The assistant couldn't respond. Try again.");
-      if (userMessage) {
-        setMessages((current) => current.filter((message, index) => index !== current.length - 1 || message !== userMessage));
-      }
+      setError(aiErrorMessage(cause));
+      setFailedRequest({ text: request, mode });
+      console.error("[StreamFlix AI] request failed", cause);
     } finally {
       setBusy(false);
     }
@@ -181,9 +196,6 @@ function AssistantPage() {
                   <LoaderCircle className="size-4 animate-spin" /> Finding a great match…
                 </div>
               )}
-              {error && (
-                <p role="alert" className="text-sm text-destructive">{error}</p>
-              )}
             </div>
           )}
         </div>
@@ -192,6 +204,30 @@ function AssistantPage() {
 
       <div className="pointer-events-none shrink-0 bg-gradient-to-t from-background via-background/95 to-transparent px-4 pt-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:px-8 md:pb-4">
         <div className="pointer-events-auto mx-auto w-full max-w-5xl">
+          {error && (
+            <div
+              role="alert"
+              className="mb-3 rounded-xl border border-destructive/30 bg-destructive/10 p-4 backdrop-blur-md"
+            >
+              <p className="flex items-center gap-2 text-sm font-semibold text-destructive">
+                <TriangleAlert className="size-4 shrink-0" />
+                Something went wrong on our side
+              </p>
+              <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{error}</p>
+              {failedRequest && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() =>
+                    void send(failedRequest.text, failedRequest.mode, { keepUserMessage: true })
+                  }
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-destructive/40 px-3 py-1.5 text-xs font-medium text-destructive transition hover:bg-destructive/10 disabled:opacity-50"
+                >
+                  <RotateCcw className="size-3.5" /> Try again
+                </button>
+              )}
+            </div>
+          )}
           {hasConversation && (
             <div className="mb-2 flex flex-nowrap gap-2 overflow-x-auto scrollbar-hide overscroll-x-contain sm:flex-wrap sm:overflow-visible">
               {suggestions.map((suggestion) => (

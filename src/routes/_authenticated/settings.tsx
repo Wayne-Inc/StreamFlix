@@ -1,4 +1,4 @@
-﻿import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -21,12 +21,17 @@ import {
   Bell,
   BellOff,
   BellRing,
+  Heart,
+  TriangleAlert,
 } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
 import {
   signOut as firebaseSignOut,
   sendEmailVerification,
   sendPasswordResetEmail,
+  deleteUser,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
 } from "firebase/auth";
 
 // Validate avatar URL to prevent XSS
@@ -58,6 +63,8 @@ import { getDeviceId, recordCurrentDevice } from "@/lib/device-tracking";
 import { isKidsProfile } from "@/lib/kids-mode";
 import { useReduceMotion } from "@/lib/reduce-motion";
 import { formatDistanceToNow } from "date-fns";
+import { GENRE_OPTIONS, getFavoriteGenres, setFavoriteGenres } from "@/lib/favorite-genres";
+import { deleteUserData } from "@/lib/user-data";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Account Settings — StreamFlix" }] }),
@@ -109,6 +116,78 @@ function SettingsPage() {
   const [verifyEmailSent, setVerifyEmailSent] = useState(false);
   const isElectron = typeof window !== "undefined" && !!window.electronAPI;
 
+  const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
+  const [savingGenres, setSavingGenres] = useState(false);
+  const [genresLoaded, setGenresLoaded] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    getFavoriteGenres(user.uid)
+      .then((ids) => {
+        if (active) setSelectedGenres(ids);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setGenresLoaded(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [user?.uid]);
+
+  const toggleGenre = (id: number) => {
+    setSelectedGenres((prev) => (prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]));
+  };
+
+  const saveInterests = async () => {
+    if (!user) return;
+    setSavingGenres(true);
+    try {
+      await setFavoriteGenres(user.uid, selectedGenres);
+      toast.success("Interests updated");
+    } catch (e) {
+      toast.error(e instanceof Error && e.message ? e.message : "Failed to save interests.");
+    } finally {
+      setSavingGenres(false);
+    }
+  };
+
+  const deleteAccount = async () => {
+    if (!user) return;
+    const providerIds = (user.providerData ?? []).map((p) => p.providerId);
+    const hasPassword = providerIds.includes("password");
+    if (hasPassword && !deletePassword) {
+      toast.error("Enter your password to continue.");
+      return;
+    }
+    setDeletingAccount(true);
+    try {
+      await deleteUserData(user.uid);
+      if (hasPassword && user.email) {
+        const credential = EmailAuthProvider.credential(user.email, deletePassword);
+        await reauthenticateWithCredential(user, credential);
+      }
+      await deleteUser(user);
+      toast.success("Your account has been deleted.");
+      router.navigate({ to: "/auth", replace: true });
+    } catch (e) {
+      const code = (e as { code?: string })?.code;
+      if (code === "auth/wrong-password" || code === "auth/invalid-credential") {
+        toast.error("Incorrect password. Please try again.");
+      } else if (code === "auth/requires-recent-login") {
+        toast.error("Please sign in again, then retry deleting your account.");
+      } else {
+        toast.error(e instanceof Error && e.message ? e.message : "Failed to delete account.");
+      }
+    } finally {
+      setDeletingAccount(false);
+    }
+  };
+
   useEffect(() => {
     if (typeof Notification !== "undefined") {
       setNotifPermission(Notification.permission);
@@ -118,7 +197,10 @@ function SettingsPage() {
 
   useEffect(() => {
     if (!window.electronAPI) return;
-    window.electronAPI.getVersion().then(setAppVersion).catch(() => {});
+    window.electronAPI
+      .getVersion()
+      .then(setAppVersion)
+      .catch(() => {});
     const unsubscribe = window.electronAPI.onUpdaterStatus((status) => {
       setUpdateStatus(status);
       setUpdateBusy(false);
@@ -157,9 +239,7 @@ function SettingsPage() {
   };
 
   const providers = user?.providerData ?? [];
-  const canChangePassword =
-    !!user?.email &&
-    providers.some((p) => p.providerId === "password");
+  const canChangePassword = !!user?.email && providers.some((p) => p.providerId === "password");
 
   const sendResetEmail = async () => {
     if (!user?.email) return;
@@ -335,7 +415,9 @@ function SettingsPage() {
       if (d.device_id === currentDeviceId) return { prev: undefined };
       await qc.cancelQueries({ queryKey: deviceQueryKey });
       const prev = qc.getQueryData<Device[]>(deviceQueryKey);
-      qc.setQueryData<Device[]>(deviceQueryKey, (old) => (old ?? []).filter((dev) => dev.id !== d.id));
+      qc.setQueryData<Device[]>(deviceQueryKey, (old) =>
+        (old ?? []).filter((dev) => dev.id !== d.id),
+      );
       return { prev };
     },
     onError: (e: Error, _d, context) => {
@@ -805,17 +887,76 @@ function SettingsPage() {
           </div>
         </section>
 
+        {/* Interests (genres) */}
+        <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <Heart className="size-4" /> Interests
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Pick the genres you love. We'll use them to personalise what you see.
+          </p>
+          {!genresLoaded ? (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <Skeleton key={i} className="h-8 w-20 rounded-full" />
+              ))}
+            </div>
+          ) : (
+            <>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {GENRE_OPTIONS.map((g) => {
+                  const active = selectedGenres.includes(g.id);
+                  return (
+                    <button
+                      key={g.id}
+                      type="button"
+                      onClick={() => toggleGenre(g.id)}
+                      aria-pressed={active}
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition ${
+                        active
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border text-muted-foreground hover:border-primary hover:text-foreground"
+                      }`}
+                    >
+                      {active && <Check className="size-3.5" />} {g.name}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-4 flex items-center gap-3">
+                <button
+                  onClick={saveInterests}
+                  disabled={savingGenres}
+                  className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+                >
+                  {savingGenres ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Check className="size-4" />
+                  )}
+                  {savingGenres ? "Saving..." : "Save interests"}
+                </button>
+                <span className="text-xs text-muted-foreground">
+                  {selectedGenres.length} selected
+                </span>
+              </div>
+            </>
+          )}
+        </section>
+
         {/* Notifications */}
         <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className={`grid size-10 shrink-0 place-items-center rounded-md ${
-                notifPermission === "granted" && hasToken
-                  ? "bg-emerald-500/15 text-emerald-400"
-                  : notifPermission === "denied"
-                  ? "bg-destructive/15 text-destructive"
-                  : "bg-accent text-muted-foreground"
-              }`}>
+              <div
+                className={`grid size-10 shrink-0 place-items-center rounded-md ${
+                  notifPermission === "granted" && hasToken
+                    ? "bg-emerald-500/15 text-emerald-400"
+                    : notifPermission === "denied"
+                      ? "bg-destructive/15 text-destructive"
+                      : "bg-accent text-muted-foreground"
+                }`}
+              >
                 {notifPermission === "denied" ? (
                   <BellOff className="size-5" />
                 ) : notifPermission === "granted" && hasToken ? (
@@ -830,8 +971,8 @@ function SettingsPage() {
                   {notifPermission === "granted" && hasToken
                     ? "Enabled — you'll receive release reminders and updates"
                     : notifPermission === "denied"
-                    ? "Blocked — enable in your browser settings and reload"
-                    : "Not enabled yet — get notified about new releases"}
+                      ? "Blocked — enable in your browser settings and reload"
+                      : "Not enabled yet — get notified about new releases"}
                 </p>
               </div>
             </div>
@@ -886,7 +1027,11 @@ function SettingsPage() {
                 disabled={notifBusy}
                 className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
-                {notifBusy ? <Loader2 className="size-4 animate-spin" /> : <Bell className="size-4" />}
+                {notifBusy ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Bell className="size-4" />
+                )}
                 {notifBusy ? "Enabling..." : "Enable Notifications"}
               </button>
             )}
@@ -894,18 +1039,40 @@ function SettingsPage() {
         </section>
 
         {/* Danger */}
-        <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
-          <div className="flex items-center justify-between gap-3">
+        <section className="mt-6 rounded-lg border border-destructive/30 bg-destructive/5 p-4 sm:p-6">
+          <div className="flex items-center gap-2 text-sm font-semibold text-destructive">
+            <TriangleAlert className="size-4" /> Danger zone
+          </div>
+          <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-semibold">Sign out</p>
               <p className="mt-1 text-xs text-muted-foreground">End this session on this device.</p>
             </div>
             <button
               onClick={signOut}
-              className="inline-flex items-center gap-2 rounded-md bg-destructive px-3 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90"
+              className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent"
             >
               <LogOut className="size-4" /> Sign out
             </button>
+          </div>
+          <div className="mt-4 border-t border-destructive/20 pt-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-destructive">Delete account</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Permanently delete your account and all associated data. This cannot be undone.
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setDeletePassword("");
+                  setConfirmDeleteOpen(true);
+                }}
+                className="inline-flex items-center gap-2 rounded-md bg-destructive px-3 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90"
+              >
+                <Trash2 className="size-4" /> Delete account
+              </button>
+            </div>
           </div>
         </section>
 
@@ -922,8 +1089,52 @@ function SettingsPage() {
           onConfirm={saveUploadedAvatar}
         />
       )}
+      {confirmDeleteOpen && (
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-black/80 p-4">
+          <div className="relative w-full max-w-sm rounded-md bg-card p-6 text-center shadow-2xl">
+            <div className="mx-auto grid size-12 place-items-center rounded-full bg-destructive/15 text-destructive">
+              <TriangleAlert className="size-6" />
+            </div>
+            <h2 className="mt-4 text-xl font-semibold">Delete account?</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              This will permanently delete your account and all associated data. This action cannot
+              be undone.
+            </p>
+            {canChangePassword && (
+              <input
+                type="password"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                placeholder="Enter your password"
+                autoComplete="current-password"
+                className="mt-4 w-full rounded-md border border-border bg-background/60 px-3 py-2 text-sm outline-none focus:border-primary"
+              />
+            )}
+            <div className="mt-6 flex flex-col gap-2">
+              <button
+                onClick={deleteAccount}
+                disabled={deletingAccount || (canChangePassword && !deletePassword)}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition hover:bg-destructive/90 disabled:opacity-50"
+              >
+                {deletingAccount ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Trash2 className="size-4" />
+                )}
+                {deletingAccount ? "Deleting..." : "Delete my account"}
+              </button>
+              <button
+                onClick={() => setConfirmDeleteOpen(false)}
+                disabled={deletingAccount}
+                className="w-full rounded-md border border-border px-4 py-2 text-sm transition hover:bg-accent disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <Footer />
     </div>
   );
 }
-
