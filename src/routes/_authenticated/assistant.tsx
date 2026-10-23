@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { askStreamflixAI } from "@/lib/api/ai";
 import { AI_ERROR_MESSAGES, aiErrorMessage } from "@/lib/ai-errors";
 import { getWatchHistory } from "@/lib/continue-watching";
+import { getFavoriteGenres } from "@/lib/favorite-genres";
 import { auth } from "@/lib/firebase";
 import { isKidsProfile } from "@/lib/kids-mode";
 import type { Movie } from "@/lib/types";
@@ -56,6 +57,17 @@ function AssistantPage() {
       .map((item) => ({ title: item.title, genres: (item.genres ?? []).slice(0, 8) }));
   };
 
+  const interestsForRequest = async () => {
+    if (kidsMode) return [];
+    try {
+      const user = auth.currentUser;
+      if (!user) return [];
+      return await getFavoriteGenres(user.uid);
+    } catch {
+      return [];
+    }
+  };
+
   const send = async (
     text: string,
     mode: "chat" | "recommendations" = "chat",
@@ -74,6 +86,7 @@ function AssistantPage() {
     try {
       const idToken = await auth.currentUser?.getIdToken();
       if (!idToken) throw new Error(AI_ERROR_MESSAGES.auth);
+      const interests = await interestsForRequest();
       const result = await askStreamflixAI({
         data: {
           idToken,
@@ -81,6 +94,7 @@ function AssistantPage() {
           prompt: request || "Recommend a few titles for me.",
           includeHistory: true,
           watchHistory: historyForRequest(),
+          interests,
           kidsMode,
           conversation: previous
             .slice(-6)
@@ -202,7 +216,7 @@ function AssistantPage() {
 
       </main>
 
-      <div className="pointer-events-none shrink-0 bg-gradient-to-t from-background via-background/95 to-transparent px-4 pt-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:px-8 md:pb-4">
+      <div className="pointer-events-none shrink-0 bg-gradient-to-t from-background via-background/95 to-transparent px-4 pt-4 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:px-8 md:pb-4">
         <div className="pointer-events-auto mx-auto w-full max-w-5xl">
           {error && (
             <div

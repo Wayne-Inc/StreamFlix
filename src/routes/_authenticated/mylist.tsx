@@ -4,8 +4,8 @@ import { Bookmark } from "lucide-react";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { MovieCard } from "@/components/streamflix/MovieCard";
-import { Skeleton } from "@/components/ui/skeleton";
-import { getMyList, MY_LIST_EVENT, type MyListEntry } from "@/lib/my-list";
+import { Skeleton, MyListSkeleton } from "@/components/ui/skeleton";
+import { getMyList, MY_LIST_EVENT, wasRecentlyRemoved, type MyListEntry } from "@/lib/my-list";
 import { getMyListFromFirestore } from "@/lib/my-list-firestore";
 import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
 
@@ -27,24 +27,32 @@ function MyListPage() {
       try {
         const fs = await getMyListFromFirestore();
         for (const e of fs) {
+          if (wasRecentlyRemoved(e.id)) continue;
           const existing = merged.get(e.id);
           if (!existing || e.addedAt > existing.addedAt) merged.set(e.id, e);
         }
       } catch {}
       if (!cancelled) {
         setList(
-          Array.from(merged.values()).sort((a, b) => b.addedAt - a.addedAt),
+          Array.from(merged.values())
+            .filter((e) => !wasRecentlyRemoved(e.id))
+            .sort((a, b) => b.addedAt - a.addedAt),
         );
         setLoaded(true);
       }
     };
+    const updateOptimistically = () => {
+      setList(getMyList());
+      setLoaded(true);
+      void update();
+    };
     update();
-    window.addEventListener(MY_LIST_EVENT, update);
+    window.addEventListener(MY_LIST_EVENT, updateOptimistically);
     window.addEventListener("storage", update);
     window.addEventListener("focus", update);
     return () => {
       cancelled = true;
-      window.removeEventListener(MY_LIST_EVENT, update);
+      window.removeEventListener(MY_LIST_EVENT, updateOptimistically);
       window.removeEventListener("storage", update);
       window.removeEventListener("focus", update);
     };
@@ -62,11 +70,7 @@ function MyListPage() {
         </h1>
 
         {!loaded ? (
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <Skeleton key={i} className="w-full aspect-[2/3] rounded-xl" />
-            ))}
-          </div>
+          <MyListSkeleton count={12} />
         ) : items.length === 0 ? (
           <div className="mt-20 text-center">
             <Bookmark className="mx-auto size-12 text-muted-foreground/50 mb-3" />

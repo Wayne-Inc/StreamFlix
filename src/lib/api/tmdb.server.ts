@@ -293,3 +293,12 @@ export async function fetchWatchProviders(
   const data = await tmdbFetch(`/${type}/${tmdbId}/watch/providers`);
   return data.results || {};
 }
+
+export async function fetchPopularPeople(page = 1): Promise<{
+  results: { id: number; name: string; profile_path: string | null; known_for_department: string; popularity: number }[];
+  page: number;
+  total_pages: number;
+}> {
+  const data = await tmdbFetch("/person/popular", { page: String(page) });
+  return data;
+}

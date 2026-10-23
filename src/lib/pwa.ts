@@ -24,7 +24,7 @@ export async function registerSW() {
   // Register your main service worker (for caching/offline)
   const registerMainSW = () => {
     navigator.serviceWorker
-      .register("/sw-new.js", { updateViaCache: "none" })
+      .register("/sw.js", { updateViaCache: "none" })
       .catch((err) => {
         console.error("Failed to register main service worker:", err);
       });

@@ -1,15 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Bell, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Film, Tv } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Film, Tv } from "lucide-react";
 import { toast } from "sonner";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { LazyImage } from "@/components/streamflix/LazyImage";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton, CalendarSkeleton } from "@/components/ui/skeleton";
 import { loadUpcomingCalendar, loadAiringCalendar } from "@/lib/streamflix-data";
 import type { CalendarTitle } from "@/lib/api/tmdb";
-import { auth } from "@/lib/firebase";
-import { toggleReleaseNotification, getNotifiedIds } from "@/lib/release-notifications";
 import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
 import { startOfMonth, addMonths, format, isSameMonth } from "date-fns";
 
@@ -20,14 +18,7 @@ export const Route = createFileRoute("/_authenticated/calendar")({
   },
   head: () => ({ meta: [{ title: "New & Coming Soon — StreamFlix" }] }),
   pendingComponent: () => (
-    <div className="min-h-dvh bg-background">
-      <Navbar />
-      <div className="mx-auto max-w-6xl px-4 pt-24 pb-16 sm:px-8">
-        <Skeleton className="h-10 w-72 rounded" />
-        <Skeleton className="mt-2 h-4 w-52 rounded" />
-        <Skeleton className="mt-8 h-96 rounded-lg" />
-      </div>
-    </div>
+    <CalendarSkeleton />
   ),
   component: CalendarPage,
 });
@@ -37,7 +28,6 @@ const DAY_HEADERS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 function CalendarPage() {
   const { items } = Route.useLoaderData();
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
-  const [notified, setNotified] = useState<Set<string>>(new Set());
 
   const kidsMode = useMemo(() => isKidsProfile(), []);
   const safeItems = useMemo(() => (kidsMode ? filterKidsContent(items) : items), [kidsMode, items]);
@@ -63,14 +53,6 @@ function CalendarPage() {
       .sort((a, b) => (a.releaseDate ?? "").localeCompare(b.releaseDate ?? ""));
   }, [safeItems, month]);
 
-  useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) return;
-    getNotifiedIds(user.uid)
-      .then(setNotified)
-      .catch(() => {});
-  }, []);
-
   const todayStr = format(new Date(), "yyyy-MM-dd");
 
   const cells = useMemo(() => {
@@ -83,62 +65,19 @@ function CalendarPage() {
     return out;
   }, [month]);
 
-  const toggle = async (item: CalendarTitle) => {
-    const user = auth.currentUser;
-    if (!user) return toast.error("Sign in to get notified about releases");
-    if (item.releaseDate && item.releaseDate <= todayStr) {
-      return toast.info("This title is already released");
-    }
-    const wasNotified = notified.has(item.id);
-    setNotified((prev) => {
-      const next = new Set(prev);
-      if (wasNotified) next.delete(item.id);
-      else next.add(item.id);
-      return next;
-    });
-    try {
-      const added = await toggleReleaseNotification(user.uid, {
-        id: item.id,
-        title: item.title,
-        poster: item.poster,
-        releaseDate: item.releaseDate,
-      });
-      if (added) {
-        const push = await import("@/lib/push").then((m) => m.ensurePushSubscription());
-        toast.success(
-          push === "granted"
-            ? "Reminder set — we'll push a notification on release day"
-            : "We'll let you know when it releases",
-        );
-      } else {
-        toast.success("Notification removed");
-      }
-    } catch (err: unknown) {
-      setNotified((prev) => {
-        const next = new Set(prev);
-        if (wasNotified) next.add(item.id);
-        else next.delete(item.id);
-        return next;
-      });
-      toast.error(
-        err instanceof Error ? err.message : "Couldn't update notification. Please try again.",
-      );
-    }
-  };
-
   return (
     <div className="min-h-dvh bg-background">
       <Navbar />
-      <main className="mx-auto max-w-6xl px-4 pt-24 pb-16 sm:px-8">
+      <main className="mx-auto max-w-6xl px-4 pt-24 pb-16 md:pb-20 sm:px-8">
         <div className="flex items-center gap-2 text-primary">
           <CalendarIcon className="size-6" />
           <span className="text-sm font-semibold uppercase tracking-widest">Release Calendar</span>
         </div>
-        <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">
-          New &amp; Coming Soon
+<h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">
+          New & Coming Soon
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Tap the bell to get a reminder when a title arrives.
+          Browse upcoming movie and TV show releases.
         </p>
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
@@ -234,17 +173,7 @@ function CalendarPage() {
                           </span>
                         </Link>
                         {item.releaseDate && item.releaseDate <= todayStr ? null : (
-                          <button
-                            onClick={() => toggle(item)}
-                            aria-label={`Notify me: ${item.title}`}
-                            className={`absolute -top-1 -right-1 grid size-4 place-items-center rounded-full border ${
-                              notified.has(item.id)
-                                ? "border-primary bg-primary text-primary-foreground"
-                                : "border-border bg-background text-muted-foreground opacity-0 group-hover:opacity-100"
-                            }`}
-                          >
-                            <Bell className="size-2.5" />
-                          </button>
+                          <span />
                         )}
                       </div>
                     ))}
@@ -304,17 +233,7 @@ function CalendarPage() {
                     </div>
                   </Link>
                   {item.releaseDate && item.releaseDate <= todayStr ? null : (
-                    <button
-                      onClick={() => toggle(item)}
-                      aria-label={`Notify me: ${item.title}`}
-                      className={`grid size-8 shrink-0 place-items-center rounded-full border ${
-                        notified.has(item.id)
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-background text-muted-foreground"
-                      }`}
-                    >
-                      <Bell className="size-3.5" />
-                    </button>
+                    <span />
                   )}
                 </div>
               );

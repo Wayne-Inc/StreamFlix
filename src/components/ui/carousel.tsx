@@ -46,6 +46,7 @@ const Carousel = React.forwardRef<
     {
       ...opts,
       axis: orientation === "horizontal" ? "x" : "y",
+      keyboard: true,
     },
     plugins,
   );
@@ -77,9 +78,15 @@ const Carousel = React.forwardRef<
       } else if (event.key === "ArrowRight") {
         event.preventDefault();
         scrollNext();
+      } else if (event.key === "Home") {
+        event.preventDefault();
+        api?.scrollTo(0);
+      } else if (event.key === "End") {
+        event.preventDefault();
+        api?.scrollTo(api.scrollSnapList().length - 1);
       }
     },
-    [scrollPrev, scrollNext],
+    [scrollPrev, scrollNext, api],
   );
 
   React.useEffect(() => {
@@ -119,7 +126,8 @@ const Carousel = React.forwardRef<
     >
       <div
         ref={ref}
-        onKeyDownCapture={handleKeyDown}
+        onKeyDown={handleKeyDown}
+        tabIndex={0}
         className={cn("relative", className)}
         role="region"
         aria-roledescription="carousel"

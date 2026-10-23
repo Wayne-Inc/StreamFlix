@@ -8,6 +8,10 @@ export function RowSkeleton() {
         {Array.from({ length: 6 }).map((_, i) => (
           <Skeleton key={i} className="w-[175px] sm:w-[220px] aspect-[2/3] rounded-xl shrink-0" />
         ))}
+        {/* Landscape/trending skeletons */}
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={`landscape-${i}`} className="w-[280px] sm:w-[380px] aspect-video rounded-xl shrink-0" />
+        ))}
       </div>
     </section>
   );

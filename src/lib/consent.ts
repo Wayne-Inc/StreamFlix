@@ -52,3 +52,16 @@ function gtagPush(...args: unknown[]) {
 export function updateConsentMode(granted: boolean) {
   gtagPush("consent", "update", consentModeSettings(granted));
 }
+
+let analyticsLoaded = false;
+
+export function loadAnalytics() {
+  if (typeof document === "undefined" || analyticsLoaded || !hasConsent()) return;
+  analyticsLoaded = true;
+  if (document.querySelector("script[data-streamflix-gtag]")) return;
+  const script = document.createElement("script");
+  script.async = true;
+  script.dataset.streamflixGtag = "true";
+  script.src = "https://www.googletagmanager.com/gtag/js?id=G-V9783E9S0W";
+  document.head.appendChild(script);
+}

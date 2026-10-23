@@ -7,8 +7,8 @@ import { HeroBanner } from "@/components/streamflix/HeroBanner";
 import { Row } from "@/components/streamflix/Row";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import { Footer } from "@/components/streamflix/Footer";
-import { Skeleton } from "@/components/ui/skeleton";
 import { RowSkeleton } from "@/components/streamflix/RowSkeleton";
+import { HeroBannerSkeleton, ContinueWatchingSkeleton } from "@/components/ui/skeleton";
 import { loadBrowseData, searchByGenre, type BrowseKind } from "@/lib/streamflix-data";
 import { fetchPopular } from "@/lib/api/tmdb";
 import type { Movie } from "@/lib/types";
@@ -20,7 +20,7 @@ import {
   toMovie as continueToMovie,
   type ContinueItem,
 } from "@/lib/continue-watching";
-import { getMyList, MY_LIST_EVENT, type MyListEntry } from "@/lib/my-list";
+import { getMyList, MY_LIST_EVENT, wasRecentlyRemoved, type MyListEntry } from "@/lib/my-list";
 import { getMyListFromFirestore } from "@/lib/my-list-firestore";
 import {
   getContinueWatchingFromFirestore,
@@ -43,24 +43,9 @@ function BrowseSkeleton() {
   return (
     <div className="min-h-dvh bg-background">
       <Navbar />
-      <div className="relative min-h-[40vh] h-[50vh] w-full overflow-hidden bg-surface/60 sm:min-h-[400px] sm:h-[65vh] lg:min-h-[550px] lg:h-[85vh]">
-        <Skeleton className="absolute inset-0 h-full w-full rounded-none opacity-60" />
-        <div className="relative flex h-full items-end justify-center px-4 pb-8 pt-10 text-center sm:px-8 md:items-end md:justify-start">
-          <div className="w-full max-w-none space-y-3 text-center md:max-w-3xl md:text-left">
-            <div className="hidden sm:block">
-              <Skeleton className="h-5 w-32 rounded mx-auto sm:mx-0" />
-            </div>
-            <Skeleton className="h-8 w-full max-w-lg rounded sm:h-14" />
-            <Skeleton className="h-4 w-72 rounded mx-auto sm:mx-0" />
-            <div className="flex gap-2 pt-1 justify-center md:justify-start">
-              <Skeleton className="h-9 w-20 rounded-md sm:h-12 sm:w-28" />
-              <Skeleton className="h-9 w-20 rounded-md sm:h-12 sm:w-32" />
-            </div>
-          </div>
-        </div>
-      </div>
+      <HeroBannerSkeleton />
       <div className="relative z-10 space-y-6 md:mt-12 md:space-y-12">
-        {isHome && <RowSkeleton />}
+        {isHome && <ContinueWatchingSkeleton count={5} />}
         {[1, 2, 3, 4, 5].map((i) => (
           <RowSkeleton key={i} />
         ))}
@@ -175,6 +160,7 @@ function BrowsePage() {
         try {
           const fs = await getMyListFromFirestore();
           for (const e of fs) {
+            if (wasRecentlyRemoved(e.id)) continue;
             const existing = merged.get(e.id);
             if (!existing || e.addedAt > existing.addedAt) merged.set(e.id, e);
           }
@@ -182,6 +168,7 @@ function BrowsePage() {
         if (!cancelled) {
           setListRow(
             Array.from(merged.values())
+              .filter((e) => !wasRecentlyRemoved(e.id))
               .sort((a, b) => b.addedAt - a.addedAt)
               .map((e) => e.movie),
           );
@@ -190,11 +177,15 @@ function BrowsePage() {
         if (!cancelled) setListRow(getMyList().map((e) => e.movie));
       }
     };
+    const updateOptimistically = () => {
+      setListRow(getMyList().map((e) => e.movie));
+      void update();
+    };
     update();
-    window.addEventListener(MY_LIST_EVENT, update);
+    window.addEventListener(MY_LIST_EVENT, updateOptimistically);
     return () => {
       cancelled = true;
-      window.removeEventListener(MY_LIST_EVENT, update);
+      window.removeEventListener(MY_LIST_EVENT, updateOptimistically);
     };
   }, [kind]);
 
@@ -464,7 +455,7 @@ function BrowsePage() {
     <div className="min-h-dvh bg-background">
       <Navbar />
       <HeroBanner slides={filteredHeroSlides} />
-      <div className="relative z-10 mt-0 md:mt-12 space-y-6 md:space-y-12">
+      <div className="relative z-10 mt-0 md:mt-12 space-y-6 md:space-y-12 pb-20 md:pb-0">
         {kind === "home" && continueLoading && <RowSkeleton />}
         {continueRow && kind === "home" && (
           <section className="space-y-4 py-4">

@@ -22,9 +22,40 @@ export type Profile = {
   avatarUrl?: string;
   pin?: string;
   hasPin?: boolean;
+  // Parental controls
+  contentRatingLimit?: "G" | "PG" | "PG-13" | "R" | "NC-17" | "TV-Y" | "TV-Y7" | "TV-G" | "TV-PG" | "TV-14" | "TV-MA";
+  pinHash?: string;
   createdAt?: Date;
   updatedAt?: Date;
 };
+
+export const CONTENT_RATINGS = [
+  { value: "G", label: "G - General Audiences", order: 1 },
+  { value: "PG", label: "PG - Parental Guidance", order: 2 },
+  { value: "PG-13", label: "PG-13 - Parents Strongly Cautioned", order: 3 },
+  { value: "R", label: "R - Restricted", order: 4 },
+  { value: "NC-17", label: "NC-17 - Adults Only", order: 5 },
+  { value: "TV-Y", label: "TV-Y - All Children", order: 1 },
+  { value: "TV-Y7", label: "TV-Y7 - Older Children", order: 2 },
+  { value: "TV-G", label: "TV-G - General Audience", order: 2 },
+  { value: "TV-PG", label: "TV-PG - Parental Guidance", order: 3 },
+  { value: "TV-14", label: "TV-14 - Parents Strongly Cautioned", order: 4 },
+  { value: "TV-MA", label: "TV-MA - Mature Audience", order: 5 },
+] as const;
+
+export type ContentRating = typeof CONTENT_RATINGS[number]["value"];
+
+export function getRatingOrder(rating: string): number {
+  const found = CONTENT_RATINGS.find((r) => r.value === rating);
+  return found?.order ?? 99;
+}
+
+export function isRatingAllowed(profileRating: ContentRating | undefined, contentRating: string): boolean {
+  if (!profileRating) return true; // No limit = allow all
+  const profileOrder = getRatingOrder(profileRating);
+  const contentOrder = getRatingOrder(contentRating);
+  return contentOrder <= profileOrder;
+}
 
 const profileColors = [
   "from-rose-500 to-red-700",
@@ -40,13 +71,17 @@ const profileColors = [
 export async function getUserProfiles(userId: string): Promise<Profile[]> {
   const q = query(collection(db, "users", userId, "profiles"), orderBy("createdAt", "asc"));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({
-    id: d.id,
-    ...d.data(),
-    hasPin: !!d.data().pinHash,
-    createdAt: d.data().createdAt?.toDate(),
-    updatedAt: d.data().updatedAt?.toDate(),
-  })) as Profile[];
+  return snap.docs.map((d) => {
+    const data = d.data();
+    return {
+      id: d.id,
+      ...data,
+      hasPin: !!data.pinHash,
+      contentRatingLimit: data.contentRatingLimit,
+      createdAt: data.createdAt?.toDate(),
+      updatedAt: data.updatedAt?.toDate(),
+    } as Profile;
+  });
 }
 
 function removeUndefinedFields<T extends Record<string, unknown>>(data: T): Partial<T> {
@@ -57,7 +92,7 @@ function removeUndefinedFields<T extends Record<string, unknown>>(data: T): Part
 
 export async function createProfile(
   userId: string,
-  data: Omit<Profile, "id" | "userId" | "color" | "createdAt" | "updatedAt">,
+  data: Omit<Profile, "id" | "userId" | "color" | "createdAt" | "updatedAt" | "hasPin" | "pinHash">,
 ): Promise<Profile> {
   const profiles = await getUserProfiles(userId);
   const color = profileColors[profiles.length % profileColors.length];
@@ -76,6 +111,7 @@ export async function createProfile(
     userId,
     ...data,
     color,
+    hasPin: false,
     createdAt: new Date(),
     updatedAt: new Date(),
   };

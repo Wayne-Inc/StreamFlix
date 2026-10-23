@@ -5,7 +5,7 @@ import { Trash2, Clock, Play, Film, X, ChevronDown, ChevronRight, Tv } from "luc
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { LazyImage } from "@/components/streamflix/LazyImage";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton, HistoryItemSkeleton } from "@/components/ui/skeleton";
 import { getWatchHistory, type WatchHistoryItem } from "@/lib/continue-watching";
 import {
   getWatchHistoryFromFirestore,
@@ -158,19 +158,15 @@ function HistoryPage() {
           {history.length > 0 && (
             <button
               onClick={clearAll}
-              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive transition-colors"
+              className="flex items-center justify-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2 rounded-lg bg-background/80 text-sm text-muted-foreground hover:bg-destructive/20 hover:text-destructive transition-colors"
             >
-              <Trash2 className="size-4" /> Clear All
+              <Trash2 className="size-5" /> <span className="hidden sm:inline">Clear All</span>
             </button>
           )}
         </div>
 
         {!loaded ? (
-          <div className="space-y-4">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <Skeleton key={i} className="h-24 w-full rounded-lg" />
-            ))}
-          </div>
+          <HistoryItemSkeleton />
         ) : history.length === 0 ? (
           <div className="mt-20 text-center">
             <Film className="mx-auto size-12 text-muted-foreground/50 mb-3" />
@@ -225,10 +221,10 @@ function HistoryPage() {
                     e.stopPropagation();
                     removeItem(item.id);
                   }}
-                  className="shrink-0 text-muted-foreground hover:text-destructive p-1"
+                  className="shrink-0 flex items-center justify-center w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-background/80 text-muted-foreground hover:bg-destructive/20 hover:text-destructive transition-colors"
                   aria-label="Remove"
                 >
-                  <X className="size-4" />
+                  <X className="size-5 sm:size-4" />
                 </button>
               </Link>
             ))}
@@ -272,15 +268,15 @@ function HistoryPage() {
                           e.stopPropagation();
                           removeItem(group.baseId);
                         }}
-                        className="text-muted-foreground hover:text-destructive p-1"
+                        className="flex items-center justify-center w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-background/80 text-muted-foreground hover:bg-destructive/20 hover:text-destructive transition-colors"
                         aria-label="Remove show"
                       >
-                        <X className="size-4" />
+                        <X className="size-5 sm:size-4" />
                       </button>
                       {expanded ? (
-                        <ChevronDown className="size-4 text-muted-foreground" />
+                        <ChevronDown className="size-5 sm:size-4 text-muted-foreground" />
                       ) : (
-                        <ChevronRight className="size-4 text-muted-foreground" />
+                        <ChevronRight className="size-5 sm:size-4 text-muted-foreground" />
                       )}
                     </div>
                   </div>
@@ -320,10 +316,10 @@ function HistoryPage() {
                               e.stopPropagation();
                               removeEpisode(ep.id);
                             }}
-                            className="shrink-0 text-muted-foreground/40 hover:text-destructive p-1 opacity-0 group-hover/ep:opacity-100 transition-opacity"
+                            className="shrink-0 flex items-center justify-center w-7 h-7 sm:w-6 sm:h-6 rounded-lg bg-background/80 text-muted-foreground/60 hover:bg-destructive/20 hover:text-destructive transition-colors"
                             aria-label="Remove episode"
                           >
-                            <X className="size-3.5" />
+                            <X className="size-4 sm:size-3.5" />
                           </button>
                         </Link>
                       ))}

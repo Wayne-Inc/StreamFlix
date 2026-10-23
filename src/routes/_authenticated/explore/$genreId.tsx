@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Sparkles, ChevronDown, ChevronUp } from "luc
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { MovieCard } from "@/components/streamflix/MovieCard";
-import { Skeleton } from "@/components/ui/skeleton";
+import { HeroBannerSkeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getGenres, searchByGenre } from "@/lib/streamflix-data";
 import type { Movie } from "@/lib/types";
@@ -31,15 +31,8 @@ export const Route = createFileRoute("/_authenticated/explore/$genreId")({
   pendingComponent: () => (
     <div className="min-h-dvh bg-background">
       <Navbar />
-      <section className="relative flex h-[42vh] items-end overflow-hidden sm:h-[52vh]">
-        <Skeleton className="absolute inset-0 h-full w-full rounded-none opacity-60" />
-        <div className="relative z-10 w-full px-4 pb-8 sm:px-8 md:px-16">
-          <Skeleton className="h-4 w-24 rounded" />
-          <Skeleton className="mt-2 h-10 w-72 rounded sm:h-16" />
-          <Skeleton className="mt-3 h-4 w-56 rounded" />
-        </div>
-      </section>
-      <main className="mx-auto max-w-[1800px] px-4 pb-16 sm:px-8">
+      <HeroBannerSkeleton />
+      <main className="mx-auto max-w-[1800px] px-4 pb-16 md:pb-20 sm:px-8">
         <div className="mt-8 flex flex-wrap gap-2">
           {Array.from({ length: 10 }).map((_, i) => (
             <Skeleton key={i} className="h-9 w-24 rounded-full" />
@@ -98,7 +91,7 @@ function ExploreGenrePage() {
         </div>
       </section>
 
-      <main className="mx-auto max-w-[1800px] px-4 pb-16 sm:px-8">
+      <main className="mx-auto max-w-[1800px] px-4 pb-16 md:pb-20 sm:px-8">
         {/* Mood chips */}
         <div className="mt-8 flex flex-wrap gap-2">
           {visibleGenres.map((g) => {

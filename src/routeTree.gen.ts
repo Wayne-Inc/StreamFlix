@@ -27,12 +27,12 @@ import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as ApiClientIpRouteImport } from './routes/api/client-ip'
 import { Route as ApiProxyRouteImport } from './routes/api/proxy'
-import { Route as ApiReleaseNotificationsCronRouteImport } from './routes/api/release-notifications-cron'
 import { Route as ApiSendNotificationRouteImport } from './routes/api/send-notification'
 import { Route as ApiVerifyRecaptchaRouteImport } from './routes/api/verify-recaptcha'
 import { Route as AuthActionRouteImport } from './routes/auth/action'
 import { Route as AuthenticatedExploreIndexRouteImport } from './routes/_authenticated/explore/index'
 import { Route as AuthenticatedExploreGenreIdRouteImport } from './routes/_authenticated/explore/$genreId'
+import { Route as AuthenticatedMovieRouteImport } from './routes/_authenticated/movie.'
 import { Route as AuthenticatedMovieIdRouteImport } from './routes/_authenticated/movie.$id'
 import { Route as AuthenticatedPersonIdRouteImport } from './routes/_authenticated/person.$id'
 import { Route as AuthenticatedWatchIdRouteImport } from './routes/_authenticated/watch.$id'
@@ -127,12 +127,6 @@ const ApiProxyRoute = ApiProxyRouteImport.update({
   path: '/api/proxy',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiReleaseNotificationsCronRoute =
-  ApiReleaseNotificationsCronRouteImport.update({
-    id: '/api/release-notifications-cron',
-    path: '/api/release-notifications-cron',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiSendNotificationRoute = ApiSendNotificationRouteImport.update({
   id: '/api/send-notification',
   path: '/api/send-notification',
@@ -160,6 +154,11 @@ const AuthenticatedExploreGenreIdRoute =
     path: '/$genreId',
     getParentRoute: () => AuthenticatedExploreRoute,
   } as any)
+const AuthenticatedMovieRoute = AuthenticatedMovieRouteImport.update({
+  id: '/movie/',
+  path: '/movie/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedMovieIdRoute = AuthenticatedMovieIdRouteImport.update({
   id: '/movie/$id',
   path: '/movie/$id',
@@ -194,10 +193,10 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/client-ip': typeof ApiClientIpRoute
   '/api/proxy': typeof ApiProxyRoute
-  '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
   '/api/send-notification': typeof ApiSendNotificationRoute
   '/api/verify-recaptcha': typeof ApiVerifyRecaptchaRoute
   '/auth/action': typeof AuthActionRoute
+  '/movie/': typeof AuthenticatedMovieRoute
   '/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
   '/movie/$id': typeof AuthenticatedMovieIdRoute
   '/person/$id': typeof AuthenticatedPersonIdRoute
@@ -221,10 +220,10 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/client-ip': typeof ApiClientIpRoute
   '/api/proxy': typeof ApiProxyRoute
-  '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
   '/api/send-notification': typeof ApiSendNotificationRoute
   '/api/verify-recaptcha': typeof ApiVerifyRecaptchaRoute
   '/auth/action': typeof AuthActionRoute
+  '/movie': typeof AuthenticatedMovieRoute
   '/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
   '/movie/$id': typeof AuthenticatedMovieIdRoute
   '/person/$id': typeof AuthenticatedPersonIdRoute
@@ -251,10 +250,10 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/api/client-ip': typeof ApiClientIpRoute
   '/api/proxy': typeof ApiProxyRoute
-  '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
   '/api/send-notification': typeof ApiSendNotificationRoute
   '/api/verify-recaptcha': typeof ApiVerifyRecaptchaRoute
   '/auth/action': typeof AuthActionRoute
+  '/_authenticated/movie/': typeof AuthenticatedMovieRoute
   '/_authenticated/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
   '/_authenticated/movie/$id': typeof AuthenticatedMovieIdRoute
   '/_authenticated/person/$id': typeof AuthenticatedPersonIdRoute
@@ -281,10 +280,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/api/client-ip'
     | '/api/proxy'
-    | '/api/release-notifications-cron'
     | '/api/send-notification'
     | '/api/verify-recaptcha'
     | '/auth/action'
+    | '/movie/'
     | '/explore/$genreId'
     | '/movie/$id'
     | '/person/$id'
@@ -308,10 +307,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/api/client-ip'
     | '/api/proxy'
-    | '/api/release-notifications-cron'
     | '/api/send-notification'
     | '/api/verify-recaptcha'
     | '/auth/action'
+    | '/movie'
     | '/explore/$genreId'
     | '/movie/$id'
     | '/person/$id'
@@ -337,10 +336,10 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/api/client-ip'
     | '/api/proxy'
-    | '/api/release-notifications-cron'
     | '/api/send-notification'
     | '/api/verify-recaptcha'
     | '/auth/action'
+    | '/_authenticated/movie/'
     | '/_authenticated/explore/$genreId'
     | '/_authenticated/movie/$id'
     | '/_authenticated/person/$id'
@@ -357,7 +356,6 @@ export interface RootRouteChildren {
   TosRoute: typeof TosRoute
   ApiClientIpRoute: typeof ApiClientIpRoute
   ApiProxyRoute: typeof ApiProxyRoute
-  ApiReleaseNotificationsCronRoute: typeof ApiReleaseNotificationsCronRoute
   ApiSendNotificationRoute: typeof ApiSendNotificationRoute
   ApiVerifyRecaptchaRoute: typeof ApiVerifyRecaptchaRoute
 }
@@ -490,13 +488,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiProxyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/release-notifications-cron': {
-      id: '/api/release-notifications-cron'
-      path: '/api/release-notifications-cron'
-      fullPath: '/api/release-notifications-cron'
-      preLoaderRoute: typeof ApiReleaseNotificationsCronRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/send-notification': {
       id: '/api/send-notification'
       path: '/api/send-notification'
@@ -531,6 +522,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/explore/$genreId'
       preLoaderRoute: typeof AuthenticatedExploreGenreIdRouteImport
       parentRoute: typeof AuthenticatedExploreRoute
+    }
+    '/_authenticated/movie/': {
+      id: '/_authenticated/movie/'
+      path: '/movie'
+      fullPath: '/movie/'
+      preLoaderRoute: typeof AuthenticatedMovieRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/movie/$id': {
       id: '/_authenticated/movie/$id'
@@ -580,6 +578,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfilesRoute: typeof AuthenticatedProfilesRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedMovieRoute: typeof AuthenticatedMovieRoute
   AuthenticatedMovieIdRoute: typeof AuthenticatedMovieIdRoute
   AuthenticatedPersonIdRoute: typeof AuthenticatedPersonIdRoute
   AuthenticatedWatchIdRoute: typeof AuthenticatedWatchIdRoute
@@ -596,6 +595,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfilesRoute: AuthenticatedProfilesRoute,
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedMovieRoute: AuthenticatedMovieRoute,
   AuthenticatedMovieIdRoute: AuthenticatedMovieIdRoute,
   AuthenticatedPersonIdRoute: AuthenticatedPersonIdRoute,
   AuthenticatedWatchIdRoute: AuthenticatedWatchIdRoute,
@@ -623,7 +623,6 @@ const rootRouteChildren: RootRouteChildren = {
   TosRoute: TosRoute,
   ApiClientIpRoute: ApiClientIpRoute,
   ApiProxyRoute: ApiProxyRoute,
-  ApiReleaseNotificationsCronRoute: ApiReleaseNotificationsCronRoute,
   ApiSendNotificationRoute: ApiSendNotificationRoute,
   ApiVerifyRecaptchaRoute: ApiVerifyRecaptchaRoute,
 }

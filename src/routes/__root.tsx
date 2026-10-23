@@ -16,9 +16,11 @@ import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import appCss from "../styles.css?url";
 import { registerSW } from "../lib/pwa";
 import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { CookieConsent } from "@/components/streamflix/CookieConsent";
 
 import { GlobalContextMenu } from "@/components/streamflix/GlobalContextMenu";
+import { ExternalLinkWarningProvider, triggerExternalLinkWarning } from "@/components/streamflix/ExternalLinkWarning";
 import { ScreenSaver } from "@/components/streamflix/ScreenSaver";
 import { auth, db } from "@/lib/firebase";
 import { metaImageUrl } from "@/lib/seo";
@@ -51,7 +53,6 @@ function NotFoundComponent() {
 
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
-  const router = useRouter();
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -65,8 +66,7 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
-              router.invalidate();
-              reset();
+              window.location.reload();
             }}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
@@ -104,6 +104,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:title", content: "StreamFlix" },
       { name: "twitter:description", content: "Unlimited movies, TV shows, and more" },
       { name: "twitter:image", content: metaImageUrl() },
+      { name: "google-adsense-account", content: "ca-pub-5529326688604668" },
     ],
     links: [
       {
@@ -116,7 +117,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://identitytoolkit.googleapis.com" },
       { rel: "preconnect", href: "https://securetoken.googleapis.com" },
       { rel: "preconnect", href: "https://image.tmdb.org" },
-      { rel: "preconnect", href: "https://www.googletagmanager.com" },
       { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
     ],
   }),
@@ -131,11 +131,6 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
-        <script
-          async
-          data-cfasync="false"
-          src="https://www.googletagmanager.com/gtag/js?id=G-V9783E9S0W"
-        />
       </head>
       <body>
         <script
@@ -166,6 +161,11 @@ function RootShell({ children }: { children: ReactNode }) {
                 ad_storage: 'granted',
                 analytics_storage: 'granted'
               });
+              var s = document.createElement('script');
+              s.async = true;
+              s.dataset.streamflixGtag = 'true';
+              s.src = 'https://www.googletagmanager.com/gtag/js?id=G-V9783E9S0W';
+              document.head.appendChild(s);
             }
           })();
           gtag('js', new Date());
@@ -209,8 +209,24 @@ function RootComponent() {
       if (isExternalHttp && href.startsWith(origin)) return;
       if (isMailto) return; // Let the browser/app handle mailto natively
       if (!isExternalHttp) return;
+      
+      // Check if it's an auth-related link (internal routes)
+      const isAuthLink = href.includes("/auth") || href.includes("/login") || href.includes("/signup");
+      if (isAuthLink) return;
+      
+      // Prevent all external redirects from watch page
+      const isWatchPage = window.location.pathname.startsWith("/watch/");
+      if (isWatchPage) {
+        e.preventDefault();
+        toast.warning("External links are blocked on the watch page");
+        return;
+      }
+      
       e.preventDefault();
-      window.location.href = href;
+      const shouldProceed = await triggerExternalLinkWarning(href);
+      if (shouldProceed) {
+        window.location.href = href;
+      }
     };
     document.addEventListener("click", handleExternalLink, true);
 
@@ -285,16 +301,18 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <ReduceMotionProvider>
-        <GlobalContextMenu>
-          <div className="wco-titlebar-padding">
-            <Toaster />
-            <Outlet />
-            <CookieConsent />
-            <ScreenSaver />
-            <Analytics />
-            <SpeedInsights />
-          </div>
-        </GlobalContextMenu>
+        <ExternalLinkWarningProvider>
+          <GlobalContextMenu>
+            <div className="wco-titlebar-padding">
+              <Toaster />
+              <Outlet />
+              <CookieConsent />
+              <ScreenSaver />
+              <Analytics />
+              <SpeedInsights />
+            </div>
+          </GlobalContextMenu>
+        </ExternalLinkWarningProvider>
       </ReduceMotionProvider>
     </QueryClientProvider>
   );

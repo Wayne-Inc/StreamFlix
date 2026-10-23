@@ -10,6 +10,27 @@ export type MyListEntry = {
 
 export const MY_LIST_EVENT = "sf:my-list-updated";
 
+const REMOVAL_TOMBSTONE_MS = 15_000;
+const recentlyRemoved = new Map<string, number>();
+
+function markRemoved(id: string) {
+  recentlyRemoved.set(id, Date.now());
+}
+
+function markAdded(id: string) {
+  recentlyRemoved.delete(id);
+}
+
+export function wasRecentlyRemoved(id: string): boolean {
+  const removedAt = recentlyRemoved.get(id);
+  if (!removedAt) return false;
+  if (Date.now() - removedAt > REMOVAL_TOMBSTONE_MS) {
+    recentlyRemoved.delete(id);
+    return false;
+  }
+  return true;
+}
+
 function getKey(): string {
   const profileId = getSelectedProfileId();
   return profileId ? `streamflix:my_list_${profileId}` : "streamflix:my_list";
@@ -39,6 +60,8 @@ export function toggleMyList(movie: Movie): boolean {
     ? current.filter((e) => e.id !== movie.id)
     : [{ id: movie.id, addedAt: Date.now(), movie }, ...current];
   window.localStorage.setItem(key, JSON.stringify(list));
+  if (exists) markRemoved(movie.id);
+  else markAdded(movie.id);
   window.dispatchEvent(new Event(MY_LIST_EVENT));
   setMyListInFirestore(movie, !exists).catch(() => {});
   return !exists;
@@ -48,6 +71,7 @@ export function removeFromMyList(id: string) {
   const key = getKey();
   const list = getMyList().filter((e) => e.id !== id);
   window.localStorage.setItem(key, JSON.stringify(list));
+  markRemoved(id);
   window.dispatchEvent(new Event(MY_LIST_EVENT));
   removeMyListFromFirestore(id).catch(() => {});
 }

@@ -14,13 +14,16 @@ import {
   Globe,
   ChevronLeft,
   Github,
+  AlertCircle,
+  ArrowRight,
 } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
 import { ContactEmail } from "@/components/streamflix/ContactEmail";
 import { DownloadAppButton } from "@/components/streamflix/DownloadAppButton";
 import { tmdbFetch, toMovie } from "@/lib/api/tmdb.server";
 import type { Movie } from "@/lib/types";
-import heroImg from "@/assets/landing.png";
+import heroImg from "@/assets/landing.jpg";
+import heroImgSm from "@/assets/landing-sm.jpg";
 
 export const Route = createFileRoute("/")({
   beforeLoad: async () => {
@@ -97,6 +100,7 @@ function Landing() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [email, setEmail] = useState("");
 
   const checkScroll = () => {
     const el = scrollContainerRef.current;
@@ -111,28 +115,44 @@ function Landing() {
     el.scrollBy({ left: dir * 300, behavior: "smooth" });
   };
 
+  const handleGetStarted = () => {
+    // Navigate to auth page with email pre-filled
+    window.location.href = `/auth?email=${encodeURIComponent(email)}`;
+  };
+
   return (
     <main className="min-h-dvh bg-background text-foreground">
       {/* Hero */}
       <section className="relative min-h-[50vh] sm:min-h-[88vh] overflow-hidden">
-        <img src={heroImg} alt="" className="absolute inset-0 size-full object-cover" />
+        <img
+          src={heroImg}
+          srcSet={`${heroImgSm} 800w, ${heroImg} 1400w`}
+          sizes="100vw"
+          width={1400}
+          height={788}
+          alt=""
+          fetchPriority="high"
+          decoding="async"
+          className="absolute inset-0 size-full object-cover"
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-background" />
         <div className="relative z-10">
-          <header className="flex items-center justify-between px-4 sm:px-12 py-5">
-            <Logo className="[&>span]:text-3xl [&>span]:sm:text-5xl" />
-            <div className="flex items-center gap-3">
+          <header className="relative flex items-center justify-between px-4 py-5 sm:px-12">
+            <Logo className="[&>span]:text-2xl [&>span]:sm:text-4xl" />
+            <div className="flex items-center gap-3 sm:gap-4">
               <a
                 href="https://github.com/Wayne-Inc/StreamFlix"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="inline-flex size-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground sm:size-11"
                 title="GitHub"
+                aria-label="GitHub"
               >
-                <Github className="size-5" />
+                <Github className="size-6 sm:size-7" />
               </a>
               <Link
                 to="/auth"
-                className="rounded-md bg-primary px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base font-semibold text-primary-foreground hover:bg-primary/90 mr-0 sm:mr-12"
+                className="rounded-md bg-primary px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base font-semibold text-primary-foreground hover:bg-primary/90 transition-all duration-300"
               >
                 Sign In
               </Link>
@@ -146,14 +166,25 @@ function Landing() {
             <p className="text-shadow-hero mt-6 text-xl sm:text-3xl font-medium">
               Completely free. No subscriptions, no catches.
             </p>
-            <div className="mt-10 flex items-center justify-center gap-6 flex-wrap">
-              <Link
-                to="/auth"
-                className="inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90"
-              >
-                <Play className="size-5 fill-current" /> Start Watching
-              </Link>
-              <DownloadAppButton className="inline-flex items-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-6 py-3 text-base font-semibold text-primary hover:bg-primary/20 transition-colors disabled:opacity-50" />
+            <div className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center sm:gap-4">
+              <div className="flex w-full flex-col gap-3 min-[480px]:flex-row sm:w-auto sm:items-center sm:flex-1">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="min-w-0 flex-1 rounded-md bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/80 px-6 py-4 text-lg outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-300"
+                  aria-label="Email address"
+                />
+                <button
+                  onClick={handleGetStarted}
+                  className="relative inline-flex items-center justify-center gap-2 rounded-md bg-primary px-8 py-4 text-lg font-black text-primary-foreground hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg shadow-primary/30 shrink-0"
+                >
+                  Get Started
+                  <ChevronRight className="size-5 fill-current" />
+                </button>
+              </div>
+              <DownloadAppButton className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-6 py-4 text-lg font-semibold text-primary hover:bg-primary/20 transition-colors disabled:opacity-50 sm:w-auto shrink-0" />
             </div>
           </div>
         </div>
@@ -180,7 +211,10 @@ function Landing() {
             >
               {trending.map((m, i) => (
                 <div key={m.id} className="shrink-0 relative transition duration-300 ease-out group hover:scale-105">
-                  <span className="rank-badge absolute bottom-6 -left-5 text-[4.5rem] sm:text-[5.5rem] font-black leading-none select-none z-10">
+                  <span
+                    aria-hidden="true"
+                    className="rank-badge absolute bottom-6 -left-5 text-[5rem] sm:text-[6.5rem] font-black leading-none select-none z-10 text-primary/30 group-hover:text-primary group-hover:opacity-100 transition-all duration-300"
+                  >
                     {i + 1}
                   </span>
                   <Link
@@ -287,49 +321,60 @@ function Landing() {
             <p className="text-lg sm:text-xl">Ready to watch? It's free — dive right in.</p>
             <Link
               to="/auth"
-              className="mt-8 inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90"
+              className="mt-8 inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-base font-extrabold text-primary-foreground hover:bg-primary/90"
             >
-              <Play className="size-5 fill-current" /> Start Watching
+              Get Started
+              <ChevronRight className="size-5 fill-current" />
             </Link>
           </div>
         </div>
       </section>
 
       <footer className="border-t border-border px-4 py-10 text-sm text-muted-foreground">
-        <div className="mx-auto max-w-6xl text-center">
-          <p className="font-medium text-foreground">StreamFlix — Free for everyone.</p>
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-            <ContactEmail className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors">
-              <Mail className="size-4" />
-            </ContactEmail>
-            <a
-              href="https://instagram.com/itiswayneee"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
-            >
-              <Instagram className="size-4" /> @itiswayneee
-            </a>
-            <a
-              href="https://github.com/Wayne-Inc/StreamFlix"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
-            >
-              <Github className="size-4" /> GitHub
-            </a>
-            <Link to="/tos" className="hover:text-foreground transition-colors">
-              Terms of Service
-            </Link>
-            <Link to="/privacy-policy" className="hover:text-foreground transition-colors">
-              Privacy Policy
-            </Link>
-            <DownloadAppButton
-              iconClassName="size-4"
-              className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors disabled:opacity-50"
-            />
+        <div className="mx-auto max-w-6xl">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+            <div className="flex items-center text-xl sm:text-2xl md:text-3xl font-black text-foreground">
+              <span className="text-primary">STREAM</span>
+              <span className="text-foreground">FLIX</span>
+            </div>
+            <div className="flex flex-wrap items-center justify-start gap-x-6 gap-y-2 text-xs text-muted-foreground">
+              <ContactEmail className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors">
+                <Mail className="size-3.5" />
+              </ContactEmail>
+              <a
+                href="https://instagram.com/itiswayneee"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+              >
+                <Instagram className="size-3.5" /> @itiswayneee
+              </a>
+              <a
+                href="https://github.com/Wayne-Inc/StreamFlix"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+              >
+                <Github className="size-3.5" /> GitHub
+              </a>
+              <Link to="/tos" className="hover:text-foreground transition-colors">
+                Terms of Service
+              </Link>
+              <Link to="/privacy-policy" className="hover:text-foreground transition-colors">
+                Privacy Policy
+              </Link>
+              <DownloadAppButton
+                iconClassName="size-3.5"
+                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors disabled:opacity-50"
+              />
+            </div>
           </div>
-          <p className="mt-6 text-xs">Made by Wayne Inc</p>
+          <p className="mt-6 text-xs text-left text-muted-foreground">
+            Made for the people, by the people. Not affiliated with Netflix. Film and series data from TMDB; this product uses the TMDB API but is not endorsed or certified by TMDB.
+          </p>
+          <p className="mt-2 text-xs text-left text-muted-foreground">
+            <strong>Disclaimer:</strong> StreamFlix is an indexing service for media that is already publicly available elsewhere. We do not store, upload, or modify any video files. Every stream is embedded from independent third-party providers, and ownership of that content remains entirely with its original rights holders.
+          </p>
         </div>
       </footer>
     </main>

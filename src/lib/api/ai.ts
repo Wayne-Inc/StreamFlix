@@ -16,6 +16,7 @@ const requestSchema = z.object({
     .max(12)
     .optional()
     .default([]),
+  interests: z.array(z.number()).max(20).optional().default([]),
   conversation: z
     .array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(1000) }))
     .max(8)
@@ -45,7 +46,7 @@ class AiServiceError extends Error {
 }
 
 const AI_RATE_WINDOW_MS = 15 * 60 * 1000;
-const AI_RATE_LIMIT = 20;
+const AI_RATE_LIMIT = 600; // 40 rpm * 15 minutes = 600
 const aiRateLimits = new Map<string, { count: number; resetAt: number }>();
 
 async function verifyUser(idToken: string): Promise<string> {
@@ -261,6 +262,7 @@ export const askStreamflixAI = createServerFn({ method: "POST" })
         request: data.prompt || "Recommend something I might enjoy.",
         recentConversation: data.conversation,
         optionalWatchHistory: history,
+        favoriteGenres: data.interests,
         catalog,
       });
       const content = await askModel(systemPrompt, userPrompt);

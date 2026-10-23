@@ -557,6 +557,32 @@ function PlayerPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [goBack]);
 
+  // Offline indicator toast
+  useEffect(() => {
+    const handleOffline = () => {
+      toast.error("You're offline. Playback may fail.", {
+        id: "offline-warning",
+        duration: Infinity,
+        action: {
+          label: "Dismiss",
+          onClick: () => toast.dismiss("offline-warning"),
+        },
+      });
+    };
+    const handleOnline = () => {
+      toast.dismiss("offline-warning");
+      toast.success("Back online", { id: "online-restored", duration: 3000 });
+    };
+
+    if (!navigator.onLine) handleOffline();
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleOnline);
+    return () => {
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleOnline);
+    };
+  }, []);
+
   useEffect(() => {
     if (typeof navigator === "undefined" || !navigator.connection) return;
     const conn = navigator.connection;
@@ -601,6 +627,21 @@ function PlayerPage() {
     return () => {
       if (sid) endSession(sid).catch(() => {});
     };
+  }, [movie.id]);
+
+  // Ads warning toast - show once per session
+  useEffect(() => {
+    const sessionKey = `sf:ads-noted-${movie.id}`;
+    if (typeof window !== "undefined") {
+      const alreadyNoted = sessionStorage.getItem(sessionKey);
+      if (!alreadyNoted) {
+        sessionStorage.setItem(sessionKey, "1");
+        toast.info("Note: You may experience ads during this session", {
+          id: `ads-note-${movie.id}`,
+          duration: 8000,
+        });
+      }
+    }
   }, [movie.id]);
 
   useEffect(() => {

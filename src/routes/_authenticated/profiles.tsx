@@ -8,11 +8,13 @@ import {
   Upload,
   Github,
   Settings,
+  Image,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Logo } from "@/components/streamflix/Logo";
 import { AvatarCropModal } from "@/components/streamflix/AvatarCropModal";
+import { TmdbAvatarPicker } from "@/components/streamflix/TmdbAvatarPicker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { auth } from "@/lib/firebase";
 import { getWatchHistory } from "@/lib/continue-watching";
@@ -84,6 +86,7 @@ function ProfilesPage() {
   const [bgSlides, setBgSlides] = useState<string[]>([]);
   const [bgIdx, setBgIdx] = useState(0);
   const [showGithubPrompt, setShowGithubPrompt] = useState(false);
+  const [tmdbAvatarOpen, setTmdbAvatarOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -345,6 +348,8 @@ function ProfilesPage() {
             setEditTarget(null);
             await load();
           }}
+          tmdbAvatarOpen={tmdbAvatarOpen}
+          setTmdbAvatarOpen={setTmdbAvatarOpen}
         />
       )}
 
@@ -447,16 +452,21 @@ function ProfileEditor({
   existingCount,
   onClose,
   onSaved,
+  tmdbAvatarOpen,
+  setTmdbAvatarOpen,
 }: {
   target: Profile | "new";
   existingCount: number;
   onClose: () => void;
   onSaved: () => void;
+  tmdbAvatarOpen: boolean;
+  setTmdbAvatarOpen: (v: boolean) => void;
 }) {
   const isNew = target === "new";
   const existing = isNew ? null : (target as Profile);
   const [name, setName] = useState(existing?.name ?? "");
   const [kids, setKids] = useState(existing?.kids ?? false);
+  const [contentRatingLimit, setContentRatingLimit] = useState<Profile["contentRatingLimit"]>(existing?.contentRatingLimit);
   const [color, setColor] = useState(existing?.color ?? COLORS[existingCount % COLORS.length]);
   const [avatarUrl, setAvatarUrl] = useState(existing?.avatarUrl ?? "");
   const [pin, setPin] = useState("");
@@ -489,12 +499,13 @@ function ProfileEditor({
         await createProfile(u.uid, {
           name: name.trim(),
           kids,
+          contentRatingLimit,
           avatarUrl: avatarUrl.trim() || undefined,
         });
         const list = await getUserProfiles(u.uid);
         const created = list.find((p) => p.name === name.trim());
         if (created) {
-          await updateProfile(u.uid, created.id, { color, avatarUrl: avatarUrl.trim() || "" });
+          await updateProfile(u.uid, created.id, { color, avatarUrl: avatarUrl.trim() || "", contentRatingLimit });
           if (pin.trim()) {
             await setProfilePin(u.uid, created.id, pin.trim());
             setHasPin(true);
@@ -506,6 +517,7 @@ function ProfileEditor({
           name: name.trim(),
           kids,
           color,
+          contentRatingLimit,
           avatarUrl: avatarUrl.trim() || "",
         });
         if (pin.trim()) {
@@ -597,10 +609,6 @@ function ProfileEditor({
               alt=""
               className="size-20 rounded-lg object-cover ring-2 ring-border"
             />
-          ) : avatarUrl && !isValidAvatarUrl(avatarUrl) ? (
-            <div className="text-xs text-destructive mb-2">
-              Invalid URL — must start with http:// or https://
-            </div>
           ) : (
             <div
               className={`grid size-20 place-items-center rounded-lg bg-gradient-to-br ${color} text-3xl font-black text-white/90`}
@@ -617,19 +625,19 @@ function ProfileEditor({
               className="w-full rounded bg-neutral-800 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <div className="flex gap-2">
-              <input
-                value={avatarUrl}
-                onChange={(e) => setAvatarUrl(e.target.value)}
-                placeholder="Avatar URL (optional)"
-                aria-label="Avatar URL"
-                className="min-w-0 flex-1 rounded bg-neutral-800 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              />
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 className="inline-flex shrink-0 items-center gap-1.5 rounded bg-neutral-700 px-3 py-2 text-xs font-semibold text-white hover:bg-neutral-600"
               >
                 <Upload className="size-3.5" /> Upload
+              </button>
+              <button
+                type="button"
+                onClick={() => setTmdbAvatarOpen(true)}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded bg-neutral-700 px-3 py-2 text-xs font-semibold text-white hover:bg-neutral-600"
+              >
+                <Image className="size-3.5" /> TMDB
               </button>
             </div>
             <input
@@ -651,6 +659,17 @@ function ProfileEditor({
               setCropSrc(null);
               toast.success("Avatar cropped");
             }}
+          />
+        )}
+
+        {tmdbAvatarOpen && (
+          <TmdbAvatarPicker
+            onSelect={(imageUrl) => {
+              setAvatarUrl(imageUrl);
+              setTmdbAvatarOpen(false);
+              toast.success("Avatar selected from TMDB");
+            }}
+            onClose={() => setTmdbAvatarOpen(false)}
           />
         )}
 
@@ -692,6 +711,37 @@ function ProfileEditor({
             />
           </button>
         </div>
+
+        {!kids && (
+          <div className="mt-5">
+            <p className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">Content Rating Limit</p>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Restrict content by maturity rating. Only applies to non-kids profiles.
+            </p>
+            <select
+              value={contentRatingLimit || ""}
+              onChange={(e) => setContentRatingLimit(e.target.value || undefined)}
+              className="w-full rounded bg-neutral-800 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="">No limit (All ratings)</option>
+              <optgroup label="Movies">
+                <option value="G">G - General Audiences</option>
+                <option value="PG">PG - Parental Guidance</option>
+                <option value="PG-13">PG-13 - Parents Strongly Cautioned</option>
+                <option value="R">R - Restricted</option>
+                <option value="NC-17">NC-17 - Adults Only</option>
+              </optgroup>
+              <optgroup label="TV Shows">
+                <option value="TV-Y">TV-Y - All Children</option>
+                <option value="TV-Y7">TV-Y7 - Older Children</option>
+                <option value="TV-G">TV-G - General Audience</option>
+                <option value="TV-PG">TV-PG - Parental Guidance</option>
+                <option value="TV-14">TV-14 - Parents Strongly Cautioned</option>
+                <option value="TV-MA">TV-MA - Mature Audience</option>
+              </optgroup>
+            </select>
+          </div>
+        )}
 
         <div className="mt-4">
           {!hasPin ? (

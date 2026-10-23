@@ -77,25 +77,54 @@ export function SeasonEpisodePicker({
 
   const toggleEpisode = (ep: number, watched: boolean) => {
     if (!movie) return;
+    const key = `S${selectedSeason}E${ep}`;
+
+    // Optimistic update - immediately update UI
+    setWatchedSet((prev) => {
+      const next = new Set(prev);
+      if (watched) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+
+    // Perform actual operation in background
     if (watched) {
       unmarkEpisodeWatched(movieId, selectedSeason, ep);
     } else {
       markEpisodeWatched(movie, selectedSeason, ep);
     }
-    refreshWatched();
+
     toast.success(watched ? "Episode unmarked" : "Episode marked as watched");
   };
 
   const toggleSeason = () => {
     if (!movie) return;
     if (allSeasonWatched) {
+      // Optimistic update - clear all episodes for this season
+      setWatchedSet((prev) => {
+        const next = new Set(prev);
+        episodes.forEach((ep) => {
+          next.delete(`S${selectedSeason}E${ep.episode_number}`);
+        });
+        return next;
+      });
       unmarkSeasonWatched(movieId, selectedSeason);
       toast.success(`Season ${selectedSeason} unmarked`);
     } else {
+      // Optimistic update - add all episodes for this season
+      setWatchedSet((prev) => {
+        const next = new Set(prev);
+        episodes.forEach((ep) => {
+          next.add(`S${selectedSeason}E${ep.episode_number}`);
+        });
+        return next;
+      });
       markSeasonWatched(movie, selectedSeason, episodes.length);
       toast.success(`Season ${selectedSeason} marked as watched`);
     }
-    refreshWatched();
   };
 
   return (

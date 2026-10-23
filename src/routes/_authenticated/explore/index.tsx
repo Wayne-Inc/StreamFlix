@@ -4,43 +4,40 @@ import { ChevronLeft, ChevronRight, Compass, Sparkles, ChevronDown, ChevronUp } 
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { MovieCard } from "@/components/streamflix/MovieCard";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Row } from "@/components/streamflix/Row";
+import { RowSkeleton } from "@/components/streamflix/RowSkeleton";
+import { HeroBannerSkeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { getGenres } from "@/lib/streamflix-data";
+import { getGenres, loadMovies, loadTv } from "@/lib/streamflix-data";
 import { fetchPopular } from "@/lib/api/tmdb";
 import type { Movie } from "@/lib/types";
 import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
 
 export const Route = createFileRoute("/_authenticated/explore/")({
   loader: async () => {
-    const [genres, popular] = await Promise.all([getGenres(), fetchPopular()]);
-    return { genres, items: popular };
+    const [genres, moviesData, tvData, popular] = await Promise.all([
+      getGenres(),
+      loadMovies(),
+      loadTv(),
+      fetchPopular()
+    ]);
+    return { genres, moviesData, tvData, items: popular };
   },
   head: () => ({ meta: [{ title: "Explore — StreamFlix" }] }),
   pendingComponent: () => (
     <div className="min-h-dvh bg-background">
       <Navbar />
-      <section className="relative flex h-[38vh] items-end overflow-hidden sm:h-[46vh]">
-        <Skeleton className="absolute inset-0 h-full w-full rounded-none opacity-60" />
-        <div className="relative z-10 w-full px-4 pb-8 sm:px-8 md:px-16">
-          <Skeleton className="h-4 w-24 rounded" />
-          <Skeleton className="mt-2 h-10 w-64 rounded sm:h-14" />
-          <Skeleton className="mt-3 h-4 w-72 rounded" />
-        </div>
-      </section>
-      <main className="mx-auto max-w-[1800px] px-4 pb-16 sm:px-8">
+      <HeroBannerSkeleton />
+      <main className="mx-auto max-w-[1800px] px-4 pb-16 md:pb-20 sm:px-8">
         <div className="mt-8 flex flex-wrap gap-2">
           {Array.from({ length: 12 }).map((_, i) => (
             <Skeleton key={i} className="h-9 w-24 rounded-full" />
           ))}
         </div>
-        <div className="mt-10">
-          <Skeleton className="h-5 w-44 rounded" />
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <Skeleton key={i} className="w-full aspect-[2/3] rounded-xl" />
-            ))}
-          </div>
+        <div className="mt-10 space-y-8">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <RowSkeleton key={i} />
+          ))}
         </div>
       </main>
     </div>
@@ -49,18 +46,23 @@ export const Route = createFileRoute("/_authenticated/explore/")({
 });
 
 function ExplorePage() {
-  const { genres, items } = Route.useLoaderData();
-  const [page, setPage] = useState(1);
-  const [showAllGenres, setShowAllGenres] = useState(false);
+  const { genres, moviesData, tvData } = Route.useLoaderData();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
   const kidsMode = isKidsProfile();
   const safeGenres = genres;
-  const safeItems: Movie[] = kidsMode ? filterKidsContent(items) : items;
-  const pageCount = Math.max(1, Math.ceil(safeItems.length / 24));
-  const visible = safeItems.slice((page - 1) * 24, page * 24);
-  const visibleGenres = isMobile && !showAllGenres ? safeGenres.slice(0, 6) : safeGenres;
+  const safeMoviesRows = moviesData.rows.map(row => ({
+    ...row,
+    items: kidsMode ? filterKidsContent(row.items) : row.items
+  })).filter(row => row.items.length > 0);
+  const safeTvRows = tvData.rows.map(row => ({
+    ...row,
+    items: kidsMode ? filterKidsContent(row.items) : row.items
+  })).filter(row => row.items.length > 0);
+
+  // Combine and take first 5 rows for 5 slideshows
+  const allRows = [...safeMoviesRows, ...safeTvRows].slice(0, 5);
 
   return (
     <div className="min-h-dvh bg-background">
@@ -81,9 +83,9 @@ function ExplorePage() {
         </div>
       </section>
 
-      <main className="mx-auto max-w-[1800px] px-4 pb-16 sm:px-8">
+      <main className="mx-auto max-w-[1800px] px-4 pb-16 md:pb-20 sm:px-8">
         <div className="mt-8 flex flex-wrap gap-2">
-          {visibleGenres.map((g) => (
+          {safeGenres.slice(0, 12).map((g) => (
             <Link
               key={g.id}
               to="/explore/$genreId"
@@ -95,71 +97,17 @@ function ExplorePage() {
             </Link>
           ))}
         </div>
-        {isMobile && safeGenres.length > 6 && (
-          <button
-            type="button"
-            onClick={() => setShowAllGenres((v) => !v)}
-            className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:border-primary"
-          >
-            {showAllGenres ? (
-              <>
-                <ChevronUp className="size-4" /> Show fewer genres
-              </>
-            ) : (
-              <>
-                <ChevronDown className="size-4" /> Show all genres ({safeGenres.length})
-              </>
-            )}
-          </button>
-        )}
 
-        {safeItems.length > 0 && (
-          <div className="mt-10">
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Popular right now</h2>
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
-              {visible.map((m) => (
-                <button
-                  key={m.id}
-                  onClick={() => navigate({ to: "/movie/$id", params: { id: m.id } })}
-                  className="w-full text-left"
-                >
-                  <MovieCard movie={m} fluid />
-                </button>
-              ))}
-            </div>
-            {pageCount > 1 && (
-              <div className="mt-8 flex items-center justify-center gap-2">
-                <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-40"
-                >
-                  <ChevronLeft className="size-4" /> Previous
-                </button>
-                {Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    className={`rounded-md px-3 py-2 text-sm ${
-                      p === page
-                        ? "bg-primary text-primary-foreground"
-                        : "border border-border text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {p}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
-                  disabled={page === pageCount}
-                  className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-40"
-                >
-                  Next <ChevronRight className="size-4" />
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+        {/* 5 Slideshows using Row components */}
+        <div className="mt-10 space-y-8">
+          {allRows.map((row, index) => (
+            <Row
+              key={row.title + index}
+              title={row.title}
+              items={row.items.slice(0, 20)}
+            />
+          ))}
+        </div>
       </main>
       <Footer />
     </div>

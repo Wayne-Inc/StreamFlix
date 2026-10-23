@@ -129,7 +129,7 @@ async function loadHome() {  const [
   };
 }
 
-async function loadMovies() {
+export async function loadMovies() {
   const [
     trending,
     popular,
@@ -169,7 +169,7 @@ async function loadMovies() {
   };
 }
 
-async function loadTv() {
+export async function loadTv() {
   const [trending, popular, topRated, airing] = await Promise.all([
     fetchTrendingTv(),
     fetchPopularTv(),

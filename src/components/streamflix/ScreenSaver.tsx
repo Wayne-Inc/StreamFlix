@@ -191,7 +191,7 @@ export function ScreenSaver() {
             className="rounded-full px-2.5 py-1 text-xs backdrop-blur-lg sm:px-3 sm:py-1.5"
           />
           <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-white/80 backdrop-blur-lg sm:px-3 sm:py-1.5">
-            <Clock className="size-3" /> {currentMovie.runtime}
+            <Clock className="size-3" /> {currentMovie.runtime || (currentMovie.runtimeMinutes ? `${Math.floor(currentMovie.runtimeMinutes / 60)}h ${currentMovie.runtimeMinutes % 60}m` : '—')}
           </span>
         </div>
       </div>

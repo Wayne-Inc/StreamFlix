@@ -58,6 +58,13 @@ export const fetchUpcoming = createServerFn({ method: "POST" }).handler(async ()
   return all.map((m: any) => toMovie(m));
 });
 
+export const fetchPopularPeople = createServerFn({ method: "POST" })
+  .validator(z.object({ page: z.number().default(1) }))
+  .handler(async ({ data }) => {
+    const { fetchPopularPeople } = await import("./tmdb.server");
+    return await fetchPopularPeople(data.page);
+  });
+
 export const fetchUpcomingTv = createServerFn({ method: "POST" }).handler(async () => {
   const { tmdbFetch, toTv } = await import("./tmdb.server");
   const today = new Date().toISOString().slice(0, 10);

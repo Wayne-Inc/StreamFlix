@@ -1,8 +1,11 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Play, Sparkles } from "lucide-react";
-import { useState, useRef } from "react";
+import { Play, Sparkles, Bookmark, BookmarkCheck, Clock, Star } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import type { Movie } from "@/lib/types";
 import { LazyImage } from "./LazyImage";
+import { isInMyList, toggleMyList, MY_LIST_EVENT } from "@/lib/my-list";
+import { toast } from "sonner";
+import { buildTitleLogoUrl } from "@/lib/title-logo";
 
 export function MovieCard({
   movie,
@@ -23,8 +26,16 @@ export function MovieCard({
 }) {
   const navigate = useNavigate();
   const [isDragging, setIsDragging] = useState(false);
+  const [isInList, setIsInList] = useState(() => isInMyList(movie.id));
   const startX = useRef(0);
   const startY = useRef(0);
+
+  // Listen for my-list updates from other components (optimistic sync)
+  useEffect(() => {
+    const handleUpdate = () => setIsInList(isInMyList(movie.id));
+    window.addEventListener(MY_LIST_EVENT, handleUpdate);
+    return () => window.removeEventListener(MY_LIST_EVENT, handleUpdate);
+  }, [movie.id]);
 
   const goToInfo = () => {
     navigate({ to: "/movie/$id", params: { id: movie.id } });
@@ -78,6 +89,17 @@ export function MovieCard({
           </div>
         )}
 
+        {/* Bottom gradient for text contrast - shows on hover */}
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background/95 via-background/40 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+        {/* Top-left rating badge - moved right when rank badge exists (Top 10/Trending) */}
+        {movie.score != null && (
+          <div className={`absolute top-2 z-10 flex items-center gap-1 rounded-full bg-black/70 backdrop-blur-lg px-2 py-1 border border-yellow-400/30 ${rank != null ? "left-10" : "left-2"}`}>
+            <Star className="size-3.5 fill-yellow-400 text-yellow-400" />
+            <span className="text-yellow-400 font-bold text-[11px] sm:text-xs">{movie.score.toFixed(1)}</span>
+          </div>
+        )}
+
         {/* Centered play button on hover (visual only) */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 z-10 pointer-events-none" aria-hidden="true">
           <div className="flex size-12 items-center justify-center rounded-full bg-white/90 text-black shadow-lg backdrop-blur-sm">
@@ -85,21 +107,62 @@ export function MovieCard({
           </div>
         </div>
 
+        {/* Watchlist button at top-right on hover - with optimistic updates */}
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            // Optimistic update - immediately update UI
+            const newState = !isInList;
+            setIsInList(newState);
+            toast.success(newState ? "Added to My List" : "Removed from My List");
+
+            // Actual toggle (localStorage + Firestore sync)
+            try {
+              toggleMyList(movie);
+            } catch {
+              // Revert on error (shouldn't happen for localStorage, but safety)
+              setIsInList(isInList);
+              toast.error("Failed to update list. Please try again.");
+            }
+          }}
+          className="absolute top-2 right-2 z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          aria-label={isInList ? "Remove from My List" : "Add to My List"}
+        >
+          <div className="flex size-10 items-center justify-center rounded-full bg-black/60 text-white shadow-lg backdrop-blur-sm hover:bg-black/80 transition-colors">
+            {isInList ? (
+              <BookmarkCheck className="size-5 fill-current" />
+            ) : (
+              <Bookmark className="size-5" />
+            )}
+          </div>
+        </button>
+
         {/* Title + meta (always visible for landscape, hover for portrait) */}
         <div className={`absolute inset-x-0 bottom-0 p-3 ${landscape ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0 transition-all duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100"}`}>
-          <p className="text-xs sm:text-sm font-bold text-white line-clamp-1 drop-shadow-lg">
-            {movie.title}
-          </p>
+          {landscape && movie.logo?.filePath ? (
+            <img
+              src={buildTitleLogoUrl(movie.logo.filePath)}
+              alt={movie.title}
+              draggable={false}
+              className="mb-2 mx-auto max-h-12 w-auto max-w-full object-contain select-none"
+            />
+          ) : (
+            <p className="text-xs sm:text-sm font-bold text-white line-clamp-1 drop-shadow-lg">
+              {movie.title}
+            </p>
+          )}
           <div className="flex items-center gap-1.5 text-[10px] sm:text-xs mt-0.5">
-            <span className="text-emerald-400">
-              {movie.score != null
-                ? movie.score.toFixed(1)
-                : movie.match
-                  ? `${(movie.match / 10).toFixed(1)}`
-                  : ""}
-            </span>
-            <span className="text-muted-foreground/40">&middot;</span>
             <span className="text-muted-foreground">{movie.year}</span>
+            {(movie.runtime || movie.runtimeMinutes) && (
+              <>
+                <span className="text-muted-foreground/40">&middot;</span>
+                <span className="inline-flex items-center gap-1 text-white/80">
+                  <Clock className="size-2.5" />
+                  {movie.runtime || (movie.runtimeMinutes ? `${Math.floor(movie.runtimeMinutes / 60)}h ${movie.runtimeMinutes % 60}m` : '')}
+                </span>
+              </>
+            )}
           </div>
           {reason && (
             <p className="mt-1 flex items-center gap-1 text-[10px] sm:text-[11px] text-purple-300">

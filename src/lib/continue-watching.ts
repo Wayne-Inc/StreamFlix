@@ -312,12 +312,53 @@ export function unmarkEpisodeWatched(movieId: string, season: number, episode: n
   const list = getWatchHistory().filter((x) => x.id !== itemId);
   window.localStorage.setItem(key, JSON.stringify(list));
   removeHistoryFromFirestore(itemId).catch(() => {});
+  window.dispatchEvent(new Event("sf:watchedUpdated"));
 }
 
 export function markSeasonWatched(movie: Movie, season: number, totalEpisodes: number) {
+  if (typeof window === "undefined") return;
+  const historyKey = getHistoryKey();
+  const list = getWatchHistory();
+  const now = Date.now();
+
   for (let e = 1; e <= totalEpisodes; e++) {
-    markEpisodeWatched(movie, season, e);
+    const itemId = `${movie.id}:S${season}E${e}`;
+    // Remove existing entry if any
+    const filtered = list.filter((x) => x.id !== itemId);
+    // Add new entry
+    filtered.unshift({
+      id: itemId,
+      title: movie.title,
+      poster: movie.poster,
+      backdrop: movie.backdrop,
+      rating: movie.rating,
+      runtime: movie.runtime,
+      genres: movie.genres,
+      genreIds: movie.genreIds,
+      match: movie.match,
+      score: movie.score,
+      description: movie.description,
+      year: movie.year,
+      cast: movie.cast,
+      castPfp: movie.castPfp,
+      director: movie.director,
+      directorId: movie.directorId,
+      progress: 1,
+      duration: 1,
+      updatedAt: now,
+      watchedAt: now,
+      season,
+      episode: e,
+      episodeLabel: `S${season}E${e}`,
+    });
+    // Update list for next iteration
+    list.length = 0;
+    list.push(...filtered);
   }
+
+  window.localStorage.setItem(historyKey, JSON.stringify(list.slice(0, HISTORY_MAX)));
+  saveHistoryToFirestore(list[0]).catch(() => {});
+  window.dispatchEvent(new Event("sf:watchedUpdated"));
 }
 
 export function unmarkSeasonWatched(movieId: string, season: number) {

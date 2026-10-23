@@ -7,7 +7,7 @@ export function Logo({ className = "" }: { className?: string }) {
       className={`inline-flex items-center gap-2.5 ${className}`}
       aria-label="StreamFlix browse"
     >
-      <span className="text-primary font-black tracking-tighter text-2xl sm:text-3xl select-none">
+      <span className="text-primary font-black tracking-tighter text-3xl sm:text-3xl select-none">
         STREAM<span className="text-foreground">FLIX</span>
       </span>
     </Link>

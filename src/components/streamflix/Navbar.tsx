@@ -16,7 +16,10 @@ import {
   BarChart3,
   Sparkles,
   Crown,
+  Shuffle,
+  Bell,
 } from "lucide-react";
+import { tmdbFetch, toMovie } from "@/lib/api/tmdb.server";
 import { toast } from "sonner";
 import { Logo } from "./Logo";
 import { auth, db } from "@/lib/firebase";
@@ -325,12 +328,31 @@ export function Navbar() {
         <div className="ml-auto flex items-center gap-3">
           <button
             type="button"
+            onClick={async () => {
+              try {
+                const data = await tmdbFetch("/trending/all/week");
+                const movies = (data.results || []).map((item: any) => (item.media_type === "tv" ? { ...item, id: `tv-${item.id}` } : item));
+                if (movies.length > 0) {
+                  const randomMovie = movies[Math.floor(Math.random() * movies.length)];
+                  router.navigate({ to: "/movie/$id", params: { id: randomMovie.id } });
+                }
+              } catch (e) {
+                toast.error("Could not fetch random title");
+              }
+            }}
+            className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground md:hidden"
+            aria-label="Random"
+          >
+            <Shuffle className="size-7" />
+          </button>
+          <button
+            type="button"
             onClick={() => setBrowseMenuOpen((open) => !open)}
             className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground md:hidden"
             aria-label="Browse menu"
             aria-expanded={browseMenuOpen}
           >
-            <Menu className="size-5" />
+            <Menu className="size-7" />
           </button>
           <div className="relative hidden md:block" ref={searchBoxRef}>
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -467,6 +489,24 @@ export function Navbar() {
                   >
                     <Bookmark className="size-4 text-muted-foreground" /> My List
                   </Link>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const data = await tmdbFetch("/trending/all/week");
+                        const movies = (data.results || []).map((item: any) => (item.media_type === "tv" ? { ...item, id: `tv-${item.id}` } : item));
+                        if (movies.length > 0) {
+                          const randomMovie = movies[Math.floor(Math.random() * movies.length)];
+                          router.navigate({ to: "/movie/$id", params: { id: randomMovie.id } });
+                        }
+                      } catch (e) {
+                        toast.error("Could not fetch random title");
+                      }
+                    }}
+                    className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm hover:bg-accent"
+                  >
+                    <Shuffle className="size-4 text-muted-foreground" /> Random
+                  </button>
                 </div>
                 <div className="border-t border-border py-1">
                   <button
@@ -591,7 +631,7 @@ export function Navbar() {
         </button>
       </div>
       {menuOpen && (
-        <div className="absolute bottom-full right-3 z-50 mb-3 w-[min(22rem,calc(100vw-1.5rem))] max-h-[min(28rem,calc(100dvh_-_7rem_-_env(safe-area-inset-bottom)))] overflow-y-auto overscroll-contain rounded-2xl border border-white/10 bg-card/95 shadow-[0_18px_70px_rgba(0,0,0,0.55)] backdrop-blur-2xl animate-fade-in md:hidden">
+        <div className="absolute bottom-full left-1/2 z-50 mb-3 w-[min(24rem,calc(100vw-2rem))] -translate-x-1/2 max-h-[min(28rem,calc(100dvh_-_7rem_-_env(safe-area-inset-bottom)))] overflow-y-auto overscroll-contain rounded-2xl border border-white/10 bg-card/95 shadow-[0_18px_70px_rgba(0,0,0,0.55)] backdrop-blur-2xl md:hidden">
           <div className="flex items-center gap-3 border-b border-border/80 bg-gradient-to-br from-primary/10 via-transparent to-transparent px-4 py-4">
             <div className="shrink-0">{profileAvatar}</div>
             <div className="min-w-0 flex-1">
@@ -627,8 +667,27 @@ export function Navbar() {
               </Link>
             )}
             <Link to="/settings" onClick={() => setMenuOpen(false)} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"><Settings className="size-4" /> Account &amp; Devices</Link>
-            <Link to="/history" onClick={() => setMenuOpen(false)} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"><Clock className="size-4" /> Watch History</Link>
+<Link to="/history" onClick={() => setMenuOpen(false)} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"><Clock className="size-4" /> Watch History</Link>
             <Link to="/mylist" onClick={() => setMenuOpen(false)} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"><Bookmark className="size-4" /> My List</Link>
+            <button
+              type="button"
+              onClick={async () => {
+                setMenuOpen(false);
+                try {
+                  const data = await tmdbFetch("/trending/all/week");
+                  const movies = (data.results || []).map((item: any) => (item.media_type === "tv" ? { ...item, id: `tv-${item.id}` } : item));
+                  if (movies.length > 0) {
+                    const randomMovie = movies[Math.floor(Math.random() * movies.length)];
+                    router.navigate({ to: "/movie/$id", params: { id: randomMovie.id } });
+                  }
+                } catch (e) {
+                  toast.error("Could not fetch random title");
+                }
+              }}
+              className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <Shuffle className="size-4" /> Random
+            </button>
             <button
               type="button"
               onClick={() => {

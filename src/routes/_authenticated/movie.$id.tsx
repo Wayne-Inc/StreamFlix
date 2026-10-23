@@ -51,7 +51,6 @@ import { movieById, loadSimilar, loadRecommendations, getWatchProviders, getGenr
 import { discoverByGenre, fetchTitleLogo, fetchTvSeason } from "@/lib/api/tmdb";
 import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
 import { getWatchHistoryFromFirestore } from "@/lib/history-firestore";
-import { TrailerModal } from "@/components/streamflix/TrailerModal";
 import { AgeRatingBadge } from "@/components/streamflix/AgeRatingBadge";
 import { askStreamflixAI } from "@/lib/api/ai";
 import { AI_ERROR_MESSAGES, aiErrorMessage } from "@/lib/ai-errors";
@@ -69,29 +68,35 @@ function MovieSkeleton() {
           <Skeleton className="mb-6 h-9 w-24 rounded-full" />
           <div className="grid w-full min-w-0 gap-10 md:grid-cols-3 md:items-center md:gap-8">
             <div className="min-w-0 space-y-4 md:col-span-2">
+              {/* Title logo skeleton */}
               <Skeleton className="mb-4 h-16 w-72 max-w-full rounded-md sm:h-20 md:h-24 md:w-80" />
+              {/* Meta badges skeleton (year, rating, runtime, etc.) */}
               <div className="flex flex-wrap items-center gap-2">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-7 w-20 rounded-full sm:h-8 sm:w-24" />
+                  <Skeleton key={i} className="h-7 w-24 rounded-full sm:h-8 sm:w-28" />
                 ))}
               </div>
+              {/* Genres skeleton */}
               <div className="flex flex-wrap gap-2">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-7 w-16 rounded-full" />
+                  <Skeleton key={i} className="h-7 w-20 rounded-full" />
                 ))}
               </div>
+              {/* Description skeleton */}
               <div className="min-w-0">
                 <Skeleton className="h-4 w-full max-w-xl rounded sm:h-5" />
                 <Skeleton className="mt-2 h-4 w-full max-w-xl rounded sm:h-5" />
                 <Skeleton className="mt-2 h-4 w-2/3 max-w-xl rounded sm:h-5" />
               </div>
+              {/* Action buttons skeleton */}
               <div className="flex flex-wrap items-center gap-2 pt-2 sm:gap-3">
-                <Skeleton className="h-10 w-24 rounded-md sm:h-12 sm:w-28" />
-                <Skeleton className="h-10 w-24 rounded-md sm:h-12 sm:w-32" />
-                <Skeleton className="h-10 w-24 rounded-md sm:h-12 sm:w-28" />
+                <Skeleton className="h-10 w-28 rounded-md sm:h-12 sm:w-32" />
+                <Skeleton className="h-10 w-28 rounded-md sm:h-12 sm:w-36" />
+                <Skeleton className="h-10 w-28 rounded-md sm:h-12 sm:w-32" />
                 <Skeleton className="size-11 rounded-full sm:size-12" />
                 <Skeleton className="size-11 rounded-full sm:size-12" />
               </div>
+              {/* Cast section skeleton */}
               <div className="min-w-0 pt-4">
                 <Skeleton className="mb-3 h-5 w-16 rounded" />
                 <div className="flex gap-3 overflow-hidden py-2">
@@ -437,7 +442,7 @@ function MoviePage() {
   }
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-background pb-20 md:pb-0">
       <Navbar />
       <section className="relative pt-16 md:flex md:min-h-[85vh] md:items-center md:pt-20">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[52vh] overflow-hidden sm:h-[58vh] md:inset-y-0 md:h-auto">
@@ -481,7 +486,7 @@ function MoviePage() {
                   className="rounded-full px-2.5 py-1 text-xs backdrop-blur-lg sm:px-3 sm:py-1.5"
                 />
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur-lg sm:px-3 sm:py-1.5">
-                  <Clock className="size-3" /> {movie.runtime}
+                  <Clock className="size-3" /> {movie.runtime || (movie.runtimeMinutes ? `${Math.floor(movie.runtimeMinutes / 60)}h ${movie.runtimeMinutes % 60}m` : '—')}
                 </span>
               </div>
 

@@ -77,9 +77,6 @@ Copy `.env.example` to `.env` and fill in your credentials:
 | `npm run preview` | Preview the production build |
 | `npm run lint` | Run ESLint |
 | `npm run format` | Format with Prettier |
-| `npm run electron:dev` | Run the Electron desktop app against the dev server |
-| `npm run electron:build` | Build Electron installers into `release/` |
-| `npm run desktop` | Open the app in Edge as a PWA-style window |
 
 ## License
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Movie } from "@/lib/types";
 import { MovieCard } from "./MovieCard";
@@ -92,12 +92,28 @@ export function Row({
     (viewportW > 0 && scrollLeft + viewportW < scrollWidth - 2) ||
     (viewportW > 0 && scrollWidth <= viewportW && items.length * step > viewportW);
 
-  const scrollBy = (dir: 1 | -1) => {
+  const scrollBy = useCallback((dir: 1 | -1) => {
     const el = scrollerRef.current;
     if (!el) return;
     const distance = step * Math.max(1, Math.ceil(viewportW / step));
     el.scrollBy({ left: dir * distance, behavior: "smooth" });
-  };
+  }, [step, viewportW]);
+
+  const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      scrollBy(-1);
+    } else if (event.key === "ArrowRight") {
+      event.preventDefault();
+      scrollBy(1);
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      scrollerRef.current?.scrollTo({ left: 0, behavior: "smooth" });
+    } else if (event.key === "End") {
+      event.preventDefault();
+      scrollerRef.current?.scrollTo({ left: scrollWidth, behavior: "smooth" });
+    }
+  }, [scrollBy, scrollWidth]);
 
   return (
     <section className="relative space-y-0 py-0 sm:space-y-0 sm:py-0">
@@ -128,8 +144,12 @@ export function Row({
         )}
         <div
           ref={scrollerRef}
+          onKeyDown={handleKeyDown}
+          tabIndex={0}
           className="scrollbar-thin flex min-w-0 gap-4 overflow-x-auto overscroll-x-contain scroll-smooth px-4 sm:gap-6 sm:px-8 pb-4 sm:pb-10"
           style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x pan-y" }}
+          role="region"
+          aria-label={`${title} carousel`}
         >
           {padStart > 0 && <div aria-hidden style={{ width: padStart }} className="shrink-0" />}
           {visible.map((m) => (
