@@ -10,7 +10,9 @@ type LazyImageProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> & {
 function getLqipUrl(src: string, width = 20): string {
   try {
     const url = new URL(src);
-    if (url.hostname.includes("image.tmdb.org")) {
+    const host = url.hostname.toLowerCase();
+    const allowedHosts = new Set(["image.tmdb.org"]);
+    if (allowedHosts.has(host)) {
       const path = url.pathname;
       return `https://image.tmdb.org/t/p/w${width}${path}`;
     }
