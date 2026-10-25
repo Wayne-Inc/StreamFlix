@@ -16,7 +16,7 @@
 
 ---
 
-## 🎯 Why StreamFlix?
+## Why StreamFlix?
 
 | Problem | StreamFlix Solution |
 |---------|---------------------|
@@ -29,16 +29,16 @@
 
 ---
 
-## ✨ Features Deep Dive
+## Features Deep Dive
 
-### 🎬 Content Discovery
+### Content Discovery
 - **Home Feed** — Hero banner, trending, popular, continue watching, My List, new releases, genre rows
 - **Explore** — Genre pages with infinite scroll, filter by year/rating, sort options
 - **Search** — Debounced TMDB multi-search (movies, TV, people) with filters & pagination
 - **Detail Pages** — Cast, crew, videos, watch providers, recommendations, similar titles
 - **Mood-Based Discovery** — "Feel good", "Dark & Gritty", "Mind Bending", etc.
 
-### 👤 Profile System (Netflix-Style)
+### Profile System (Netflix-Style)
 - Up to **5 profiles per account**
 - Custom name, avatar (upload / TMDB actor picker / initials), color theme
 - **Kids Mode** — Blocks horror, thriller, crime, romance, mystery, drama, war + ratings > PG/TV-PG
@@ -46,14 +46,14 @@
 - **Content Rating Limits** — G → NC-17 per profile
 - **Session Persistence** — `sessionStorage` + custom `profileChanged` events
 
-### ▶️ Video Playback
+### Video Playback
 - **Multi-Provider Fallback** — vidking, vsembed, 2embed, multiembed, videasy
 - **Secure iframe** — `sandbox` + `allow` policies, CSP frame-src locked to providers
 - **TV Support** — Season/episode picker, auto-play next, skip intro
 - **PiP & Fullscreen** — Native browser APIs
 - **Subtitles** — WebVTT support where provider offers
 
-### 📺 Continue Watching (Cross-Device)
+### Continue Watching (Cross-Device)
 ```
 localStorage (instant) → Firestore (persistent) → Multi-tab sync → Offline queue
 ```
@@ -62,13 +62,13 @@ localStorage (instant) → Firestore (persistent) → Multi-tab sync → Offline
 - Auto-cleanup (max 50 entries per profile)
 - Instant resume on any device
 
-### ❤️ My List (Watchlist)
+### My List (Watchlist)
 - Optimistic UI (instant add/remove)
 - localStorage + Firestore dual-write
 - Cross-tab broadcast via `BroadcastChannel`
 - Dedicated page with grid/filter/sort
 
-### 🤖 AI Recommendations
+### AI Recommendations
 ```typescript
 // lib/api/ai.ts
 export async function askStreamflixAI(prompt: string): Promise<string>
@@ -76,7 +76,7 @@ export async function askStreamflixAI(prompt: string): Promise<string>
 // Model: NVIDIA Nemotron 3 Ultra via NVIDIA NIM API
 ```
 
-### 🛡️ Security & Privacy
+### Security & Privacy
 | Layer | Implementation |
 |-------|----------------|
 | **API Abuse** | Firebase App Check (reCAPTCHA v3) |
@@ -87,7 +87,7 @@ export async function askStreamflixAI(prompt: string): Promise<string>
 | **Rate Limiting** | 5 req/min on auth endpoints (client + server) |
 | **Data** | Minimal PII, user-controlled deletion, consent-first analytics |
 
-### ♿ Accessibility
+### Accessibility
 - Semantic HTML, ARIA labels, focus management
 - Keyboard navigation throughout
 - Reduced motion support
@@ -96,7 +96,7 @@ export async function askStreamflixAI(prompt: string): Promise<string>
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```mermaid
 graph TB
@@ -139,7 +139,7 @@ graph TB
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 streamflix/
@@ -239,7 +239,7 @@ streamflix/
 
 ---
 
-## ⚙️ Getting Started
+## Getting Started
 
 ### Prerequisites
 - **Node.js 20+** (LTS recommended)
@@ -288,7 +288,7 @@ npm run dev
 | `VITE_FIREBASE_EMULATOR` | ❌ | Client | Set `1` for local emulator |
 | `VITE_FIREBASE_EMULATOR_HOST` | ❌ | Client | Emulator host (default: `127.0.0.1`) |
 
-> **🔐 Security:** Server-only secrets (`TURNSTILE_SECRET_KEY`, Firebase Admin SDK) go in **Vercel Project Settings → Environment Variables**, never in `.env`.
+> **Security:** Server-only secrets (`TURNSTILE_SECRET_KEY`, Firebase Admin SDK) go in **Vercel Project Settings → Environment Variables**, never in `.env`.
 
 ### Firebase Setup
 
@@ -304,7 +304,7 @@ firebase deploy --only firestore:rules,firestore:indexes
 
 ---
 
-## 📜 Available Scripts
+## Available Scripts
 
 | Command | Description |
 |---------|-------------|
@@ -326,7 +326,7 @@ firebase deploy --only firestore:rules,firestore:indexes
 
 ---
 
-## 🚀 Deployment
+## Deployment
 
 ### Vercel (Recommended)
 
@@ -375,7 +375,7 @@ firebase deploy --only hosting
 
 ---
 
-## 🧪 Testing & Quality
+## Testing & Quality
 
 ```bash
 # Type safety
@@ -399,7 +399,7 @@ npm run typecheck && npm run lint && npm run build
 
 ---
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 | Issue | Solution |
 |-------|----------|
@@ -413,7 +413,7 @@ npm run typecheck && npm run lint && npm run build
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 | Document | Purpose |
 |----------|---------|
@@ -425,7 +425,7 @@ npm run typecheck && npm run lint && npm run build
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 ```bash
 # 1. Fork & branch
@@ -451,29 +451,11 @@ git push origin feat/amazing-feature
 
 ---
 
-## 📄 License
+## License
 
 **MIT License** — See [LICENSE](LICENSE) for details.
 
-```
-MIT License
-
-Copyright (c) 2024-present StreamFlix Contributors
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-```
-
----
-
-## 🙏 Acknowledgments
+## Acknowledgments
 
 | Project | Role |
 |---------|------|
@@ -488,18 +470,8 @@ copies or substantial portions of the Software.
 
 ---
 
-## 📞 Support
+## Support
 
 - **Issues:** [GitHub Issues](https://github.com/Wayne-Inc/StreamFlix/issues)
 - **Discussions:** [GitHub Discussions](https://github.com/Wayne-Inc/StreamFlix/discussions)
 - **Security:** Email security@streamflix.dpdns.org (GPG key in repo)
-
----
-
-<div align="center">
-
-**Built with ❤️ by the StreamFlix team**
-
-[⬆ Back to top](#streamflix)
-
-</div>
