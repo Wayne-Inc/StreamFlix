@@ -28,6 +28,7 @@ import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { profileHasPin, verifyProfilePin } from "@/lib/profiles";
 import { getSelectedProfile, clearSelectedProfile } from "@/lib/selected-profile";
 import { suggestTitles } from "@/lib/streamflix-data";
+import { LegalVersionBanner } from "./LegalVersionBanner";
 
 const links = [
   { kind: "home", label: "Home" },
@@ -591,6 +592,7 @@ export function Navbar() {
         </div>
       )}
     </header>
+      <LegalVersionBanner />
     <nav
       ref={mobileNavRef}
       aria-label="Mobile navigation"

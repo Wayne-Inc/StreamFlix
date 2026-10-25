@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Navbar } from "@/components/streamflix/Navbar";
 
 function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (

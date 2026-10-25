@@ -12,6 +12,40 @@ import {
   query,
   orderBy,
 } from "firebase/firestore";
+import { TOS_VERSION } from "@/routes/tos";
+import { PRIVACY_VERSION } from "@/routes/privacy-policy";
+import { setUserLegalVersions } from "@/lib/user-versions";
+
+async function hashPin(pin: string, salt?: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const saltBytes = salt ? encoder.encode(salt) : crypto.getRandomValues(new Uint8Array(16));
+  const pinBytes = encoder.encode(pin);
+  const key = await crypto.subtle.importKey("raw", pinBytes, { name: "PBKDF2" }, false, ["deriveBits"]);
+  const hashBits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt: saltBytes, iterations: 100000, hash: "SHA-256" },
+    key,
+    256
+  );
+  const hashArray = new Uint8Array(hashBits);
+  const hashHex = Array.from(hashArray).map(b => b.toString(16).padStart(2, "0")).join("");
+  const saltHex = Array.from(saltBytes).map(b => b.toString(16).padStart(2, "0")).join("");
+  return `pbkdf2_sha256$100000$${saltHex}$${hashHex}`;
+}
+
+async function verifyPinHash(pin: string, storedHash: string): Promise<boolean> {
+  try {
+    const parts = storedHash.split("$");
+    if (parts.length !== 4 || parts[0] !== "pbkdf2_sha256" || parts[1] !== "100000") {
+      return false;
+    }
+    const saltHex = parts[2];
+    const expectedHash = parts[3];
+    const computedHash = await hashPin(pin, saltHex);
+    return computedHash === storedHash;
+  } catch {
+    return false;
+  }
+}
 
 export type Profile = {
   id: string;
@@ -143,13 +177,22 @@ export async function ensureUserHasProfile(
       name: displayName || "Profile 1",
       kids: false,
     });
+    // Set user's accepted legal versions
+    try {
+      await setUserLegalVersions(userId, {
+        tosVersion: TOS_VERSION,
+        privacyVersion: PRIVACY_VERSION,
+      });
+    } catch (e) {
+      console.warn("Could not set user legal versions", e);
+    }
     return getUserProfiles(userId);
   }
   return profiles;
 }
 
 export async function setProfilePin(userId: string, profileId: string, pin: string): Promise<void> {
-  const pinHash = btoa(pin);
+  const pinHash = await hashPin(pin);
   await updateDoc(doc(db, "users", userId, "profiles", profileId), {
     pinHash,
     updatedAt: serverTimestamp(),
@@ -172,7 +215,7 @@ export async function verifyProfilePin(
   if (!snap.exists()) return false;
   const data = snap.data();
   if (!data.pinHash) return true;
-  return data.pinHash === btoa(pin);
+  return verifyPinHash(pin, data.pinHash);
 }
 
 export async function profileHasPin(userId: string, profileId: string): Promise<boolean> {

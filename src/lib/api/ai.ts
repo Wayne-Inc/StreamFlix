@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { Movie } from "../types";
 import { UNSAFE_GENRE_IDS } from "../kids-mode";
 import { AI_ERROR_MESSAGES, type AiErrorKind } from "../ai-errors";
+import { aiRateLimiter } from "../rate-limiter";
 
 const requestSchema = z.object({
   idToken: z.string().min(20).max(4096),
@@ -45,10 +46,6 @@ class AiServiceError extends Error {
   }
 }
 
-const AI_RATE_WINDOW_MS = 15 * 60 * 1000;
-const AI_RATE_LIMIT = 600; // 40 rpm * 15 minutes = 600
-const aiRateLimits = new Map<string, { count: number; resetAt: number }>();
-
 async function verifyUser(idToken: string): Promise<string> {
   const apiKey = (import.meta as any).env?.VITE_FIREBASE_API_KEY as string | undefined;
   if (!apiKey) {
@@ -74,20 +71,11 @@ async function verifyUser(idToken: string): Promise<string> {
   return uid;
 }
 
-function enforceRateLimit(uid: string) {
-  const now = Date.now();
-  if (aiRateLimits.size > 500) {
-    for (const [key, value] of aiRateLimits) if (value.resetAt <= now) aiRateLimits.delete(key);
-  }
-  const entry = aiRateLimits.get(uid);
-  if (!entry || entry.resetAt <= now) {
-    aiRateLimits.set(uid, { count: 1, resetAt: now + AI_RATE_WINDOW_MS });
-    return;
-  }
-  if (entry.count >= AI_RATE_LIMIT) {
+async function enforceRateLimit(uid: string) {
+  const result = await aiRateLimiter({ headers: new Headers() } as any);
+  if (!result.allowed) {
     throw new AiServiceError("rateLimit", AI_ERROR_MESSAGES.rateLimit);
   }
-  entry.count++;
 }
 
 function envValue(name: string): string {
@@ -101,7 +89,7 @@ function getAiConfig() {
   return {
     apiKey: envValue("NVIDIA_API_KEY") || envValue("NVIDIA_NIM_API_KEY"),
     baseUrl: (envValue("NVIDIA_BASE_URL") || "https://integrate.api.nvidia.com/v1").replace(/\/+$/, ""),
-    model: envValue("NVIDIA_MODEL") || "nvidia/nemotron-3-ultra-550b-a55b",
+    model: envValue("NVIDIA_MODEL") || "nvidia/nemotron-3-ultra",
   };
 }
 

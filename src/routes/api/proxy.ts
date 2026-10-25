@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createErrorResponse } from "@/lib/error-handler";
 
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
@@ -23,6 +24,18 @@ function rewriteM3u8(manifest: string, manifestUrl: string, referer: string): st
 export const Route = createFileRoute("/api/proxy")({
   server: {
     handlers: {
+      OPTIONS: async ({ request }: { request: Request }) => {
+        const allowedOrigin = new URL(request.url).origin;
+        return new Response(null, {
+          status: 204,
+          headers: {
+            "Access-Control-Allow-Origin": allowedOrigin,
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            "Access-Control-Max-Age": "86400",
+          },
+        });
+      },
       GET: async ({ request }: { request: Request }) => {
         const url = new URL(request.url);
         const targetUrl = url.searchParams.get("url");
@@ -45,10 +58,12 @@ export const Route = createFileRoute("/api/proxy")({
             signal: AbortSignal.timeout(15000),
           });
 
+          const allowedOrigin = new URL(request.url).origin;
           const respHeaders = new Headers({
-            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Origin": allowedOrigin,
             "Access-Control-Allow-Methods": "GET, OPTIONS",
-            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            "Access-Control-Max-Age": "86400",
             "Accept-Ranges": "bytes",
           });
 
@@ -75,10 +90,7 @@ export const Route = createFileRoute("/api/proxy")({
 
           return new Response(r.body, { status: r.status, headers: respHeaders });
         } catch (e: any) {
-          return new Response(JSON.stringify({ error: e?.message || "Proxy error" }), {
-            status: 502,
-            headers: { "Content-Type": "application/json" },
-          });
+          return createErrorResponse(e, 502);
         }
       },
     },

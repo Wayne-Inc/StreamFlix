@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { runFirestoreQuery, sendFcmMulticast } from "@/lib/firebase-rest";
+import { createErrorResponse } from "@/lib/error-handler";
 
 const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
 const siteUrl = (import.meta.env.VITE_SITE_URL ?? "").replace(/\/+$/, "");
@@ -87,7 +88,7 @@ export const Route = createFileRoute("/api/send-notification")({
           });
         } catch (err) {
           console.error("send-notification error:", err);
-          return Response.json({ error: "Internal error" }, { status: 500 });
+          return createErrorResponse(err, 500);
         }
       },
     },

@@ -2,27 +2,31 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 export const fetchTrending = createServerFn({ method: "POST" }).handler(async () => {
-  const { tmdbFetch, toMovie } = await import("./tmdb.server");
+  const { tmdbFetch, toMovie, enrichRuntimes } = await import("./tmdb.server");
   const data = await tmdbFetch("/trending/movie/week");
-  return (data.results || []).map((m: any) => toMovie(m));
+  const movies = (data.results || []).map((m: any) => toMovie(m));
+  return enrichRuntimes(movies);
 });
 
 export const fetchTrendingDay = createServerFn({ method: "POST" }).handler(async () => {
-  const { tmdbFetch, toMovie } = await import("./tmdb.server");
+  const { tmdbFetch, toMovie, enrichRuntimes } = await import("./tmdb.server");
   const data = await tmdbFetch("/trending/movie/day");
-  return (data.results || []).map((m: any) => toMovie(m));
+  const movies = (data.results || []).map((m: any) => toMovie(m));
+  return enrichRuntimes(movies);
 });
 
 export const fetchTrendingAllDay = createServerFn({ method: "POST" }).handler(async () => {
-  const { tmdbFetch, toMovie, toTv } = await import("./tmdb.server");
+  const { tmdbFetch, toMovie, toTv, enrichRuntimes } = await import("./tmdb.server");
   const data = await tmdbFetch("/trending/all/day");
-  return (data.results || []).map((m: any) => (m.media_type === "tv" ? toTv(m) : toMovie(m)));
+  const items = (data.results || []).map((m: any) => (m.media_type === "tv" ? toTv(m) : toMovie(m)));
+  return enrichRuntimes(items);
 });
 
 export const fetchTrendingAllWeek = createServerFn({ method: "POST" }).handler(async () => {
-  const { tmdbFetch, toMovie, toTv } = await import("./tmdb.server");
+  const { tmdbFetch, toMovie, toTv, enrichRuntimes } = await import("./tmdb.server");
   const data = await tmdbFetch("/trending/all/week");
-  return (data.results || []).map((m: any) => (m.media_type === "tv" ? toTv(m) : toMovie(m)));
+  const items = (data.results || []).map((m: any) => (m.media_type === "tv" ? toTv(m) : toMovie(m)));
+  return enrichRuntimes(items);
 });
 
 export const fetchPopular = createServerFn({ method: "POST" }).handler(async () => {

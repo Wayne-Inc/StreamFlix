@@ -50,6 +50,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { movieById, loadSimilar, loadRecommendations, getWatchProviders, getGenres, type WatchProvider } from "@/lib/streamflix-data";
 import { discoverByGenre, fetchTitleLogo, fetchTvSeason } from "@/lib/api/tmdb";
 import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
+import { TrailerModal } from "@/components/streamflix/TrailerModal";
 import { getWatchHistoryFromFirestore } from "@/lib/history-firestore";
 import { AgeRatingBadge } from "@/components/streamflix/AgeRatingBadge";
 import { askStreamflixAI } from "@/lib/api/ai";

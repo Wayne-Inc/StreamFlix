@@ -24,6 +24,9 @@ import {
   type User,
 } from "firebase/auth";
 import heroImg from "@/assets/hero-1.jpg";
+import { TOS_VERSION } from "@/routes/tos";
+import { PRIVACY_VERSION } from "@/routes/privacy-policy";
+import { setUserLegalVersions } from "@/lib/user-versions";
 
 const LAST_SIGN_IN_METHOD_KEY = "sf:lastSignInMethod";
 type SignInMethod = "email" | "google" | "github";
@@ -189,6 +192,15 @@ function AuthPage() {
         try {
           localStorage.setItem("sf:auth", "1");
         } catch {}
+        // Set user's accepted legal versions
+        try {
+          await setUserLegalVersions(cred.user.uid, {
+            tosVersion: TOS_VERSION,
+            privacyVersion: PRIVACY_VERSION,
+          });
+        } catch (e) {
+          console.warn("Could not set user legal versions", e);
+        }
         toast.success("Signed in.");
         navigate({ to: "/profiles" });
       } else {
@@ -222,8 +234,17 @@ function AuthPage() {
           await updateFirebaseProfile(cred.user, { displayName: name.trim() });
         }
         await sendEmailVerification(cred.user);
+        // Set user's accepted legal versions
+        try {
+          await setUserLegalVersions(cred.user.uid, {
+            tosVersion: TOS_VERSION,
+            privacyVersion: PRIVACY_VERSION,
+          });
+        } catch (e) {
+          console.warn("Could not set user legal versions", e);
+        }
         setVerifyMsg(
-          `Verification email sent to ${email}. Please check your inbox and then sign in.`,
+          `Verification email sent to ${email}. Please check your inbox (and spam folder) and then sign in.`,
         );
         setMode("signin");
       }
@@ -243,7 +264,7 @@ function AuthPage() {
     setBusy(true);
     try {
       await sendEmailVerification(user);
-      toast.success("Verification email resent.");
+      toast.success("Verification email resent. Check your inbox and spam folder.");
     } catch (err: any) {
       toast.error(err?.message ?? "Failed to resend");
     }
@@ -257,7 +278,7 @@ function AuthPage() {
     try {
       await sendPasswordResetEmail(auth, email.trim());
       setResetSent(true);
-      toast.success("Password reset email sent.");
+      toast.success("Password reset email sent. Check your inbox and spam folder.");
     } catch (err: any) {
       const msg = err?.code
         ? err.code.replace("auth/", "").replace(/-/g, " ")
@@ -378,6 +399,15 @@ function AuthPage() {
       try {
         localStorage.setItem("sf:auth", "1");
       } catch {}
+      // Set user's accepted legal versions
+      try {
+        await setUserLegalVersions(userCred.user.uid, {
+          tosVersion: TOS_VERSION,
+          privacyVersion: PRIVACY_VERSION,
+        });
+      } catch (e) {
+        console.warn("Could not set user legal versions", e);
+      }
       toast.success("Signed in with Google.");
       navigate({ to: "/profiles" });
     } catch (err: any) {
@@ -407,6 +437,15 @@ function AuthPage() {
       try {
         localStorage.setItem("sf:auth", "1");
       } catch {}
+      // Set user's accepted legal versions
+      try {
+        await setUserLegalVersions(userCred.user.uid, {
+          tosVersion: TOS_VERSION,
+          privacyVersion: PRIVACY_VERSION,
+        });
+      } catch (e) {
+        console.warn("Could not set user legal versions", e);
+      }
       toast.success("Signed in with GitHub.");
       navigate({ to: "/profiles" });
     } catch (err: any) {
@@ -612,6 +651,20 @@ function AuthPage() {
                     Password requirements
                   </p>
                   <PasswordPolicyChecklist password={password} />
+                </div>
+              )}
+
+              {mode === "signup" && (
+                <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-400 text-center">
+                  By creating an account, you agree to our{" "}
+                  <Link to="/tos" className="underline hover:text-amber-300 transition-colors font-medium">
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link to="/privacy-policy" className="underline hover:text-amber-300 transition-colors font-medium">
+                    Privacy Policy
+                  </Link>
+                  .
                 </div>
               )}
 

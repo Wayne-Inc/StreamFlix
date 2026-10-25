@@ -6,7 +6,7 @@ import { Footer } from "@/components/streamflix/Footer";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import { Row } from "@/components/streamflix/Row";
 import { RowSkeleton } from "@/components/streamflix/RowSkeleton";
-import { HeroBannerSkeleton } from "@/components/ui/skeleton";
+import { HeroBannerSkeleton, Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getGenres, loadMovies, loadTv } from "@/lib/streamflix-data";
 import { fetchPopular } from "@/lib/api/tmdb";

@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Sparkles, ChevronDown, ChevronUp } from "luc
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { MovieCard } from "@/components/streamflix/MovieCard";
-import { HeroBannerSkeleton } from "@/components/ui/skeleton";
+import { HeroBannerSkeleton, Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getGenres, searchByGenre } from "@/lib/streamflix-data";
 import type { Movie } from "@/lib/types";

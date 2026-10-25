@@ -12,6 +12,7 @@ import {
 import { passwordMeetsPolicy } from "@/lib/password";
 import { PasswordPolicyChecklist } from "@/components/streamflix/PasswordPolicyChecklist";
 import { PasswordStrengthMeter } from "@/components/streamflix/PasswordStrengthMeter";
+import { LegalVersionBanner } from "@/components/streamflix/LegalVersionBanner";
 
 export const Route = createFileRoute("/_authenticated/force-password")({
   ssr: false,
@@ -85,6 +86,7 @@ function ForcePasswordPage() {
 
   return (
     <div className="grid min-h-dvh place-items-center bg-background p-4">
+      <LegalVersionBanner />
       <div className="w-full max-w-md rounded-lg border border-border bg-card/60 p-8 sm:p-10">
         <div className="flex items-center gap-2">
           <ShieldCheck className="size-6 text-primary" />

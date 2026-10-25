@@ -785,8 +785,9 @@ function PlayerPage() {
             ref={iframeRef}
             src={videoUrl}
             title={`Embed Player — ${movie.title}`}
-            allow="autoplay; fullscreen; encrypted-media"
+            allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
             allowFullScreen
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-modals"
             onLoad={handleEmbedLoad}
             className="size-full border-0"
           />

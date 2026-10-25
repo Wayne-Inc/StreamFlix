@@ -57,22 +57,23 @@ export function MovieCard({
     }
   };
 
-  const handleClick = () => {
+  const handleCardClick = () => {
     if (!isDragging) {
       goToInfo();
     }
   };
 
   return (
-    <div
-      className={`group relative ${fluid ? "w-full" : landscape ? "w-[280px] sm:w-[380px] shrink-0" : "w-[175px] sm:w-[220px] shrink-0"}`}
-      data-context="movie"
-      data-title={movie.title}
-      data-url={`/movie/${movie.id}`}
-      onClick={handleClick}
+    <Link
+      to="/movie/$id"
+      params={{ id: movie.id }}
+      onClick={handleCardClick}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={() => setIsDragging(false)}
+      className={`group relative block ${fluid ? "w-full" : landscape ? "w-[280px] sm:w-[380px] shrink-0" : "w-[175px] sm:w-[220px] shrink-0"}`}
+      data-context="movie"
+      data-title={movie.title}
     >
       <div className={`relative ${landscape ? "aspect-video" : "aspect-[2/3]"} overflow-hidden rounded-xl bg-surface shadow-md transition-shadow duration-300 group-hover:shadow-2xl`}>
         {(landscape ? movie.backdropSm || movie.backdrop : movie.poster) ? (
@@ -145,28 +146,28 @@ export function MovieCard({
               src={buildTitleLogoUrl(movie.logo.filePath)}
               alt={movie.title}
               draggable={false}
-              className="mb-2 mx-auto max-h-12 w-auto max-w-full object-contain select-none"
+              className="mb-2 mx-auto max-h-16 w-auto max-w-full object-contain select-none"
             />
           ) : (
-            <p className="text-xs sm:text-sm font-bold text-white line-clamp-1 drop-shadow-lg">
+            <p className={`font-bold text-white line-clamp-1 drop-shadow-lg ${landscape ? "text-lg sm:text-xl" : "text-xs sm:text-sm"}`}>
               {movie.title}
             </p>
           )}
-          <div className="flex items-center gap-1.5 text-[10px] sm:text-xs mt-0.5">
+          <div className={`flex items-center gap-1.5 mt-0.5 ${landscape ? "text-base sm:text-lg" : "text-[10px] sm:text-xs"}`}>
             <span className="text-muted-foreground">{movie.year}</span>
             {(movie.runtime || movie.runtimeMinutes) && (
               <>
                 <span className="text-muted-foreground/40">&middot;</span>
                 <span className="inline-flex items-center gap-1 text-white/80">
-                  <Clock className="size-2.5" />
+                  <Clock className={landscape ? "size-4" : "size-2.5"} />
                   {movie.runtime || (movie.runtimeMinutes ? `${Math.floor(movie.runtimeMinutes / 60)}h ${movie.runtimeMinutes % 60}m` : '')}
                 </span>
               </>
             )}
           </div>
           {reason && (
-            <p className="mt-1 flex items-center gap-1 text-[10px] sm:text-[11px] text-purple-300">
-              <Sparkles className="size-3 shrink-0" />
+            <p className={`mt-1 flex items-center gap-1 text-purple-300 ${landscape ? "text-base sm:text-lg" : "text-[10px] sm:text-[11px]"}`}>
+              <Sparkles className={landscape ? "size-4" : "size-3"} shrink-0 />
               {reasonLink ? (
                 <Link
                   to="/movie/$id"
@@ -219,6 +220,6 @@ export function MovieCard({
           </>
         )}
       </div>
-    </div>
+    </Link>
   );
 }

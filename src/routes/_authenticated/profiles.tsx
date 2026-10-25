@@ -33,14 +33,16 @@ import { getFavoriteGenres, setFavoriteGenres, GENRE_OPTIONS } from "@/lib/favor
 import { isKidsProfile } from "@/lib/kids-mode";
 import { setSelectedProfile } from "@/lib/selected-profile";
 import { ConfirmDialog } from "@/components/streamflix/ConfirmDialog";
+import { LegalVersionBanner } from "@/components/streamflix/LegalVersionBanner";
 
 function isValidAvatarUrl(url: string): boolean {
   if (!url) return false;
-  // Allow data URLs (cropped avatars) and http/https URLs
+  // Allow data URLs (cropped avatars) and TMDB image URLs only
   if (url.startsWith("data:")) return true;
   try {
     const parsed = new URL(url);
-    return parsed.protocol === "https:" || parsed.protocol === "http:";
+    // Only allow TMDB image domains
+    return parsed.hostname === "image.tmdb.org" && parsed.protocol === "https:";
   } catch {
     return false;
   }
@@ -169,6 +171,7 @@ function ProfilesPage() {
         color: p.color,
         avatarUrl: p.avatarUrl,
         kids: p.kids,
+        contentRatingLimit: p.contentRatingLimit,
       });
       window.dispatchEvent(new Event("profileChanged"));
     } catch {}
@@ -258,6 +261,7 @@ function ProfilesPage() {
           <Settings className="size-5" />
         </button>
       </header>
+      <LegalVersionBanner />
       <div className="relative z-20 w-full max-w-4xl px-4 text-center">
         <h1 className="text-3xl font-medium sm:text-5xl">
           {editing ? "Manage Profiles:" : "Who's watching?"}
@@ -466,7 +470,6 @@ function ProfileEditor({
   const existing = isNew ? null : (target as Profile);
   const [name, setName] = useState(existing?.name ?? "");
   const [kids, setKids] = useState(existing?.kids ?? false);
-  const [contentRatingLimit, setContentRatingLimit] = useState<Profile["contentRatingLimit"]>(existing?.contentRatingLimit);
   const [color, setColor] = useState(existing?.color ?? COLORS[existingCount % COLORS.length]);
   const [avatarUrl, setAvatarUrl] = useState(existing?.avatarUrl ?? "");
   const [pin, setPin] = useState("");
@@ -499,13 +502,12 @@ function ProfileEditor({
         await createProfile(u.uid, {
           name: name.trim(),
           kids,
-          contentRatingLimit,
           avatarUrl: avatarUrl.trim() || undefined,
         });
         const list = await getUserProfiles(u.uid);
         const created = list.find((p) => p.name === name.trim());
         if (created) {
-          await updateProfile(u.uid, created.id, { color, avatarUrl: avatarUrl.trim() || "", contentRatingLimit });
+          await updateProfile(u.uid, created.id, { color, avatarUrl: avatarUrl.trim() || "" });
           if (pin.trim()) {
             await setProfilePin(u.uid, created.id, pin.trim());
             setHasPin(true);
@@ -517,7 +519,6 @@ function ProfileEditor({
           name: name.trim(),
           kids,
           color,
-          contentRatingLimit,
           avatarUrl: avatarUrl.trim() || "",
         });
         if (pin.trim()) {
@@ -639,6 +640,18 @@ function ProfileEditor({
               >
                 <Image className="size-3.5" /> TMDB
               </button>
+              {avatarUrl && isValidAvatarUrl(avatarUrl) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAvatarUrl("");
+                    toast.success("Avatar removed");
+                  }}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded bg-destructive/20 px-3 py-2 text-xs font-semibold text-destructive hover:bg-destructive/30"
+                >
+                  <X className="size-3.5" /> Remove
+                </button>
+              )}
             </div>
             <input
               ref={fileInputRef}
@@ -673,21 +686,23 @@ function ProfileEditor({
           />
         )}
 
-        <div className="mt-5">
-          <p className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">Color</p>
-          <div className="flex flex-wrap gap-2">
-            {COLORS.map((c) => (
-              <button
-                key={c}
-                onClick={() => setColor(c)}
-                className={`size-9 rounded-md bg-gradient-to-br ${c} ${
-                  color === c ? "ring-2 ring-foreground ring-offset-2 ring-offset-card" : ""
-                }`}
-                aria-label={c}
-              />
-            ))}
+        {(avatarUrl === "" || !isValidAvatarUrl(avatarUrl)) && (
+          <div className="mt-5">
+            <p className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">Color</p>
+            <div className="flex flex-wrap gap-2">
+              {COLORS.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setColor(c)}
+                  className={`size-9 rounded-md bg-gradient-to-br ${c} ${
+                    color === c ? "ring-2 ring-foreground ring-offset-2 ring-offset-card" : ""
+                  }`}
+                  aria-label={c}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="mt-5 flex items-center justify-between gap-3">
           <div>
@@ -711,37 +726,6 @@ function ProfileEditor({
             />
           </button>
         </div>
-
-        {!kids && (
-          <div className="mt-5">
-            <p className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">Content Rating Limit</p>
-            <p className="mb-3 text-xs text-muted-foreground">
-              Restrict content by maturity rating. Only applies to non-kids profiles.
-            </p>
-            <select
-              value={contentRatingLimit || ""}
-              onChange={(e) => setContentRatingLimit(e.target.value || undefined)}
-              className="w-full rounded bg-neutral-800 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="">No limit (All ratings)</option>
-              <optgroup label="Movies">
-                <option value="G">G - General Audiences</option>
-                <option value="PG">PG - Parental Guidance</option>
-                <option value="PG-13">PG-13 - Parents Strongly Cautioned</option>
-                <option value="R">R - Restricted</option>
-                <option value="NC-17">NC-17 - Adults Only</option>
-              </optgroup>
-              <optgroup label="TV Shows">
-                <option value="TV-Y">TV-Y - All Children</option>
-                <option value="TV-Y7">TV-Y7 - Older Children</option>
-                <option value="TV-G">TV-G - General Audience</option>
-                <option value="TV-PG">TV-PG - Parental Guidance</option>
-                <option value="TV-14">TV-14 - Parents Strongly Cautioned</option>
-                <option value="TV-MA">TV-MA - Mature Audience</option>
-              </optgroup>
-            </select>
-          </div>
-        )}
 
         <div className="mt-4">
           {!hasPin ? (

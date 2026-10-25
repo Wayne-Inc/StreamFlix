@@ -199,7 +199,7 @@ function SettingsPage() {
     setSendingReset(true);
     try {
       await sendPasswordResetEmail(auth, user.email);
-      toast.success(`Password reset email sent to ${user.email}.`);
+      toast.success(`Password reset email sent to ${user.email}. Check your inbox and spam folder.`);
     } catch (e: any) {
       if (e?.code === "auth/too-many-requests") {
         toast.error("Too many requests. Try again later.");
@@ -602,7 +602,7 @@ function SettingsPage() {
                           setVerifyEmailSent(true);
                           try {
                             await sendEmailVerification(user);
-                            toast.success("Verification email sent.");
+                            toast.success("Verification email sent. Check your inbox and spam folder.");
                           } catch (e: any) {
                             setVerifyEmailSent(false);
                             toast.error(e.message);

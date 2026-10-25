@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
-import { Search, X, Image as ImageIcon, User as UserIcon, Star } from "lucide-react";
+import { Search, X, User as UserIcon, Star, Film } from "lucide-react";
 import { toast } from "sonner";
 import { fetchPopularPeople } from "@/lib/api/tmdb";
+import { getWatchHistory } from "@/lib/continue-watching";
 
 interface TmdbPerson {
   id: number;
@@ -9,6 +10,13 @@ interface TmdbPerson {
   profile_path: string | null;
   known_for_department: string;
   popularity: number;
+}
+
+interface WatchedCharacter {
+  name: string;
+  profile_path: string | null;
+  title: string;
+  mediaType: "movie" | "tv";
 }
 
 export function TmdbAvatarPicker({
@@ -19,14 +27,50 @@ export function TmdbAvatarPicker({
   onClose: () => void;
 }) {
   const [people, setPeople] = useState<TmdbPerson[]>([]);
+  const [watchedCharacters, setWatchedCharacters] = useState<WatchedCharacter[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<TmdbPerson[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [activeTab, setActiveTab] = useState<"watched" | "popular" | "search">("watched");
 
   const imageBaseUrl = "https://image.tmdb.org/t/p/w185";
+
+  // Load characters from watch history
+  useEffect(() => {
+    const history = getWatchHistory();
+    const characters: WatchedCharacter[] = [];
+
+    for (const item of history) {
+      // Use cast (actors) and castPfp (actor profile pictures) from watch history
+      // Note: character names (castRoles) are not stored in watch history, so we use actor names
+      const cast = item.cast || [];
+      const castPfp = item.castPfp || [];
+
+      for (let i = 0; i < cast.length; i++) {
+        const actorName = cast[i];
+        const profilePath = castPfp[i] ? castPfp[i].replace("https://image.tmdb.org/t/p/w185", "") : null;
+
+        if (actorName && profilePath) {
+          characters.push({
+            name: actorName,
+            profile_path: profilePath,
+            title: item.title,
+            mediaType: item.id.startsWith("tv-") ? "tv" : "movie",
+          });
+        }
+      }
+    }
+
+    // Remove duplicates by name, keep first occurrence
+    const uniqueCharacters = characters.filter(
+      (char, index, self) => index === self.findIndex((c) => c.name === char.name)
+    ).slice(0, 20); // Limit to 20 characters
+
+    setWatchedCharacters(uniqueCharacters);
+  }, []);
 
   const loadPopular = useCallback(async (pageNum = 1) => {
     try {
@@ -84,13 +128,17 @@ export function TmdbAvatarPicker({
     return () => clearTimeout(debounce);
   }, [searchQuery, handleSearch]);
 
-  const handleSelect = (person: TmdbPerson) => {
+  const handleSelect = (person: TmdbPerson | WatchedCharacter) => {
     if (person.profile_path) {
       onSelect(`${imageBaseUrl}${person.profile_path}`);
     }
   };
 
-  const displayPeople = searchQuery ? searchResults : people;
+  const displayPeople = searchQuery
+    ? searchResults
+    : activeTab === "watched"
+      ? watchedCharacters
+      : people;
 
   return (
     <div className="max-h-[60vh] overflow-y-auto">
@@ -114,18 +162,47 @@ export function TmdbAvatarPicker({
         </button>
       </div>
 
-      {loading && (
+      {!searchQuery && (
+        <div className="mb-4 flex gap-1 bg-neutral-800/50 rounded-lg p-1" role="tablist">
+          <button
+            role="tab"
+            aria-selected={activeTab === "watched"}
+            onClick={() => setActiveTab("watched")}
+            className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition ${
+              activeTab === "watched"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Film className="size-3.5 inline mr-1" /> Your Characters
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeTab === "popular"}
+            onClick={() => setActiveTab("popular")}
+            className={`flex-1 py-1.5 px-3 rounded-md text-sm font-medium transition ${
+              activeTab === "popular"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Star className="size-3.5 inline mr-1" /> Popular Actors
+          </button>
+        </div>
+      )}
+
+      {loading && activeTab === "popular" && (
         <div className="flex items-center justify-center py-8 text-muted-foreground">
           Loading avatars...
         </div>
       )}
 
-      {!loading && (
+      {(!loading || activeTab === "watched" || searchQuery) && (
         <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-2">
-          {displayPeople.map((person) => (
+          {displayPeople.map((person, index) => (
             <button
-              key={person.id}
-              onClick={() => handleSelect(person)}
+              key={`${activeTab}-${person.name}-${index}`}
+              onClick={() => handleSelect(person as any)}
               className="relative aspect-square overflow-hidden rounded-lg bg-neutral-800/50 hover:ring-2 hover:ring-primary transition"
               aria-label={person.name}
             >
@@ -141,15 +218,18 @@ export function TmdbAvatarPicker({
                   <UserIcon className="size-8 text-muted-foreground" />
                 </div>
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 hover:opacity-100 transition p-2 flex items-end">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 hover:opacity-100 transition p-2 flex flex-col items-end justify-end">
                 <span className="text-xs text-white truncate w-full">{person.name}</span>
+                {activeTab === "watched" && 'title' in person && (
+                  <span className="text-[10px] text-white/70 truncate w-full">{person.title}</span>
+                )}
               </div>
             </button>
           ))}
         </div>
       )}
 
-      {!loading && !searchQuery && hasMore && (
+      {!loading && activeTab === "popular" && !searchQuery && hasMore && (
         <button
           onClick={() => {
             const nextPage = page + 1;
@@ -167,6 +247,13 @@ export function TmdbAvatarPicker({
         <div className="text-center py-8 text-muted-foreground">
           <UserIcon className="mx-auto size-12 mb-2 opacity-50" />
           <p>No results found for "{searchQuery}"</p>
+        </div>
+      )}
+
+      {!searchQuery && watchedCharacters.length === 0 && activeTab === "watched" && (
+        <div className="text-center py-8 text-muted-foreground">
+          <Film className="mx-auto size-12 mb-2 opacity-50" />
+          <p>Watch some movies or shows to see characters here</p>
         </div>
       )}
     </div>

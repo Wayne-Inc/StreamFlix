@@ -15,7 +15,9 @@ A free, Netflix-style streaming web app. Browse an ever-changing catalog of movi
 - **Release Calendar** — upcoming titles with reminder notifications.
 - **Kids mode** — filter content per profile.
 - **Personalized recommendations** — seeded from favorites and watch history.
-- **Accounts** — email/password and Google sign-in, password policy enforcement, device tracking.
+- **Accounts** — email/password, Google, and GitHub sign-in, password policy enforcement, device tracking.
+- **Terms & Privacy Version Tracking** — automatic version tracking with in-app notifications when policies are updated.
+- **Screensaver** — beautiful backdrop carousel with movie/show details after inactivity.
 
 ## Tech Stack
 
@@ -66,6 +68,23 @@ Copy `.env.example` to `.env` and fill in your credentials:
 | `NVIDIA_API_KEY` | NVIDIA NIM API key for StreamFlix AI (server-side only) |
 | `VITE_SITE_URL` | Public site URL (e.g. `https://streamflix.dpdns.org`) |
 | `CRON_SECRET` | Bearer secret that authorizes the `/api/release-notifications-cron` endpoint (also a GitHub Actions secret) |
+
+## Terms of Service & Privacy Policy Versioning
+
+StreamFlix tracks the version of the Terms of Service and Privacy Policy that each user has accepted. When these documents are updated:
+
+1. The version constants in `src/routes/tos.tsx` and `src/routes/privacy-policy.tsx` are updated
+2. On next sign-in, the app compares the user's stored version with the current version
+3. If outdated, an in-app banner notifies the user with links to review the updated documents
+4. User's accepted version is stored in Firestore per user document
+
+### Version Format
+Versions use date-based format (e.g., `2026-10-24`).
+
+### Configuration
+Update versions in:
+- `src/routes/tos.tsx` - `TOS_VERSION` constant
+- `src/routes/privacy-policy.tsx` - `PRIVACY_VERSION` constant
 
 ## Scripts
 

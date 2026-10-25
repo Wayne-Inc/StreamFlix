@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createErrorResponse } from "@/lib/error-handler";
 
 export const Route = createFileRoute("/api/verify-recaptcha")({
   server: {
@@ -66,10 +67,7 @@ export const Route = createFileRoute("/api/verify-recaptcha")({
           });
         } catch (err) {
           console.error("Turnstile verification error:", err);
-          return new Response(JSON.stringify({ ok: false, error: "Internal error" }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
+          return createErrorResponse(err, 500);
         }
       },
     },

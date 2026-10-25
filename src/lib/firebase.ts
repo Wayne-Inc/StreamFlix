@@ -4,9 +4,20 @@ import {
   getFirestore,
   connectFirestoreEmulator,
   initializeFirestore,
-  persistentLocalCache,
-  persistentMultipleTabManager,
+  enableIndexedDbPersistence,
 } from "firebase/firestore";
+import { initializeAppCheck, ReCaptchaV3Provider, getToken } from "firebase/app-check";
+
+// Try to import persistent cache (available in newer Firebase versions)
+let persistentLocalCache: any;
+let persistentMultipleTabManager: any;
+try {
+  const firestore = await import("firebase/firestore");
+  persistentLocalCache = firestore.persistentLocalCache;
+  persistentMultipleTabManager = firestore.persistentMultipleTabManager;
+} catch {
+  // Not available in this version
+}
 
 // Vite inlines VITE_* vars into both the client and server bundles.
 const firebaseConfig = {
@@ -22,17 +33,33 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0
 
 export const auth = getAuth(app);
 
+// Initialize App Check for Firestore and Auth protection (client-side only)
+if (typeof window !== "undefined" && import.meta.env.VITE_APP_CHECK_SITE_KEY) {
+  try {
+    initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider(import.meta.env.VITE_APP_CHECK_SITE_KEY),
+      isTokenAutoRefreshEnabled: true,
+    });
+    console.log("[App Check] Initialized with reCAPTCHA v3");
+  } catch (e) {
+    console.warn("[App Check] Failed to initialize:", e);
+  }
+}
+
 // Persistent local cache so watch history, my list and profiles keep working
 // offline and on flaky connections. Falls back to the in-memory cache when
 // IndexedDB is unavailable (private mode, server-side rendering).
 function createDb() {
   if (typeof window === "undefined") return getFirestore(app);
   try {
-    return initializeFirestore(app, {
-      localCache: persistentLocalCache({
-        tabManager: persistentMultipleTabManager(),
-      }),
-    });
+    if (persistentLocalCache && persistentMultipleTabManager) {
+      return initializeFirestore(app, {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager(),
+        }),
+      });
+    }
+    return initializeFirestore(app, {});
   } catch {
     // Firestore was already initialized for this app (e.g. during HMR).
     return getFirestore(app);

@@ -6,6 +6,7 @@ import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
 import { buildTitleLogoUrl } from "@/lib/title-logo";
 import { AgeRatingBadge } from "./AgeRatingBadge";
 import { Calendar, Clock, Star } from "lucide-react";
+import { formatRuntime } from "@/lib/runtime";
 
 const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
@@ -191,7 +192,18 @@ export function ScreenSaver() {
             className="rounded-full px-2.5 py-1 text-xs backdrop-blur-lg sm:px-3 sm:py-1.5"
           />
           <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-white/80 backdrop-blur-lg sm:px-3 sm:py-1.5">
-            <Clock className="size-3" /> {currentMovie.runtime || (currentMovie.runtimeMinutes ? `${Math.floor(currentMovie.runtimeMinutes / 60)}h ${currentMovie.runtimeMinutes % 60}m` : '—')}
+            <Clock className="size-3" />
+            {currentMovie.id.startsWith("tv-")
+              ? currentMovie.numberOfSeasons
+                ? `${currentMovie.numberOfSeasons} season${currentMovie.numberOfSeasons > 1 ? "s" : ""}${currentMovie.numberOfEpisodes ? ` · ${currentMovie.numberOfEpisodes} ep${currentMovie.numberOfEpisodes > 1 ? "s" : ""}` : ""}`
+                : currentMovie.numberOfEpisodes
+                ? `${currentMovie.numberOfEpisodes} ep${currentMovie.numberOfEpisodes > 1 ? "s" : ""}`
+                : "TV Series"
+              : currentMovie.runtime && currentMovie.runtime !== "—"
+                ? currentMovie.runtime
+                : currentMovie.runtimeMinutes
+                  ? formatRuntime(currentMovie.runtimeMinutes)
+                  : "—"}
           </span>
         </div>
       </div>
