@@ -14,11 +14,12 @@ export function createErrorResponse(
   status: number = 500,
   code?: string
 ): Response {
-  const message = error instanceof Error ? error.message : String(error);
+  // Keep full error details on the server for debugging, but never expose them to clients.
+  console.error("API error response:", error);
 
   const response: ErrorResponse = {
     ok: false,
-    error: message,
+    error: "Internal server error",
     ...(code ? { code } : {}),
   };
 
