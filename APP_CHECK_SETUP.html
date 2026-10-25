@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firebase App Check Setup — StreamFlix Documentation</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      line-height: 1.7;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: #0a0a0a;
+      color: #eaeaea;
+    }
+    h1 { color: #e50914; border-bottom: 3px solid #e50914; padding-bottom: 0.5rem; margin-bottom: 2rem; }
+    h2 { color: #fff; margin-top: 3rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem; }
+    h3 { color: #ccc; margin-top: 2rem; }
+    code { background: #1a1a1a; padding: 0.2rem 0.4rem; border-radius: 4px; color: #e50914; font-size: 0.9em; }
+    pre { background: #121212; padding: 1rem; border-radius: 8px; overflow-x: auto; border: 1px solid #2a2a2a; }
+    pre code { background: none; padding: 0; color: #aaa; font-size: 0.85rem; }
+    .section { background: #121212; border: 1px solid #2a2a2a; border-radius: 8px; padding: 1.5rem; margin: 1.5rem 0; }
+    .note { background: #1a2a1a; border-left: 3px solid #4ade80; padding: 1rem; margin: 1rem 0; border-radius: 0 8px 8px 0; }
+    .warning { background: #2a1a1a; border-left: 3px solid #e50914; padding: 1rem; margin: 1rem 0; border-radius: 0 8px 8px 0; }
+    .info { background: #1a1a2a; border-left: 3px solid #60a5fa; padding: 1rem; margin: 1rem 0; border-radius: 0 8px 8px 0; }
+    .step { counter-increment: step; margin: 1.5rem 0; padding: 1rem; background: #181818; border-radius: 8px; border-left: 4px solid #e50914; }
+    .step::before { content: counter(step); display: inline-block; width: 2rem; height: 2rem; background: #e50914; color: white; border-radius: 50%; text-align: center; line-height: 2rem; margin-right: 1rem; font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+    th, td { border: 1px solid #333; padding: 0.75rem; text-align: left; }
+    th { background: #1a1a1a; color: #e50914; }
+    tr:nth-child(even) { background: #181818; }
+    a { color: #e50914; }
+    a:hover { color: #ff3333; }
+    .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+    .badge-primary { background: #e50914; color: white; }
+    .badge-success { background: #1a5a1a; color: #4ade80; }
+    .badge-warning { background: #5a4a1a; color: #f5a623; }
+    .file-tree { font-family: monospace; font-size: 0.85rem; white-space: pre; color: #888; }
+  </style>
+</head>
+<body>
+  <h1>🔐 Firebase App Check Setup Guide</h1>
+  <p style="color: #888; margin-bottom: 2rem;">Complete guide to configuring Firebase App Check with reCAPTCHA v3 for StreamFlix</p>
+
+  <section class="section">
+    <h2>Overview</h2>
+    <p><strong>Firebase App Check</strong> protects your backend APIs from abuse by ensuring requests originate from your genuine app. StreamFlix uses <strong>reCAPTCHA v3</strong> as the attestation provider.</p>
+
+    <div class="info">
+      <strong>What it protects:</strong> Firestore reads/writes, Auth operations, Cloud Functions, Storage uploads
+    </div>
+
+    <div class="warning">
+      <strong>Required for production.</strong> Without App Check, your Firebase project is vulnerable to credential stuffing, scraping, and billing attacks.
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Prerequisites</h2>
+    <ul>
+      <li>Firebase project with <strong>Authentication</strong> and <strong>Firestore</strong> enabled</li>
+      <li>Google Cloud project linked to Firebase</li>
+      <li>Domain(s) where StreamFlix will run (e.g., <code>streamflix.dpdns.org</code>, <code>localhost</code> for dev)</li>
+    </ul>
+  </section>
+
+  <section class="section">
+    <h2>Step-by-Step Setup</h2>
+
+    <div class="step">
+      <h3>Create reCAPTCHA v3 Site</h3>
+      <ol>
+        <li>Go to <a href="https://console.cloud.google.com/recaptcha" target="_blank">Google Cloud reCAPTCHA Console</a></li>
+        <li>Click <strong>Create</strong> (or <strong>+ Create</strong>)</li>
+        <li>Fill in:
+          <ul>
+            <li><strong>Label:</strong> <code>StreamFlix Web</code></li>
+            <li><strong>reCAPTCHA type:</strong> <strong>Score based (v3)</strong></li>
+            <li><strong>Domains:</strong> Add your domains:
+              <ul>
+                <li><code>streamflix.dpdns.org</code></li>
+                <li><code>localhost</code> (for development)</li>
+                <li>Any preview/staging domains</li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+        <li>Accept terms and click <strong>Submit</strong></li>
+        <li><strong>Copy both keys:</strong>
+          <ul>
+            <li><strong>Site Key</strong> → goes in <code>VITE_APP_CHECK_SITE_KEY</code> (client-safe)</li>
+            <li><strong>Secret Key</strong> → <strong>NEVER</strong> in client code; used server-side if needed</li>
+          </ul>
+        </li>
+      </ol>
+    </div>
+
+    <div class="step">
+      <h3>Register App in Firebase App Check</h3>
+      <ol>
+        <li>Open <a href="https://console.firebase.google.com/" target="_blank">Firebase Console</a> → Your Project</li>
+        <li>Navigate to <strong>Build</strong> → <strong>App Check</strong></li>
+        <li>Click <strong>Get started</strong> or <strong>Add app</strong></li>
+        <li>Select <strong>Web</strong> app (or your existing web app)</li>
+        <li>Choose <strong>reCAPTCHA v3</strong> as provider</li>
+        <li>Paste the <strong>Site Key</strong> from reCAPTCHA console</li>
+        <li>Click <strong>Save</strong></li>
+      </ol>
+    </div>
+
+    <div class="step">
+      <h3>Configure Environment Variables</h3>
+      <p>Add to your <code>.env.local</code> (development) and <strong>Vercel Project Settings</strong> (production):</p>
+      <pre><code># Client-side (VITE_ prefix required)
+VITE_APP_CHECK_SITE_KEY="your-recaptcha-v3-site-key"
+</code></pre>
+      <div class="note">
+        <strong>Never commit</strong> this file. Use <code>.env.local</code> (gitignored) locally.
+      </div>
+    </div>
+
+    <div class="step">
+      <h3>Enforce App Check (Production)</h3>
+      <ol>
+        <li>In Firebase Console → App Check, wait for metrics to show requests (may take 10-15 min)</li>
+        <li>For each service (Firestore, Auth, Functions, Storage):
+          <ul>
+            <li>Click the <strong>⋮</strong> menu → <strong>Enforce</strong></li>
+            <li>Confirm enforcement</li>
+          </ul>
+        </li>
+      </ol>
+      <div class="warning">
+        <strong>Test in audit mode first!</strong> Enforcement blocks requests without valid tokens. Monitor the <strong>App Check metrics</strong> dashboard for 24-48 hours before enforcing.
+      </div>
+    </div>
+
+    <div class="step">
+      <h3>Verify Implementation</h3>
+      <ol>
+        <li>Run locally: <code>npm run dev</code></li>
+        <li>Open DevTools → Console → Filter by <code>App Check</code></li>
+        <li>You should see: <code>[App Check] Initialized with reCAPTCHA v3</code></li>
+        <li>In Network tab, filter by <code>exchangeRecaptchaV3Token</code> — should return <code>200 OK</code> with a token</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Code Implementation</h2>
+    <p>StreamFlix initializes App Check in <code>src/lib/firebase.ts</code>:</p>
+    <pre><code>import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+
+if (typeof window !== 'undefined' && import.meta.env.VITE_APP_CHECK_SITE_KEY) {
+  initializeAppCheck(app, {
+    provider: new ReCaptchaV3Provider(import.meta.env.VITE_APP_CHECK_SITE_KEY),
+    isTokenAutoRefreshEnabled: true,
+  });
+}
+</code></pre>
+
+    <h3>Key Points</h3>
+    <ul>
+      <li><strong>Client-side only</strong> — guarded by <code>typeof window !== 'undefined'</code></li>
+      <li><strong>Auto-refresh enabled</strong> — tokens refresh before expiry</li>
+      <li><strong>Lazy initialization</strong> — only runs when env var present</li>
+      <li><strong>Debug token (dev)</strong> — for local testing without reCAPTCHA:
+        <pre><code>// In browser console during development:
+self.FIREBASE_APPCHECK_DEBUG_TOKEN = 'YOUR_DEBUG_TOKEN';
+// Get debug token from Firebase Console → App Check → Debug tokens
+        </code></pre>
+      </li>
+    </ul>
+  </section>
+
+  <section class="section">
+    <h2>Troubleshooting</h2>
+
+    <table>
+      <thead>
+        <tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>AppCheck: ReCAPTCHA error</code></td>
+          <td>CSP blocking <code>google.com/recaptcha</code></td>
+          <td>Add <code>https://www.google.com</code>, <code>https://www.gstatic.com</code>, <code>https://www.recaptcha.net</code> to CSP <code>script-src</code>, <code>connect-src</code>, <code>frame-src</code></td>
+        </tr>
+        <tr>
+          <td><code>AppCheck: Fetch failed</code></td>
+          <td>CSP blocking <code>content-firebaseappcheck.googleapis.com</code></td>
+          <td>Add <code>https://content-firebaseappcheck.googleapis.com</code> to <code>connect-src</code></td>
+        </tr>
+        <tr>
+          <td>Token not refreshing</td>
+          <td><code>isTokenAutoRefreshEnabled: false</code></td>
+          <li>Set to <code>true</code> in initialization</li>
+        </tr>
+        <tr>
+          <td>Localhost blocked</td>
+          <td>Domain not in reCAPTCHA allowlist</td>
+          <td>Add <code>localhost</code> to reCAPTCHA site domains</td>
+        </tr>
+        <tr>
+          <td>403 on Firestore writes</td>
+          <td>App Check enforced but token invalid</td>
+          <td>Check browser console for errors; verify Site Key matches</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section">
+    <h2>CSP Configuration (vercel.json)</h2>
+    <p>Required additions for App Check to work:</p>
+    <pre><code>script-src:  ... https://www.google.com https://www.gstatic.com https://www.recaptcha.net;
+connect-src: ... https://www.google.com https://www.gstatic.com https://www.recaptcha.net https://content-firebaseappcheck.googleapis.com;
+frame-src:   ... https://www.google.com https://www.recaptcha.net;
+img-src:     ... https://www.gstatic.com;
+</code></pre>
+  </section>
+
+  <section class="section">
+    <h2>Monitoring & Metrics</h2>
+    <ul>
+      <li><strong>Firebase Console → App Check</strong> — Request volume, validity rate, enforcement status</li>
+      <li><strong>reCAPTCHA Admin Console</strong> — Score distribution, traffic by domain</li>
+      <li><strong>Vercel Analytics</strong> — Client-side error tracking</li>
+    </ul>
+    <div class="info">
+      <strong>Target:</strong> > 99% valid token rate. If dropping, check for CSP issues or bot traffic.
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Cost Considerations</h2>
+    <table>
+      <thead>
+        <tr><th>Tier</th><th>Monthly Assessments</th><th>Cost</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Free</td><td>1,000,000</td><td>$0</td></tr>
+        <tr><td>Paid</td><td>Beyond 1M</td><td>$1 per 100K</td></tr>
+      </tbody>
+    </table>
+    <p>For typical StreamFlix usage (~10K DAU), well within free tier.</p>
+  </section>
+
+  <section class="section">
+    <h2>Security Best Practices</h2>
+    <ol>
+      <li><strong>Rotate keys annually</strong> — Generate new reCAPTCHA site/secret keys</li>
+      <li><strong>Monitor score thresholds</strong> — reCAPTCHA v3 returns 0.0–1.0; Firebase handles threshold</li>
+      <li><strong>Use debug tokens only locally</strong> — Never in production</li>
+      <li><strong>Combine with Turnstile</strong> — App Check protects APIs; Turnstile protects auth forms</li>
+      <li><strong>Enable on all Firebase services</strong> — Auth, Firestore, Functions, Storage</li>
+    </ol>
+  </section>
+
+  <hr style="margin: 3rem 0; border-color: #333;">
+
+  <footer style="text-align: center; color: #666; padding: 2rem;">
+    <p><a href="README.md">← Back to README</a> • <a href="STREAMFLIX_DOCUMENTATION.html">Full Technical Docs</a></p>
+    <p>StreamFlix Documentation • Generated 2025</p>
+  </footer>
+</body>
+</html>
