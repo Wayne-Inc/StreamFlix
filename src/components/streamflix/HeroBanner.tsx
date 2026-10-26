@@ -96,26 +96,26 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
       <div className="absolute inset-0 bg-gradient-to-r from-background via-background/50 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background via-background/70 to-transparent md:h-72" />
 
-      <div className="relative z-10 flex h-full items-end justify-center px-4 pb-8 pt-10 text-center sm:px-8 md:items-end md:justify-start">
+      <div className="relative z-10 flex h-full items-end justify-center px-4 pb-6 pt-8 text-center sm:pb-8 sm:pt-10 sm:px-8 md:items-end md:justify-start">
           {/* Bottom gradient for text contrast */}
           <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-background/95 via-background/40 to-transparent z-0 pointer-events-none" />
 
           <div
             key={s.id}
-            className="animate-fade-in w-full max-w-none space-y-3 text-center md:max-w-3xl md:text-left"
+            className="animate-fade-in w-full max-w-none space-y-2 sm:space-y-3 text-center md:max-w-3xl md:text-left"
           >
             {titleLogoUrl ? (
               <img
                 src={titleLogoUrl}
                 alt={s.title}
                 draggable={false}
-                className="mb-4 mx-auto md:mx-0 max-h-28 w-auto max-w-full object-contain select-none sm:max-h-32 md:max-h-36"
+                className="mb-2 sm:mb-4 mx-auto md:mx-0 max-h-28 w-auto max-w-full object-contain select-none sm:max-h-32 md:max-h-36"
               />
             ) : (
-              <h1 className="mb-4 text-3xl md:text-3xl lg:text-4xl font-bold">{s.title}</h1>
+              <h1 className="mb-2 sm:mb-4 text-3xl md:text-3xl lg:text-4xl font-bold">{s.title}</h1>
             )}
             {s.genreIds.length > 0 && (
-              <div className="mb-2 flex flex-wrap items-center justify-center md:justify-start gap-1.5 text-base font-normal text-white/80 tracking-wide">
+              <div className="mb-1.5 sm:mb-2 flex flex-wrap items-center justify-center md:justify-start gap-1.5 text-base font-normal text-white/80 tracking-wide">
                 {s.genreIds.map((gid, idx) => (
                   <span key={gid} className="flex items-center gap-1.5">
                     {idx > 0 && <span className="text-white/40">·</span>}
@@ -124,7 +124,7 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
                 ))}
               </div>
             )}
-            <div className="flex flex-wrap items-center justify-center gap-2 text-sm md:justify-start md:text-sm">
+            <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 text-sm md:justify-start md:text-sm">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm text-white/90 backdrop-blur-lg">
                 <Calendar className="size-3.5" /> {s.year}
               </span>
@@ -141,18 +141,18 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
             <p className="hidden md:block mx-auto md:mx-0 text-lg lg:text-xl text-gray-200 leading-relaxed max-w-xl">
               {description}
             </p>
-            <div className="mx-auto md:mx-0 flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto md:justify-start px-4 sm:px-0">
+            <div className="mx-auto md:mx-0 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full sm:w-auto md:justify-start px-4 sm:px-0">
               <Link
                 to="/watch/$id"
                 params={{ id: s.id }}
-                className="inline-flex w-full sm:w-auto max-w-[90%] sm:max-w-none items-center justify-center gap-2 rounded-md bg-foreground px-4 py-3 text-base font-bold text-background transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:bg-foreground/85 sm:px-6 sm:py-3.5 sm:text-base"
+                className="inline-flex w-full sm:w-auto max-w-[90%] sm:max-w-none items-center justify-center gap-2 rounded-md bg-foreground px-4 py-2.5 sm:py-3 text-base font-bold text-background transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:bg-foreground/85 sm:px-6 sm:py-3.5 sm:text-base"
               >
                 <Play className="size-4 fill-current sm:size-5" /> Play
               </Link>
               <Link
                 to="/movie/$id"
                 params={{ id: s.id }}
-                className="inline-flex w-full sm:w-auto max-w-[92%] sm:max-w-none items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border hover:text-accent-foreground h-11 bg-gray-600/30 backdrop-blur-xl border-gray-400 text-white hover:bg-gray-600/50 font-bold px-4 py-3 text-base rounded-lg transition-all duration-200 sm:h-11 sm:px-8 sm:py-4 sm:text-base lg:h-12 lg:px-10 lg:py-5 lg:text-lg"
+                className="inline-flex w-full sm:w-auto max-w-[92%] sm:max-w-none items-center justify-center gap-2 whitespace-nowrap ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border hover:text-accent-foreground h-10 sm:h-11 bg-gray-600/30 backdrop-blur-xl border-gray-400 text-white hover:bg-gray-600/50 font-bold px-4 py-2.5 sm:py-3 text-base rounded-lg transition-all duration-200 sm:h-11 sm:px-8 sm:py-4 sm:text-base lg:h-12 lg:px-10 lg:py-5 lg:text-lg"
               >
                 <Info /> More Info
               </Link>
