@@ -188,6 +188,15 @@ function AuthPage() {
         try {
           localStorage.removeItem("sf:upgrade_password");
         } catch {}
+
+        // Create server session cookie for SSR auth
+        const idToken = await cred.user.getIdToken();
+        await fetch("/api/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken }),
+        });
+
         rememberSignInMethod("email");
         try {
           localStorage.setItem("sf:auth", "1");
@@ -299,6 +308,15 @@ function AuthPage() {
     markSignedIn();
     setLinkRequest(null);
     setLinkPassword("");
+
+    // Create server session cookie for SSR auth
+    const idToken = await signedInUser.getIdToken();
+    await fetch("/api/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken }),
+    });
+
     toast.success(`Accounts linked — signed in with ${providerLabel(provider)}.`);
     navigate({ to: "/profiles" });
   };
@@ -399,6 +417,13 @@ function AuthPage() {
       try {
         localStorage.setItem("sf:auth", "1");
       } catch {}
+      // Create server session cookie for SSR auth
+      const idToken = await userCred.user.getIdToken();
+      await fetch("/api/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      });
       // Set user's accepted legal versions
       try {
         await setUserLegalVersions(userCred.user.uid, {
@@ -437,6 +462,13 @@ function AuthPage() {
       try {
         localStorage.setItem("sf:auth", "1");
       } catch {}
+      // Create server session cookie for SSR auth
+      const idToken = await userCred.user.getIdToken();
+      await fetch("/api/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      });
       // Set user's accepted legal versions
       try {
         await setUserLegalVersions(userCred.user.uid, {

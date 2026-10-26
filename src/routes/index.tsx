@@ -26,12 +26,13 @@ import heroImg from "@/assets/landing.jpg";
 import heroImgSm from "@/assets/landing-sm.jpg";
 
 export const Route = createFileRoute("/")({
+  ssr: true,
   beforeLoad: async () => {
     if (typeof window === "undefined") return;
     // Instant redirect from localStorage cache — no flash
     try {
       if (localStorage.getItem("sf:auth") === "1") {
-        throw redirect({ to: "/browse" });
+        throw redirect({ to: "/profiles" });
       }
     } catch (e) {
       if (e && typeof e === "object" && "isRedirect" in e) throw e;
@@ -47,7 +48,7 @@ export const Route = createFileRoute("/")({
     });
     if (user) {
       try { localStorage.setItem("sf:auth", "1"); } catch {}
-      throw redirect({ to: "/browse" });
+      throw redirect({ to: "/profiles" });
     }
   },
   loader: async () => {

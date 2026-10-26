@@ -169,14 +169,15 @@ export function MovieCard({
             <p className={`mt-1 flex items-center gap-1 text-purple-300 ${landscape ? "text-base sm:text-lg" : "text-[10px] sm:text-[11px]"}`}>
               <Sparkles className={landscape ? "size-4" : "size-3"} shrink-0 />
               {reasonLink ? (
-                <Link
-                  to="/movie/$id"
-                  params={{ id: reasonLink }}
-                  className="line-clamp-1 underline decoration-purple-300/40 underline-offset-2 hover:text-purple-200"
-                  onClick={(e) => e.stopPropagation()}
+                <span
+                  className="line-clamp-1 underline decoration-purple-300/40 underline-offset-2 hover:text-purple-200 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate({ to: "/movie/$id", params: { id: reasonLink } });
+                  }}
                 >
                   {reason}
-                </Link>
+                </span>
               ) : (
                 <span className="line-clamp-1">{reason}</span>
               )}

@@ -243,7 +243,13 @@ function RootComponent() {
         return;
       }
       router.invalidate();
-      if (user) queryClient.invalidateQueries();
+      if (user) {
+        queryClient.invalidateQueries();
+        // Set up push notifications for newly authenticated user
+        import("@/lib/push").then(({ ensurePushSubscription }) => {
+          ensurePushSubscription().catch(() => {});
+        });
+      }
     });
     import("@/lib/device-tracking").then(({ recordCurrentDevice }) => {
       recordCurrentDevice().catch(() => {});
@@ -253,7 +259,10 @@ function RootComponent() {
     });
     import("@/lib/push").then(({ setupForegroundPush, ensurePushSubscription }) => {
       setupForegroundPush();
-      ensurePushSubscription();
+      // Only attempt push subscription if user is authenticated
+      if (auth.currentUser) {
+        ensurePushSubscription();
+      }
     });
     const u = auth.currentUser;
     if (u?.photoURL && u.photoURL !== photoSaved.current) {

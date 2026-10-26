@@ -26,8 +26,8 @@ import { Route as AuthenticatedProfilesRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as ApiClientIpRouteImport } from './routes/api/client-ip'
-import { Route as ApiProxyRouteImport } from './routes/api/proxy'
-import { Route as ApiSendNotificationRouteImport } from './routes/api/send-notification'
+import { Route as ApiReleaseNotificationsCronRouteImport } from './routes/api/release-notifications-cron'
+import { Route as ApiSessionRouteImport } from './routes/api/session'
 import { Route as ApiVerifyRecaptchaRouteImport } from './routes/api/verify-recaptcha'
 import { Route as AuthActionRouteImport } from './routes/auth/action'
 import { Route as AuthenticatedExploreIndexRouteImport } from './routes/_authenticated/explore/index'
@@ -122,14 +122,15 @@ const ApiClientIpRoute = ApiClientIpRouteImport.update({
   path: '/api/client-ip',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiProxyRoute = ApiProxyRouteImport.update({
-  id: '/api/proxy',
-  path: '/api/proxy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiSendNotificationRoute = ApiSendNotificationRouteImport.update({
-  id: '/api/send-notification',
-  path: '/api/send-notification',
+const ApiReleaseNotificationsCronRoute =
+  ApiReleaseNotificationsCronRouteImport.update({
+    id: '/api/release-notifications-cron',
+    path: '/api/release-notifications-cron',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiSessionRoute = ApiSessionRouteImport.update({
+  id: '/api/session',
+  path: '/api/session',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiVerifyRecaptchaRoute = ApiVerifyRecaptchaRouteImport.update({
@@ -192,8 +193,8 @@ export interface FileRoutesByFullPath {
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/client-ip': typeof ApiClientIpRoute
-  '/api/proxy': typeof ApiProxyRoute
-  '/api/send-notification': typeof ApiSendNotificationRoute
+  '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
+  '/api/session': typeof ApiSessionRoute
   '/api/verify-recaptcha': typeof ApiVerifyRecaptchaRoute
   '/auth/action': typeof AuthActionRoute
   '/movie/': typeof AuthenticatedMovieRoute
@@ -219,8 +220,8 @@ export interface FileRoutesByTo {
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/client-ip': typeof ApiClientIpRoute
-  '/api/proxy': typeof ApiProxyRoute
-  '/api/send-notification': typeof ApiSendNotificationRoute
+  '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
+  '/api/session': typeof ApiSessionRoute
   '/api/verify-recaptcha': typeof ApiVerifyRecaptchaRoute
   '/auth/action': typeof AuthActionRoute
   '/movie': typeof AuthenticatedMovieRoute
@@ -249,8 +250,8 @@ export interface FileRoutesById {
   '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/api/client-ip': typeof ApiClientIpRoute
-  '/api/proxy': typeof ApiProxyRoute
-  '/api/send-notification': typeof ApiSendNotificationRoute
+  '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
+  '/api/session': typeof ApiSessionRoute
   '/api/verify-recaptcha': typeof ApiVerifyRecaptchaRoute
   '/auth/action': typeof AuthActionRoute
   '/_authenticated/movie/': typeof AuthenticatedMovieRoute
@@ -279,8 +280,8 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/api/client-ip'
-    | '/api/proxy'
-    | '/api/send-notification'
+    | '/api/release-notifications-cron'
+    | '/api/session'
     | '/api/verify-recaptcha'
     | '/auth/action'
     | '/movie/'
@@ -306,8 +307,8 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/api/client-ip'
-    | '/api/proxy'
-    | '/api/send-notification'
+    | '/api/release-notifications-cron'
+    | '/api/session'
     | '/api/verify-recaptcha'
     | '/auth/action'
     | '/movie'
@@ -335,8 +336,8 @@ export interface FileRouteTypes {
     | '/_authenticated/search'
     | '/_authenticated/settings'
     | '/api/client-ip'
-    | '/api/proxy'
-    | '/api/send-notification'
+    | '/api/release-notifications-cron'
+    | '/api/session'
     | '/api/verify-recaptcha'
     | '/auth/action'
     | '/_authenticated/movie/'
@@ -355,8 +356,8 @@ export interface RootRouteChildren {
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   TosRoute: typeof TosRoute
   ApiClientIpRoute: typeof ApiClientIpRoute
-  ApiProxyRoute: typeof ApiProxyRoute
-  ApiSendNotificationRoute: typeof ApiSendNotificationRoute
+  ApiReleaseNotificationsCronRoute: typeof ApiReleaseNotificationsCronRoute
+  ApiSessionRoute: typeof ApiSessionRoute
   ApiVerifyRecaptchaRoute: typeof ApiVerifyRecaptchaRoute
 }
 
@@ -481,18 +482,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiClientIpRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/proxy': {
-      id: '/api/proxy'
-      path: '/api/proxy'
-      fullPath: '/api/proxy'
-      preLoaderRoute: typeof ApiProxyRouteImport
+    '/api/release-notifications-cron': {
+      id: '/api/release-notifications-cron'
+      path: '/api/release-notifications-cron'
+      fullPath: '/api/release-notifications-cron'
+      preLoaderRoute: typeof ApiReleaseNotificationsCronRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/send-notification': {
-      id: '/api/send-notification'
-      path: '/api/send-notification'
-      fullPath: '/api/send-notification'
-      preLoaderRoute: typeof ApiSendNotificationRouteImport
+    '/api/session': {
+      id: '/api/session'
+      path: '/api/session'
+      fullPath: '/api/session'
+      preLoaderRoute: typeof ApiSessionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/verify-recaptcha': {
@@ -622,8 +623,8 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   TosRoute: TosRoute,
   ApiClientIpRoute: ApiClientIpRoute,
-  ApiProxyRoute: ApiProxyRoute,
-  ApiSendNotificationRoute: ApiSendNotificationRoute,
+  ApiReleaseNotificationsCronRoute: ApiReleaseNotificationsCronRoute,
+  ApiSessionRoute: ApiSessionRoute,
   ApiVerifyRecaptchaRoute: ApiVerifyRecaptchaRoute,
 }
 export const routeTree = rootRouteImport

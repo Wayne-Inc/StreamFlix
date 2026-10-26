@@ -196,6 +196,14 @@ export function Navbar() {
     } catch (err) {
       console.warn("Could not remove the push subscription for this device", err);
     }
+
+    // Clear server session cookie for SSR auth
+    try {
+      await fetch("/api/session", { method: "DELETE" });
+    } catch (err) {
+      console.warn("Could not clear server session cookie", err);
+    }
+
     await firebaseSignOut(auth);
     toast.success("Signed out");
     router.navigate({ to: "/auth", replace: true });

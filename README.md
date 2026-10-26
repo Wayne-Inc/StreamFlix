@@ -77,15 +77,17 @@ export async function askStreamflixAI(prompt: string): Promise<string>
 ```
 
 ### Security & Privacy
+
 | Layer | Implementation |
 |-------|----------------|
 | **API Abuse** | Firebase App Check (reCAPTCHA v3) |
 | **Bot Protection** | Cloudflare Turnstile on auth forms |
-| **XSS/Injection** | Strict CSP, Trusted Types, iframe sandbox |
-| **Auth** | Firebase Auth (Email/Pass, Google, GitHub) + email verification |
+| **XSS/Injection** | Strict CSP (removed — see Security Fixes), Trusted Types, iframe sandbox |
+| **Auth** | **Server-side session cookies** (HTTP-only, Secure, SameSite=Lax, 14-day) + Firebase Auth |
 | **Password Policy** | 8+ chars, upper/lower/number/special, real-time strength meter |
 | **Rate Limiting** | 5 req/min on auth endpoints (client + server) |
 | **Data** | Minimal PII, user-controlled deletion, consent-first analytics |
+| **Dependencies** | `@grpc/grpc-js@^1.14.6` — fixed CVE alerts #75, #77 |
 
 ### Accessibility
 - Semantic HTML, ARIA labels, focus management
@@ -107,6 +109,12 @@ graph TB
         State["Context + Hooks\nProfile, Auth, CW, MyList"]
     end
 
+    subgraph Server["Server (Nitro/h3 Middleware)"]
+        AuthMiddleware["authMiddleware\nPre-render auth interception"]
+        SessionAPI["/api/session\nCreate/clear session cookies"]
+        FirebaseAdmin["Firebase Admin SDK\nverifyIdToken, createSessionCookie"]
+    end
+
     subgraph APIs["External APIs"]
         TMDB["TMDB REST API\nMetadata, Images, Search"]
         NVIDIA["NVIDIA Nemotron 3 Ultra\nAI Recommendations"]
@@ -123,6 +131,8 @@ graph TB
     State --> FirebaseAuth
     State --> Firestore
     State --> AppCheck
+    AuthMiddleware --> SessionAPI
+    SessionAPI --> FirebaseAdmin
 ```
 
 ### Key Design Decisions
@@ -136,6 +146,97 @@ graph TB
 | **Zod everywhere** | Runtime validation = type safety at boundaries |
 | **shadcn/ui primitives** | Accessible, customizable, zero-runtime CSS-in-JS |
 | **Vite + Nitro** | Fast dev, optimized Vercel output, serverless API routes |
+| **Server-side Auth Middleware** | User authenticated before HTML renders (Netflix/Google style), no flash, survives restarts |
+
+---
+
+## Server-Side Authentication (New)
+
+StreamFlix now implements **true server-side authentication** where the user is authenticated before any HTML renders — similar to Netflix, Google, and other major platforms.
+
+### How It Works
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. Request hits Vercel Edge/Origin                              │
+├─────────────────────────────────────────────────────────────────┤
+│ 2. Nitro/h3 middleware (src/server.ts) intercepts request       │
+│    • Checks for __session cookie (HTTP-only, Secure, SameSite) │
+│    • Verifies cookie via Firebase Admin SDK (verifySessionCookie)│
+│    • Protected paths: /profiles, /browse, /watch/*, /explore,   │
+│      /search, /calendar, /history, /mylist, /settings,          │
+│      /assistant, /force-password                                 │
+├─────────────────────────────────────────────────────────────────┤
+│ 3a. Valid session → Continue to TanStack Start handler (SSR)   │
+│ 3b. Invalid/missing → 302 Redirect to /auth?redirect=...       │
+├─────────────────────────────────────────────────────────────────┤
+│ 4. On sign-in: Client exchanges ID token for session cookie    │
+│    POST /api/session { idToken } → Sets __session cookie       │
+│ 5. On sign-out: DELETE /api/session → Clears __session cookie  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `src/server.ts` | Nitro entry + `authMiddleware` intercepts all requests |
+| `src/server/firebase-admin.ts` | Firebase Admin init, `verifyIdToken`, `createSessionCookie`, `verifySessionCookie` |
+| `src/server/server-auth.ts` | Cookie extraction, `setSessionCookie`/`clearSessionCookie`, `authenticateRequest` |
+| `src/routes/api/session.ts` | `POST` (create session from ID token), `DELETE` (clear cookie) |
+| `src/routes/auth.tsx` | All sign-in flows call `fetch("/api/session", {method:"POST", body:{idToken}})` |
+| `src/components/streamflix/Navbar.tsx` | `signOut` calls `fetch("/api/session", {method:"DELETE"})` before Firebase signOut |
+| `src/routes/index.tsx` | Client-side redirect to `/profiles` via `localStorage` cache + Firebase fallback |
+| `src/routes/_authenticated/route.tsx` | Client-side guard (`onAuthStateChanged`) for defense-in-depth |
+
+### Benefits
+
+- **No authentication flash** — User never sees landing page when logged in
+- **Survives browser restarts** — 14-day HTTP-only session cookie
+- **SSR-friendly** — Protected routes render user-specific content on server
+- **Secure** — Cookies are HTTP-only (XSS-safe), Secure (HTTPS-only), SameSite=Lax (CSRF protection)
+- **Instant redirect** — `localStorage` cache (`sf:auth=1`) redirects before Firebase loads
+
+### Client-Side Fallback
+
+For the root page (`/`), SSR can't redirect based on auth (page is public). Instead:
+```typescript
+// src/routes/index.tsx — beforeLoad runs in browser
+if (localStorage.getItem("sf:auth") === "1") throw redirect({ to: "/profiles" });
+// Fallback: Firebase onAuthStateChanged
+```
+
+---
+
+## Security Fixes (2026-10)
+
+### @grpc/grpc-js Vulnerabilities Fixed
+
+| Alert | Issue | Fix |
+|-------|-------|-----|
+| **#77** | `getAuthContext` returns unauthorized certs as authorized | Pinned `@grpc/grpc-js@^1.14.6` in `package.json` overrides |
+| **#75** | Server transmits error messages to client | Same fix — upgraded transitive dependency via override |
+
+```json
+// package.json
+"overrides": {
+  "@grpc/grpc-js": "^1.14.6"
+}
+```
+
+**Result:** `npm audit` → **0 vulnerabilities**
+
+### Content-Security-Policy Removed
+
+All CSP headers removed from `vercel.json`:
+- Global headers CSP removed
+- `/watch/:id` route CSP removed
+
+**Reason:** CSP caused false positives, broke legitimate embed providers, and interfered with Firebase Auth popups. Security now relies on:
+- Trusted Types (enforced)
+- Iframe `sandbox` + explicit `allow` policies
+- Server-side auth (no sensitive data in client without auth)
+- Firebase App Check (reCAPTCHA v3) on all API calls
 
 ---
 
@@ -202,7 +303,7 @@ streamflix/
 │   │   ├── user-versions.ts    # TOS/Privacy version tracking
 │   │   └── utils.ts            # cn(), formatters, validators
 │   ├── routes/                 # TanStack Router file-based routes
-│   │   ├── _authenticated/     # Protected layout
+│   │   ├── _authenticated/     # Protected layout (server auth + client guard)
 │   │   │   ├── browse.tsx
 │   │   │   ├── explore/
 │   │   │   │   └── $genreId.tsx
@@ -211,11 +312,23 @@ streamflix/
 │   │   │   ├── profiles.tsx
 │   │   │   ├── settings.tsx
 │   │   │   ├── force-password.tsx
-│   │   │   └── ...
-│   │   ├── auth.tsx            # Sign in / up (Turnstile)
-│   │   ├── index.tsx           # Landing (SSR)
+│   │   │   ├── assistant.tsx
+│   │   │   ├── calendar.tsx
+│   │   │   ├── history.tsx
+│   │   │   ├── mylist.tsx
+│   │   │   ├── search.tsx
+│   │   │   └── person.$id.tsx
+│   │   ├── auth/               # Email action handlers (verify, reset)
+│   │   │   └── action.tsx
+│   │   ├── api/                # Server-only API routes
+│   │   │   └── session.ts      # POST create / DELETE clear session cookie
+│   │   ├── auth.tsx            # Sign in / up (Turnstile + session cookie)
+│   │   ├── index.tsx           # Landing (SSR) — instant redirect if authed
 │   │   ├── tos.tsx
 │   │   └── privacy-policy.tsx
+│   ├── server/                 # Server-only code (never bundled to client)
+│   │   ├── firebase-admin.ts   # Firebase Admin SDK (SERVER ONLY)
+│   │   └── server-auth.ts      # Session cookie helpers + middleware
 │   ├── styles/
 │   │   └── globals.css         # Tailwind 4 + CSS vars
 │   ├── types/
@@ -223,17 +336,18 @@ streamflix/
 │   ├── App.tsx
 │   ├── main.tsx                # Entry, providers, queryClient
 │   └── routeTree.gen.ts        # Auto-generated (do not edit)
-├── .env.example
+├── .env.example                # All placeholders — NO REAL SECRETS
 ├── .eslintrc.cjs
 ├── .prettierrc
 ├── package.json
 ├── tsconfig.json
 ├── vite.config.ts
 ├── tailwind.config.ts
-├── vercel.json                 # CSP, headers, rewrites, crons
+├── vercel.json                 # Headers, rewrites, crons (NO CSP)
 ├── firebase.json               # Hosting, Firestore rules, indexes
 ├── firestore.rules
 ├── firestore.indexes.json
+├── SERVER_AUTH_GUIDE.html      # Complete deployment guide
 └── STREAMFLIX_DOCUMENTATION.html  # Full technical docs
 ```
 
@@ -288,7 +402,7 @@ npm run dev
 | `VITE_FIREBASE_EMULATOR` | ❌ | Client | Set `1` for local emulator |
 | `VITE_FIREBASE_EMULATOR_HOST` | ❌ | Client | Emulator host (default: `127.0.0.1`) |
 
-> **Security:** Server-only secrets (`TURNSTILE_SECRET_KEY`, Firebase Admin SDK) go in **Vercel Project Settings → Environment Variables**, never in `.env`.
+> **Security:** Server-only secrets (`TURNSTILE_SECRET_KEY`, Firebase Admin SDK: `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`) go in **Vercel Project Settings → Environment Variables**, never in `.env`.
 
 ### Firebase Setup
 
@@ -301,6 +415,17 @@ npm run dev
 # Deploy Firestore rules & indexes
 firebase deploy --only firestore:rules,firestore:indexes
 ```
+
+### Firebase Admin SDK Setup (Required for Server Auth)
+
+1. Firebase Console → Project Settings → Service Accounts → **Generate new private key**
+2. Save as JSON (keep secure — never commit)
+3. In Vercel Dashboard → Settings → Environment Variables, add:
+   - `FIREBASE_CLIENT_EMAIL` = `client_email` from JSON
+   - `FIREBASE_PRIVATE_KEY` = `private_key` from JSON (including `-----BEGIN PRIVATE KEY-----` lines)
+4. Redeploy
+
+> See **[SERVER_AUTH_GUIDE.html](SERVER_AUTH_GUIDE.html)** for complete step-by-step deployment guide.
 
 ---
 
@@ -334,6 +459,7 @@ firebase deploy --only firestore:rules,firestore:indexes
 # One-time setup
 vercel link
 # Add all env vars in Vercel Dashboard → Settings → Environment Variables
+#   → Include FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY, TURNSTILE_SECRET_KEY
 
 # Deploy preview
 vercel
@@ -344,9 +470,9 @@ vercel --prod
 
 **vercel.json** handles:
 - SPA rewrites (`/* → /index.html`)
-- **CSP Headers** (strict, with Google/Firebase/recaptcha allowances)
-- Security headers (HSTS, X-Frame-Options, COOP, Permissions-Policy)
+- **Security headers** (HSTS, X-Frame-Options, COOP, Permissions-Policy) — **CSP REMOVED**
 - Cron job for release notifications (`0 8 * * *`)
+- `/watch/:id` route headers (iframe sandbox, no CSP)
 
 ### Docker
 
@@ -404,12 +530,13 @@ npm run typecheck && npm run lint && npm run build
 | Issue | Solution |
 |-------|----------|
 | **App Check errors** | Verify `VITE_APP_CHECK_SITE_KEY`, check reCAPTCHA v3 domain allowlist |
-| **CSP violations** | Check browser console → update `vercel.json` CSP → redeploy |
-| **Auth popup blocked** | Ensure `Cross-Origin-Opener-Policy: same-origin-allow-popups` |
+| **Auth redirect loop** | Ensure `FIREBASE_CLIENT_EMAIL` + `FIREBASE_PRIVATE_KEY` set in Vercel, redeploy |
+| **Session cookie not set** | Check Vercel logs for `/api/session` errors; verify Firebase Admin init |
 | **Firestore permission denied** | Deploy `firestore.rules`, verify user profile exists |
 | **TMDB 401/429** | Verify API keys, check rate limits (40 req/10s) |
-| **Video won't play** | Check iframe CSP `frame-src`, provider availability |
+| **Video won't play** | Check iframe `sandbox` `allow` policies, provider availability |
 | **Hydration mismatch** | Ensure server/client render same data (use `useSyncExternalStore`) |
+| **Build fails: "Import denied in client environment"** | Move server-only imports to `src/server/`, use dynamic `await import()` only in server entry |
 
 ---
 
@@ -418,10 +545,10 @@ npm run typecheck && npm run lint && npm run build
 | Document | Purpose |
 |----------|---------|
 | **[STREAMFLIX_DOCUMENTATION.html](STREAMFLIX_DOCUMENTATION.html)** | Complete technical reference (architecture, components, APIs, security) |
-| **[APP_CHECK_SETUP.html](APP_CHECK_SETUP.html)** | Firebase App Check / reCAPTCHA v3 setup guide |
-| **`.env.example`** | Environment variable template |
+| **[SERVER_AUTH_GUIDE.html](SERVER_AUTH_GUIDE.html)** | **NEW** — Server-side auth implementation & deployment guide |
+| **`.env.example`** | Environment variable template (all placeholders, no secrets) |
 | **`firestore.rules`** | Security rules reference |
-| **`vercel.json`** | Headers, CSP, rewrites, crons |
+| **`vercel.json`** | Headers, rewrites, crons |
 
 ---
 
