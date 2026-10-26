@@ -71,36 +71,55 @@ export function MovieCardSkeleton({
 
 /**
  * Hero banner skeleton - matches HeroBanner component
+ * Responsive breakpoints: aspect-[4/5] sm:aspect-[16/9]
+ * Heights: max-h-[95vh] min-h-[60vh] sm:min-h-[50vh] sm:min-h-[400px] lg:min-h-[550px]
  */
 export function HeroBannerSkeleton() {
   return (
-    <section className="relative min-h-[40vh] h-[50vh] w-full overflow-hidden sm:min-h-[400px] sm:h-[65vh] lg:min-h-[550px] lg:h-[85vh]">
-      <Skeleton className="absolute inset-0 size-full rounded-none bg-surface/60" />
+    <section
+      className="relative w-full overflow-hidden aspect-[4/5] sm:aspect-[16/9] max-h-[95vh] min-h-[60vh] sm:min-h-[50vh] sm:min-h-[400px] lg:min-h-[550px]"
+    >
+      <Skeleton className="absolute inset-0 size-full rounded-none bg-surface/60 animate-ken-burns" />
+      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/50 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background via-background/70 to-transparent md:h-72" />
-      <div className="relative z-10 flex h-full items-end justify-center px-4 pb-8 pt-10 text-center sm:px-8 md:items-end md:justify-start">
-        <div className="animate-fade-in w-full max-w-none space-y-3 text-center md:max-w-3xl md:text-left">
-          <Skeleton className="mb-4 mx-auto md:mx-0 h-20 w-64 max-w-full rounded-md sm:h-24 sm:w-72" />
-          <div className="mb-2 flex flex-wrap items-center justify-center md:justify-start gap-1.5">
+
+      <div className="relative z-10 flex h-full items-end justify-center px-4 pb-6 pt-8 text-center sm:pb-8 sm:pt-10 sm:px-8 md:items-end md:justify-start">
+        {/* Bottom gradient for text contrast */}
+        <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-background/95 via-background/40 to-transparent z-0 pointer-events-none" />
+
+        <div className="animate-fade-in w-full max-w-none space-y-2 sm:space-y-3 text-center md:max-w-3xl md:text-left">
+          {/* Title/Logo area */}
+          <Skeleton className="mb-2 sm:mb-4 mx-auto md:mx-0 h-8 w-56 max-w-full rounded-md sm:h-10 sm:w-64 lg:h-12 lg:w-72" />
+
+          {/* Genre chips */}
+          <div className="mb-1.5 sm:mb-2 flex flex-wrap items-center justify-center md:justify-start gap-1.5">
+            <Skeleton className="h-5 w-16 rounded-full" />
             <Skeleton className="h-5 w-20 rounded-full" />
             <Skeleton className="h-5 w-24 rounded-full" />
-            <Skeleton className="h-5 w-28 rounded-full" />
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <Skeleton className="h-7 w-24 rounded-full" />
-            <Skeleton className="h-7 w-24 rounded-full" />
-            <Skeleton className="h-7 w-28 rounded-full" />
+
+          {/* Meta badges: year, rating, runtime */}
+          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 text-sm md:justify-start md:text-sm">
             <Skeleton className="h-7 w-20 rounded-full" />
+            <Skeleton className="h-7 w-16 rounded-full" />
+            <Skeleton className="h-7 w-24 rounded-full" />
           </div>
-          <Skeleton className="mt-4 h-4 w-full max-w-xl rounded" />
-          <Skeleton className="h-4 w-full max-w-xl rounded" />
-          <Skeleton className="h-4 w-2/3 max-w-xl rounded" />
-          <div className="mx-auto md:mx-0 flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto md:justify-start px-4 sm:px-0">
-            <Skeleton className="h-10 w-28 rounded-md sm:h-12 sm:w-32" />
-            <Skeleton className="h-10 w-28 rounded-md sm:h-12 sm:w-36" />
+
+          {/* Description - hidden on mobile, visible on md+ */}
+          <Skeleton className="hidden md:block mx-auto md:mx-0 h-4 w-full max-w-xl rounded lg:h-5" />
+          <Skeleton className="hidden md:block mx-auto md:mx-0 h-4 w-full max-w-xl rounded lg:h-5" />
+          <Skeleton className="hidden md:block mx-auto md:mx-0 h-4 w-2/3 max-w-xl rounded lg:h-5" />
+
+          {/* Action buttons */}
+          <div className="mx-auto md:mx-0 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full sm:w-auto md:justify-start px-4 sm:px-0">
+            <Skeleton className="h-10 w-28 rounded-md sm:h-11 sm:w-32 lg:h-12 lg:w-36" />
+            <Skeleton className="h-10 w-28 rounded-md sm:h-11 sm:w-36 lg:h-12 lg:w-40" />
           </div>
         </div>
       </div>
-      <div className="absolute bottom-6 inset-x-0 z-10 flex items-center justify-center gap-2 sm:justify-end sm:right-8 sm:inset-x-auto">
+
+      {/* Slide indicators */}
+      <div className="absolute bottom-3 inset-x-0 z-10 flex items-center justify-center gap-2 sm:justify-end sm:right-8 sm:inset-x-auto">
         <Skeleton className="w-8 h-2 rounded-full" />
         <Skeleton className="w-2 h-2 rounded-full" />
         <Skeleton className="w-2 h-2 rounded-full" />
@@ -178,40 +197,69 @@ export function HistoryItemSkeleton() {
 }
 
 /**
- * Profile skeleton - matches ProfilesPage profile cards
+ * Profile skeleton - matches ProfilesPage "Who's watching?" layout
+ * Full-screen background with profile avatar grid
  */
 export function ProfileSkeleton() {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-4xl px-4 pt-28 pb-20 sm:px-8">
-        <Skeleton className="h-8 w-48 rounded mb-2" />
-        <Skeleton className="h-4 w-80 rounded" />
-        <section className="mt-8 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
-          <Skeleton className="h-4 w-20 rounded mb-5" />
-          <div className="flex flex-col sm:flex-row gap-6">
-            <div className="flex flex-col items-center gap-3">
-              <Skeleton className="size-24 rounded-full" />
-              <Skeleton className="h-5 w-32 rounded" />
-              <div className="flex flex-wrap justify-center gap-2">
-                <Skeleton className="h-8 w-24 rounded-md" />
-                <Skeleton className="h-8 w-20 rounded-md" />
-                <Skeleton className="h-8 w-16 rounded-md" />
+    <div className="relative grid min-h-dvh place-items-center overflow-hidden bg-background">
+      {/* Background slides with gradient overlay */}
+      <div className="absolute inset-0">
+        {[1, 2, 3].map((i) => (
+          <Skeleton
+            key={i}
+            className="absolute inset-0 size-full object-cover bg-surface/30"
+          />
+        ))}
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/60 to-background" />
+      </div>
+
+      {/* Header with logo placeholder */}
+      <header className="absolute inset-x-0 top-0 px-4 sm:px-12 py-5 z-10 flex items-center justify-between">
+        <Skeleton className="h-8 w-32 rounded" />
+        <Skeleton className="size-10 rounded-lg" />
+      </header>
+
+      {/* Legal banner placeholder */}
+      <Skeleton className="absolute inset-x-0 top-14 h-4 sm:top-20" />
+
+      {/* Main content */}
+      <div className="relative z-20 w-full max-w-4xl px-4 text-center">
+        {/* Title: "Who's watching?" */}
+        <Skeleton className="mx-auto h-10 w-48 rounded sm:h-14 sm:w-64" />
+
+        {/* Profile grid - 5 profile cards + add button */}
+        <div className="mt-8 flex flex-wrap justify-center gap-3 sm:mt-10 sm:gap-8">
+          {/* 5 profile skeleton cards */}
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex flex-col items-center gap-3">
+              {/* Avatar circle */}
+              <div className="relative size-28 overflow-hidden rounded-lg bg-gradient-to-br from-primary/30 to-primary/60 sm:size-32">
+                <Skeleton className="absolute inset-0 size-full" />
+                {/* PIN lock indicator */}
+                {i === 2 && (
+                  <Skeleton className="absolute bottom-1 right-1 size-5 rounded-full" />
+                )}
               </div>
+              {/* Profile name */}
+              <Skeleton className="h-4 w-24 rounded sm:w-28" />
+              {/* Kids badge (on some profiles) */}
+              {i === 1 && (
+                <Skeleton className="h-4 w-16 rounded-full" />
+              )}
             </div>
-            <div className="flex-1 grid gap-4 sm:grid-cols-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className={i === 4 ? "sm:col-span-2" : ""}>
-                  <Skeleton className="h-3 w-20 mb-1 rounded" />
-                  <Skeleton className="h-10 w-full rounded-md" />
-                </div>
-              ))}
+          ))}
+          {/* Add Profile button */}
+          <div className="flex flex-col items-center gap-3">
+            <div className="grid size-28 place-items-center rounded-lg border border-dashed border-border sm:size-32">
+              <Skeleton className="size-8 rounded" />
             </div>
+            <Skeleton className="h-4 w-24 rounded" />
           </div>
-        </section>
-        <Skeleton className="mt-6 h-20 rounded-lg" />
-        <Skeleton className="mt-4 h-20 rounded-lg" />
-        <Skeleton className="mt-4 h-20 rounded-lg" />
-        <Skeleton className="mt-4 h-20 rounded-lg" />
+        </div>
+
+        {/* Manage Profiles button */}
+        <Skeleton className="mx-auto mt-8 h-10 w-40 rounded border sm:mt-12" />
       </div>
     </div>
   );
