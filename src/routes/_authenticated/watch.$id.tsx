@@ -425,7 +425,6 @@ function PlayerPage() {
         const dest = new URL(e.destination.url, window.location.href);
         if (dest.origin !== window.location.origin) {
           e.preventDefault();
-          toast.error("Redirect blocked");
         }
       } catch {}
     };

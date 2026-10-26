@@ -27,7 +27,7 @@ import { signOut as firebaseSignOut } from "firebase/auth";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { profileHasPin, verifyProfilePin } from "@/lib/profiles";
 import { getSelectedProfile, clearSelectedProfile } from "@/lib/selected-profile";
-import { suggestTitles } from "@/lib/streamflix-data";
+import { suggestTitles, getRandomTitle } from "@/lib/streamflix-data";
 import { LegalVersionBanner } from "./LegalVersionBanner";
 
 const links = [
@@ -345,11 +345,11 @@ export function Navbar() {
             type="button"
             onClick={async () => {
               try {
-                const data = await tmdbFetch("/trending/all/week");
-                const movies = (data.results || []).map((item: any) => (item.media_type === "tv" ? { ...item, id: `tv-${item.id}` } : item));
-                if (movies.length > 0) {
-                  const randomMovie = movies[Math.floor(Math.random() * movies.length)];
-                  router.navigate({ to: "/movie/$id", params: { id: randomMovie.id } });
+                const random = await getRandomTitle();
+                if (random?.id) {
+                  router.navigate({ to: "/movie/$id", params: { id: random.id } });
+                } else {
+                  toast.error("Could not fetch random title");
                 }
               } catch (e) {
                 toast.error("Could not fetch random title");
@@ -508,11 +508,11 @@ export function Navbar() {
                     type="button"
                     onClick={async () => {
                       try {
-                        const data = await tmdbFetch("/trending/all/week");
-                        const movies = (data.results || []).map((item: any) => (item.media_type === "tv" ? { ...item, id: `tv-${item.id}` } : item));
-                        if (movies.length > 0) {
-                          const randomMovie = movies[Math.floor(Math.random() * movies.length)];
-                          router.navigate({ to: "/movie/$id", params: { id: randomMovie.id } });
+                        const random = await getRandomTitle();
+                        if (random?.id) {
+                          router.navigate({ to: "/movie/$id", params: { id: random.id } });
+                        } else {
+                          toast.error("Could not fetch random title");
                         }
                       } catch (e) {
                         toast.error("Could not fetch random title");
@@ -690,11 +690,11 @@ export function Navbar() {
               onClick={async () => {
                 setMenuOpen(false);
                 try {
-                  const data = await tmdbFetch("/trending/all/week");
-                  const movies = (data.results || []).map((item: any) => (item.media_type === "tv" ? { ...item, id: `tv-${item.id}` } : item));
-                  if (movies.length > 0) {
-                    const randomMovie = movies[Math.floor(Math.random() * movies.length)];
-                    router.navigate({ to: "/movie/$id", params: { id: randomMovie.id } });
+                  const random = await getRandomTitle();
+                  if (random?.id) {
+                    router.navigate({ to: "/movie/$id", params: { id: random.id } });
+                  } else {
+                    toast.error("Could not fetch random title");
                   }
                 } catch (e) {
                   toast.error("Could not fetch random title");

@@ -713,3 +713,68 @@ export const fetchWatchProviders = createServerFn({ method: "POST" })
     const tmdbId = data.id.replace(/^tv-/, "");
     return fetch(tmdbId, data.type);
   });
+
+export const fetchRandomTitle = createServerFn({ method: "POST" }).handler(async () => {
+  const { tmdbFetch } = await import("./tmdb.server");
+  // Fetch from multiple catalogues for true randomness
+  const [trendingAll, popularMovies, popularTv, topRatedMovies, topRatedTv] = await Promise.allSettled([
+    tmdbFetch("/trending/all/week"),
+    tmdbFetch("/movie/popular"),
+    tmdbFetch("/tv/popular"),
+    tmdbFetch("/movie/top_rated"),
+    tmdbFetch("/tv/top_rated"),
+  ]);
+
+  const allItems: any[] = [];
+  if (trendingAll.status === "fulfilled") {
+    allItems.push(...(trendingAll.value.results || []).map((m: any) => ({
+      ...m,
+      id: m.media_type === "tv" ? `tv-${m.id}` : String(m.id),
+    })));
+  }
+  if (popularMovies.status === "fulfilled") {
+    allItems.push(...(popularMovies.value.results || []).map((m: any) => ({
+      ...m,
+      id: String(m.id),
+    })));
+  }
+  if (popularTv.status === "fulfilled") {
+    allItems.push(...(popularTv.value.results || []).map((m: any) => ({
+      ...m,
+      id: `tv-${m.id}`,
+    })));
+  }
+  if (topRatedMovies.status === "fulfilled") {
+    allItems.push(...(topRatedMovies.value.results || []).map((m: any) => ({
+      ...m,
+      id: String(m.id),
+    })));
+  }
+  if (topRatedTv.status === "fulfilled") {
+    allItems.push(...(topRatedTv.value.results || []).map((m: any) => ({
+      ...m,
+      id: `tv-${m.id}`,
+    })));
+  }
+
+  // Deduplicate by id
+  const seen = new Set<string>();
+  const unique = allItems.filter((item) => {
+    if (seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
+
+  if (unique.length === 0) {
+    return null;
+  }
+
+  const random = unique[Math.floor(Math.random() * unique.length)];
+  return {
+    id: random.id,
+    media_type: random.id.startsWith("tv-") ? "tv" : "movie",
+    title: random.title || random.name,
+    poster_path: random.poster_path,
+    backdrop_path: random.backdrop_path,
+  };
+});

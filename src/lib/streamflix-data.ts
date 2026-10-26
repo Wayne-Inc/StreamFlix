@@ -32,7 +32,7 @@ import {
   enrichCertifications as enrichCertificationsFn,
   enrichRuntimes as enrichRuntimesFn,
 } from "./api/tmdb";
-import { fetchWatchProviders } from "./api/tmdb";
+import { fetchWatchProviders, fetchRandomTitle } from "./api/tmdb";
 import type { WatchProvider } from "./api/tmdb.server";
 
 export type { Movie };
@@ -151,20 +151,37 @@ export async function loadMovies() {
     discoverByGenre({ data: { genreId: "16" } }),
     discoverByGenre({ data: { genreId: "99" } }),
   ]);
+  const enrichedRows = await enrichRuntimesFn({
+    data: {
+      items: [
+        ...trending,
+        ...popular,
+        ...topRated,
+        ...action,
+        ...comedy,
+        ...romance,
+        ...horror,
+        ...animation,
+        ...documentary,
+      ],
+    },
+  });
+  const enrichedMap = new Map((enrichedRows as Movie[]).map((m) => [m.id, m]));
+  const enrich = (items: Movie[]) => items.map((m) => enrichedMap.get(m.id) ?? m);
   return {
     heroSlides: await enrichHeroSlides(popular.slice(0, 3)),
     top10Today: [],
     genreGroups: [],
     rows: [
-      { title: "Trending Movies", items: trending },
-      { title: "Popular Movies", items: popular },
-      { title: "Critically Acclaimed", items: topRated },
-      { title: "Action & Adventure", items: action },
-      { title: "Laugh Out Loud", items: comedy },
-      { title: "Romance", items: romance },
-      { title: "Animation & Family", items: animation },
-      { title: "Horror", items: horror },
-      { title: "Documentaries", items: documentary },
+      { title: "Trending Movies", items: enrich(trending) },
+      { title: "Popular Movies", items: enrich(popular) },
+      { title: "Critically Acclaimed", items: enrich(topRated) },
+      { title: "Action & Adventure", items: enrich(action) },
+      { title: "Laugh Out Loud", items: enrich(comedy) },
+      { title: "Romance", items: enrich(romance) },
+      { title: "Animation & Family", items: enrich(animation) },
+      { title: "Horror", items: enrich(horror) },
+      { title: "Documentaries", items: enrich(documentary) },
     ],
   };
 }
@@ -176,15 +193,27 @@ export async function loadTv() {
     fetchTopRatedTv(),
     fetchAiringTv(),
   ]);
+  const enrichedRows = await enrichRuntimesFn({
+    data: {
+      items: [
+        ...trending,
+        ...popular,
+        ...topRated,
+        ...airing,
+      ],
+    },
+  });
+  const enrichedMap = new Map((enrichedRows as Movie[]).map((m) => [m.id, m]));
+  const enrich = (items: Movie[]) => items.map((m) => enrichedMap.get(m.id) ?? m);
   return {
     heroSlides: await enrichHeroSlides(trending.slice(0, 3)),
     top10Today: [],
     genreGroups: [],
     rows: [
-      { title: "Trending TV", items: trending },
-      { title: "Popular Shows", items: popular },
-      { title: "Top Rated Series", items: topRated },
-      { title: "On the Air Now", items: airing },
+      { title: "Trending TV", items: enrich(trending) },
+      { title: "Popular Shows", items: enrich(popular) },
+      { title: "Top Rated Series", items: enrich(topRated) },
+      { title: "On the Air Now", items: enrich(airing) },
     ],
   };
 }
@@ -221,6 +250,18 @@ async function loadNew() {
     ? popularUpcoming
     : comingSoon;
 
+  const allNewItems = [
+    ...featured,
+    ...comingSoon,
+    ...trending,
+    ...airing,
+    ...nowPlaying,
+    ...newMovies,
+  ];
+  const enrichedNew = await enrichRuntimesFn({ data: { items: allNewItems } });
+  const enrichedNewMap = new Map((enrichedNew as Movie[]).map((m) => [m.id, m]));
+  const enrichNew = (items: Movie[]) => items.map((m) => enrichedNewMap.get(m.id) ?? m);
+
   return {
     heroSlides: await enrichHeroSlides(featured.slice(0, 3)),
     top10Today: [],
@@ -228,15 +269,17 @@ async function loadNew() {
     rows: [
       {
         title: "New Movies",
-        items: featured.length
-          ? featured
-          : newMovies.length
-            ? newMovies
-            : nowPlaying,
+        items: enrichNew(
+          featured.length
+            ? featured
+            : newMovies.length
+              ? newMovies
+              : nowPlaying,
+        ),
       },
-      { title: "Coming Soon", items: comingSoon },
-      { title: "Trending This Week", items: trending },
-      { title: "New TV Episodes", items: airing },
+      { title: "Coming Soon", items: enrichNew(comingSoon) },
+      { title: "Trending This Week", items: enrichNew(trending) },
+      { title: "New TV Episodes", items: enrichNew(airing) },
     ],
   };
 }
@@ -349,6 +392,14 @@ export async function getWatchProviders(id: string, type: "movie" | "tv" = "movi
     return await fetchWatchProviders({ data: { id, type } });
   } catch {
     return {};
+  }
+}
+
+export async function getRandomTitle() {
+  try {
+    return await fetchRandomTitle();
+  } catch {
+    return null;
   }
 }
 
