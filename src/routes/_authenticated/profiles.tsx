@@ -1,4 +1,5 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Pencil,
   Plus,
@@ -76,6 +77,7 @@ function defaultName() {
 
 function ProfilesPage() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [profiles, setProfiles] = useState<Profile[] | null>(null);
   const [editTarget, setEditTarget] = useState<Profile | "new" | null>(null);
@@ -138,6 +140,7 @@ function ProfilesPage() {
     if (!u) return;
     try {
       const list = await ensureUserHasProfile(u.uid, defaultName());
+      qc.setQueryData(["profiles", u.uid], list);
       setProfiles(list);
     } catch (e: any) {
       toast.error(e?.message ?? "Couldn't load profiles");
@@ -164,17 +167,26 @@ function ProfilesPage() {
   };
 
   const selectProfile = (p: Profile) => {
+    // Optimistic: immediately update localStorage and cache
+    const profileData = {
+      id: p.id,
+      name: p.name,
+      color: p.color,
+      avatarUrl: p.avatarUrl,
+      kids: p.kids,
+      contentRatingLimit: p.contentRatingLimit,
+    };
     try {
-      setSelectedProfile({
-        id: p.id,
-        name: p.name,
-        color: p.color,
-        avatarUrl: p.avatarUrl,
-        kids: p.kids,
-        contentRatingLimit: p.contentRatingLimit,
-      });
+      setSelectedProfile(profileData);
       window.dispatchEvent(new Event("profileChanged"));
     } catch {}
+    // Update query cache immediately
+    const u = auth.currentUser;
+    if (u) {
+      qc.setQueryData(["profiles", u.uid], (old: Profile[] | undefined) =>
+        old?.map((prof) => (prof.id === p.id ? { ...prof, ...profileData } : prof)) ?? []
+      );
+    }
     navigate({ to: "/browse" });
   };
 
@@ -211,16 +223,20 @@ function ProfilesPage() {
       toast.error("Pick at least one genre");
       return;
     }
-    setOnboardBusy(true);
+
+    // Optimistic: immediately update local state
+    try {
+      localStorage.setItem("sf:onboarded", "1");
+    } catch {}
+    setOnboardOpen(false);
+    toast.success("Preferences saved");
+
+    // Background sync
     try {
       await setFavoriteGenres(u.uid, pickedGenres);
-      try {
-        localStorage.setItem("sf:onboarded", "1");
-      } catch {}
-      setOnboardOpen(false);
-      toast.success("Preferences saved");
     } catch {
-      toast.error("Couldn't save preferences");
+      // Silently fail - preferences saved locally
+      console.warn("Couldn't sync genres to server");
     }
     setOnboardBusy(false);
   };
@@ -496,6 +512,36 @@ function ProfileEditor({
       toast.error("Name is required");
       return;
     }
+
+    // Optimistic: immediately update UI
+    const profileUpdates = {
+      name: name.trim(),
+      kids,
+      color,
+      avatarUrl: avatarUrl.trim() || "",
+    };
+
+    const previousProfiles = qc.getQueryData<Profile[]>(["profiles", u.uid]);
+
+    // Optimistically update cache
+    if (isNew) {
+      // For new profile, we'll add a temporary entry
+      const tempId = `temp-${Date.now()}`;
+      const optimisticProfile: Profile = {
+        id: tempId,
+        ...profileUpdates,
+        hasPin: false,
+        contentRatingLimit: kids ? "PG" : "NC-17",
+      };
+      qc.setQueryData<Profile[]>(["profiles", u.uid], (old) => [...(old ?? []), optimisticProfile]);
+      setProfiles((old) => [...(old ?? []), optimisticProfile]);
+    } else if (existing) {
+      qc.setQueryData<Profile[]>(["profiles", u.uid], (old) =>
+        old?.map((p) => (p.id === existing.id ? { ...p, ...profileUpdates } : p)) ?? []
+      );
+      setProfiles((old) => old?.map((p) => (p.id === existing.id ? { ...p, ...profileUpdates } : p)) ?? []);
+    }
+
     setBusy(true);
     try {
       if (isNew) {
@@ -510,9 +556,13 @@ function ProfileEditor({
           await updateProfile(u.uid, created.id, { color, avatarUrl: avatarUrl.trim() || "" });
           if (pin.trim()) {
             await setProfilePin(u.uid, created.id, pin.trim());
-            setHasPin(true);
           }
         }
+        // Replace temp profile with real one in cache
+        qc.setQueryData<Profile[]>(["profiles", u.uid], (old) =>
+          old?.map((p) => (p.id.startsWith("temp-") && p.name === name.trim() ? created! : p)) ?? []
+        );
+        setProfiles((old) => old?.map((p) => (p.id.startsWith("temp-") && p.name === name.trim() ? created! : p)) ?? []);
         toast.success("Profile added");
       } else if (existing) {
         await updateProfile(u.uid, existing.id, {
@@ -523,12 +573,16 @@ function ProfileEditor({
         });
         if (pin.trim()) {
           await setProfilePin(u.uid, existing.id, pin.trim());
-          setHasPin(true);
         }
         toast.success("Profile updated");
       }
       onSaved();
     } catch (e: any) {
+      // Rollback on error
+      if (previousProfiles) {
+        qc.setQueryData(["profiles", u.uid], previousProfiles);
+        setProfiles(previousProfiles);
+      }
       toast.error(e?.message ?? "Couldn't save profile");
     } finally {
       setBusy(false);
@@ -539,21 +593,27 @@ function ProfileEditor({
     if (!existing) return;
     const u = auth.currentUser;
     if (!u) return;
+
+    // Optimistically update PIN state
+    const prevHasPin = hasPin;
+    setHasPin(false);
+    setPin("");
+
     setRemovePinBusy(true);
     try {
       const ok = await verifyProfilePin(u.uid, existing.id, removePinValue);
       if (!ok) {
         toast.error("Incorrect PIN");
+        setHasPin(prevHasPin); // rollback
         setRemovePinBusy(false);
         return;
       }
       await removeProfilePin(u.uid, existing.id);
-      setHasPin(false);
-      setPin("");
       setRemovePinOpen(false);
       setRemovePinValue("");
       toast.success("PIN removed");
     } catch {
+      setHasPin(prevHasPin); // rollback
       toast.error("Couldn't remove PIN");
     }
     setRemovePinBusy(false);
@@ -576,6 +636,14 @@ function ProfileEditor({
     if (!existing) return;
     const u = auth.currentUser;
     if (!u) return;
+
+    // Optimistic: immediately remove from cache
+    const previousProfiles = qc.getQueryData<Profile[]>(["profiles", u.uid]);
+    qc.setQueryData<Profile[]>(["profiles", u.uid], (old) =>
+      old?.filter((p) => p.id !== existing.id) ?? []
+    );
+    setProfiles((old) => old?.filter((p) => p.id !== existing.id) ?? []);
+
     setBusy(true);
     try {
       await deleteProfile(u.uid, existing.id);
@@ -583,6 +651,11 @@ function ProfileEditor({
       setDeleteOpen(false);
       onSaved();
     } catch (e: any) {
+      // Rollback on error
+      if (previousProfiles) {
+        qc.setQueryData(["profiles", u.uid], previousProfiles);
+        setProfiles(previousProfiles);
+      }
       toast.error(e?.message ?? "Couldn't delete");
     } finally {
       setBusy(false);

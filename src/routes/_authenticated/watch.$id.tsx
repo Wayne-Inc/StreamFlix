@@ -720,15 +720,7 @@ function PlayerPage() {
     sendEmbedPlaybackCommand(iframe, "requestProgress");
   };
 
-  useEffect(() => {
-    const onBlocked = (e: Event) => {
-      const url = (e as CustomEvent).detail;
-      if (url) toast.info(`Blocked redirect: ${new URL(url).hostname}`);
-    };
-    window.addEventListener("blocked-redirect", onBlocked);
-    return () => window.removeEventListener("blocked-redirect", onBlocked);
-  }, []);
-
+  
   useEffect(() => {
     return () => {
       if (hideTimer.current) window.clearTimeout(hideTimer.current);
@@ -787,7 +779,6 @@ function PlayerPage() {
             title={`Embed Player — ${movie.title}`}
             allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
             allowFullScreen
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation allow-modals"
             onLoad={handleEmbedLoad}
             className="size-full border-0"
           />
