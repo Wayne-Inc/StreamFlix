@@ -337,7 +337,10 @@ export async function loadRecommendations(id: string): Promise<Movie[]> {
 
 export async function search(query: string): Promise<Movie[]> {
   try {
-    return await searchMovies({ data: { query } });
+    const items = await searchMovies({ data: { query } });
+    if (items.length === 0) return [];
+    const enriched = await enrichRuntimesFn({ data: { items } });
+    return enriched as Movie[];
   } catch {
     return [];
   }
@@ -345,7 +348,10 @@ export async function search(query: string): Promise<Movie[]> {
 
 export async function searchWithFilters(filters: SearchFilterInput): Promise<Movie[]> {
   try {
-    return await searchFilteredFn({ data: filters });
+    const items = await searchFilteredFn({ data: filters });
+    if (items.length === 0) return [];
+    const enriched = await enrichRuntimesFn({ data: { items } });
+    return enriched as Movie[];
   } catch {
     return [];
   }
@@ -363,7 +369,10 @@ export type { SearchFilterInput, SearchSort };
 
 export async function searchByGenre(genreId: string): Promise<Movie[]> {
   try {
-    return await discoverByGenre({ data: { genreId } });
+    const items = await discoverByGenre({ data: { genreId } });
+    if (items.length === 0) return [];
+    const enriched = await enrichRuntimesFn({ data: { items } });
+    return enriched as Movie[];
   } catch {
     return [];
   }

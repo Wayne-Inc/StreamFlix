@@ -16,13 +16,11 @@ import {
   Github,
   AlertCircle,
   ArrowRight,
-  Award,
 } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
 import { ContactEmail } from "@/components/streamflix/ContactEmail";
 import { DownloadAppButton } from "@/components/streamflix/DownloadAppButton";
 import { tmdbFetch, toMovie } from "@/lib/api/tmdb.server";
-import { enrichRuntimes } from "@/lib/api/tmdb";
 import type { Movie } from "@/lib/types";
 import heroImg from "@/assets/landing.jpg";
 import heroImgSm from "@/assets/landing-sm.jpg";
@@ -55,10 +53,7 @@ export const Route = createFileRoute("/")({
   },
   loader: async () => {
     const data = await tmdbFetch("/trending/movie/week");
-    const trending = (data.results || []).slice(0, 10).map(toMovie);
-    // Enrich with runtimes
-    const enriched = await enrichRuntimes({ data: { items: trending } });
-    return enriched as Movie[];
+    return (data.results || []).slice(0, 10).map(toMovie);
   },
   head: () => ({
     meta: [
