@@ -40,8 +40,9 @@ export function AvatarCropModal({
     if (!image || !size) return;
     const dispW = image.naturalWidth * renderScale;
     const dispH = image.naturalHeight * renderScale;
-    const nx = Math.min(0, Math.max(size - dispW, 0));
-    const ny = Math.min(0, Math.max(size - dispH, 0));
+    // Center the image initially in the viewport
+    const nx = Math.min(0, (size - dispW) / 2);
+    const ny = Math.min(0, (size - dispH) / 2);
     offsetRef.current = { x: nx, y: ny };
     setOffset({ x: nx, y: ny });
   }, [image, size, renderScale]);
@@ -121,6 +122,14 @@ export function AvatarCropModal({
               }}
             />
           )}
+          {/* Circular crop preview overlay - shows how the avatar will appear as a circle */}
+          <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+            <div className="absolute inset-0 bg-black/30" />
+            <div className="absolute inset-0 bg-radial-gradient-from-transparent-via-black/30-to-black/50 rounded-full" style={{
+              background: 'radial-gradient(circle at center, transparent 48%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.6) 52%)'
+            }} />
+            <div className="absolute inset-0 border-2 border-white/60 rounded-full" />
+          </div>
           <div className="pointer-events-none absolute inset-0 border-2 border-white/40" />
         </div>
 
