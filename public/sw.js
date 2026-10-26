@@ -1,8 +1,7 @@
 const CACHE_NAME = "streamflix-cache-v2";
 const ASSET_CACHE = "streamflix-assets-v2";
-const OFFLINE_URL = "/offline";
 
-const PRECACHE_URLS = ["/", OFFLINE_URL, "/browse"];
+const PRECACHE_URLS = ["/", "/browse"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -79,8 +78,6 @@ async function navigationFallback(request) {
   } catch {
     const cached = await caches.match(request);
     if (cached) return cached;
-    const offlinePage = await caches.match(OFFLINE_URL);
-    if (offlinePage) return offlinePage;
     return new Response("Offline", {
       status: 503,
       headers: { "Content-Type": "text/html" },
