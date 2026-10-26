@@ -248,32 +248,33 @@ function SettingsPage() {
         userData.profile = { id: profileSnap.id, ...profileSnap.data() };
       }
 
-      // Devices
+      // Devices (uses user_id snake_case)
       const devicesQry = query(collection(db, "user_devices"), where("user_id", "==", user.uid));
       const devicesSnap = await getDocs(devicesQry);
       userData.devices = devicesSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-      // Watch history
-      const historyQry = query(collection(db, "watch_history"), where("user_id", "==", user.uid), orderBy("watchedAt", "desc"));
+      // Watch history (uses userId camelCase)
+      const historyQry = query(collection(db, "watch_history"), where("userId", "==", user.uid), orderBy("watchedAt", "desc"));
       const historySnap = await getDocs(historyQry);
       userData.watchHistory = historySnap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-      // Continue watching
-      const continueQry = query(collection(db, "continue_watching"), where("user_id", "==", user.uid), orderBy("updatedAt", "desc"));
+      // Continue watching (uses userId camelCase)
+      const continueQry = query(collection(db, "continue_watching"), where("userId", "==", user.uid), orderBy("updatedAt", "desc"));
       const continueSnap = await getDocs(continueQry);
       userData.continueWatching = continueSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-      // My List
-      const listQry = query(collection(db, "my_list"), where("user_id", "==", user.uid), orderBy("addedAt", "desc"));
+      // My List (uses userId camelCase)
+      const listQry = query(collection(db, "my_list"), where("userId", "==", user.uid), orderBy("addedAt", "desc"));
       const listSnap = await getDocs(listQry);
       userData.myList = listSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-      // Favorite genres
-      const genresQry = query(collection(db, "favorite_genres"), where("user_id", "==", user.uid));
-      const genresSnap = await getDocs(genresQry);
-      userData.favoriteGenres = genresSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      // Favorite genres (stored in users/{userId} document)
+      const userSnap = await getDoc(doc(db, "users", user.uid));
+      if (userSnap.exists()) {
+        userData.favoriteGenres = userSnap.data().favoriteGenres || [];
+      }
 
-      // FCM tokens
+      // FCM tokens (uses user_id snake_case)
       const fcmQry = query(collection(db, "fcm_tokens"), where("user_id", "==", user.uid));
       const fcmSnap = await getDocs(fcmQry);
       userData.fcmTokens = fcmSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
