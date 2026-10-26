@@ -493,15 +493,7 @@ function BrowsePage() {
         )}
         {kind === "home" && !kidsMode && top10Today.length > 0 && (
           <section className="space-y-4 py-4">
-            <div className="flex items-end gap-3 mb-4 px-4 sm:px-8">
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Top 10 Today</h2>
-              <span
-                aria-hidden="true"
-                className="font-black select-none text-primary/30 text-[3rem] sm:text-[4rem] leading-none tracking-tight"
-              >
-                TOP 10
-              </span>
-            </div>
+            <h2 className="px-4 sm:px-8 mb-4 sm:mb-6 text-2xl sm:text-3xl font-bold tracking-tight">Top 10 Today</h2>
             <div className="relative">
               {top10Scroll.left > 2 && (
                 <button

@@ -1,5 +1,5 @@
 import { Link, useRouter, useRouterState } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import {
   Search,
   ChevronDown,
@@ -22,9 +22,7 @@ import {
 import { tmdbFetch, toMovie } from "@/lib/api/tmdb.server";
 import { toast } from "sonner";
 import { Logo } from "./Logo";
-import { auth, db } from "@/lib/firebase";
-import { signOut as firebaseSignOut } from "firebase/auth";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { getFirebase } from "@/lib/lazy-firebase";
 import { profileHasPin, verifyProfilePin } from "@/lib/profiles";
 import { getSelectedProfile, clearSelectedProfile } from "@/lib/selected-profile";
 import { suggestTitles, getRandomTitle } from "@/lib/streamflix-data";
