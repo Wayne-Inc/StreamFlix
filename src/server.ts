@@ -1,3 +1,8 @@
+// Polyfill __dirname for ES modules (fixes Firebase Admin SDK / google-gax on Vercel)
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+globalThis.__dirname = dirname(fileURLToPath(import.meta.url));
+
 import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
