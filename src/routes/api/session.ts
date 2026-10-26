@@ -6,12 +6,17 @@ export const Route = createFileRoute("/api/session")({
     handlers: {
       POST: async ({ request }: { request: Request }) => {
         try {
+          console.log("[API Session] POST request received");
+          const { isAdminInitialized, createSessionCookie } = await import("@/server/firebase-admin");
+          console.log("[API Session] Admin initialized:", isAdminInitialized());
+
           if (!isAdminInitialized()) {
+            console.error("[API Session] Firebase Admin NOT initialized");
             return new Response(
               JSON.stringify({
                 ok: false,
                 error: "Server auth not configured",
-                hint: "Add FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY to Vercel environment variables (or .env.local for local dev)"
+                hint: "Add FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY to Vercel environment variables"
               }),
               {
                 status: 503,
@@ -21,9 +26,11 @@ export const Route = createFileRoute("/api/session")({
           }
 
           const body = await request.json();
+          console.log("[API Session] Request body keys:", Object.keys(body));
           const { idToken } = body as { idToken?: string };
 
           if (!idToken) {
+            console.error("[API Session] Missing ID token");
             return new Response(
               JSON.stringify({ ok: false, error: "Missing ID token" }),
               {
@@ -32,9 +39,12 @@ export const Route = createFileRoute("/api/session")({
               }
             );
           }
+          console.log("[API Session] ID token received, length:", idToken.length);
 
           const sessionCookie = await createSessionCookie(idToken);
+          console.log("[API Session] Session cookie created:", sessionCookie ? "YES" : "NO (null)");
           if (!sessionCookie) {
+            console.error("[API Session] createSessionCookie returned null");
             return new Response(
               JSON.stringify({
                 ok: false,
@@ -54,11 +64,12 @@ export const Route = createFileRoute("/api/session")({
           });
 
           setSessionCookie(response, sessionCookie);
+          console.log("[API Session] Cookie set, returning success");
           return response;
         } catch (err) {
-          console.error("Session creation error:", err);
+          console.error("[API Session] Session creation error:", err);
           return new Response(
-            JSON.stringify({ ok: false, error: "Internal server error" }),
+            JSON.stringify({ ok: false, error: "Internal server error", detail: String(err) }),
             {
               status: 500,
               headers: { "Content-Type": "application/json" },
