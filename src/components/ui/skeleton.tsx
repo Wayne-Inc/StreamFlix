@@ -1,7 +1,9 @@
 import { cn } from "@/lib/utils";
-import { Navbar } from "@/components/streamflix/Navbar";
 
-function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+function Skeleton({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={cn(
@@ -13,9 +15,41 @@ function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>)
   );
 }
 
-export function MovieCardSkeleton({ landscape = false }: { landscape?: boolean }) {
+/**
+ * Movie card skeleton - matches MovieCard component responsive sizes
+ * Portrait (default) and landscape variants
+ */
+export function MovieCardSkeleton({
+  landscape = false,
+  fluid = false,
+}: { landscape?: boolean; fluid?: boolean } = {}) {
+  if (fluid) {
+    return (
+      <div className="group relative w-full shrink-0">
+        <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-surface">
+          <Skeleton className="size-full" />
+          <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background/95 via-background/40 to-transparent" />
+          <div className="absolute top-2 left-2 z-10 flex items-center gap-1 rounded-full bg-black/70 backdrop-blur-lg px-2 py-1 border border-yellow-400/30">
+            <Skeleton className="size-3.5 rounded-full" />
+            <Skeleton className="h-3 w-8 rounded" />
+          </div>
+          <div className="absolute inset-x-0 bottom-0 p-3">
+            <Skeleton className="h-4 w-3/4 rounded mb-2" />
+            <div className="flex items-center gap-1.5">
+              <Skeleton className="h-3 w-12 rounded" />
+              <Skeleton className="h-3 w-16 rounded" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={`group relative ${landscape ? "w-[280px] sm:w-[380px] shrink-0" : "w-[175px] sm:w-[220px] shrink-0"}`}>
+    <div className={`group relative ${landscape
+      ? "w-[280px] sm:w-[380px] md:w-[320px] lg:w-[350px] xl:w-[380px] shrink-0"
+      : "w-[175px] sm:w-[220px] md:w-[190px] lg:w-[200px] xl:w-[210px] 2xl:w-[220px] shrink-0"
+    }`}>
       <div className={`relative ${landscape ? "aspect-video" : "aspect-[2/3]"} overflow-hidden rounded-xl bg-surface`}>
         <Skeleton className="size-full" />
         <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background/95 via-background/40 to-transparent" />
@@ -35,6 +69,9 @@ export function MovieCardSkeleton({ landscape = false }: { landscape?: boolean }
   );
 }
 
+/**
+ * Hero banner skeleton - matches HeroBanner component
+ */
 export function HeroBannerSkeleton() {
   return (
     <section className="relative min-h-[40vh] h-[50vh] w-full overflow-hidden sm:min-h-[400px] sm:h-[65vh] lg:min-h-[550px] lg:h-[85vh]">
@@ -74,7 +111,12 @@ export function HeroBannerSkeleton() {
   );
 }
 
-export function SeasonEpisodePickerSkeleton({ episodeCount = 6 }: { episodeCount?: number }) {
+/**
+ * Season episode picker skeleton - matches SeasonEpisodePicker component
+ */
+export function SeasonEpisodePickerSkeleton({
+  episodeCount = 6,
+}: { episodeCount?: number } = {}) {
   return (
     <div>
       <Skeleton className="mb-2 h-3 w-20 rounded" />
@@ -96,6 +138,9 @@ export function SeasonEpisodePickerSkeleton({ episodeCount = 6 }: { episodeCount
   );
 }
 
+/**
+ * Settings section skeleton - matches SettingsPage sections
+ */
 export function SettingsSectionSkeleton() {
   return (
     <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
@@ -107,8 +152,8 @@ export function SettingsSectionSkeleton() {
           <Skeleton className="h-5 w-32 rounded" />
         </div>
         <div className="flex-1 grid gap-4 sm:grid-cols-2">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className={i === 4 ? "sm:col-span-2" : ""}>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className={i === 5 ? "sm:col-span-2" : ""}>
               <Skeleton className="h-3 w-20 mb-1 rounded" />
               <Skeleton className="h-10 w-full rounded-md" />
             </div>
@@ -119,6 +164,9 @@ export function SettingsSectionSkeleton() {
   );
 }
 
+/**
+ * History item skeleton - matches HistoryPage items
+ */
 export function HistoryItemSkeleton() {
   return (
     <div className="space-y-3">
@@ -129,6 +177,9 @@ export function HistoryItemSkeleton() {
   );
 }
 
+/**
+ * Profile skeleton - matches ProfilesPage profile cards
+ */
 export function ProfileSkeleton() {
   return (
     <div className="min-h-screen bg-background">
@@ -166,7 +217,10 @@ export function ProfileSkeleton() {
   );
 }
 
-export function ContinueWatchingSkeleton({ count = 5 }: { count?: number }) {
+/**
+ * Continue watching skeleton - matches ContinueWatching row
+ */
+export function ContinueWatchingSkeleton({ count = 5 }: { count?: number } = {}) {
   return (
     <section className="relative space-y-0 py-0 sm:space-y-0 sm:py-0">
       <Skeleton className="px-4 sm:px-8 mb-4 sm:mb-6 h-8 sm:h-9 w-52 rounded" />
@@ -181,7 +235,10 @@ export function ContinueWatchingSkeleton({ count = 5 }: { count?: number }) {
   );
 }
 
-export function MyListSkeleton({ count = 12 }: { count?: number }) {
+/**
+ * My List skeleton - matches MyListPage grid
+ */
+export function MyListSkeleton({ count = 12 }: { count?: number } = {}) {
   return (
     <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
       {Array.from({ length: count }).map((_, i) => (
@@ -191,10 +248,12 @@ export function MyListSkeleton({ count = 12 }: { count?: number }) {
   );
 }
 
+/**
+ * Calendar skeleton - matches CalendarPage
+ */
 export function CalendarSkeleton() {
   return (
     <div className="min-h-dvh bg-background">
-      <Navbar />
       <div className="mx-auto max-w-6xl px-4 pt-24 pb-16 sm:px-8">
         <Skeleton className="h-10 w-72 rounded" />
         <Skeleton className="mt-2 h-4 w-52 rounded" />
@@ -212,6 +271,188 @@ export function CalendarSkeleton() {
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Search results skeleton - grid of movie cards
+ */
+export function SearchResultsSkeleton({ count = 12 }: { count?: number } = {}) {
+  return (
+    <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+      {Array.from({ length: count }).map((_, i) => (
+        <MovieCardSkeleton key={i} />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Explore genre chips skeleton
+ */
+export function ExploreGenreChipsSkeleton({ count = 12 }: { count?: number } = {}) {
+  return (
+    <div className="mt-8 flex flex-wrap gap-2">
+      {Array.from({ length: count }).map((_, i) => (
+        <Skeleton key={i} className="h-9 w-24 rounded-full" />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Browse page skeleton - combines hero + continue watching + rows
+ */
+export function BrowseSkeleton() {
+  return (
+    <div className="min-h-dvh bg-background">
+      <div className="relative z-10 space-y-6 md:mt-12 md:space-y-12">
+        <ContinueWatchingSkeleton count={5} />
+        {[1, 2, 3, 4, 5].map((i) => (
+          <RowSkeleton key={i} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Explore page skeleton - hero + genre chips + rows
+ */
+export function ExploreSkeleton() {
+  return (
+    <div className="min-h-dvh bg-background">
+      <div className="mx-auto max-w-[1800px] px-4 pb-16 md:pb-20 sm:px-8">
+        <ExploreGenreChipsSkeleton count={12} />
+        <div className="mt-10 space-y-8">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <RowSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Explore genre page skeleton - hero + genre chips + grid
+ */
+export function ExploreGenreSkeleton() {
+  return (
+    <div className="min-h-dvh bg-background">
+      <div className="mx-auto max-w-[1800px] px-4 pb-16 md:pb-20 sm:px-8">
+        <ExploreGenreChipsSkeleton count={10} />
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <MovieCardSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Movie detail page skeleton - matches MoviePage
+ */
+export function MovieDetailSkeleton() {
+  return (
+    <div className="min-h-dvh bg-background">
+      <section className="relative min-h-[70vh] pt-16 md:min-h-[85vh] md:pt-20">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[52vh] overflow-hidden sm:h-[58vh] md:inset-y-0 md:h-auto">
+          <Skeleton className="absolute inset-0 size-full rounded-none bg-surface/60" />
+        </div>
+        <div className="relative z-10 w-full min-w-0 px-4 py-10 sm:px-8 md:px-12 md:py-16 lg:px-16">
+          <Skeleton className="mb-6 h-9 w-28 rounded-full" />
+          <div className="grid w-full min-w-0 gap-10 md:grid-cols-3 md:items-center md:gap-8">
+            <div className="min-w-0 space-y-4 md:col-span-2">
+              <Skeleton className="mb-4 h-16 w-72 max-w-full rounded-md sm:h-20 md:h-24 md:w-80" />
+              <div className="flex flex-wrap items-center gap-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-7 w-24 rounded-full sm:h-8 sm:w-28" />
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-7 w-20 rounded-full" />
+                ))}
+              </div>
+              <div className="min-w-0">
+                <Skeleton className="h-4 w-full max-w-xl rounded sm:h-5" />
+                <Skeleton className="mt-2 h-4 w-full max-w-xl rounded sm:h-5" />
+                <Skeleton className="mt-2 h-4 w-2/3 max-w-xl rounded sm:h-5" />
+              </div>
+              <div className="flex flex-wrap items-center gap-2 pt-2 sm:gap-3">
+                <Skeleton className="h-10 w-28 rounded-md sm:h-12 sm:w-32" />
+                <Skeleton className="h-10 w-28 rounded-md sm:h-12 sm:w-36" />
+                <Skeleton className="h-10 w-28 rounded-md sm:h-12 sm:w-32" />
+                <Skeleton className="size-11 rounded-full sm:size-12" />
+                <Skeleton className="size-11 rounded-full sm:size-12" />
+              </div>
+              <div className="min-w-0 pt-4">
+                <Skeleton className="mb-3 h-5 w-16 rounded" />
+                <div className="flex gap-3 overflow-hidden py-2">
+                  {Array.from({ length: 7 }).map((_, i) => (
+                    <Skeleton key={i} className="w-20 shrink-0 aspect-square rounded-xl sm:w-24" />
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="hidden min-w-0 md:col-span-1 md:block">
+              <Skeleton className="w-full max-w-80 aspect-[2/3] rounded-xl" />
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+/**
+ * Person detail page skeleton
+ */
+export function PersonDetailSkeleton() {
+  return (
+    <div className="min-h-dvh bg-background">
+      <div className="mx-auto max-w-6xl px-4 pt-28 pb-16 sm:px-8 animate-pulse space-y-6">
+        <div className="mb-4">
+          <Skeleton className="h-8 w-28 rounded-lg" />
+        </div>
+        <div className="flex flex-col sm:flex-row gap-6 sm:gap-10">
+          <Skeleton className="size-48 shrink-0 rounded-xl" />
+          <div className="flex-1 space-y-4">
+            <Skeleton className="h-10 w-64 rounded" />
+            <Skeleton className="h-4 w-48 rounded" />
+            <Skeleton className="h-20 w-full rounded" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Row skeleton - for browse/explore rows with mixed portrait/landscape cards
+ */
+export function RowSkeleton() {
+  return (
+    <section className="space-y-0 py-0 sm:space-y-0 sm:py-0">
+      <Skeleton className="mb-4 sm:mb-6 px-4 sm:px-8 h-8 sm:h-9 w-52 rounded" />
+      <div className="flex gap-4 sm:gap-6 overflow-hidden px-4 sm:px-8 pb-4 sm:pb-10">
+        {Array.from({ length: 7 }).map((_, i) => (
+          <Skeleton
+            key={i}
+            className="w-[175px] sm:w-[220px] md:w-[190px] lg:w-[200px] xl:w-[210px] 2xl:w-[220px] aspect-[2/3] rounded-xl shrink-0"
+          />
+        ))}
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton
+            key={`landscape-${i}`}
+            className="w-[280px] sm:w-[380px] md:w-[320px] lg:w-[350px] xl:w-[380px] aspect-video rounded-xl shrink-0"
+          />
+        ))}
+      </div>
+    </section>
   );
 }
 

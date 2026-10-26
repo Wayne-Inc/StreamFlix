@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Calendar, MapPin, Film, ChevronLeft, ChevronDown } from "lucide-react";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton, PersonDetailSkeleton } from "@/components/ui/skeleton";
 import { fetchPersonDetails } from "@/lib/api/tmdb";
 
 export const Route = createFileRoute("/_authenticated/person/$id")({
@@ -129,21 +129,7 @@ function PersonPage() {
     return (
       <div className="min-h-dvh bg-background">
         <Navbar />
-        <main className="px-4 pt-28 pb-16 sm:px-8">
-          <div className="mx-auto max-w-6xl animate-pulse space-y-6">
-            <div className="mb-4">
-              <Skeleton className="h-8 w-28 rounded-lg" />
-            </div>
-            <div className="flex flex-col sm:flex-row gap-6 sm:gap-10">
-              <Skeleton className="size-48 shrink-0 rounded-xl" />
-              <div className="flex-1 space-y-4">
-                <Skeleton className="h-10 w-64 rounded" />
-                <Skeleton className="h-4 w-48 rounded" />
-                <Skeleton className="h-20 w-full rounded" />
-              </div>
-            </div>
-          </div>
-        </main>
+        <PersonDetailSkeleton />
         <Footer />
       </div>
     );

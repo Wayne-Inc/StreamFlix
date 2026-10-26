@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { Logo } from "@/components/streamflix/Logo";
 import { AvatarCropModal } from "@/components/streamflix/AvatarCropModal";
 import { TmdbAvatarPicker } from "@/components/streamflix/TmdbAvatarPicker";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton, ProfileSkeleton } from "@/components/ui/skeleton";
 import { auth } from "@/lib/firebase";
 import { getWatchHistory } from "@/lib/continue-watching";
 import {
@@ -284,14 +284,7 @@ function ProfilesPage() {
         </h1>
 
         {profiles === null ? (
-          <ul className="mt-8 flex flex-wrap justify-center gap-3 sm:mt-10 sm:gap-8">
-            {[1, 2, 3, 4].map((i) => (
-              <li key={i} className="flex flex-col items-center gap-3">
-                <Skeleton className="size-28 sm:size-32 rounded-lg" />
-                <Skeleton className="h-4 w-20 rounded" />
-              </li>
-            ))}
-          </ul>
+          <ProfileSkeleton />
         ) : (
           <ul className="mt-8 flex flex-wrap justify-center gap-3 sm:mt-10 sm:gap-8">
             {profiles.map((p) => (

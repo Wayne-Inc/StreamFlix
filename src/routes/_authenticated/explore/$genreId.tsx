@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Sparkles, ChevronDown, ChevronUp } from "luc
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { MovieCard } from "@/components/streamflix/MovieCard";
-import { HeroBannerSkeleton, Skeleton } from "@/components/ui/skeleton";
+import { HeroBannerSkeleton, Skeleton, ExploreGenreSkeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getGenres, searchByGenre } from "@/lib/streamflix-data";
 import type { Movie } from "@/lib/types";
@@ -31,19 +31,7 @@ export const Route = createFileRoute("/_authenticated/explore/$genreId")({
   pendingComponent: () => (
     <div className="min-h-dvh bg-background">
       <Navbar />
-      <HeroBannerSkeleton />
-      <main className="mx-auto max-w-[1800px] px-4 pb-16 md:pb-20 sm:px-8">
-        <div className="mt-8 flex flex-wrap gap-2">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <Skeleton key={i} className="h-9 w-24 rounded-full" />
-          ))}
-        </div>
-        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <Skeleton key={i} className="w-full aspect-[2/3] rounded-xl" />
-          ))}
-        </div>
-      </main>
+      <ExploreGenreSkeleton />
     </div>
   ),
   component: ExploreGenrePage,

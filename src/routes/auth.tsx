@@ -352,7 +352,7 @@ function AuthPage() {
     const existing = methods.map((m) => FEDERATED_PROVIDERS[m]).find((m): m is LinkProvider => !!m);
     if (!existing) {
       toast.error(
-        `An account already exists for ${mail} with a sign-in method that can't be linked automatically. Sign in with that method first, then link ${providerLabel(provider)}.`,
+        `An account already exists for ${mail}`,
       );
       return;
     }

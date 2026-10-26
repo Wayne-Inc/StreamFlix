@@ -8,7 +8,7 @@ import { Row } from "@/components/streamflix/Row";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import { Footer } from "@/components/streamflix/Footer";
 import { RowSkeleton } from "@/components/streamflix/RowSkeleton";
-import { HeroBannerSkeleton, ContinueWatchingSkeleton } from "@/components/ui/skeleton";
+import { HeroBannerSkeleton, ContinueWatchingSkeleton, BrowseSkeleton as BrowseSkeletonComponent } from "@/components/ui/skeleton";
 import { loadBrowseData, searchByGenre, type BrowseKind } from "@/lib/streamflix-data";
 import { fetchPopular } from "@/lib/api/tmdb";
 import type { Movie } from "@/lib/types";
@@ -34,25 +34,12 @@ const searchSchema = z.object({
   kind: z.enum(["home", "movies", "tv", "new"]).catch("home").default("home"),
 });
 
-function BrowseSkeleton() {
-  const kind =
-    (typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search).get("kind")
-      : "home") || "home";
-  const isHome = kind === "home";
-  return (
-    <div className="min-h-dvh bg-background">
-      <Navbar />
-      <HeroBannerSkeleton />
-      <div className="relative z-10 space-y-6 md:mt-12 md:space-y-12">
-        {isHome && <ContinueWatchingSkeleton count={5} />}
-        {[1, 2, 3, 4, 5].map((i) => (
-          <RowSkeleton key={i} />
-        ))}
-      </div>
-    </div>
-  );
-}
+const BrowseSkeleton = () => (
+  <div className="min-h-dvh bg-background">
+    <Navbar />
+    <BrowseSkeletonComponent />
+  </div>
+);
 
 export const Route = createFileRoute("/_authenticated/browse")({
   validateSearch: searchSchema,

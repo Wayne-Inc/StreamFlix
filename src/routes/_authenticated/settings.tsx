@@ -57,7 +57,7 @@ import {
 } from "firebase/firestore";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton, SettingsSectionSkeleton } from "@/components/ui/skeleton";
 import { AvatarCropModal } from "@/components/streamflix/AvatarCropModal";
 import { getDeviceId, recordCurrentDevice } from "@/lib/device-tracking";
 import { isKidsProfile } from "@/lib/kids-mode";
@@ -619,20 +619,7 @@ function SettingsPage() {
             <UserIcon className="size-4" /> Profile
           </div>
           {profileLoading ? (
-            <div className="mt-5 flex flex-col sm:flex-row gap-6">
-              <div className="flex flex-col items-center gap-3">
-                <Skeleton className="size-24 rounded-full" />
-                <Skeleton className="h-5 w-32 rounded" />
-              </div>
-              <div className="flex-1 grid gap-4 sm:grid-cols-2">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className={i === 5 ? "sm:col-span-2" : ""}>
-                    <Skeleton className="h-3 w-20 mb-1 rounded" />
-                    <Skeleton className="h-10 w-full rounded-md" />
-                  </div>
-                ))}
-              </div>
-            </div>
+            <SettingsSectionSkeleton />
           ) : (
             <div className="mt-5 flex flex-col sm:flex-row gap-6">
               <div className="flex flex-col items-center gap-3">
@@ -869,13 +856,7 @@ function SettingsPage() {
             {devicesQ.isLoading && (
               <div className="divide-y divide-border">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center gap-4 px-4 py-4">
-                    <Skeleton className="size-10 rounded-md" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-40 rounded" />
-                      <Skeleton className="h-3 w-56 rounded" />
-                    </div>
-                  </div>
+                  <SettingsSectionSkeleton key={i} />
                 ))}
               </div>
             )}

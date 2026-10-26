@@ -13,7 +13,7 @@ import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import { LazyImage } from "@/components/streamflix/LazyImage";
-import { Skeleton, MyListSkeleton } from "@/components/ui/skeleton";
+import { Skeleton, MyListSkeleton, SearchResultsSkeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -387,7 +387,7 @@ function SearchPage() {
                     : `${results.length} title${results.length === 1 ? "" : "s"} matching your filters`}
               </p>
               {loading && (
-                <MyListSkeleton count={12} />
+                <SearchResultsSkeleton count={12} />
               )}
               {!loading && results.length === 0 && (
                 <p className="mt-10 text-center text-sm text-muted-foreground">
