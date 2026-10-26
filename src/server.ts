@@ -16,6 +16,7 @@ async function authMiddleware(request: Request): Promise<Response | null> {
 
   // Paths that require authentication
   const protectedPaths = [
+    "/",
     "/profiles",
     "/browse",
     "/watch/",
