@@ -67,22 +67,15 @@ export function clearSessionCookie(response: Response): void {
  * Returns the user object if authenticated, null otherwise
  */
 export async function authenticateRequest(request: Request): Promise<ServerUser | null> {
-  if (!isAdminInitialized()) {
-    console.warn("[Server Auth] Firebase Admin not initialized - skipping server auth");
-    return null;
-  }
+  if (!isAdminInitialized()) return null;
 
   const cookieHeader = request.headers.get("cookie");
-  console.log("[Server Auth] Cookie header:", cookieHeader ? "PRESENT" : "MISSING");
+  if (!cookieHeader) return null;
 
   const sessionCookie = getSessionCookie(request);
-  console.log("[Server Auth] Session cookie:", sessionCookie ? "FOUND" : "MISSING");
-
   if (!sessionCookie) return null;
 
-  const user = await verifySessionCookie(sessionCookie);
-  console.log("[Server Auth] Verified user:", user?.uid || "VERIFICATION_FAILED");
-  return user;
+  return verifySessionCookie(sessionCookie);
 }
 
 /**

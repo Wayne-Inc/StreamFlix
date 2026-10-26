@@ -70,14 +70,9 @@ export async function verifyIdToken(idToken: string): Promise<{ uid: string; ema
   }
 }
 
-export async function createSessionCookie(idToken: string, expiresIn = 60 * 60 * 24 * 14 * 1000): Promise<string | null> {
-  if (!adminAuth) return null;
-  try {
-    return await adminAuth.createSessionCookie(idToken, { expiresIn });
-  } catch (error) {
-    console.warn("[Firebase Admin] Session cookie creation failed:", error);
-    return null;
-  }
+export async function createSessionCookie(idToken: string, expiresIn = 60 * 60 * 24 * 14 * 1000): Promise<string> {
+  if (!adminAuth) throw new Error("Firebase Admin not initialized");
+  return adminAuth.createSessionCookie(idToken, { expiresIn });
 }
 
 export async function verifySessionCookie(sessionCookie: string): Promise<{ uid: string; email: string; claims: Record<string, unknown> } | null> {
