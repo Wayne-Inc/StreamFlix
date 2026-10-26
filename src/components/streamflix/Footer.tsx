@@ -12,37 +12,37 @@ export function Footer() {
             <span className="text-primary">STREAM</span>
             <span className="text-foreground">FLIX</span>
           </div>
-          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-x-3 gap-y-2 text-xs sm:text-sm text-muted-foreground">
-            <ContactEmail className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors whitespace-nowrap">
-              <Mail className="size-3.5" />
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-x-3 gap-y-3 text-sm sm:text-base text-muted-foreground">
+            <ContactEmail className="inline-flex items-center gap-2 py-1.5 hover:text-foreground transition-colors whitespace-nowrap min-h-[44px]">
+              <Mail className="size-4 sm:size-3.5" />
             </ContactEmail>
             <a
               href="https://instagram.com/itiswayneee"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors whitespace-nowrap"
+              className="inline-flex items-center gap-2 py-1.5 hover:text-foreground transition-colors whitespace-nowrap min-h-[44px]"
             >
-              <Instagram className="size-3.5" /> @itiswayneee
+              <Instagram className="size-4 sm:size-3.5" /> @itiswayneee
             </a>
             <a
               href="https://github.com/Wayne-Inc/StreamFlix"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors whitespace-nowrap"
+              className="inline-flex items-center gap-2 py-1.5 hover:text-foreground transition-colors whitespace-nowrap min-h-[44px]"
             >
-              <Github className="size-3.5" /> GitHub
+              <Github className="size-4 sm:size-3.5" /> GitHub
             </a>
-            <div className="flex items-center gap-3 whitespace-nowrap">
-            <Link to="/tos" className="hover:text-foreground transition-colors whitespace-nowrap">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 whitespace-nowrap">
+            <Link to="/tos" className="py-1.5 hover:text-foreground transition-colors whitespace-nowrap min-h-[44px]">
               Terms of Service
             </Link>
-            <Link to="/privacy-policy" className="hover:text-foreground transition-colors whitespace-nowrap">
+            <Link to="/privacy-policy" className="py-1.5 hover:text-foreground transition-colors whitespace-nowrap min-h-[44px]">
               Privacy Policy
             </Link>
           </div>
             <DownloadAppButton
-              iconClassName="size-3.5"
-              className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors disabled:opacity-50 whitespace-nowrap"
+              iconClassName="size-4 sm:size-3.5"
+              className="inline-flex items-center gap-2 py-1.5 hover:text-foreground transition-colors disabled:opacity-50 whitespace-nowrap min-h-[44px]"
             />
           </div>
         </div>

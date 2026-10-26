@@ -87,7 +87,8 @@ async function enrichHeroSlides(items: Movie[]): Promise<Movie[]> {
   });
 }
 
-async function loadHome() {  const [
+async function loadHome() {
+  const [
     trendingAllWeek,
     nowPlaying,
     topRated,
@@ -113,7 +114,20 @@ async function loadHome() {  const [
   const top10Today = trendingAllDay.slice(0, 10);
   const top10TrendingWeek = trendingAllWeek.slice(0, 10);
 
-  const genreGroups = HOME_GENRES.map((g, i) => ({ id: g.id, name: g.name, items: genreItems[i] }));
+  // Enrich genre groups and rows with runtimes
+  const allItems = [
+    ...genreItems.flat(),
+    ...trendingAllWeek,
+    ...(recommendations || []),
+    ...topRated,
+    ...topRatedTv,
+    ...nowPlaying,
+  ];
+  const enrichedHome = await enrichRuntimesFn({ data: { items: allItems } });
+  const enrichedMap = new Map((enrichedHome as Movie[]).map((m) => [m.id, m]));
+  const enrich = (items: Movie[]) => items.map((m) => enrichedMap.get(m.id) ?? m);
+
+  const genreGroups = HOME_GENRES.map((g, i) => ({ id: g.id, name: g.name, items: enrich(genreItems[i]) }));
 
   return {
     heroSlides: await enrichHeroSlides(trendingAllWeek.slice(0, 5)),
@@ -121,10 +135,10 @@ async function loadHome() {  const [
     top10TrendingWeek,
     genreGroups,
     rows: [
-      { title: "Trending Now", items: trendingAllWeek },
-      ...(recommendations.length ? [{ title: "Recommended for You", items: recommendations }] : []),
-      { title: "Top Rated", items: [...topRated, ...topRatedTv].slice(0, 10) },
-      { title: "New Releases", items: nowPlaying },
+      { title: "Trending Now", items: enrich(trendingAllWeek) },
+      ...(recommendations.length ? [{ title: "Recommended for You", items: enrich(recommendations) }] : []),
+      { title: "Top Rated", items: enrich([...topRated, ...topRatedTv].slice(0, 10)) },
+      { title: "New Releases", items: enrich(nowPlaying) },
     ],
   };
 }
