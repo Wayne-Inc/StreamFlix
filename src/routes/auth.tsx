@@ -410,6 +410,27 @@ function AuthPage() {
   const onGoogle = async () => {
     setBusy(true);
     setPopupBlocked(false);
+
+    // Verify Turnstile CAPTCHA before allowing OAuth popup
+    const { executeTurnstile } = await import("@/lib/turnstile");
+    const token = await executeTurnstile("google-signin");
+    if (!token) {
+      toast.error("Verification failed. Please try again.");
+      setBusy(false);
+      return;
+    }
+    const verifyRes = await fetch("/api/verify-recaptcha", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, action: "google-signin" }),
+    });
+    const verifyData = await verifyRes.json();
+    if (!verifyData.ok) {
+      toast.error("Verification failed. Please try again.");
+      setBusy(false);
+      return;
+    }
+
     const provider = new GoogleAuthProvider();
     try {
       const userCred = await signInWithPopup(auth, provider);
@@ -454,6 +475,27 @@ function AuthPage() {
 
   const onGitHub = async () => {
     setBusy(true);
+
+    // Verify Turnstile CAPTCHA before allowing OAuth popup
+    const { executeTurnstile } = await import("@/lib/turnstile");
+    const token = await executeTurnstile("github-signin");
+    if (!token) {
+      toast.error("Verification failed. Please try again.");
+      setBusy(false);
+      return;
+    }
+    const verifyRes = await fetch("/api/verify-recaptcha", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, action: "github-signin" }),
+    });
+    const verifyData = await verifyRes.json();
+    if (!verifyData.ok) {
+      toast.error("Verification failed. Please try again.");
+      setBusy(false);
+      return;
+    }
+
     // Web: popup flow
     const provider = new GithubAuthProvider();
     try {
