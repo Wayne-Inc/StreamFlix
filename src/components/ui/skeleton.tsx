@@ -158,28 +158,363 @@ export function SeasonEpisodePickerSkeleton({
 }
 
 /**
- * Settings section skeleton - matches SettingsPage sections
+ * Settings section skeleton - matches generic SettingsPage section layout
+ * Used for Profile, Security, Accessibility, Interests, Notifications, Sign Out, Export Data, Delete Account
  */
 export function SettingsSectionSkeleton() {
   return (
-    <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
-      <Skeleton className="h-5 w-32 rounded mb-4" />
-      <Skeleton className="h-3 w-64 rounded" />
-      <div className="mt-5 flex flex-col sm:flex-row gap-6">
-        <div className="flex flex-col items-center gap-3">
+    <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6 animate-pulse">
+      {/* Section header: icon + title */}
+      <div className="flex items-center gap-2">
+        <Skeleton className="size-4" />
+        <Skeleton className="h-5 w-24 rounded" />
+      </div>
+      {/* Section description */}
+      <Skeleton className="mt-1 h-3 w-48 rounded" />
+      {/* Section content - generic form field layout */}
+      <div className="mt-4 flex flex-col sm:flex-row gap-6">
+        {/* Left side - avatar/profile image placeholder */}
+        <div className="flex flex-col items-center gap-3 sm:w-32 shrink-0">
           <Skeleton className="size-24 rounded-full" />
-          <Skeleton className="h-5 w-32 rounded" />
+          <Skeleton className="h-8 w-24 rounded-md" />
         </div>
+        {/* Right side - form fields grid */}
         <div className="flex-1 grid gap-4 sm:grid-cols-2">
           {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className={i === 5 ? "sm:col-span-2" : ""}>
-              <Skeleton className="h-3 w-20 mb-1 rounded" />
-              <Skeleton className="h-10 w-full rounded-md" />
+              <Skeleton className="h-3 w-20 mb-1 rounded" /> {/* Label */}
+              <Skeleton className="h-10 w-full rounded-md" /> {/* Input */}
             </div>
           ))}
         </div>
       </div>
+      {/* Save button at bottom */}
+      <div className="mt-6 flex justify-end">
+        <Skeleton className="h-10 w-28 rounded-md" />
+      </div>
     </section>
+  );
+}
+
+/**
+ * Profile section skeleton - matches Profile section with avatar upload and Save button
+ */
+export function ProfileSettingsSkeleton() {
+  return (
+    <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6 animate-pulse">
+      {/* Section header */}
+      <div className="flex items-center gap-2">
+        <Skeleton className="size-4" />
+        <Skeleton className="h-5 w-20 rounded" />
+      </div>
+      <Skeleton className="mt-1 h-3 w-56 rounded" />
+
+      {/* Avatar upload area + form fields */}
+      <div className="mt-4 flex flex-col sm:flex-row gap-6">
+        {/* Avatar */}
+        <div className="flex flex-col items-center gap-3 sm:w-32 shrink-0">
+          <Skeleton className="size-24 rounded-full" />
+          <Skeleton className="h-8 w-24 rounded-md" /> {/* Upload button */}
+        </div>
+        {/* Form fields */}
+        <div className="flex-1 grid gap-4 sm:grid-cols-2">
+          <div>
+            <Skeleton className="h-3 w-16 mb-1 rounded" />
+            <Skeleton className="h-10 w-full rounded-md" />
+          </div>
+          <div>
+            <Skeleton className="h-3 w-20 mb-1 rounded" />
+            <Skeleton className="h-10 w-full rounded-md" />
+          </div>
+          <div>
+            <Skeleton className="h-3 w-24 mb-1 rounded" />
+            <Skeleton className="h-10 w-full rounded-md" />
+          </div>
+          <div className="sm:col-span-2">
+            <Skeleton className="h-3 w-24 mb-1 rounded" />
+            <Skeleton className="h-10 w-full rounded-md" />
+          </div>
+          <div className="sm:col-span-2">
+            <Skeleton className="h-3 w-20 mb-1 rounded" />
+            <Skeleton className="h-10 w-full rounded-md" />
+          </div>
+        </div>
+      </div>
+
+      {/* Color picker row */}
+      <div className="mt-4 flex items-center gap-2">
+        <Skeleton className="h-3 w-20 mb-1 rounded" />
+        <div className="flex gap-2">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <Skeleton key={i} className="size-10 rounded-full" />
+          ))}
+        </div>
+      </div>
+
+      {/* Toggle row (Kids profile) */}
+      <div className="mt-4 flex items-center justify-between gap-4">
+        <div>
+          <Skeleton className="h-3 w-24 rounded" />
+          <Skeleton className="mt-0.5 h-3 w-32 rounded" />
+        </div>
+        <Skeleton className="h-6 w-11 rounded-full border-2 shrink-0" />
+      </div>
+
+      {/* Save button */}
+      <div className="mt-6 flex justify-end">
+        <Skeleton className="h-10 w-28 rounded-md" />
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Security section skeleton - matches Security section with password fields and Save button
+ */
+export function SecuritySettingsSkeleton() {
+  return (
+    <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6 animate-pulse">
+      <div className="flex items-center gap-2">
+        <Skeleton className="size-4" />
+        <Skeleton className="h-5 w-20 rounded" />
+      </div>
+      <Skeleton className="mt-1 h-3 w-56 rounded" />
+
+      {/* Password fields */}
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <Skeleton className="h-3 w-20 mb-1 rounded" />
+          <Skeleton className="h-10 w-full rounded-md" />
+        </div>
+        <div>
+          <Skeleton className="h-3 w-24 mb-1 rounded" />
+          <Skeleton className="h-10 w-full rounded-md" />
+        </div>
+        <div className="sm:col-span-2">
+          <Skeleton className="h-3 w-24 mb-1 rounded" />
+          <Skeleton className="h-10 w-full rounded-md" />
+        </div>
+      </div>
+
+      {/* 2FA row */}
+      <div className="mt-4 flex items-center justify-between gap-4">
+        <div>
+          <Skeleton className="h-3 w-24 rounded" />
+          <Skeleton className="mt-0.5 h-3 w-40 rounded" />
+        </div>
+        <Skeleton className="h-6 w-11 rounded-full border-2 shrink-0" />
+      </div>
+
+      {/* Save button */}
+      <div className="mt-6 flex justify-end">
+        <Skeleton className="h-10 w-28 rounded-md" />
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Accessibility section skeleton - matches Accessibility section with toggles and Save button
+ */
+export function AccessibilitySettingsSkeleton() {
+  return (
+    <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6 animate-pulse">
+      <div className="flex items-center gap-2">
+        <Skeleton className="size-4" />
+        <Skeleton className="h-5 w-28 rounded" />
+      </div>
+      <Skeleton className="mt-1 h-3 w-60 rounded" />
+
+      {/* Reduce motion toggle */}
+      <div className="mt-4 flex items-center justify-between gap-4">
+        <div>
+          <Skeleton className="h-3 w-28 rounded" />
+          <Skeleton className="mt-0.5 h-3 w-48 rounded" />
+        </div>
+        <Skeleton className="h-6 w-11 rounded-full border-2 shrink-0" />
+      </div>
+
+      {/* High contrast toggle */}
+      <div className="mt-3 flex items-center justify-between gap-4">
+        <div>
+          <Skeleton className="h-3 w-24 rounded" />
+          <Skeleton className="mt-0.5 h-3 w-48 rounded" />
+        </div>
+        <Skeleton className="h-6 w-11 rounded-full border-2 shrink-0" />
+      </div>
+
+      {/* Save button */}
+      <div className="mt-6 flex justify-end">
+        <Skeleton className="h-10 w-28 rounded-md" />
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Devices section skeleton - matches Devices section with device list and Remove buttons
+ */
+export function DevicesSettingsSkeleton({ deviceCount = 3 }: { deviceCount?: number } = {}) {
+  return (
+    <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6 animate-pulse">
+      <div className="flex items-center gap-2">
+        <Skeleton className="size-4" />
+        <Skeleton className="h-5 w-20 rounded" />
+      </div>
+      <Skeleton className="mt-1 h-3 w-56 rounded" />
+
+      {/* Device list */}
+      <div className="mt-4 space-y-3">
+        {Array.from({ length: deviceCount }).map((_, i) => (
+          <div key={i} className="flex items-center gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4">
+            <Skeleton className="size-10 shrink-0 rounded-md" />
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <Skeleton className="h-4 w-32 rounded" />
+                {i === 0 && <Skeleton className="h-4 w-20 rounded-full" />}
+              </div>
+              <Skeleton className="mt-0.5 h-3 w-40 rounded" />
+            </div>
+            <Skeleton className="h-8 w-20 rounded-md shrink-0" /> {/* Remove button */}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Interests section skeleton - matches Interests section with genre chips and Save button
+ */
+export function InterestsSettingsSkeleton() {
+  return (
+    <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6 animate-pulse">
+      <div className="flex items-center gap-2">
+        <Skeleton className="size-4" />
+        <Skeleton className="h-5 w-20 rounded" />
+      </div>
+      <Skeleton className="mt-1 h-3 w-64 rounded" />
+
+      {/* Genre chips grid */}
+      <div className="mt-4 flex flex-wrap gap-2">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <Skeleton key={i} className="h-9 w-24 rounded-full" />
+        ))}
+      </div>
+
+      {/* Save button */}
+      <div className="mt-6 flex justify-end">
+        <Skeleton className="h-10 w-28 rounded-md" />
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Notifications section skeleton - matches Notifications section with Enable button and toggle
+ */
+export function NotificationsSettingsSkeleton() {
+  return (
+    <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6 animate-pulse">
+      <div className="flex items-center gap-2">
+        <Skeleton className="size-4" />
+        <Skeleton className="h-5 w-28 rounded" />
+      </div>
+      <Skeleton className="mt-1 h-3 w-64 rounded" />
+
+      {/* Permission status badge */}
+      <Skeleton className="mt-4 h-8 w-24 rounded-md" />
+
+      {/* Enable Notifications button */}
+      <div className="mt-4">
+        <Skeleton className="h-10 w-36 rounded-md" />
+      </div>
+
+      {/* Upcoming Movie Notifications toggle */}
+      <div className="mt-4 flex items-center justify-between gap-4 rounded-md border border-border bg-background/60 px-4 py-3">
+        <div>
+          <Skeleton className="h-4 w-36 rounded" />
+          <Skeleton className="mt-0.5 h-3 w-48 rounded" />
+        </div>
+        <Skeleton className="h-6 w-11 rounded-full border-2 shrink-0" />
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Sign Out section skeleton - matches Sign Out section with Sign out button
+ */
+export function SignOutSettingsSkeleton() {
+  return (
+    <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6 animate-pulse">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="size-4" />
+            <Skeleton className="h-5 w-20 rounded" />
+          </div>
+          <Skeleton className="mt-1 h-3 w-40 rounded" />
+        </div>
+        <Skeleton className="h-10 w-28 rounded-md shrink-0" />
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Export Data section skeleton - matches Export Data section with Export button
+ */
+export function ExportDataSettingsSkeleton() {
+  return (
+    <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6 animate-pulse">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="size-4" />
+            <Skeleton className="h-5 w-28 rounded" />
+          </div>
+          <Skeleton className="mt-1 h-3 w-56 rounded" />
+        </div>
+        <Skeleton className="h-10 w-28 rounded-md shrink-0" />
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Delete Account section skeleton - matches Delete Account section with Delete button
+ */
+export function DeleteAccountSettingsSkeleton() {
+  return (
+    <section className="mt-6 rounded-lg border border-destructive/30 bg-destructive/5 p-4 sm:p-6 animate-pulse">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <Skeleton className="h-4 w-24 rounded text-destructive" />
+          <Skeleton className="mt-1 h-3 w-56 rounded" />
+        </div>
+        <Skeleton className="h-10 w-28 rounded-md" />
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Device list item skeleton - matches Devices section device rows
+ */
+export function DeviceListItemSkeleton() {
+  return (
+    <div className="flex items-center gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4 animate-pulse">
+      <Skeleton className="size-10 shrink-0 rounded-md" /> {/* Device icon */}
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <Skeleton className="h-4 w-32 rounded" /> {/* Device label */}
+          <Skeleton className="h-4 w-20 rounded-full" /> {/* "This device" badge */}
+        </div>
+        <Skeleton className="mt-0.5 h-3 w-40 rounded" /> {/* IP + last active */}
+      </div>
+      <Skeleton className="h-8 w-20 rounded-md shrink-0" /> {/* Remove button */}
+    </div>
   );
 }
 

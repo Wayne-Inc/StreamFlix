@@ -3,42 +3,158 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ============================================
-    // USER DOCUMENTS (root collection)
+    // HELPER FUNCTIONS
+    // ============================================
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // ============================================
+    // USERS (root collection)
+    // Doc ID = userId
+    // Stores: favoriteGenres, appVersion, etc.
+    // Subcollections: profiles, continueWatching, myList, history, devices, sessions, recommendations, releaseNotifications
     // ============================================
     match /users/{userId} {
-      // Users can read/write their own document
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Own document read/write
+      allow read, write: if isOwner(userId);
 
       // ============================================
-      // SUB-COLLECTION: users/{userId}/profiles/{profileId}
+      // SUB: users/{userId}/profiles (main profiles)
+      // Doc ID = auto-generated
       // ============================================
       match /profiles/{profileId} {
-        // Users can read/delete their own profiles.
-        // NOTE: `allow read, write` used to sit next to the validated rule below.
-        // Firestore ORs `allow` statements, so the strict rule was dead code.
-        allow read: if request.auth != null && request.auth.uid == userId;
-        allow delete: if request.auth != null && request.auth.uid == userId;
+        allow read, delete: if isOwner(userId);
 
-        // Fields validation on create/update
-        allow create, update: if request.auth != null
-          && request.auth.uid == userId
-          && request.resource.data.keys().hasOnly(['name', 'color', 'kids', 'avatarUrl', 'pinHash', 'createdAt', 'updatedAt', 'userId'])
-          && request.resource.data.userId == request.auth.uid
-          && (request.resource.data.name is string && request.resource.data.name.size() <= 50)
-          && (request.resource.data.color is string)
-          && (request.resource.data.kids is bool)
+        allow create, update: if isOwner(userId)
+          && request.resource.data.keys().hasOnly(['name', 'color', 'kids', 'avatarUrl', 'pinHash', 'createdAt', 'updatedAt', 'userId', 'contentRatingLimit'])
+          && request.resource.data.userId == userId
+          && request.resource.data.name is string
+          && request.resource.data.name.size() <= 50
+          && request.resource.data.color is string
+          && request.resource.data.kids is bool
           && (!('avatarUrl' in request.resource.data) || request.resource.data.avatarUrl is string)
-          && (!('pinHash' in request.resource.data) || request.resource.data.pinHash is string);
+          && (!('pinHash' in request.resource.data) || request.resource.data.pinHash is string)
+          && (!('contentRatingLimit' in request.resource.data) || request.resource.data.contentRatingLimit is string);
       }
 
       // ============================================
-      // OTHER SUB-COLLECTIONS (legacy per-user data)
-      // Owners may read and delete their own data. Writes are validated by
-      // the dedicated top-level collection rules below.
+      // SUB: users/{userId}/continueWatching (legacy - kept for cleanup)
       // ============================================
-      match /{subcollection}/{docId} {
-        allow read, delete: if request.auth != null && request.auth.uid == userId;
+      match /continueWatching/{docId} {
+        allow read, write, delete: if isOwner(userId);
       }
+
+      // ============================================
+      // SUB: users/{userId}/myList (legacy - kept for cleanup)
+      // ============================================
+      match /myList/{docId} {
+        allow read, write, delete: if isOwner(userId);
+      }
+
+      // ============================================
+      // SUB: users/{userId}/history (legacy - kept for cleanup)
+      // ============================================
+      match /history/{docId} {
+        allow read, write, delete: if isOwner(userId);
+      }
+
+      // ============================================
+      // SUB: users/{userId}/devices (legacy - kept for cleanup)
+      // ============================================
+      match /devices/{docId} {
+        allow read, write, delete: if isOwner(userId);
+      }
+
+      // ============================================
+      // SUB: users/{userId}/sessions (legacy - kept for cleanup)
+      // ============================================
+      match /sessions/{docId} {
+        allow read, write, delete: if isOwner(userId);
+      }
+
+      // ============================================
+      // SUB: users/{userId}/recommendations (legacy - kept for cleanup)
+      // ============================================
+      match /recommendations/{docId} {
+        allow read, write, delete: if isOwner(userId);
+      }
+
+      // ============================================
+      // SUB: users/{userId}/releaseNotifications (legacy - kept for cleanup)
+      // ============================================
+      match /releaseNotifications/{docId} {
+        allow read, write, delete: if isOwner(userId);
+      }
+    }
+
+    // ============================================
+    // PROFILES (root collection - legacy/simple)
+    // Doc ID = userId
+    // Used for avatar sync and basic profile info
+    // ============================================
+    match /profiles/{userId} {
+      allow read, delete: if isOwner(userId);
+
+      allow create, update: if isOwner(userId)
+        && request.resource.data.keys().hasOnly(['avatar_url', 'display_name', 'show_google_pfp', 'updated_at', 'upcoming_movie_notifs'])
+        && (!('avatar_url' in request.resource.data) || request.resource.data.avatar_url is string)
+        && (!('display_name' in request.resource.data) || request.resource.data.display_name is string)
+        && (!('show_google_pfp' in request.resource.data) || request.resource.data.show_google_pfp is bool)
+        && (!('upcoming_movie_notifs' in request.resource.data) || request.resource.data.upcoming_movie_notifs is bool);
+    }
+
+    // ============================================
+    // USER DEVICES
+    // Doc ID = device_id
+    // ============================================
+    match /user_devices/{deviceId} {
+      // Create/update own device record
+      allow create, update: if isSignedIn()
+        && request.resource.data.user_id == request.auth.uid
+        && request.resource.data.device_id == deviceId
+        && request.resource.data.device_label is string
+        && request.resource.data.browser is string
+        && request.resource.data.os is string
+        && request.resource.data.user_agent is string
+        && (!('ip_address' in request.resource.data) || request.resource.data.ip_address is string);
+
+      // Delete own device
+      allow delete: if isSignedIn() && resource.data.user_id == request.auth.uid;
+
+      // Read own devices
+      allow read: if isSignedIn() && resource.data.user_id == request.auth.uid;
+    }
+
+    // ============================================
+    // WATCH HISTORY
+    // Doc ID format: {uid}_{profileId}_{movieId} or {uid}_{profileId}_{movieId}:S{season}E{episode}
+    // ============================================
+    match /watch_history/{docId} {
+      // Owner read/write by docId prefix
+      allow read, write: if isSignedIn()
+        && docId.matches('^[^_]+_[^_]+_.*$')
+        && docId.split('_')[0] == request.auth.uid;
+
+      // Owner read/delete by userId field (for account deletion)
+      allow read, delete: if isSignedIn()
+        && resource.data.userId == request.auth.uid;
+
+      // Validate fields on write
+      allow create, update: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.profileId == resource.data.profileId
+        && request.resource.data.movieId is string
+        && request.resource.data.watchedAt is number;
+
+      // Allow delete for clear history (by docId prefix)
+      allow delete: if isSignedIn()
+        && docId.matches('^[^_]+_[^_]+_.*$')
+        && docId.split('_')[0] == request.auth.uid;
     }
 
     // ============================================
@@ -46,16 +162,17 @@ service cloud.firestore {
     // Doc ID format: {uid}_{profileId}_{movieId} or {uid}_{profileId}_{movieId}:S{season}E{episode}
     // ============================================
     match /continue_watching/{docId} {
-      allow read, write: if request.auth != null
+      // Owner read/write by docId prefix
+      allow read, write: if isSignedIn()
         && docId.matches('^[^_]+_[^_]+_.*$')
         && docId.split('_')[0] == request.auth.uid;
 
-      // Owners may list and delete their own documents (account deletion).
-      allow read, delete: if request.auth != null
+      // Owner read/delete by userId field (for account deletion)
+      allow read, delete: if isSignedIn()
         && resource.data.userId == request.auth.uid;
 
       // Validate fields on write
-      allow create, update: if request.auth != null
+      allow create, update: if isSignedIn()
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.profileId == resource.data.profileId
         && request.resource.data.movieId is string
@@ -65,44 +182,21 @@ service cloud.firestore {
     }
 
     // ============================================
-    // WATCH HISTORY
-    // Doc ID format: {uid}_{profileId}_{movieId}
-    // ============================================
-    match /watch_history/{docId} {
-      allow read, write: if request.auth != null
-        && docId.matches('^[^_]+_[^_]+_.*$')
-        && docId.split('_')[0] == request.auth.uid;
-
-      // Owners may list and delete their own documents (account deletion).
-      allow read, delete: if request.auth != null
-        && resource.data.userId == request.auth.uid;
-
-      allow create, update: if request.auth != null
-        && request.resource.data.userId == request.auth.uid
-        && request.resource.data.profileId == resource.data.profileId
-        && request.resource.data.movieId is string
-        && request.resource.data.watchedAt is number;
-
-      // Allow delete for clear history
-      allow delete: if request.auth != null
-        && docId.matches('^[^_]+_[^_]+_.*$')
-        && docId.split('_')[0] == request.auth.uid;
-    }
-
-    // ============================================
     // MY LIST
     // Doc ID format: {uid}_{profileId}_{movieId}
     // ============================================
     match /my_list/{docId} {
-      allow read, write: if request.auth != null
+      // Owner read/write by docId prefix
+      allow read, write: if isSignedIn()
         && docId.matches('^[^_]+_[^_]+_.*$')
         && docId.split('_')[0] == request.auth.uid;
 
-      // Owners may list and delete their own documents (account deletion).
-      allow read, delete: if request.auth != null
+      // Owner read/delete by userId field (for account deletion)
+      allow read, delete: if isSignedIn()
         && resource.data.userId == request.auth.uid;
 
-      allow create, update: if request.auth != null
+      // Validate fields on write
+      allow create, update: if isSignedIn()
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.profileId == resource.data.profileId
         && request.resource.data.movieId is string
@@ -115,18 +209,19 @@ service cloud.firestore {
     // Doc ID = token
     // ============================================
     match /fcm_tokens/{token} {
-      // Users can create/update their own tokens
-      allow create, update: if request.auth != null
+      // Create/update own token
+      allow create, update: if isSignedIn()
         && request.resource.data.user_id == request.auth.uid
         && request.resource.data.device_id is string
-        && request.resource.data.platform is string;
+        && request.resource.data.platform is string
+        && request.resource.data.user_agent is string;
 
-      // Users can delete their own tokens (sign out / account deletion)
-      allow delete: if request.auth != null
+      // Delete own token
+      allow delete: if isSignedIn()
         && resource.data.user_id == request.auth.uid;
 
-      // Users can read their own tokens (for debugging)
-      allow read: if request.auth != null
+      // Read own tokens
+      allow read: if isSignedIn()
         && resource.data.user_id == request.auth.uid;
     }
 
@@ -135,11 +230,11 @@ service cloud.firestore {
     // Doc ID format: {userId}_{movieId}
     // ============================================
     match /release_notifications/{docId} {
-      allow read, write: if request.auth != null
+      allow read, write: if isSignedIn()
         && docId.matches('^[^_]+_.*$')
         && docId.split('_')[0] == request.auth.uid;
 
-      allow create, update: if request.auth != null
+      allow create, update: if isSignedIn()
         && request.resource.data.user_id == request.auth.uid
         && request.resource.data.movie_id is string
         && request.resource.data.title is string
@@ -147,82 +242,44 @@ service cloud.firestore {
     }
 
     // ============================================
-    // USER DEVICES
-    // Doc ID = device_id
-    // ============================================
-    match /user_devices/{deviceId} {
-      // Users can create/update their own device info
-      allow create, update: if request.auth != null
-        && request.resource.data.user_id == request.auth.uid
-        && request.resource.data.device_id == deviceId
-        && request.resource.data.device_label is string
-        && request.resource.data.browser is string
-        && request.resource.data.os is string;
-
-      // Users can delete their own device records
-      allow delete: if request.auth != null
-        && resource.data.user_id == request.auth.uid;
-
-      // Users can read their own devices
-      allow read: if request.auth != null
-        && resource.data.user_id == request.auth.uid;
-    }
-
-    // ============================================
-    // SESSIONS
-    // Active watch sessions
+    // SESSIONS (active watch sessions)
+    // Doc ID = auto-generated
     // ============================================
     match /sessions/{sessionId} {
-      allow create: if request.auth != null
+      // Create session
+      allow create: if isSignedIn()
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.deviceId is string
         && request.resource.data.movieId is string
-        && request.resource.data.profileId is string;
+        && request.resource.data.profileId is string
+        && request.resource.data.lastActiveAt is number;
 
-      allow read: if request.auth != null
+      // Read own sessions
+      allow read: if isSignedIn()
         && resource.data.userId == request.auth.uid;
 
-      allow delete: if request.auth != null
+      // Delete own sessions
+      allow delete: if isSignedIn()
         && resource.data.userId == request.auth.uid;
-    }
-
-    // ============================================
-    // PROFILES (root collection - legacy/simple)
-    // Used for avatar sync and VIP check
-    // ============================================
-    match /profiles/{userId} {
-      // Users can read/delete their own profile.
-      // NOTE: the validated rule below was previously OR-ed away by a blanket
-      // `allow read, write`, so it never actually ran.
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow delete: if request.auth != null && request.auth.uid == userId;
-
-      allow create, update: if request.auth != null
-        && request.auth.uid == userId
-        && request.resource.data.keys().hasOnly(['avatar_url', 'display_name', 'show_google_pfp', 'updated_at'])
-        && (!('avatar_url' in request.resource.data) || request.resource.data.avatar_url is string)
-        && (!('display_name' in request.resource.data) || request.resource.data.display_name is string)
-        && (!('show_google_pfp' in request.resource.data) || request.resource.data.show_google_pfp is bool);
-    }
-
-    // ============================================
-    // MOVIE SOURCES (root collection)
-    // Read-only catalog of playable sources, written by admin tooling.
-    // Without this rule the catch-all below denies every read and the app
-    // silently gets `null` back from getVideoSource()/listVideoSources().
-    // ============================================
-    match /movie_sources/{tmdbId} {
-      allow read: if request.auth != null;
-      allow write: if false;
     }
 
     // ============================================
     // VIP (root collection)
+    // Doc ID = userId
     // Read-only for users, admin write
     // ============================================
     match /vip/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
+      allow read: if isOwner(userId);
       // Admin write handled via Admin SDK / Cloud Functions
+      allow write: if false;
+    }
+
+    // ============================================
+    // MOVIE SOURCES (root collection)
+    // Read-only catalog of playable sources, written by admin tooling
+    // ============================================
+    match /movie_sources/{tmdbId} {
+      allow read: if isSignedIn();
       allow write: if false;
     }
 

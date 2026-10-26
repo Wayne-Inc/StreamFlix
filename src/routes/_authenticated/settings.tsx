@@ -57,7 +57,7 @@ import {
 } from "firebase/firestore";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
-import { Skeleton, SettingsSectionSkeleton } from "@/components/ui/skeleton";
+import { Skeleton, SettingsSectionSkeleton, ProfileSettingsSkeleton, SecuritySettingsSkeleton, AccessibilitySettingsSkeleton, DevicesSettingsSkeleton, InterestsSettingsSkeleton, NotificationsSettingsSkeleton, SignOutSettingsSkeleton, ExportDataSettingsSkeleton, DeleteAccountSettingsSkeleton, DeviceListItemSkeleton } from "@/components/ui/skeleton";
 import { AvatarCropModal } from "@/components/streamflix/AvatarCropModal";
 import { getDeviceId, recordCurrentDevice } from "@/lib/device-tracking";
 import { isKidsProfile } from "@/lib/kids-mode";
@@ -622,7 +622,7 @@ function SettingsPage() {
             <UserIcon className="size-4" /> Profile
           </div>
           {profileLoading ? (
-            <SettingsSectionSkeleton />
+            <ProfileSettingsSkeleton />
           ) : (
             <div className="mt-5 flex flex-col sm:flex-row gap-6">
               <div className="flex flex-col items-center gap-3">
@@ -859,7 +859,7 @@ function SettingsPage() {
             {devicesQ.isLoading && (
               <div className="divide-y divide-border">
                 {[1, 2, 3].map((i) => (
-                  <SettingsSectionSkeleton key={i} />
+                  <DeviceListItemSkeleton key={i} />
                 ))}
               </div>
             )}
@@ -919,11 +919,7 @@ function SettingsPage() {
             Pick the genres you love. We'll use them to personalise what you see.
           </p>
           {!genresLoaded ? (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <Skeleton key={i} className="h-8 w-20 rounded-full" />
-              ))}
-            </div>
+            <InterestsSettingsSkeleton />
           ) : (
             <>
               <div className="mt-4 flex flex-wrap gap-2">
@@ -969,122 +965,128 @@ function SettingsPage() {
 
         {/* Notifications */}
         <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div
-                className={`grid size-10 shrink-0 place-items-center rounded-md ${
-                  notifPermission === "granted" && hasToken
-                    ? "bg-emerald-500/15 text-emerald-400"
-                    : notifPermission === "denied"
-                      ? "bg-destructive/15 text-destructive"
-                      : "bg-accent text-muted-foreground"
-                }`}
-              >
+          {notifBusy ? (
+            <NotificationsSettingsSkeleton />
+          ) : (
+            <>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`grid size-10 shrink-0 place-items-center rounded-md ${
+                      notifPermission === "granted" && hasToken
+                        ? "bg-emerald-500/15 text-emerald-400"
+                        : notifPermission === "denied"
+                          ? "bg-destructive/15 text-destructive"
+                          : "bg-accent text-muted-foreground"
+                    }`}
+                  >
+                    {notifPermission === "denied" ? (
+                      <BellOff className="size-5" />
+                    ) : notifPermission === "granted" && hasToken ? (
+                      <BellRing className="size-5" />
+                    ) : (
+                      <Bell className="size-5" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">Push Notifications</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {notifPermission === "granted" && hasToken
+                        ? "Enabled — you'll receive updates"
+                        : notifPermission === "denied"
+                          ? "Blocked — enable in your browser settings and reload"
+                          : "Not enabled yet — get notified about new releases"}
+                    </p>
+                  </div>
+                </div>
                 {notifPermission === "denied" ? (
-                  <BellOff className="size-5" />
-                ) : notifPermission === "granted" && hasToken ? (
-                  <BellRing className="size-5" />
+                  <span className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs text-muted-foreground">
+                    <BellOff className="size-3.5" /> Blocked
+                  </span>
+                ) : hasToken ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-400 font-medium">
+                    <CheckCircle2 className="size-3.5" /> Active
+                  </span>
                 ) : (
-                  <Bell className="size-5" />
-                )}
-              </div>
-              <div>
-                <p className="text-sm font-semibold">Push Notifications</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {notifPermission === "granted" && hasToken
-                    ? "Enabled — you'll receive updates"
-                    : notifPermission === "denied"
-                      ? "Blocked — enable in your browser settings and reload"
-                      : "Not enabled yet — get notified about new releases"}
-                </p>
-              </div>
-            </div>
-            {notifPermission === "denied" ? (
-              <span className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-xs text-muted-foreground">
-                <BellOff className="size-3.5" /> Blocked
-              </span>
-            ) : hasToken ? (
-              <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-400 font-medium">
-                <CheckCircle2 className="size-3.5" /> Active
-              </span>
-            ) : (
-              <button
-                onClick={async () => {
-                  if (notifBusy) return;
-                  const prevHasToken = hasToken;
-                  const prevNotifPermission = notifPermission;
-                  setHasToken(true);
-                  setNotifPermission("granted");
-                  setNotifBusy(true);
-                  try {
-                    const { ensurePushSubscription } = await import("@/lib/push");
-                    const status = await ensurePushSubscription();
-                    if (status === "granted") {
+                  <button
+                    onClick={async () => {
+                      if (notifBusy) return;
+                      const prevHasToken = hasToken;
+                      const prevNotifPermission = notifPermission;
                       setHasToken(true);
-                      if (typeof Notification !== "undefined") {
-                        setNotifPermission(Notification.permission);
-                      }
-                      toast.success("Notifications enabled!");
-                    } else {
-                      setHasToken(prevHasToken);
-                      setNotifPermission(prevNotifPermission);
-                      if (status === "denied") {
-                        if (typeof Notification !== "undefined") {
-                          setNotifPermission(Notification.permission);
+                      setNotifPermission("granted");
+                      setNotifBusy(true);
+                      try {
+                        const { ensurePushSubscription } = await import("@/lib/push");
+                        const status = await ensurePushSubscription();
+                        if (status === "granted") {
+                          setHasToken(true);
+                          if (typeof Notification !== "undefined") {
+                            setNotifPermission(Notification.permission);
+                          }
+                          toast.success("Notifications enabled!");
+                        } else {
+                          setHasToken(prevHasToken);
+                          setNotifPermission(prevNotifPermission);
+                          if (status === "denied") {
+                            if (typeof Notification !== "undefined") {
+                              setNotifPermission(Notification.permission);
+                            }
+                            toast.error("Permission denied — enable in browser settings");
+                          } else if (status === "no-vapid") {
+                            toast.error("Push not configured on this server");
+                          } else {
+                            toast.error("Notifications unavailable on this device");
+                          }
                         }
-                        toast.error("Permission denied — enable in browser settings");
-                      } else if (status === "no-vapid") {
-                        toast.error("Push not configured on this server");
-                      } else {
-                        toast.error("Notifications unavailable on this device");
+                      } catch {
+                        setHasToken(prevHasToken);
+                        setNotifPermission(prevNotifPermission);
+                        toast.error("Failed to enable notifications");
+                      } finally {
+                        setNotifBusy(false);
                       }
-                    }
-                  } catch {
-                    setHasToken(prevHasToken);
-                    setNotifPermission(prevNotifPermission);
-                    toast.error("Failed to enable notifications");
-                  } finally {
-                    setNotifBusy(false);
-                  }
-                }}
-                disabled={notifBusy}
-                className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-              >
-                {notifBusy ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Bell className="size-4" />
+                    }}
+                    disabled={notifBusy}
+                    className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                  >
+                    {notifBusy ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Bell className="size-4" />
+                    )}
+                    {notifBusy ? "Enabling..." : "Enable Notifications"}
+                  </button>
                 )}
-                {notifBusy ? "Enabling..." : "Enable Notifications"}
-              </button>
-            )}
-          </div>
-
-          {/* Upcoming movie notifications toggle */}
-          {hasToken && (
-            <div className="mt-4 flex items-center justify-between gap-4 rounded-md border border-border bg-background/60 px-4 py-3">
-              <div>
-                <p className="text-sm font-semibold">Upcoming Movie Notifications</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Get notified when new movies matching your interests are released.
-                </p>
               </div>
-              <button
-                onClick={saveUpcomingNotifs}
-                disabled={savingUpcomingNotifs || !upcomingNotifsLoaded}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-                  upcomingNotifs ? "bg-primary" : "bg-muted"
-                }`}
-                role="switch"
-                aria-checked={upcomingNotifs}
-              >
-                <span
-                  className={`pointer-events-none inline-block size-5 rounded-full bg-white shadow-lg ring-0 transition-transform ${
-                    upcomingNotifs ? "translate-x-5" : "translate-x-0"
-                  }`}
-                />
-              </button>
-            </div>
+
+              {/* Upcoming movie notifications toggle */}
+              {hasToken && (
+                <div className="mt-4 flex items-center justify-between gap-4 rounded-md border border-border bg-background/60 px-4 py-3">
+                  <div>
+                    <p className="text-sm font-semibold">Upcoming Movie Notifications</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Get notified when new movies matching your interests are released.
+                    </p>
+                  </div>
+                  <button
+                    onClick={saveUpcomingNotifs}
+                    disabled={savingUpcomingNotifs || !upcomingNotifsLoaded}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+                      upcomingNotifs ? "bg-primary" : "bg-muted"
+                    }`}
+                    role="switch"
+                    aria-checked={upcomingNotifs}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block size-5 rounded-full bg-white shadow-lg ring-0 transition-transform ${
+                        upcomingNotifs ? "translate-x-5" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </section>
 
@@ -1119,18 +1121,16 @@ function SettingsPage() {
                 Download a JSON file with your profile, watch history, devices, and preferences.
               </p>
             </div>
-            <button
-              onClick={exportUserData}
-              disabled={exportingData}
-              className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent shrink-0 disabled:opacity-50"
-            >
-              {exportingData ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Upload className="size-4" />
-              )}
-              {exportingData ? "Exporting..." : "Export data"}
-            </button>
+            {exportingData ? (
+              <ExportDataSettingsSkeleton />
+            ) : (
+              <button
+                onClick={exportUserData}
+                className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent shrink-0"
+              >
+                <Upload className="size-4" /> Export data
+              </button>
+            )}
           </div>
         </section>
 
