@@ -72,10 +72,17 @@ export async function authenticateRequest(request: Request): Promise<ServerUser 
     return null;
   }
 
+  const cookieHeader = request.headers.get("cookie");
+  console.log("[Server Auth] Cookie header:", cookieHeader ? "PRESENT" : "MISSING");
+
   const sessionCookie = getSessionCookie(request);
+  console.log("[Server Auth] Session cookie:", sessionCookie ? "FOUND" : "MISSING");
+
   if (!sessionCookie) return null;
 
-  return await verifySessionCookie(sessionCookie);
+  const user = await verifySessionCookie(sessionCookie);
+  console.log("[Server Auth] Verified user:", user?.uid || "VERIFICATION_FAILED");
+  return user;
 }
 
 /**
