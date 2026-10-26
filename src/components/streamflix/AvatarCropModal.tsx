@@ -5,10 +5,12 @@ export function AvatarCropModal({
   src,
   onConfirm,
   onClose,
+  showCircleGuide = false,
 }: {
   src: string;
   onConfirm: (dataUrl: string) => void;
   onClose: () => void;
+  showCircleGuide?: boolean;
 }) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ startX: number; startY: number; ox: number; oy: number } | null>(null);
@@ -122,14 +124,9 @@ export function AvatarCropModal({
               }}
             />
           )}
-          {/* Circular crop preview overlay - shows how the avatar will appear as a circle */}
-          <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-            <div className="absolute inset-0 bg-black/30" />
-            <div className="absolute inset-0 bg-radial-gradient-from-transparent-via-black/30-to-black/50 rounded-full" style={{
-              background: 'radial-gradient(circle at center, transparent 48%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.6) 52%)'
-            }} />
-            <div className="absolute inset-0 border-2 border-white/60 rounded-full" />
-          </div>
+          {showCircleGuide && (
+            <div className="pointer-events-none absolute inset-0 border-2 border-white/60 rounded-full" aria-hidden="true" />
+          )}
           <div className="pointer-events-none absolute inset-0 border-2 border-white/40" />
         </div>
 
