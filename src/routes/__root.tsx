@@ -91,7 +91,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1, interactive-widget=resizes-content" },
       { title: "StreamFlix" },
       { name: "description", content: "Unlimited movies, TV shows, and more" },
-      { name: "theme-color", content: "#E50914" },
+      { name: "theme-color", content: "#0C0D0F" },
       { name: "mobile-web-app-capable", content: "yes" },
       { property: "og:title", content: "StreamFlix" },
       { property: "og:description", content: "Unlimited movies, TV shows, and more" },
