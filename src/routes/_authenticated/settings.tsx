@@ -65,6 +65,7 @@ import { useReduceMotion } from "@/lib/reduce-motion";
 import { formatDistanceToNow } from "date-fns";
 import { GENRE_OPTIONS, getFavoriteGenres, setFavoriteGenres } from "@/lib/favorite-genres";
 import { deleteUserData } from "@/lib/user-data";
+import { orderBy } from "firebase/firestore";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Account Settings — StreamFlix" }] }),
@@ -118,6 +119,9 @@ function SettingsPage() {
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
+  const [upcomingNotifs, setUpcomingNotifs] = useState(false);
+  const [upcomingNotifsLoaded, setUpcomingNotifsLoaded] = useState(false);
+  const [savingUpcomingNotifs, setSavingUpcomingNotifs] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -130,6 +134,22 @@ function SettingsPage() {
       .finally(() => {
         if (active) setGenresLoaded(true);
       });
+
+    // Load upcoming movie notifications preference
+    const loadUpcomingNotifs = async () => {
+      try {
+        const snap = await getDoc(doc(db, "profiles", user.uid));
+        if (active && snap.exists()) {
+          const data = snap.data();
+          setUpcomingNotifs(data.upcoming_movie_notifs === true);
+        }
+      } catch {}
+      finally {
+        if (active) setUpcomingNotifsLoaded(true);
+      }
+    };
+    loadUpcomingNotifs();
+
     return () => {
       active = false;
     };
@@ -149,6 +169,26 @@ function SettingsPage() {
       toast.error(e instanceof Error && e.message ? e.message : "Failed to save interests.");
     } finally {
       setSavingGenres(false);
+    }
+  };
+
+  const saveUpcomingNotifs = async () => {
+    if (!user) return;
+    const newValue = !upcomingNotifs;
+    setUpcomingNotifs(newValue);
+    setSavingUpcomingNotifs(true);
+    try {
+      await setDoc(
+        doc(db, "profiles", user.uid),
+        { upcoming_movie_notifs: newValue, updated_at: serverTimestamp() },
+        { merge: true }
+      );
+      toast.success(newValue ? "Upcoming movie notifications enabled" : "Upcoming movie notifications disabled");
+    } catch (e) {
+      setUpcomingNotifs(upcomingNotifs);
+      toast.error("Failed to save notification preference");
+    } finally {
+      setSavingUpcomingNotifs(false);
     }
   };
 
@@ -181,6 +221,83 @@ function SettingsPage() {
       }
     } finally {
       setDeletingAccount(false);
+    }
+  };
+
+  const exportUserData = async () => {
+    if (!user) return;
+    setSavingUpcomingNotifs(true); // reuse this state for loading
+    try {
+      const userData: Record<string, any> = {
+        exportDate: new Date().toISOString(),
+        user: {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          emailVerified: user.emailVerified,
+          createdAt: user.metadata?.creationTime,
+          lastSignInAt: user.metadata?.lastSignInTime,
+        },
+      };
+
+      // Profile
+      const profileSnap = await getDoc(doc(db, "profiles", user.uid));
+      if (profileSnap.exists()) {
+        userData.profile = { id: profileSnap.id, ...profileSnap.data() };
+      }
+
+      // Devices
+      const devicesQry = query(collection(db, "user_devices"), where("user_id", "==", user.uid));
+      const devicesSnap = await getDocs(devicesQry);
+      userData.devices = devicesSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+      // Watch history
+      const historyQry = query(collection(db, "watch_history"), where("user_id", "==", user.uid), orderBy("watchedAt", "desc"));
+      const historySnap = await getDocs(historyQry);
+      userData.watchHistory = historySnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+      // Continue watching
+      const continueQry = query(collection(db, "continue_watching"), where("user_id", "==", user.uid), orderBy("updatedAt", "desc"));
+      const continueSnap = await getDocs(continueQry);
+      userData.continueWatching = continueSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+      // My List
+      const listQry = query(collection(db, "my_list"), where("user_id", "==", user.uid), orderBy("addedAt", "desc"));
+      const listSnap = await getDocs(listQry);
+      userData.myList = listSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+      // Favorite genres
+      const genresQry = query(collection(db, "favorite_genres"), where("user_id", "==", user.uid));
+      const genresSnap = await getDocs(genresQry);
+      userData.favoriteGenres = genresSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+      // FCM tokens
+      const fcmQry = query(collection(db, "fcm_tokens"), where("user_id", "==", user.uid));
+      const fcmSnap = await getDocs(fcmQry);
+      userData.fcmTokens = fcmSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+      // VIP status
+      const vipSnap = await getDoc(doc(db, "vip", user.uid));
+      userData.isVip = vipSnap.exists();
+
+      // Download as JSON
+      const json = JSON.stringify(userData, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `streamflix-data-${user.uid}-${new Date().toISOString().split("T")[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast.success("Your data has been downloaded");
+    } catch (e) {
+      toast.error("Failed to export data");
+    } finally {
+      setSavingUpcomingNotifs(false);
     }
   };
 
@@ -958,6 +1075,33 @@ function SettingsPage() {
               </button>
             )}
           </div>
+
+          {/* Upcoming movie notifications toggle */}
+          {hasToken && (
+            <div className="mt-4 flex items-center justify-between gap-4 rounded-md border border-border bg-background/60 px-4 py-3">
+              <div>
+                <p className="text-sm font-semibold">Upcoming Movie Notifications</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Get notified when new movies matching your interests are released.
+                </p>
+              </div>
+              <button
+                onClick={saveUpcomingNotifs}
+                disabled={savingUpcomingNotifs || !upcomingNotifsLoaded}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+                  upcomingNotifs ? "bg-primary" : "bg-muted"
+                }`}
+                role="switch"
+                aria-checked={upcomingNotifs}
+              >
+                <span
+                  className={`pointer-events-none inline-block size-5 rounded-full bg-white shadow-lg ring-0 transition-transform ${
+                    upcomingNotifs ? "translate-x-5" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
+          )}
         </section>
 
         {/* Sign out */}
@@ -976,6 +1120,32 @@ function SettingsPage() {
               className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent shrink-0"
             >
               <LogOut className="size-4" /> Sign out
+            </button>
+          </div>
+        </section>
+
+        {/* Export Data */}
+        <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Upload className="size-4" /> Export your data
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Download a JSON file with your profile, watch history, devices, and preferences.
+              </p>
+            </div>
+            <button
+              onClick={exportUserData}
+              disabled={savingUpcomingNotifs}
+              className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent shrink-0 disabled:opacity-50"
+            >
+              {savingUpcomingNotifs ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Upload className="size-4" />
+              )}
+              {savingUpcomingNotifs ? "Exporting..." : "Export data"}
             </button>
           </div>
         </section>
