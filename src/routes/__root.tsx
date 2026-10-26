@@ -184,7 +184,7 @@ function RootComponent() {
   const router = useRouter();
   const initial = useRef(true);
   const photoSaved = useRef<string | null>(null);
-  const offlineRoute = "/offline";
+  const offlineToastId = useRef<string | number | null>(null);
 
   useNavTracker();
 
@@ -277,22 +277,44 @@ function RootComponent() {
       ).catch(() => {});
     }
 
+
+    const showOfflineToast = () => {
+      if (offlineToastId.current === null) {
+        offlineToastId.current = toast("You're offline", {
+          description: "Check your internet connection. Some features may not work.",
+          icon: (
+            <svg className="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M1 1l22 22" />
+              <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" />
+              <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" />
+              <path d="M10.71 5.05A16 16 0 0 1 22.58 9" />
+              <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88" />
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+              <line x1="12" x2="12.01" y1="19" y2="19" />
+            </svg>
+          ),
+          duration: Infinity, // Persistent toast
+          className: "bg-yellow-500/20 border-yellow-500/50 text-yellow-300",
+        });
+      }
+    };
+
+    const hideOfflineToast = () => {
+      if (offlineToastId.current !== null) {
+        toast.dismiss(offlineToastId.current);
+        offlineToastId.current = null;
+      }
+    };
+
     const handleOffline = () => {
-      // If we are on the watch page, do not redirect to offline page.
+      // If we are on the watch page, do not show offline toast (embed might still work).
       if (/^\/watch\/[^/]+/.test(window.location.pathname)) {
         return;
       }
-      if (window.location.pathname !== offlineRoute) {
-        sessionStorage.setItem("sf:returnUrl", window.location.pathname + window.location.search);
-        window.location.replace(offlineRoute);
-      }
+      showOfflineToast();
     };
     const handleOnline = () => {
-      if (window.location.pathname === offlineRoute) {
-        const returnUrl = sessionStorage.getItem("sf:returnUrl");
-        sessionStorage.removeItem("sf:returnUrl");
-        window.location.replace(returnUrl || "/browse");
-      }
+      hideOfflineToast();
     };
 
     if (!navigator.onLine) handleOffline();
@@ -304,6 +326,7 @@ function RootComponent() {
       document.removeEventListener("click", handleExternalLink, true);
       window.removeEventListener("offline", handleOffline);
       window.removeEventListener("online", handleOnline);
+      hideOfflineToast(); // Cleanup on unmount
     };
   }, [router, queryClient]);
 

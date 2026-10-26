@@ -1,431 +1,243 @@
 # StreamFlix
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-19-61DAFB.svg)](https://react.dev/)
-[![TanStack Router](https://img.shields.io/badge/TanStack_Router-1.170-FF6B6B.svg)](https://tanstack.com/router)
-[![TanStack Start](https://img.shields.io/badge/TanStack_Start-1.168-FF6B6B.svg)](https://tanstack.com/start)
-[![Vite](https://img.shields.io/badge/Vite-7-646CFF.svg)](https://vite.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4.svg)](https://tailwindcss.com/)
-[![Firebase](https://img.shields.io/badge/Firebase-13-FFCA28.svg)](https://firebase.google.com/)
-[![Vercel](https://img.shields.io/badge/Deploy-Vercel-000000.svg)](https://vercel.com/)
-
-> **A modern, full-featured streaming platform** — Netflix-style UI, multi-profile support, AI recommendations, cross-device sync, and enterprise-grade security. Built with React 19, TanStack Start, TypeScript, Firebase, and TMDB.
+A modern streaming platform with Netflix-style UI, multi-profile support, cross-device sync, and server-side authentication. Built with React 19, TanStack Start, TypeScript, Firebase, and TMDB.
 
 **Live Demo:** [https://streamflix.dpdns.org](https://streamflix.dpdns.org)
 
 ---
 
-## Why StreamFlix?
+## What is StreamFlix?
 
-| Problem | StreamFlix Solution |
-|---------|---------------------|
-| Fragmented content across services | **Unified browse** — TMDB metadata + multiple embed providers in one UI |
-| Lost watch progress | **Continue Watching** — Local-first + Firestore sync, survives device switches |
-| No safe viewing for kids | **Kids Mode** — PIN-protected profiles, genre/rating filtering |
-| Discovery is hard | **AI Recommendations** — NVIDIA Nemotron powered, context-aware suggestions |
-| Security afterthought | **App Check + Turnstile** — reCAPTCHA v3, rate limiting, iframe sandboxing |
-| Poor developer experience | **Type-safe everything** — TanStack Router + Query, Zod schemas, ESLint/Prettier |
+StreamFlix is a full-featured streaming web application that aggregates movie and TV show metadata from TMDB and plays content through multiple embed providers. It provides a Netflix-like experience with:
 
----
-
-## Features Deep Dive
-
-### Content Discovery
-- **Home Feed** — Hero banner, trending, popular, continue watching, My List, new releases, genre rows
-- **Explore** — Genre pages with infinite scroll, filter by year/rating, sort options
-- **Search** — Debounced TMDB multi-search (movies, TV, people) with filters & pagination
-- **Detail Pages** — Cast, crew, videos, watch providers, recommendations, similar titles
-- **Mood-Based Discovery** — "Feel good", "Dark & Gritty", "Mind Bending", etc.
-
-### Profile System (Netflix-Style)
-- Up to **5 profiles per account**
-- Custom name, avatar (upload / TMDB actor picker / initials), color theme
-- **Kids Mode** — Blocks horror, thriller, crime, romance, mystery, drama, war + ratings > PG/TV-PG
-- **PIN Protection** — Optional 6-digit PIN per profile
-- **Content Rating Limits** — G → NC-17 per profile
-- **Session Persistence** — `sessionStorage` + custom `profileChanged` events
-
-### Video Playback
-- **Multi-Provider Fallback** — vidking, vsembed, 2embed, multiembed, videasy
-- **Secure iframe** — `sandbox` + `allow` policies, CSP frame-src locked to providers
-- **TV Support** — Season/episode picker, auto-play next, skip intro
-- **PiP & Fullscreen** — Native browser APIs
-- **Subtitles** — WebVTT support where provider offers
-
-### Continue Watching (Cross-Device)
-```
-localStorage (instant) → Firestore (persistent) → Multi-tab sync → Offline queue
-```
-- Progress saved **every 5 seconds** during playback
-- Episode-level tracking for TV shows
-- Auto-cleanup (max 50 entries per profile)
-- Instant resume on any device
-
-### My List (Watchlist)
-- Optimistic UI (instant add/remove)
-- localStorage + Firestore dual-write
-- Cross-tab broadcast via `BroadcastChannel`
-- Dedicated page with grid/filter/sort
-
-### AI Recommendations
-```typescript
-// lib/api/ai.ts
-export async function askStreamflixAI(prompt: string): Promise<string>
-// Context: watch history, favorites, preferences, current profile
-// Model: NVIDIA Nemotron 3 Ultra via NVIDIA NIM API
-```
-
-### Security & Privacy
-
-| Layer | Implementation |
-|-------|----------------|
-| **API Abuse** | Firebase App Check (reCAPTCHA v3) |
-| **Bot Protection** | Cloudflare Turnstile on auth forms |
-| **XSS/Injection** | Strict CSP (removed — see Security Fixes), Trusted Types, iframe sandbox |
-| **Auth** | **Server-side session cookies** (HTTP-only, Secure, SameSite=Lax, 14-day) + Firebase Auth |
-| **Password Policy** | 8+ chars, upper/lower/number/special, real-time strength meter |
-| **Rate Limiting** | 5 req/min on auth endpoints (client + server) |
-| **Data** | Minimal PII, user-controlled deletion, consent-first analytics |
-| **Dependencies** | `@grpc/grpc-js@^1.14.6` — fixed CVE alerts #75, #77 |
-
-### Accessibility
-- Semantic HTML, ARIA labels, focus management
-- Keyboard navigation throughout
-- Reduced motion support
-- High contrast mode compatible
-- Screen reader tested (NVDA, VoiceOver)
+- **Unified browsing** — Search and discover across movies/TV with genre rows, trending, and personalized recommendations
+- **Multi-profile accounts** — Up to 5 profiles per account with custom avatars, PIN protection, and Kids Mode
+- **Continue Watching** — Progress saved every 5 seconds, synced across devices via Firestore
+- **My List** — Personal watchlist with optimistic UI and cross-tab sync
+- **Server-side authentication** — User is authenticated before HTML renders (no flash, survives browser restarts)
+- **AI recommendations** — NVIDIA Nemotron 3 Ultra powered suggestions based on watch history
+- **Export your data** — Download all your data as JSON (GDPR-compliant)
 
 ---
 
-## Architecture
+## How It Works
 
-```mermaid
-graph TB
-    subgraph Client["Client (React 19 + TanStack Start)"]
-        Router["TanStack Router\nFile-based, Type-safe"]
-        Query["TanStack Query v5\nServer State + Caching"]
-        UI["Components\nshadcn/ui + Tailwind 4"]
-        State["Context + Hooks\nProfile, Auth, CW, MyList"]
-    end
+### Architecture Overview
 
-    subgraph Server["Server (Nitro/h3 Middleware)"]
-        AuthMiddleware["authMiddleware\nPre-render auth interception"]
-        SessionAPI["/api/session\nCreate/clear session cookies"]
-        FirebaseAdmin["Firebase Admin SDK\nverifyIdToken, createSessionCookie"]
-    end
-
-    subgraph APIs["External APIs"]
-        TMDB["TMDB REST API\nMetadata, Images, Search"]
-        NVIDIA["NVIDIA Nemotron 3 Ultra\nAI Recommendations"]
-        FirebaseAuth["Firebase Auth\nEmail, Google, GitHub"]
-        Firestore["Cloud Firestore\nProfiles, CW, MyList, History"]
-        AppCheck["Firebase App Check\nreCAPTCHA v3"]
-    end
-
-    Router --> Query
-    Router --> State
-    State --> UI
-    Query --> TMDB
-    Query --> NVIDIA
-    State --> FirebaseAuth
-    State --> Firestore
-    State --> AppCheck
-    AuthMiddleware --> SessionAPI
-    SessionAPI --> FirebaseAdmin
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        CLIENT (Browser)                             │
+│  React 19 + TanStack Start (SSR) + TanStack Query + Tailwind 4     │
+│  • File-based routing with type-safe URLs                          │
+│  • Server state management with caching, retries, optimistic UI    │
+│  • shadcn/ui accessible components                                 │
+└─────────────────────────────────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                        SERVER (Vercel / Nitro)                      │
+│  • Nitro/h3 middleware intercepts ALL requests                     │
+│  • authMiddleware verifies __session cookie via Firebase Admin     │
+│  • Protected routes: /profiles, /browse, /watch/*, /settings, etc. │
+│  • API routes: /api/session (create/clear session cookies)         │
+└─────────────────────────────────────────────────────────────────────┘
+                                │
+              ┌─────────────────┼─────────────────┐
+              ▼                 ▼                 ▼
+┌─────────────────────┐ ┌───────────────┐ ┌─────────────────────┐
+│      TMDB API       │ │ Firebase Auth │ │    Cloud Firestore  │
+│  Metadata, images,  │ │  Email/Pass,  │ │  Profiles, devices, │
+│  search, providers  │ │  Google, GitHub│ │  watch history,     │
+│                     │ │               │ │  my list, FCM tokens│
+└─────────────────────┘ └───────────────┘ └─────────────────────┘
+              │                 │                 │
+              ▼                 ▼                 ▼
+┌─────────────────────┐ ┌───────────────┐ ┌─────────────────────┐
+│   NVIDIA Nemotron   │ │ Firebase App  │ │  Cloudflare         │
+│   3 Ultra (AI)      │ │ Check (reCAPTCHA│  Turnstile          │
+│                     │ │  v3)          │ │  (bot protection)   │
+└─────────────────────┘ └───────────────┘ └─────────────────────┘
 ```
 
-### Key Design Decisions
+### Server-Side Authentication Flow
 
-| Decision | Rationale |
-|----------|-----------|
-| **TanStack Start (SSR)** | SEO, faster FCP, streaming HTML, route loaders |
-| **File-based Routing** | Type-safe URLs, auto-generated route tree, layout routes |
-| **TanStack Query** | Deduplication, caching, retries, optimistic updates |
-| **localStorage-first** | Instant UX, Firestore sync in background |
-| **Zod everywhere** | Runtime validation = type safety at boundaries |
-| **shadcn/ui primitives** | Accessible, customizable, zero-runtime CSS-in-JS |
-| **Vite + Nitro** | Fast dev, optimized Vercel output, serverless API routes |
-| **Server-side Auth Middleware** | User authenticated before HTML renders (Netflix/Google style), no flash, survives restarts |
+```
+1. Request → Vercel Edge/Origin
+2. Nitro middleware (src/server.ts) checks __session cookie
+3. Cookie verified via Firebase Admin SDK (verifySessionCookie)
+4. Valid? → Continue to TanStack Start SSR handler
+   Invalid? → 302 Redirect to /auth?redirect=...
+5. On sign-in: Client POST /api/session { idToken } → Sets HTTP-only cookie
+6. On sign-out: DELETE /api/session → Clears cookie
+```
+
+**Key files:**
+- `src/server.ts` — Nitro entry + authMiddleware
+- `src/server/firebase-admin.ts` — Firebase Admin init
+- `src/server/server-auth.ts` — Cookie helpers + middleware
+- `src/routes/api/session.ts` — POST (create) / DELETE (clear) session
+- `src/routes/_authenticated/route.tsx` — Client-side guard (defense-in-depth)
 
 ---
 
-## Server-Side Authentication (New)
+## External Services
 
-StreamFlix now implements **true server-side authentication** where the user is authenticated before any HTML renders — similar to Netflix, Google, and other major platforms.
-
-### How It Works
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ 1. Request hits Vercel Edge/Origin                              │
-├─────────────────────────────────────────────────────────────────┤
-│ 2. Nitro/h3 middleware (src/server.ts) intercepts request       │
-│    • Checks for __session cookie (HTTP-only, Secure, SameSite) │
-│    • Verifies cookie via Firebase Admin SDK (verifySessionCookie)│
-│    • Protected paths: /profiles, /browse, /watch/*, /explore,   │
-│      /search, /calendar, /history, /mylist, /settings,          │
-│      /assistant, /force-password                                 │
-├─────────────────────────────────────────────────────────────────┤
-│ 3a. Valid session → Continue to TanStack Start handler (SSR)   │
-│ 3b. Invalid/missing → 302 Redirect to /auth?redirect=...       │
-├─────────────────────────────────────────────────────────────────┤
-│ 4. On sign-in: Client exchanges ID token for session cookie    │
-│    POST /api/session { idToken } → Sets __session cookie       │
-│ 5. On sign-out: DELETE /api/session → Clears __session cookie  │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Key Files
-
-| File | Purpose |
-|------|---------|
-| `src/server.ts` | Nitro entry + `authMiddleware` intercepts all requests |
-| `src/server/firebase-admin.ts` | Firebase Admin init, `verifyIdToken`, `createSessionCookie`, `verifySessionCookie` |
-| `src/server/server-auth.ts` | Cookie extraction, `setSessionCookie`/`clearSessionCookie`, `authenticateRequest` |
-| `src/routes/api/session.ts` | `POST` (create session from ID token), `DELETE` (clear cookie) |
-| `src/routes/auth.tsx` | All sign-in flows call `fetch("/api/session", {method:"POST", body:{idToken}})` |
-| `src/components/streamflix/Navbar.tsx` | `signOut` calls `fetch("/api/session", {method:"DELETE"})` before Firebase signOut |
-| `src/routes/index.tsx` | Client-side redirect to `/profiles` via `localStorage` cache + Firebase fallback |
-| `src/routes/_authenticated/route.tsx` | Client-side guard (`onAuthStateChanged`) for defense-in-depth |
-
-### Benefits
-
-- **No authentication flash** — User never sees landing page when logged in
-- **Survives browser restarts** — 14-day HTTP-only session cookie
-- **SSR-friendly** — Protected routes render user-specific content on server
-- **Secure** — Cookies are HTTP-only (XSS-safe), Secure (HTTPS-only), SameSite=Lax (CSRF protection)
-- **Instant redirect** — `localStorage` cache (`sf:auth=1`) redirects before Firebase loads
-
-### Client-Side Fallback
-
-For the root page (`/`), SSR can't redirect based on auth (page is public). Instead:
-```typescript
-// src/routes/index.tsx — beforeLoad runs in browser
-if (localStorage.getItem("sf:auth") === "1") throw redirect({ to: "/profiles" });
-// Fallback: Firebase onAuthStateChanged
-```
+| Service | Purpose | Required |
+|---------|---------|----------|
+| **Firebase** | Auth (email/password, Google, GitHub), Firestore (data), App Check (reCAPTCHA v3), FCM (push) | ✅ Yes |
+| **TMDB (The Movie Database)** | Movie/TV metadata, images, search, watch providers | ✅ Yes |
+| **NVIDIA NIM** | AI recommendations (Nemotron 3 Ultra) | ⚠️ Optional |
+| **Cloudflare Turnstile** | Bot protection on auth forms | ⚠️ Optional |
+| **Vercel** | Hosting, serverless functions, cron jobs | ✅ Yes (recommended) |
 
 ---
 
-## Security Fixes (2026-10)
-
-### @grpc/grpc-js Vulnerabilities Fixed
-
-| Alert | Issue | Fix |
-|-------|-------|-----|
-| **#77** | `getAuthContext` returns unauthorized certs as authorized | Pinned `@grpc/grpc-js@^1.14.6` in `package.json` overrides |
-| **#75** | Server transmits error messages to client | Same fix — upgraded transitive dependency via override |
-
-```json
-// package.json
-"overrides": {
-  "@grpc/grpc-js": "^1.14.6"
-}
-```
-
-**Result:** `npm audit` → **0 vulnerabilities**
-
-### Content-Security-Policy Removed
-
-All CSP headers removed from `vercel.json`:
-- Global headers CSP removed
-- `/watch/:id` route CSP removed
-
-**Reason:** CSP caused false positives, broke legitimate embed providers, and interfered with Firebase Auth popups. Security now relies on:
-- Trusted Types (enforced)
-- Iframe `sandbox` + explicit `allow` policies
-- Server-side auth (no sensitive data in client without auth)
-- Firebase App Check (reCAPTCHA v3) on all API calls
-
----
-
-## Project Structure
-
-```
-streamflix/
-├── public/                     # Static assets (favicons, manifest, sw.js)
-├── src/
-│   ├── assets/                 # Images, fonts, logos
-│   ├── components/
-│   │   ├── streamflix/         # Feature components (domain-specific)
-│   │   │   ├── AvatarCropModal.tsx
-│   │   │   ├── ContinueWatching.tsx
-│   │   │   ├── DownloadAppButton.tsx
-│   │   │   ├── Footer.tsx
-│   │   │   ├── HeroBanner.tsx
-│   │   │   ├── LazyImage.tsx
-│   │   │   ├── LegalVersionBanner.tsx
-│   │   │   ├── Logo.tsx
-│   │   │   ├── MovieCard.tsx           # Portrait + Landscape
-│   │   │   ├── MovieCardSkeleton.tsx
-│   │   │   ├── Navbar.tsx
-│   │   │   ├── Row.tsx / RowSkeleton.tsx
-│   │   │   ├── ScreenSaver.tsx         # Ken Burns + metadata
-│   │   │   ├── SeasonEpisodePicker.tsx
-│   │   │   ├── ShareButton.tsx
-│   │   │   ├── TmdbAvatarPicker.tsx    # Actor search modal
-│   │   │   ├── VideoPlayer.tsx         # iframe + postMessage
-│   │   │   └── ...
-│   │   └── ui/                 # shadcn/ui primitives
-│   │       ├── button.tsx
-│   │       ├── carousel.tsx
-│   │       ├── dialog.tsx
-│   │       ├── skeleton.tsx
-│   │       ├── toast.tsx
-│   │       └── ...
-│   ├── hooks/                  # Custom React hooks
-│   │   ├── use-mobile.ts
-│   │   ├── use-debounce.ts
-│   │   ├── use-local-storage.ts
-│   │   └── ...
-│   ├── lib/                    # Core libraries (singletons, clients, utils)
-│   │   ├── api/
-│   │   │   ├── ai.ts           # NVIDIA Nemotron client
-│   │   │   └── tmdb.ts         # TMDB wrapper (typed, cached)
-│   │   ├── auth/               # Auth helpers, password policy
-│   │   ├── continue-watching.ts     # CW logic + Firestore sync
-│   │   ├── continue-watching-server.ts
-│   │   ├── firebase.ts         # Firebase init + App Check
-│   │   ├── my-list.ts          # Watchlist CRUD + sync
-│   │   ├── profiles.ts         # Profile CRUD + types
-│   │   ├── selected-profile.ts # sessionStorage + events
-│   │   ├── kids-mode.ts        # Filtering logic
-│   │   ├── consent.ts          # Cookie consent (granular)
-│   │   ├── rate-limiter.ts     # Client-side token bucket
-│   │   ├── error-handler.ts    # Global error boundary + Sentry-ready
-│   │   ├── seo.ts              # Dynamic meta tags
-│   │   ├── session-tracking.ts # Analytics helpers
-│   │   ├── title-logo.ts       # TMDB logo URL builder
-│   │   ├── password.ts         # Policy + strength meter
-│   │   ├── turnstile.ts        # Cloudflare Turnstile
-│   │   ├── runtime.ts          # formatRuntime, formatDate, etc.
-│   │   ├── user-versions.ts    # TOS/Privacy version tracking
-│   │   └── utils.ts            # cn(), formatters, validators
-│   ├── routes/                 # TanStack Router file-based routes
-│   │   ├── _authenticated/     # Protected layout (server auth + client guard)
-│   │   │   ├── browse.tsx
-│   │   │   ├── explore/
-│   │   │   │   └── $genreId.tsx
-│   │   │   ├── movie.$id.tsx
-│   │   │   ├── watch.$id.tsx
-│   │   │   ├── profiles.tsx
-│   │   │   ├── settings.tsx
-│   │   │   ├── force-password.tsx
-│   │   │   ├── assistant.tsx
-│   │   │   ├── calendar.tsx
-│   │   │   ├── history.tsx
-│   │   │   ├── mylist.tsx
-│   │   │   ├── search.tsx
-│   │   │   └── person.$id.tsx
-│   │   ├── auth/               # Email action handlers (verify, reset)
-│   │   │   └── action.tsx
-│   │   ├── api/                # Server-only API routes
-│   │   │   └── session.ts      # POST create / DELETE clear session cookie
-│   │   ├── auth.tsx            # Sign in / up (Turnstile + session cookie)
-│   │   ├── index.tsx           # Landing (SSR) — instant redirect if authed
-│   │   ├── tos.tsx
-│   │   └── privacy-policy.tsx
-│   ├── server/                 # Server-only code (never bundled to client)
-│   │   ├── firebase-admin.ts   # Firebase Admin SDK (SERVER ONLY)
-│   │   └── server-auth.ts      # Session cookie helpers + middleware
-│   ├── styles/
-│   │   └── globals.css         # Tailwind 4 + CSS vars
-│   ├── types/
-│   │   └── index.ts            # Shared TypeScript types
-│   ├── App.tsx
-│   ├── main.tsx                # Entry, providers, queryClient
-│   └── routeTree.gen.ts        # Auto-generated (do not edit)
-├── .env.example                # All placeholders — NO REAL SECRETS
-├── .eslintrc.cjs
-├── .prettierrc
-├── package.json
-├── tsconfig.json
-├── vite.config.ts
-├── tailwind.config.ts
-├── vercel.json                 # Headers, rewrites, crons (NO CSP)
-├── firebase.json               # Hosting, Firestore rules, indexes
-├── firestore.rules
-├── firestore.indexes.json
-├── SERVER_AUTH_GUIDE.html      # Complete deployment guide
-└── STREAMFLIX_DOCUMENTATION.html  # Full technical docs
-```
-
----
-
-## Getting Started
+## Setup Guide
 
 ### Prerequisites
-- **Node.js 20+** (LTS recommended)
-- **npm 10+** or **bun 1.1+**
-- **Firebase Project** — Auth, Firestore, App Check enabled
-- **TMDB Account** — API Key (v4 Bearer + v3 fallback)
-- **NVIDIA API Key** (optional) — For AI recommendations
-- **Cloudflare Turnstile** (optional) — Bot protection on auth
+- Node.js 20+ (LTS)
+- npm 10+ or bun 1.1+
+- Firebase project with Auth, Firestore, App Check enabled
+- TMDB account with API keys (v4 Bearer + v3 fallback)
 
-### Quick Start
-
+### 1. Clone & Install
 ```bash
-# 1. Clone & install
 git clone https://github.com/Wayne-Inc/StreamFlix.git
 cd StreamFlix
 npm install
+```
 
-# 2. Configure environment
+### 2. Configure Environment
+```bash
 cp .env.example .env.local
-# Edit .env.local with your keys (see table below)
+# Edit .env.local with your keys
+```
 
-# 3. Start development server
+**Client variables (`.env.local`):**
+| Variable | Description |
+|----------|-------------|
+| `VITE_FIREBASE_API_KEY` | Firebase Web API Key |
+| `VITE_FIREBASE_AUTH_DOMAIN` | `project.firebaseapp.com` |
+| `VITE_FIREBASE_PROJECT_ID` | Firebase Project ID |
+| `VITE_FIREBASE_STORAGE_BUCKET` | `project.appspot.com` |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | FCM Sender ID |
+| `VITE_FIREBASE_APP_ID` | Firebase App ID (`1:xxx:web:xxx`) |
+| `VITE_FIREBASE_VAPID_KEY` | FCM Web Push VAPID key (for notifications) |
+| `VITE_TMDB_API_KEY` | TMDB v4 Bearer Token |
+| `VITE_TMDB_V3_API_KEY` | TMDB v3 API Key (fallback) |
+| `VITE_NVIDIA_API_KEY` | NVIDIA NIM API Key (optional) |
+| `VITE_TURNSTILE_SITE_KEY` | Turnstile Site Key (optional) |
+| `VITE_APP_CHECK_SITE_KEY` | reCAPTCHA v3 Site Key (optional) |
+| `VITE_SITE_URL` | Your site URL (e.g., `https://streamflix.dpdns.org`) |
+
+**Server-only secrets (Vercel Dashboard → Settings → Environment Variables):**
+| Variable | Description |
+|----------|-------------|
+| `FIREBASE_CLIENT_EMAIL` | From Firebase service account JSON |
+| `FIREBASE_PRIVATE_KEY` | From Firebase service account JSON (full key with headers) |
+| `TURNSTILE_SECRET_KEY` | Turnstile Secret Key |
+| `CRON_SECRET` | Bearer token for `/api/release-notifications-cron` |
+
+### 3. Firebase Setup
+1. **Authentication** → Enable Email/Password, Google, GitHub providers
+2. **Firestore** → Create database in production mode
+3. **App Check** → Register reCAPTCHA v3 site, copy Site Key
+4. **Service Account** → Project Settings → Service Accounts → Generate new private key
+5. Deploy rules & indexes:
+```bash
+firebase deploy --only firestore:rules,firestore:indexes
+```
+
+### 4. Firebase Admin on Vercel
+Add these to **Vercel Dashboard → Settings → Environment Variables**:
+- `FIREBASE_CLIENT_EMAIL` = `client_email` from service account JSON
+- `FIREBASE_PRIVATE_KEY` = `private_key` from JSON (keep `-----BEGIN PRIVATE KEY-----` lines)
+
+### 5. Run Development
+```bash
 npm run dev
 # → http://localhost:5173
 ```
 
-### Environment Variables
-
-| Variable | Required | Scope | Description |
-|----------|----------|-------|-------------|
-| `VITE_FIREBASE_API_KEY` | ✅ | Client | Firebase Web API Key |
-| `VITE_FIREBASE_AUTH_DOMAIN` | ✅ | Client | `project.firebaseapp.com` |
-| `VITE_FIREBASE_PROJECT_ID` | ✅ | Both | Firebase Project ID |
-| `VITE_FIREBASE_STORAGE_BUCKET` | ✅ | Client | `project.appspot.com` |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | ✅ | Client | FCM Sender ID |
-| `VITE_FIREBASE_APP_ID` | ✅ | Client | Firebase App ID (`1:xxx:web:xxx`) |
-| `VITE_FIREBASE_VAPID_KEY` | ⚠️ | Client | FCM Web Push VAPID key |
-| `VITE_TMDB_API_KEY` | ✅ | Both | TMDB v4 Bearer Token |
-| `VITE_TMDB_V3_API_KEY` | ✅ | Both | TMDB v3 API Key (fallback) |
-| `VITE_NVIDIA_API_KEY` | ❌ | Server | NVIDIA NIM API Key |
-| `VITE_TURNSTILE_SITE_KEY` | ⚠️ | Client | Turnstile Site Key |
-| `TURNSTILE_SECRET_KEY` | ⚠️ | Server | Turnstile Secret (Vercel env) |
-| `VITE_APP_CHECK_SITE_KEY` | ❌ | Client | reCAPTCHA v3 Site Key |
-| `VITE_SITE_URL` | ✅ | Both | `https://streamflix.dpdns.org` |
-| `CRON_SECRET` | ✅ | Server | Bearer token for `/api/release-notifications-cron` |
-| `VITE_FIREBASE_EMULATOR` | ❌ | Client | Set `1` for local emulator |
-| `VITE_FIREBASE_EMULATOR_HOST` | ❌ | Client | Emulator host (default: `127.0.0.1`) |
-
-> **Security:** Server-only secrets (`TURNSTILE_SECRET_KEY`, Firebase Admin SDK: `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`) go in **Vercel Project Settings → Environment Variables**, never in `.env`.
-
-### Firebase Setup
-
-1. **Authentication** → Enable Email/Password, Google, GitHub providers
-2. **Firestore** → Create database, deploy `firestore.rules` + `firestore.indexes.json`
-3. **App Check** → Register reCAPTCHA v3 site, add Site Key to `VITE_APP_CHECK_SITE_KEY`
-4. **Hosting** (optional) → `firebase deploy --only hosting`
-
+### 6. Deploy to Vercel
 ```bash
-# Deploy Firestore rules & indexes
-firebase deploy --only firestore:rules,firestore:indexes
+vercel link
+# Add all env vars in Vercel Dashboard
+vercel --prod
 ```
 
-### Firebase Admin SDK Setup (Required for Server Auth)
+---
 
-1. Firebase Console → Project Settings → Service Accounts → **Generate new private key**
-2. Save as JSON (keep secure — never commit)
-3. In Vercel Dashboard → Settings → Environment Variables, add:
-   - `FIREBASE_CLIENT_EMAIL` = `client_email` from JSON
-   - `FIREBASE_PRIVATE_KEY` = `private_key` from JSON (including `-----BEGIN PRIVATE KEY-----` lines)
-4. Redeploy
+## Project Structure (Key Directories)
 
-> See **[SERVER_AUTH_GUIDE.html](SERVER_AUTH_GUIDE.html)** for complete step-by-step deployment guide.
+```
+src/
+├── components/
+│   ├── streamflix/      # Feature components (Navbar, MovieCard, VideoPlayer, etc.)
+│   └── ui/              # shadcn/ui primitives
+├── lib/
+│   ├── api/tmdb.ts      # TMDB wrapper (typed, cached)
+│   ├── api/ai.ts        # NVIDIA Nemotron client
+│   ├── firebase.ts      # Firebase init + App Check
+│   ├── continue-watching.ts
+│   ├── my-list.ts
+│   ├── profiles.ts
+│   └── push.ts          # FCM push notifications
+├── routes/
+│   ├── _authenticated/  # Protected routes (server auth + client guard)
+│   │   ├── browse.tsx
+│   │   ├── watch.$id.tsx
+│   │   ├── profiles.tsx
+│   │   ├── settings.tsx  # Export data, notifications, delete account
+│   │   ├── explore/      # Genre pages ($genreId.tsx)
+│   │   ├── assistant.tsx
+│   │   ├── calendar.tsx
+│   │   ├── history.tsx
+│   │   ├── mylist.tsx
+│   │   ├── search.tsx
+│   │   ├── movie.$id.tsx
+│   │   ├── person.$id.tsx
+│   │   ├── force-password.tsx
+│   │   └── route.tsx     # Client-side auth guard
+│   ├── api/             # Server-only API routes
+│   │   ├── session.ts           # Create/clear session cookie
+│   │   ├── release-notifications-cron.ts
+│   │   ├── verify-recaptcha.ts
+│   │   └── client-ip.ts
+│   ├── auth.tsx         # Sign in/up (calls /api/session)
+│   ├── index.tsx        # Landing (instant redirect if authed)
+│   ├── tos.tsx
+│   ├── privacy-policy.tsx
+│   └── offline.tsx
+├── server/              # SERVER-ONLY CODE (never bundled to client)
+│   ├── firebase-admin.ts
+│   └── server-auth.ts
+└── main.tsx             # Entry, providers, queryClient
+```
+
+---
+
+## Key Features Implementation
+
+### Optimistic Updates (Almost Everything)
+- **Profile CRUD** — TanStack Query cache update → background Firestore sync → rollback on error
+- **My List** — localStorage instant add/remove → Firestore sync → BroadcastChannel cross-tab
+- **Continue Watching** — localStorage every 5s → Firestore → multi-tab sync
+- **Sign Out** — Immediate localStorage clear + navigate → background cleanup
+- **Export Data** — Fetches all collections → downloads JSON
+
+### Security
+- **Server-side auth** — HTTP-only, Secure, SameSite=Lax cookies (14-day expiry)
+- **Firebase App Check** — reCAPTCHA v3 on all API calls
+- **No CSP** — Removed (broke embed providers & Firebase popups)
+- **Trusted Types** — Enforced
+- **Iframe sandbox** — Explicit `allow` policies per provider
+- **Dependencies** — `@grpc/grpc-js@^1.14.6` (fixed CVE alerts #75, #77)
+
+### Accessibility
+- Semantic HTML, ARIA labels, focus management
+- Keyboard navigation, reduced motion support
+- Screen reader tested (NVDA, VoiceOver)
 
 ---
 
@@ -433,110 +245,13 @@ firebase deploy --only firestore:rules,firestore:indexes
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start Vite dev server (port 5173, HMR) |
+| `npm run dev` | Start dev server (port 5173, HMR) |
 | `npm run build` | Production build → `.vercel/output` |
-| `npm run build:dev` | Development-mode build (no minify) |
 | `npm run preview` | Preview production build locally |
-| `npm run lint` | Run ESLint (with auto-fix) |
-| `npm run typecheck` | TypeScript compile check (`tsc --noEmit`) |
-| `npm run format` | Format with Prettier |
-| `npm run sitemap` | Generate `sitemap.xml` for SEO |
-
-### Git Hooks (Husky + lint-staged)
-```bash
-# Pre-commit runs automatically:
-#   - eslint --fix on staged files
-#   - prettier --write on staged files
-```
-
----
-
-## Deployment
-
-### Vercel (Recommended)
-
-```bash
-# One-time setup
-vercel link
-# Add all env vars in Vercel Dashboard → Settings → Environment Variables
-#   → Include FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY, TURNSTILE_SECRET_KEY
-
-# Deploy preview
-vercel
-
-# Deploy production
-vercel --prod
-```
-
-**vercel.json** handles:
-- SPA rewrites (`/* → /index.html`)
-- **Security headers** (HSTS, X-Frame-Options, COOP, Permissions-Policy) — **CSP REMOVED**
-- Cron job for release notifications (`0 8 * * *`)
-- `/watch/:id` route headers (iframe sandbox, no CSP)
-
-### Docker
-
-```dockerfile
-# Multi-stage build
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-FROM nginx:alpine
-COPY --from=builder /app/.vercel/output/static /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-```
-
-### Firebase Hosting (Alternative)
-
-```bash
-npm run build
-firebase deploy --only hosting
-```
-
----
-
-## Testing & Quality
-
-```bash
-# Type safety
-npm run typecheck          # tsc --noEmit
-
-# Linting
-npm run lint               # ESLint + Prettier
-
-# Format check
-npm run format -- --check  # CI-friendly
-
-# Full CI pipeline (run before PR)
-npm run typecheck && npm run lint && npm run build
-```
-
-### Code Standards
-- **TypeScript strict mode** — No `any`, explicit returns
-- **ESLint** — `typescript-eslint`, `react-hooks`, `prettier`
-- **Prettier** — Single quotes, trailing commas, 100-char lines
-- **Conventional Commits** — `feat:`, `fix:`, `docs:`, `refactor:`
-
----
-
-## Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| **App Check errors** | Verify `VITE_APP_CHECK_SITE_KEY`, check reCAPTCHA v3 domain allowlist |
-| **Auth redirect loop** | Ensure `FIREBASE_CLIENT_EMAIL` + `FIREBASE_PRIVATE_KEY` set in Vercel, redeploy |
-| **Session cookie not set** | Check Vercel logs for `/api/session` errors; verify Firebase Admin init |
-| **Firestore permission denied** | Deploy `firestore.rules`, verify user profile exists |
-| **TMDB 401/429** | Verify API keys, check rate limits (40 req/10s) |
-| **Video won't play** | Check iframe `sandbox` `allow` policies, provider availability |
-| **Hydration mismatch** | Ensure server/client render same data (use `useSyncExternalStore`) |
-| **Build fails: "Import denied in client environment"** | Move server-only imports to `src/server/`, use dynamic `await import()` only in server entry |
+| `npm run lint` | ESLint with auto-fix |
+| `npm run typecheck` | TypeScript compile check |
+| `npm run format` | Prettier format |
+| `npm run sitemap` | Generate `sitemap.xml` |
 
 ---
 
@@ -544,11 +259,10 @@ npm run typecheck && npm run lint && npm run build
 
 | Document | Purpose |
 |----------|---------|
-| **[STREAMFLIX_DOCUMENTATION.html](STREAMFLIX_DOCUMENTATION.html)** | Complete technical reference (architecture, components, APIs, security) |
-| **[SERVER_AUTH_GUIDE.html](SERVER_AUTH_GUIDE.html)** | **NEW** — Server-side auth implementation & deployment guide |
-| **`.env.example`** | Environment variable template (all placeholders, no secrets) |
-| **`firestore.rules`** | Security rules reference |
-| **`vercel.json`** | Headers, rewrites, crons |
+| `.env.example` | Environment variable template (all placeholders, no secrets) |
+| `firestore.rules` | Security rules reference |
+| `vercel.json` | Headers, rewrites, crons |
+| `LICENSE` | MIT License |
 
 ---
 
@@ -580,25 +294,17 @@ git push origin feat/amazing-feature
 
 ## License
 
-**MIT License** — See [LICENSE](LICENSE) for details.
-
-## Acknowledgments
-
-| Project | Role |
-|---------|------|
-| **[TMDB](https://www.themoviedb.org/)** | Movie/TV metadata & images |
-| **[Firebase](https://firebase.google.com/)** | Auth, Firestore, App Check, Hosting |
-| **[TanStack](https://tanstack.com/)** | Router, Query, Start — best-in-class DX |
-| **[NVIDIA Nemotron](https://www.nvidia.com/en-us/ai-data-science/nemotron/)** | AI recommendation engine |
-| **[shadcn/ui](https://ui.shadcn.com/)** | Accessible component primitives |
-| **[Tailwind CSS](https://tailwindcss.com/)** | Utility-first styling |
-| **[Lucide](https://lucide.dev/)** | Beautiful consistent icons |
-| **[Vercel](https://vercel.com/)** | Zero-config deployment |
+MIT License — See [LICENSE](LICENSE)
 
 ---
 
-## Support
+## Acknowledgments
 
-- **Issues:** [GitHub Issues](https://github.com/Wayne-Inc/StreamFlix/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/Wayne-Inc/StreamFlix/discussions)
-- **Security:** Email security@streamflix.dpdns.org (GPG key in repo)
+- **TMDB** — Movie/TV metadata & images
+- **Firebase** — Auth, Firestore, App Check, Hosting
+- **TanStack** — Router, Query, Start
+- **NVIDIA Nemotron** — AI recommendations
+- **shadcn/ui** — Accessible component primitives
+- **Tailwind CSS** — Utility-first styling
+- **Lucide** — Icons
+- **Vercel** — Deployment
