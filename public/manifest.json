@@ -5,7 +5,7 @@
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#141414",
-  "theme_color": "#E50914",
+  "theme_color": "#0C0D0F",
   "description": "Stream your favorite movies and TV shows",
   "icons": [
     {
