@@ -188,25 +188,31 @@ export function Navbar() {
   }, [u]);
 
   const signOut = async () => {
-    // Drop this device's push token before the session ends, otherwise the
-    // device keeps receiving notifications for this account.
-    try {
-      const { removePushSubscription } = await import("@/lib/push");
-      await removePushSubscription();
-    } catch (err) {
-      console.warn("Could not remove the push subscription for this device", err);
-    }
-
-    // Clear server session cookie for SSR auth
-    try {
-      await fetch("/api/session", { method: "DELETE" });
-    } catch (err) {
-      console.warn("Could not clear server session cookie", err);
-    }
-
-    await firebaseSignOut(auth);
+    // Optimistic: instantly clear local auth cache & navigate
+    localStorage.removeItem("sf:auth");
+    localStorage.removeItem("sf:vip");
     toast.success("Signed out");
     router.navigate({ to: "/auth", replace: true });
+
+    // Background cleanup (non-blocking)
+    (async () => {
+      try {
+        const { removePushSubscription } = await import("@/lib/push");
+        await removePushSubscription();
+      } catch (err) {
+        console.warn("Could not remove the push subscription for this device", err);
+      }
+      try {
+        await fetch("/api/session", { method: "DELETE" });
+      } catch (err) {
+        console.warn("Could not clear server session cookie", err);
+      }
+      try {
+        await firebaseSignOut(auth);
+      } catch (err) {
+        console.warn("Firebase signOut failed", err);
+      }
+    })();
   };
 
   const handleExitKids = async () => {
