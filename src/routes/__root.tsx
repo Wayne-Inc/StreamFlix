@@ -10,6 +10,8 @@ import {
   type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, useRef, type ReactNode } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 import appCss from "../styles.css?url";
 import { registerSW } from "../lib/pwa";
@@ -20,12 +22,12 @@ import { CookieConsent } from "@/components/streamflix/CookieConsent";
 import { GlobalContextMenu } from "@/components/streamflix/GlobalContextMenu";
 import { ExternalLinkWarningProvider, triggerExternalLinkWarning } from "@/components/streamflix/ExternalLinkWarning";
 import { ScreenSaver } from "@/components/streamflix/ScreenSaver";
+import { auth, db } from "@/lib/firebase";
 import { metaImageUrl } from "@/lib/seo";
 import { useNavTracker } from "@/lib/nav-history";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { ReduceMotionProvider } from "@/lib/reduce-motion";
-import { getFirebase, isLikelyAuthenticated } from "@/lib/lazy-firebase";
 
 function NotFoundComponent() {
   return (
@@ -228,103 +230,53 @@ function RootComponent() {
     };
     document.addEventListener("click", handleExternalLink, true);
 
-    // Lazy-load Firebase auth state listener and other Firebase-dependent features
-    let authUnsub: (() => void) | null = null;
-    let cancelled = false;
-
-    const initFirebaseFeatures = async () => {
-      // Only initialize Firebase if user is likely authenticated (has localStorage cache)
-      // or if we're on a page that needs Firebase
-      const needsFirebase = isLikelyAuthenticated() ||
-        pathname.startsWith("/browse") ||
-        pathname.startsWith("/watch/") ||
-        pathname.startsWith("/settings") ||
-        pathname.startsWith("/profiles") ||
-        pathname.startsWith("/mylist") ||
-        pathname.startsWith("/history") ||
-        pathname.startsWith("/explore") ||
-        pathname.startsWith("/calendar") ||
-        pathname.startsWith("/assistant") ||
-        pathname.startsWith("/movie/") ||
-        pathname.startsWith("/person/") ||
-        pathname.startsWith("/search");
-
-      if (!needsFirebase) {
-        // Still check for auth on first load for instant redirect on root page
-        if (pathname === "/") {
-          const { auth } = await getFirebase();
-          const { onAuthStateChanged } = await import("firebase/auth");
-          const user = await new Promise<any>((resolve) => {
-            const unsub = onAuthStateChanged(auth, (user) => {
-              unsub();
-              resolve(user);
-            });
-          });
-          if (user) {
-            try { localStorage.setItem("sf:auth", "1"); } catch {}
-          }
+    const unsub = onAuthStateChanged(auth, (user) => {
+      try {
+        if (user) {
+          localStorage.setItem("sf:auth", "1");
+        } else {
+          localStorage.removeItem("sf:auth");
         }
+      } catch {}
+      if (initial.current) {
+        initial.current = false;
         return;
       }
-
-      try {
-        const { auth, db, onAuthStateChanged, doc, setDoc, serverTimestamp, signOut } = await getFirebase();
-
-        authUnsub = onAuthStateChanged(auth, (user) => {
-          if (cancelled) return;
-          try {
-            if (user) {
-              localStorage.setItem("sf:auth", "1");
-            } else {
-              localStorage.removeItem("sf:auth");
-            }
-          } catch {}
-          if (initial.current) {
-            initial.current = false;
-            return;
-          }
-          router.invalidate();
-          if (user) {
-            queryClient.invalidateQueries();
-            // Set up push notifications for newly authenticated user
-            import("@/lib/push").then(({ ensurePushSubscription }) => {
-              ensurePushSubscription().catch(() => {});
-            });
-          }
+      router.invalidate();
+      if (user) {
+        queryClient.invalidateQueries();
+        // Set up push notifications for newly authenticated user
+        import("@/lib/push").then(({ ensurePushSubscription }) => {
+          ensurePushSubscription().catch(() => {});
         });
-
-        import("@/lib/device-tracking").then(({ recordCurrentDevice }) => {
-          recordCurrentDevice().catch(() => {});
-        });
-        import("@/lib/mobile").then(({ initMobileApp }) => {
-          initMobileApp().catch(() => {});
-        });
-        import("@/lib/push").then(({ setupForegroundPush, ensurePushSubscription }) => {
-          setupForegroundPush();
-          // Only attempt push subscription if user is authenticated
-          if (auth.currentUser) {
-            ensurePushSubscription();
-          }
-        });
-
-        const u = auth.currentUser;
-        if (u?.photoURL && u.photoURL !== photoSaved.current) {
-          photoSaved.current = u.photoURL;
-          setDoc(
-            doc(db, "profiles", u.uid),
-            {
-              avatar_url: u.photoURL,
-              updated_at: serverTimestamp(),
-            },
-            { merge: true },
-          ).catch(() => {});
-        }
-      } catch (e) {
-        console.warn("Firebase lazy init failed:", e);
       }
-    };
+    });
+    import("@/lib/device-tracking").then(({ recordCurrentDevice }) => {
+      recordCurrentDevice().catch(() => {});
+    });
+    import("@/lib/mobile").then(({ initMobileApp }) => {
+      initMobileApp().catch(() => {});
+    });
+    import("@/lib/push").then(({ setupForegroundPush, ensurePushSubscription }) => {
+      setupForegroundPush();
+      // Only attempt push subscription if user is authenticated
+      if (auth.currentUser) {
+        ensurePushSubscription();
+      }
+    });
+    const u = auth.currentUser;
+    if (u?.photoURL && u.photoURL !== photoSaved.current) {
+      photoSaved.current = u.photoURL;
+      setDoc(
+        doc(db, "profiles", u.uid),
+        {
+          avatar_url: u.photoURL,
+          updated_at: serverTimestamp(),
+        },
+        { merge: true },
+      ).catch(() => {});
+    }
 
-    initFirebaseFeatures();
 
     const showOfflineToast = () => {
       if (offlineToastId.current === null) {
@@ -370,14 +322,13 @@ function RootComponent() {
     window.addEventListener("offline", handleOffline);
     window.addEventListener("online", handleOnline);
     return () => {
-      cancelled = true;
-      if (authUnsub) authUnsub();
+      unsub();
       document.removeEventListener("click", handleExternalLink, true);
       window.removeEventListener("offline", handleOffline);
       window.removeEventListener("online", handleOnline);
       hideOfflineToast(); // Cleanup on unmount
     };
-  }, [router, queryClient, pathname]);
+  }, [router, queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
