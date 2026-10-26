@@ -122,6 +122,7 @@ function SettingsPage() {
   const [upcomingNotifs, setUpcomingNotifs] = useState(false);
   const [upcomingNotifsLoaded, setUpcomingNotifsLoaded] = useState(false);
   const [savingUpcomingNotifs, setSavingUpcomingNotifs] = useState(false);
+  const [exportingData, setExportingData] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -226,7 +227,7 @@ function SettingsPage() {
 
   const exportUserData = async () => {
     if (!user) return;
-    setSavingUpcomingNotifs(true); // reuse this state for loading
+    setExportingData(true);
     try {
       const userData: Record<string, any> = {
         exportDate: new Date().toISOString(),
@@ -295,9 +296,10 @@ function SettingsPage() {
 
       toast.success("Your data has been downloaded");
     } catch (e) {
+      console.error("Export failed:", e);
       toast.error("Failed to export data");
     } finally {
-      setSavingUpcomingNotifs(false);
+      setExportingData(false);
     }
   };
 
@@ -1118,15 +1120,15 @@ function SettingsPage() {
             </div>
             <button
               onClick={exportUserData}
-              disabled={savingUpcomingNotifs}
+              disabled={exportingData}
               className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent shrink-0 disabled:opacity-50"
             >
-              {savingUpcomingNotifs ? (
+              {exportingData ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
                 <Upload className="size-4" />
               )}
-              {savingUpcomingNotifs ? "Exporting..." : "Export data"}
+              {exportingData ? "Exporting..." : "Export data"}
             </button>
           </div>
         </section>
