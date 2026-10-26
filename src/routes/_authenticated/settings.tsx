@@ -36,6 +36,9 @@ import {
 
 // Validate avatar URL to prevent XSS
 const isValidAvatarUrl = (url: string): boolean => {
+  if (!url) return false;
+  // Allow data URLs (cropped avatars) and TMDB image URLs only
+  if (url.startsWith("data:")) return true;
   try {
     const parsed = new URL(url);
     return parsed.protocol === "https:" || parsed.protocol === "http:";
@@ -57,8 +60,8 @@ import {
 } from "firebase/firestore";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
-import { Skeleton, SettingsSectionSkeleton, ProfileSettingsSkeleton, SecuritySettingsSkeleton, AccessibilitySettingsSkeleton, DevicesSettingsSkeleton, InterestsSettingsSkeleton, NotificationsSettingsSkeleton, SignOutSettingsSkeleton, ExportDataSettingsSkeleton, DeleteAccountSettingsSkeleton, DeviceListItemSkeleton } from "@/components/ui/skeleton";
 import { AvatarCropModal } from "@/components/streamflix/AvatarCropModal";
+import { Skeleton, SettingsSectionSkeleton, ProfileSettingsSkeleton, SecuritySettingsSkeleton, AccessibilitySettingsSkeleton, DevicesSettingsSkeleton, InterestsSettingsSkeleton, NotificationsSettingsSkeleton, SignOutSettingsSkeleton, ExportDataSettingsSkeleton, DeleteAccountSettingsSkeleton, DeviceListItemSkeleton } from "@/components/ui/skeleton";
 import { getDeviceId, recordCurrentDevice } from "@/lib/device-tracking";
 import { isKidsProfile } from "@/lib/kids-mode";
 import { useReduceMotion } from "@/lib/reduce-motion";
@@ -102,10 +105,10 @@ function SettingsPage() {
   const user = auth.currentUser;
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [savingName, setSavingName] = useState(false);
   const currentDeviceId = typeof window !== "undefined" ? getDeviceId() : "";
-  const [cropSrc, setCropSrc] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [sendingReset, setSendingReset] = useState(false);
   const { reduceMotion, setReduceMotion } = useReduceMotion();
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>("default");
