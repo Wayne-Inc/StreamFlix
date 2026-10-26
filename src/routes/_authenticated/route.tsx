@@ -3,10 +3,33 @@ import { auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
 function waitForUser(): Promise<typeof auth.currentUser> {
+  // If Firebase Auth already has a user (e.g., persisted session), return immediately
+  if (auth.currentUser) {
+    return Promise.resolve(auth.currentUser);
+  }
+
+  // Otherwise wait for onAuthStateChanged to fire with a non-null user
   return new Promise((resolve) => {
+    let resolved = false;
+    const timeout = setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        // Timeout: resolve with current user (may be null if not logged in)
+        resolve(auth.currentUser);
+      }
+    }, 3000);
+
     const unsub = onAuthStateChanged(auth, (user) => {
-      unsub();
-      resolve(user);
+      if (user !== null) {
+        // Got a real user - resolve immediately
+        if (!resolved) {
+          resolved = true;
+          clearTimeout(timeout);
+          unsub();
+          resolve(user);
+        }
+      }
+      // If user === null, keep waiting (don't resolve yet)
     });
   });
 }
