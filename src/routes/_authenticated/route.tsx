@@ -37,10 +37,16 @@ function waitForUser(): Promise<typeof auth.currentUser> {
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async ({ location }) => {
+    // Trust server-side auth: if sf:auth flag exists, the middleware already validated the session cookie
+    const hasServerAuth = typeof window !== "undefined" && localStorage.getItem("sf:auth") === "1";
+
     const user = await waitForUser();
-    if (!user) {
+
+    // Only redirect to /auth if BOTH server auth flag is missing AND Firebase Auth has no user
+    if (!hasServerAuth && !user) {
       throw redirect({ to: "/auth" });
     }
+
     let pending = false;
     try {
       pending = localStorage.getItem("sf:upgrade_password") === "1";
