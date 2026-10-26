@@ -14,9 +14,8 @@ async function authMiddleware(request: Request): Promise<Response | null> {
   const url = new URL(request.url);
   const pathname = url.pathname;
 
-  // Paths that require authentication
+  // Paths that require authentication (redirect to /auth if not logged in)
   const protectedPaths = [
-    "/",
     "/profiles",
     "/browse",
     "/watch/",
@@ -32,20 +31,28 @@ async function authMiddleware(request: Request): Promise<Response | null> {
 
   // Check if this path requires auth
   const requiresAuth = protectedPaths.some((p) => pathname === p || pathname.startsWith(p + "/"));
-  if (!requiresAuth) return null;
 
   // Import server auth dynamically (only runs on server)
   const { authenticateRequest } = await import("./server/server-auth");
   const user = await authenticateRequest(request);
 
-  if (!user) {
-    // Redirect to auth page with return URL
-    const loginUrl = new URL("/auth", request.url);
-    loginUrl.searchParams.set("redirect", pathname + url.search);
-    return Response.redirect(loginUrl.toString(), 302);
+  if (requiresAuth) {
+    // Protected path: require authentication
+    if (!user) {
+      const loginUrl = new URL("/auth", request.url);
+      loginUrl.searchParams.set("redirect", pathname + url.search);
+      return Response.redirect(loginUrl.toString(), 302);
+    }
+    // Authenticated - continue
+    return null;
   }
 
-  // User is authenticated - continue to TanStack Start handler
+  // Root path "/": if authenticated, redirect to /profiles (Netflix pattern)
+  if (pathname === "/" && user) {
+    return Response.redirect(new URL("/profiles", request.url).toString(), 302);
+  }
+
+  // Public path, not authenticated - continue
   return null;
 }
 
