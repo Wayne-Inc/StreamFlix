@@ -72,7 +72,7 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
 
   return (
     <section
-      className="relative w-full overflow-hidden aspect-[16/9] max-h-[95vh] min-h-[50vh] sm:min-h-[400px] lg:min-h-[550px]"
+      className="relative w-full overflow-hidden aspect-[4/5] sm:aspect-[16/9] max-h-[95vh] min-h-[60vh] sm:min-h-[50vh] sm:min-h-[400px] lg:min-h-[550px]"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
