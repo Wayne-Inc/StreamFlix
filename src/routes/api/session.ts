@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createSessionCookie, setSessionCookie, isAdminInitialized, clearSessionCookie } from "@/server/server-auth";
 
+// Module-level log to confirm this file loads
+console.log("[API Session] MODULE LOADED");
+
 export const Route = createFileRoute("/api/session")({
   server: {
     handlers: {
@@ -67,9 +70,12 @@ export const Route = createFileRoute("/api/session")({
           console.log("[API Session] Cookie set, returning success");
           return response;
         } catch (err) {
-          console.error("[API Session] Session creation error:", err);
+          const errMsg = err instanceof Error ? err.message : String(err);
+          const errStack = err instanceof Error ? err.stack : undefined;
+          console.error("[API Session] Session creation error:", errMsg, errStack);
+          // Return error detail in response so you can see it in Network tab
           return new Response(
-            JSON.stringify({ ok: false, error: "Internal server error", detail: String(err) }),
+            JSON.stringify({ ok: false, error: "Internal server error", detail: errMsg, stack: errStack }),
             {
               status: 500,
               headers: { "Content-Type": "application/json" },
@@ -84,7 +90,7 @@ export const Route = createFileRoute("/api/session")({
         });
 
         // Clear the session cookie
-        const { clearSessionCookie } = await import("@/lib/server-auth");
+        const { clearSessionCookie } = await import("@/server/server-auth");
         clearSessionCookie(response);
 
         return response;
