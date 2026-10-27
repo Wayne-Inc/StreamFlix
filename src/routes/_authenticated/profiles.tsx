@@ -13,6 +13,9 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+
+// Module-level store for query client to avoid minifier scoping issues in async functions
+const queryClientStore = { current: null as ReturnType<typeof useQueryClient> | null };
 import { Logo } from "@/components/streamflix/Logo";
 import { AvatarCropModal } from "@/components/streamflix/AvatarCropModal";
 import { TmdbAvatarPicker } from "@/components/streamflix/TmdbAvatarPicker";
@@ -77,7 +80,8 @@ function defaultName() {
 
 function ProfilesPage() {
   const navigate = useNavigate();
-  const queryClientRef = useRef(useQueryClient());
+  const queryClient = useQueryClient();
+  useEffect(() => { queryClientStore.current = queryClient; }, [queryClient]);
   const [editing, setEditing] = useState(false);
   const [profiles, setProfiles] = useState<Profile[] | null>(null);
   const [editTarget, setEditTarget] = useState<Profile | "new" | null>(null);
@@ -140,7 +144,7 @@ function ProfilesPage() {
     if (!u) return;
     try {
       const list = await ensureUserHasProfile(u.uid, defaultName());
-      queryClientRef.current.setQueryData(["profiles", u.uid], list);
+      queryClientStore.current.setQueryData(["profiles", u.uid], list);
       setProfiles(list);
     } catch (e: any) {
       toast.error(e?.message ?? "Couldn't load profiles");
@@ -183,7 +187,7 @@ function ProfilesPage() {
     // Update query cache immediately
     const u = auth.currentUser;
     if (u) {
-      queryClientRef.current.setQueryData(["profiles", u.uid], (old: Profile[] | undefined) =>
+      queryClientStore.current.setQueryData(["profiles", u.uid], (old: Profile[] | undefined) =>
         old?.map((prof) => (prof.id === p.id ? { ...prof, ...profileData } : prof)) ?? []
       );
     }
@@ -521,7 +525,7 @@ function ProfileEditor({
       avatarUrl: avatarUrl.trim() || "",
     };
 
-    const previousProfiles = queryClientRef.current.getQueryData<Profile[]>(["profiles", u.uid]);
+    const previousProfiles = queryClientStore.current.getQueryData<Profile[]>(["profiles", u.uid]);
 
     // Optimistically update cache
     if (isNew) {
@@ -533,10 +537,10 @@ function ProfileEditor({
         hasPin: false,
         contentRatingLimit: kids ? "PG" : "NC-17",
       };
-      queryClientRef.current.setQueryData<Profile[]>(["profiles", u.uid], (old) => [...(old ?? []), optimisticProfile]);
+      queryClientStore.current.setQueryData<Profile[]>(["profiles", u.uid], (old) => [...(old ?? []), optimisticProfile]);
       setProfiles((old) => [...(old ?? []), optimisticProfile]);
     } else if (existing) {
-      queryClientRef.current.setQueryData<Profile[]>(["profiles", u.uid], (old) =>
+      queryClientStore.current.setQueryData<Profile[]>(["profiles", u.uid], (old) =>
         old?.map((p) => (p.id === existing.id ? { ...p, ...profileUpdates } : p)) ?? []
       );
       setProfiles((old) => old?.map((p) => (p.id === existing.id ? { ...p, ...profileUpdates } : p)) ?? []);
@@ -559,7 +563,7 @@ function ProfileEditor({
           }
         }
         // Replace temp profile with real one in cache
-        queryClientRef.current.setQueryData<Profile[]>(["profiles", u.uid], (old) =>
+        queryClientStore.current.setQueryData<Profile[]>(["profiles", u.uid], (old) =>
           old?.map((p) => (p.id.startsWith("temp-") && p.name === name.trim() ? created! : p)) ?? []
         );
         setProfiles((old) => old?.map((p) => (p.id.startsWith("temp-") && p.name === name.trim() ? created! : p)) ?? []);
@@ -580,7 +584,7 @@ function ProfileEditor({
     } catch (e: any) {
       // Rollback on error
       if (previousProfiles) {
-        queryClientRef.current.setQueryData(["profiles", u.uid], previousProfiles);
+        queryClientStore.current.setQueryData(["profiles", u.uid], previousProfiles);
         setProfiles(previousProfiles);
       }
       toast.error(e?.message ?? "Couldn't save profile");
@@ -638,8 +642,8 @@ function ProfileEditor({
     if (!u) return;
 
     // Optimistic: immediately remove from cache
-    const previousProfiles = queryClientRef.current.getQueryData<Profile[]>(["profiles", u.uid]);
-    queryClientRef.current.setQueryData<Profile[]>(["profiles", u.uid], (old) =>
+    const previousProfiles = queryClientStore.current.getQueryData<Profile[]>(["profiles", u.uid]);
+    queryClientStore.current.setQueryData<Profile[]>(["profiles", u.uid], (old) =>
       old?.filter((p) => p.id !== existing.id) ?? []
     );
     setProfiles((old) => old?.filter((p) => p.id !== existing.id) ?? []);
@@ -653,7 +657,7 @@ function ProfileEditor({
     } catch (e: any) {
       // Rollback on error
       if (previousProfiles) {
-        queryClientRef.current.setQueryData(["profiles", u.uid], previousProfiles);
+        queryClientStore.current.setQueryData(["profiles", u.uid], previousProfiles);
         setProfiles(previousProfiles);
       }
       toast.error(e?.message ?? "Couldn't delete");
