@@ -21,8 +21,7 @@ export function AvatarCropModal({
   const offsetRef = useRef({ x: 0, y: 0 });
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [image, setImage] = useState<HTMLImageElement | null>(null);
-  const [viewportWidth, setViewportWidth] = useState(0);
-  const [viewportHeight, setViewportHeight] = useState(0);
+  const [size, setSize] = useState(0);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -34,41 +33,46 @@ export function AvatarCropModal({
   useEffect(() => {
     const el = viewportRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => {
-      setViewportWidth(el.clientWidth);
-      setViewportHeight(el.clientHeight);
-    });
+    const ro = new ResizeObserver(() => setSize(el.clientWidth));
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
 
-  // Determine the crop area aspect ratio
+  // For "free" mode, the crop region has the image's aspect ratio
+  // For square/circle, crop region is square (1:1)
   const cropAspectRatio = cropShape === "free" && image
     ? image.naturalWidth / image.naturalHeight
     : 1;
 
-  // Calculate render scale to fit image in viewport
-  // For "free", we want to fit the image within the viewport maintaining the crop aspect ratio
-  const renderScale = image && viewportWidth && viewportHeight
-    ? Math.min(
-        viewportWidth / image.naturalWidth,
-        viewportHeight / image.naturalHeight
-      )
+  // Calculate render scale to COVER the viewport (so image overflows and can be panned)
+  // This matches the original behavior for square/circle
+  const renderScale = image && size
+    ? Math.max(size / image.naturalWidth, size / image.naturalHeight)
     : 1;
 
+  // The crop region dimensions in viewport coordinates
+  // For square/circle: full viewport (size x size)
+  // For free: centered rectangle with image's aspect ratio
+  const cropViewportW = cropShape === "free" && image
+    ? Math.min(size, size * cropAspectRatio) // width of crop region in viewport
+    : size;
+  const cropViewportH = cropShape === "free" && image
+    ? Math.min(size, size / cropAspectRatio) // height of crop region in viewport
+    : size;
+
   useEffect(() => {
-    if (!image || !viewportWidth || !viewportHeight) return;
+    if (!image || !size) return;
     const dispW = image.naturalWidth * renderScale;
     const dispH = image.naturalHeight * renderScale;
     // Center the image initially in the viewport
-    const nx = Math.min(0, (viewportWidth - dispW) / 2);
-    const ny = Math.min(0, (viewportHeight - dispH) / 2);
+    const nx = Math.min(0, (size - dispW) / 2);
+    const ny = Math.min(0, (size - dispH) / 2);
     offsetRef.current = { x: nx, y: ny };
     setOffset({ x: nx, y: ny });
-  }, [image, viewportWidth, viewportHeight, renderScale]);
+  }, [image, size, renderScale]);
 
   const confirm = () => {
-    if (!image || !viewportWidth || !viewportHeight) return;
+    if (!image || !size) return;
     setBusy(true);
     const canvas = document.createElement("canvas");
 
@@ -114,12 +118,15 @@ export function AvatarCropModal({
     const dispW = image.naturalWidth * renderScale;
     const dispH = image.naturalHeight * renderScale;
 
-    // The crop area IS the full viewport (since viewport matches crop aspect ratio for "free")
-    const cropViewportW = viewportWidth;
-    const cropViewportH = viewportHeight;
+    // The crop region in viewport coordinates (centered)
+    const cropLeft = (size - cropViewportW) / 2;
+    const cropTop = (size - cropViewportH) / 2;
 
-    const sx = -offset.x / renderScale;
-    const sy = -offset.y / renderScale;
+    // Convert crop region to image coordinates
+    // The image is positioned at (offset.x, offset.y) in viewport coordinates
+    // So the crop region in image coordinates:
+    const sx = (cropLeft - offset.x) / renderScale;
+    const sy = (cropTop - offset.y) / renderScale;
     const sw = cropViewportW / renderScale;
     const sh = cropViewportH / renderScale;
 
@@ -133,22 +140,14 @@ export function AvatarCropModal({
     setBusy(false);
   };
 
-  // Determine viewport aspect ratio class
-  const getViewportAspectClass = () => {
-    if (cropShape === "square" || cropShape === "circle") return "aspect-square";
-    if (cropShape === "free" && image) {
-      const ratio = image.naturalWidth / image.naturalHeight;
-      return `aspect-[${ratio}]`;
-    }
-    return "aspect-square";
-  };
-
   // Determine crop guide border radius
   const getCropGuideClass = () => {
     if (cropShape === "circle") return "rounded-full";
-    if (cropShape === "square") return "rounded-lg";
     return "rounded-lg";
   };
+
+  // For "free" mode, show a crop guide with the image's aspect ratio
+  const showFreeGuide = cropShape === "free" && image;
 
   return (
     <div className="fixed inset-0 z-[70] grid place-items-center bg-black/80 p-4">
@@ -182,15 +181,15 @@ export function AvatarCropModal({
             if (!drag || !image) return;
             const dispW = image.naturalWidth * renderScale;
             const dispH = image.naturalHeight * renderScale;
-            // Constrain dragging so the image always covers the crop area
-            const nx = Math.min(0, Math.max(viewportWidth - dispW, drag.ox + (e.clientX - drag.startX)));
-            const ny = Math.min(0, Math.max(viewportHeight - dispH, drag.oy + (e.clientY - drag.startY)));
+            // Constrain dragging so the image always covers the crop region
+            const nx = Math.min(0, Math.max(size - dispW, drag.ox + (e.clientX - drag.startX)));
+            const ny = Math.min(0, Math.max(size - dispH, drag.oy + (e.clientY - drag.startY)));
             offsetRef.current = { x: nx, y: ny };
             setOffset({ x: nx, y: ny });
           }}
           onPointerUp={() => { dragRef.current = null; }}
           onPointerCancel={() => { dragRef.current = null; }}
-          className={`relative mt-4 w-full touch-none cursor-move overflow-hidden bg-neutral-900 ${getViewportAspectClass()}`}
+          className="relative mt-4 aspect-square w-full touch-none cursor-move overflow-hidden rounded-lg bg-neutral-900"
         >
           {image && (
             <img
@@ -208,7 +207,23 @@ export function AvatarCropModal({
           {showCircleGuide && cropShape === "circle" && (
             <div className="pointer-events-none absolute inset-0 border-2 border-white/60 rounded-full" aria-hidden="true" />
           )}
-          <div className={`pointer-events-none absolute inset-0 border-2 border-white/40 ${getCropGuideClass()}`} />
+          {/* Square/circle guide - always full viewport */}
+          {(cropShape === "square" || cropShape === "circle") && (
+            <div className={`pointer-events-none absolute inset-0 border-2 border-white/40 ${getCropGuideClass()}`} />
+          )}
+          {/* Free mode guide - centered rectangle with image's aspect ratio */}
+          {showFreeGuide && (
+            <div
+              className="pointer-events-none absolute border-2 border-white/40 rounded-lg"
+              style={{
+                width: cropViewportW,
+                height: cropViewportH,
+                left: (size - cropViewportW) / 2,
+                top: (size - cropViewportH) / 2,
+              }}
+              aria-hidden="true"
+            />
+          )}
         </div>
 
         <div className="mt-6 flex justify-end gap-2">
