@@ -77,7 +77,7 @@ function defaultName() {
 
 function ProfilesPage() {
   const navigate = useNavigate();
-  const tanstackQueryClient = useQueryClient();
+  const queryClientRef = useRef(useQueryClient());
   const [editing, setEditing] = useState(false);
   const [profiles, setProfiles] = useState<Profile[] | null>(null);
   const [editTarget, setEditTarget] = useState<Profile | "new" | null>(null);
@@ -140,7 +140,7 @@ function ProfilesPage() {
     if (!u) return;
     try {
       const list = await ensureUserHasProfile(u.uid, defaultName());
-      tanstackQueryClient.setQueryData(["profiles", u.uid], list);
+      queryClientRef.current.setQueryData(["profiles", u.uid], list);
       setProfiles(list);
     } catch (e: any) {
       toast.error(e?.message ?? "Couldn't load profiles");
@@ -183,7 +183,7 @@ function ProfilesPage() {
     // Update query cache immediately
     const u = auth.currentUser;
     if (u) {
-      tanstackQueryClient.setQueryData(["profiles", u.uid], (old: Profile[] | undefined) =>
+      queryClientRef.current.setQueryData(["profiles", u.uid], (old: Profile[] | undefined) =>
         old?.map((prof) => (prof.id === p.id ? { ...prof, ...profileData } : prof)) ?? []
       );
     }
@@ -521,7 +521,7 @@ function ProfileEditor({
       avatarUrl: avatarUrl.trim() || "",
     };
 
-    const previousProfiles = tanstackQueryClient.getQueryData<Profile[]>(["profiles", u.uid]);
+    const previousProfiles = queryClientRef.current.getQueryData<Profile[]>(["profiles", u.uid]);
 
     // Optimistically update cache
     if (isNew) {
@@ -533,10 +533,10 @@ function ProfileEditor({
         hasPin: false,
         contentRatingLimit: kids ? "PG" : "NC-17",
       };
-      tanstackQueryClient.setQueryData<Profile[]>(["profiles", u.uid], (old) => [...(old ?? []), optimisticProfile]);
+      queryClientRef.current.setQueryData<Profile[]>(["profiles", u.uid], (old) => [...(old ?? []), optimisticProfile]);
       setProfiles((old) => [...(old ?? []), optimisticProfile]);
     } else if (existing) {
-      tanstackQueryClient.setQueryData<Profile[]>(["profiles", u.uid], (old) =>
+      queryClientRef.current.setQueryData<Profile[]>(["profiles", u.uid], (old) =>
         old?.map((p) => (p.id === existing.id ? { ...p, ...profileUpdates } : p)) ?? []
       );
       setProfiles((old) => old?.map((p) => (p.id === existing.id ? { ...p, ...profileUpdates } : p)) ?? []);
@@ -559,7 +559,7 @@ function ProfileEditor({
           }
         }
         // Replace temp profile with real one in cache
-        tanstackQueryClient.setQueryData<Profile[]>(["profiles", u.uid], (old) =>
+        queryClientRef.current.setQueryData<Profile[]>(["profiles", u.uid], (old) =>
           old?.map((p) => (p.id.startsWith("temp-") && p.name === name.trim() ? created! : p)) ?? []
         );
         setProfiles((old) => old?.map((p) => (p.id.startsWith("temp-") && p.name === name.trim() ? created! : p)) ?? []);
@@ -580,7 +580,7 @@ function ProfileEditor({
     } catch (e: any) {
       // Rollback on error
       if (previousProfiles) {
-        tanstackQueryClient.setQueryData(["profiles", u.uid], previousProfiles);
+        queryClientRef.current.setQueryData(["profiles", u.uid], previousProfiles);
         setProfiles(previousProfiles);
       }
       toast.error(e?.message ?? "Couldn't save profile");
@@ -638,8 +638,8 @@ function ProfileEditor({
     if (!u) return;
 
     // Optimistic: immediately remove from cache
-    const previousProfiles = tanstackQueryClient.getQueryData<Profile[]>(["profiles", u.uid]);
-    tanstackQueryClient.setQueryData<Profile[]>(["profiles", u.uid], (old) =>
+    const previousProfiles = queryClientRef.current.getQueryData<Profile[]>(["profiles", u.uid]);
+    queryClientRef.current.setQueryData<Profile[]>(["profiles", u.uid], (old) =>
       old?.filter((p) => p.id !== existing.id) ?? []
     );
     setProfiles((old) => old?.filter((p) => p.id !== existing.id) ?? []);
@@ -653,7 +653,7 @@ function ProfileEditor({
     } catch (e: any) {
       // Rollback on error
       if (previousProfiles) {
-        tanstackQueryClient.setQueryData(["profiles", u.uid], previousProfiles);
+        queryClientRef.current.setQueryData(["profiles", u.uid], previousProfiles);
         setProfiles(previousProfiles);
       }
       toast.error(e?.message ?? "Couldn't delete");
