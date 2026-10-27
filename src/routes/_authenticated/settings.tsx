@@ -1170,6 +1170,7 @@ function SettingsPage() {
           onClose={() => setCropSrc(null)}
           onConfirm={saveUploadedAvatar}
           showCircleGuide
+          cropShape="free"
         />
       )}
       {confirmDeleteOpen && (
