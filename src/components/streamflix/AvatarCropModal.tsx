@@ -38,9 +38,14 @@ export function AvatarCropModal({
     return () => ro.disconnect();
   }, []);
 
-  // Scale image so height matches viewport height (fit height), preserving aspect ratio - viewport is always 1:1
+  // Scale image to cover viewport (cover), preserving aspect ratio - viewport is always 1:1
+  // For landscape: height matches, width overflows → pan horizontally
+  // For portrait: width matches, height overflows → pan vertically
   const renderScale = image && viewportWidth && viewportHeight
-    ? viewportHeight / image.naturalHeight
+    ? Math.max(
+        viewportWidth / image.naturalWidth,
+        viewportHeight / image.naturalHeight
+      )
     : 1;
 
   useEffect(() => {
