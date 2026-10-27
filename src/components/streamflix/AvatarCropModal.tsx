@@ -162,6 +162,7 @@ export function AvatarCropModal({
               style={{
                 width: image.naturalWidth * renderScale,
                 height: image.naturalHeight * renderScale,
+                maxWidth: 'none',
                 transform: `translate(${offset.x}px, ${offset.y}px)`,
               }}
             />
