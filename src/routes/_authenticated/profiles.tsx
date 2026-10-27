@@ -297,7 +297,7 @@ function ProfilesPage() {
                     className={`relative size-28 overflow-hidden rounded-lg transition-all group-hover:ring-4 group-hover:ring-foreground sm:size-32 ${p.avatarUrl ? "" : `bg-gradient-to-br ${p.color}`}`}
                   >
                     {p.avatarUrl && isValidAvatarUrl(p.avatarUrl) ? (
-                      <img src={p.avatarUrl} alt="" className="size-full object-cover" />
+                      <img src={p.avatarUrl} alt="" className="max-h-full max-w-full object-contain" style={{ aspectRatio: 'auto' }} />
                     ) : (
                       <span className="grid size-full place-items-center text-2xl font-black text-white/90 sm:text-5xl">
                         {p.name[0]?.toUpperCase()}
@@ -674,7 +674,8 @@ function ProfileEditor({
             <img
               src={avatarUrl}
               alt=""
-              className="size-20 rounded-lg object-cover ring-2 ring-border"
+              className="max-h-20 max-w-20 rounded-lg object-contain ring-2 ring-border"
+              style={{ aspectRatio: 'auto' }}
             />
           ) : (
             <div
