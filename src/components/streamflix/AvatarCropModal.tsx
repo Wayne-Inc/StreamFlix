@@ -38,12 +38,9 @@ export function AvatarCropModal({
     return () => ro.disconnect();
   }, []);
 
-  // Scale image to fit within viewport (contain), preserving aspect ratio - viewport is always 1:1
+  // Scale image so height matches viewport height (fit height), preserving aspect ratio - viewport is always 1:1
   const renderScale = image && viewportWidth && viewportHeight
-    ? Math.min(
-        viewportWidth / image.naturalWidth,
-        viewportHeight / image.naturalHeight
-      )
+    ? viewportHeight / image.naturalHeight
     : 1;
 
   useEffect(() => {
