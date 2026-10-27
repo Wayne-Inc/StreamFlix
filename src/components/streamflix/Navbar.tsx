@@ -254,8 +254,10 @@ export function Navbar() {
       <img
         src={selectedProfile.avatarUrl}
         alt=""
-        className={`size-7 md:size-8 shrink-0 rounded-lg object-contain ${vipRing}`}
-        style={{ aspectRatio: 'auto' }}
+        className={selectedProfile.avatarUrl.includes("image.tmdb.org")
+          ? `size-7 md:size-8 shrink-0 rounded-lg object-cover ${vipRing}`
+          : `size-7 md:size-8 shrink-0 rounded-lg object-contain ${vipRing}`}
+        style={selectedProfile.avatarUrl.includes("image.tmdb.org") ? {} : { aspectRatio: 'auto' }}
       />
     ) : (
       <div
