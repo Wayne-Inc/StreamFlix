@@ -38,9 +38,9 @@ export function AvatarCropModal({
     return () => ro.disconnect();
   }, []);
 
-  // Scale image to fit within viewport (contain), preserving aspect ratio
+  // Scale image to cover viewport (cover), preserving aspect ratio - viewport is always 1:1
   const renderScale = image && viewportWidth && viewportHeight
-    ? Math.min(
+    ? Math.max(
         viewportWidth / image.naturalWidth,
         viewportHeight / image.naturalHeight
       )
@@ -51,8 +51,8 @@ export function AvatarCropModal({
     const dispW = image.naturalWidth * renderScale;
     const dispH = image.naturalHeight * renderScale;
     // Center the image initially in the viewport
-    const nx = Math.min(0, (viewportWidth - dispW) / 2);
-    const ny = Math.min(0, (viewportHeight - dispH) / 2);
+    const nx = (viewportWidth - dispW) / 2;
+    const ny = (viewportHeight - dispH) / 2;
     offsetRef.current = { x: nx, y: ny };
     setOffset({ x: nx, y: ny });
   }, [image, viewportWidth, viewportHeight, renderScale]);
@@ -62,22 +62,10 @@ export function AvatarCropModal({
     setBusy(true);
     const canvas = document.createElement("canvas");
 
-    // Output at original aspect ratio, max 512px on longest side
+    // Output square (1:1), 512x512 for avatar
     const MAX_OUT = 512;
-    const imgAspect = image.naturalWidth / image.naturalHeight;
-    let outWidth: number;
-    let outHeight: number;
-
-    if (imgAspect >= 1) {
-      outWidth = MAX_OUT;
-      outHeight = Math.round(MAX_OUT / imgAspect);
-    } else {
-      outHeight = MAX_OUT;
-      outWidth = Math.round(MAX_OUT * imgAspect);
-    }
-
-    canvas.width = outWidth;
-    canvas.height = outHeight;
+    canvas.width = MAX_OUT;
+    canvas.height = MAX_OUT;
     const ctx = canvas.getContext("2d");
     if (!ctx) {
       setBusy(false);
@@ -88,7 +76,7 @@ export function AvatarCropModal({
     if (showCircleGuide) {
       ctx.save();
       ctx.beginPath();
-      ctx.arc(outWidth / 2, outHeight / 2, Math.min(outWidth, outHeight) / 2, 0, Math.PI * 2);
+      ctx.arc(MAX_OUT / 2, MAX_OUT / 2, MAX_OUT / 2, 0, Math.PI * 2);
       ctx.clip();
     }
 
@@ -96,7 +84,7 @@ export function AvatarCropModal({
     const dispW = image.naturalWidth * renderScale;
     const dispH = image.naturalHeight * renderScale;
 
-    // The crop region is the full viewport (image is fitted to viewport)
+    // The crop region is the full viewport (1:1 square)
     const cropViewportW = viewportWidth;
     const cropViewportH = viewportHeight;
 
@@ -106,7 +94,7 @@ export function AvatarCropModal({
     const sw = cropViewportW / renderScale;
     const sh = cropViewportH / renderScale;
 
-    ctx.drawImage(image, sx, sy, sw, sh, 0, 0, outWidth, outHeight);
+    ctx.drawImage(image, sx, sy, sw, sh, 0, 0, MAX_OUT, MAX_OUT);
 
     if (showCircleGuide) {
       ctx.restore();
@@ -116,10 +104,8 @@ export function AvatarCropModal({
     setBusy(false);
   };
 
-  // Viewport matches image aspect ratio - use inline style since dynamic Tailwind classes don't work with JIT
-  const viewportStyle = image
-    ? { aspectRatio: image.naturalWidth / image.naturalHeight }
-    : { aspectRatio: 1 };
+  // Viewport is always 1:1 (square) for avatar cropping
+  const viewportStyle = { aspectRatio: 1 };
 
   return (
     <div className="fixed inset-0 z-[70] grid place-items-center bg-black/80 p-4">
