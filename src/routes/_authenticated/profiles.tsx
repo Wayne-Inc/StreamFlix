@@ -738,7 +738,6 @@ function ProfileEditor({
               setCropSrc(null);
               toast.success("Avatar cropped");
             }}
-            cropShape="free"
           />
         )}
 
