@@ -116,10 +116,10 @@ export function AvatarCropModal({
     setBusy(false);
   };
 
-  // Viewport matches image aspect ratio
-  const aspectClass = image
-    ? `aspect-[${image.naturalWidth / image.naturalHeight}]`
-    : "aspect-square";
+  // Viewport matches image aspect ratio - use inline style since dynamic Tailwind classes don't work with JIT
+  const viewportStyle = image
+    ? { aspectRatio: image.naturalWidth / image.naturalHeight }
+    : { aspectRatio: 1 };
 
   return (
     <div className="fixed inset-0 z-[70] grid place-items-center bg-black/80 p-4">
@@ -161,7 +161,8 @@ export function AvatarCropModal({
           }}
           onPointerUp={() => { dragRef.current = null; }}
           onPointerCancel={() => { dragRef.current = null; }}
-          className={`relative mt-4 w-full touch-none cursor-move overflow-hidden rounded-lg bg-neutral-900 ${aspectClass}`}
+          className="relative mt-4 w-full touch-none cursor-move overflow-hidden rounded-lg bg-neutral-900"
+          style={viewportStyle}
         >
           {image && (
             <img
