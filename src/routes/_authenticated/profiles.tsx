@@ -77,7 +77,7 @@ function defaultName() {
 
 function ProfilesPage() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const tanstackQueryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [profiles, setProfiles] = useState<Profile[] | null>(null);
   const [editTarget, setEditTarget] = useState<Profile | "new" | null>(null);
@@ -140,7 +140,7 @@ function ProfilesPage() {
     if (!u) return;
     try {
       const list = await ensureUserHasProfile(u.uid, defaultName());
-      queryClient.setQueryData(["profiles", u.uid], list);
+      tanstackQueryClient.setQueryData(["profiles", u.uid], list);
       setProfiles(list);
     } catch (e: any) {
       toast.error(e?.message ?? "Couldn't load profiles");
@@ -183,7 +183,7 @@ function ProfilesPage() {
     // Update query cache immediately
     const u = auth.currentUser;
     if (u) {
-      queryClient.setQueryData(["profiles", u.uid], (old: Profile[] | undefined) =>
+      tanstackQueryClient.setQueryData(["profiles", u.uid], (old: Profile[] | undefined) =>
         old?.map((prof) => (prof.id === p.id ? { ...prof, ...profileData } : prof)) ?? []
       );
     }
@@ -521,7 +521,7 @@ function ProfileEditor({
       avatarUrl: avatarUrl.trim() || "",
     };
 
-    const previousProfiles = queryClient.getQueryData<Profile[]>(["profiles", u.uid]);
+    const previousProfiles = tanstackQueryClient.getQueryData<Profile[]>(["profiles", u.uid]);
 
     // Optimistically update cache
     if (isNew) {
@@ -533,10 +533,10 @@ function ProfileEditor({
         hasPin: false,
         contentRatingLimit: kids ? "PG" : "NC-17",
       };
-      queryClient.setQueryData<Profile[]>(["profiles", u.uid], (old) => [...(old ?? []), optimisticProfile]);
+      tanstackQueryClient.setQueryData<Profile[]>(["profiles", u.uid], (old) => [...(old ?? []), optimisticProfile]);
       setProfiles((old) => [...(old ?? []), optimisticProfile]);
     } else if (existing) {
-      queryClient.setQueryData<Profile[]>(["profiles", u.uid], (old) =>
+      tanstackQueryClient.setQueryData<Profile[]>(["profiles", u.uid], (old) =>
         old?.map((p) => (p.id === existing.id ? { ...p, ...profileUpdates } : p)) ?? []
       );
       setProfiles((old) => old?.map((p) => (p.id === existing.id ? { ...p, ...profileUpdates } : p)) ?? []);
@@ -559,7 +559,7 @@ function ProfileEditor({
           }
         }
         // Replace temp profile with real one in cache
-        queryClient.setQueryData<Profile[]>(["profiles", u.uid], (old) =>
+        tanstackQueryClient.setQueryData<Profile[]>(["profiles", u.uid], (old) =>
           old?.map((p) => (p.id.startsWith("temp-") && p.name === name.trim() ? created! : p)) ?? []
         );
         setProfiles((old) => old?.map((p) => (p.id.startsWith("temp-") && p.name === name.trim() ? created! : p)) ?? []);
@@ -580,7 +580,7 @@ function ProfileEditor({
     } catch (e: any) {
       // Rollback on error
       if (previousProfiles) {
-        queryClient.setQueryData(["profiles", u.uid], previousProfiles);
+        tanstackQueryClient.setQueryData(["profiles", u.uid], previousProfiles);
         setProfiles(previousProfiles);
       }
       toast.error(e?.message ?? "Couldn't save profile");
@@ -638,8 +638,8 @@ function ProfileEditor({
     if (!u) return;
 
     // Optimistic: immediately remove from cache
-    const previousProfiles = queryClient.getQueryData<Profile[]>(["profiles", u.uid]);
-    queryClient.setQueryData<Profile[]>(["profiles", u.uid], (old) =>
+    const previousProfiles = tanstackQueryClient.getQueryData<Profile[]>(["profiles", u.uid]);
+    tanstackQueryClient.setQueryData<Profile[]>(["profiles", u.uid], (old) =>
       old?.filter((p) => p.id !== existing.id) ?? []
     );
     setProfiles((old) => old?.filter((p) => p.id !== existing.id) ?? []);
@@ -653,7 +653,7 @@ function ProfileEditor({
     } catch (e: any) {
       // Rollback on error
       if (previousProfiles) {
-        queryClient.setQueryData(["profiles", u.uid], previousProfiles);
+        tanstackQueryClient.setQueryData(["profiles", u.uid], previousProfiles);
         setProfiles(previousProfiles);
       }
       toast.error(e?.message ?? "Couldn't delete");
