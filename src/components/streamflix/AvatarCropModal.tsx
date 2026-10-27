@@ -38,9 +38,9 @@ export function AvatarCropModal({
     return () => ro.disconnect();
   }, []);
 
-  // Scale image to cover viewport (cover), preserving aspect ratio - viewport is always 1:1
+  // Scale image to fit within viewport (contain), preserving aspect ratio - viewport is always 1:1
   const renderScale = image && viewportWidth && viewportHeight
-    ? Math.max(
+    ? Math.min(
         viewportWidth / image.naturalWidth,
         viewportHeight / image.naturalHeight
       )
@@ -139,9 +139,15 @@ export function AvatarCropModal({
             if (!drag || !image) return;
             const dispW = image.naturalWidth * renderScale;
             const dispH = image.naturalHeight * renderScale;
-            // Constrain so image covers the viewport
-            const nx = Math.min(0, Math.max(viewportWidth - dispW, drag.ox + (e.clientX - drag.startX)));
-            const ny = Math.min(0, Math.max(viewportHeight - dispH, drag.oy + (e.clientY - drag.startY)));
+            // Constrain image to stay within viewport bounds
+            // For cover mode (image >= viewport): offset ranges [viewport - disp, 0] (negative)
+            // For contain mode (image <= viewport): offset ranges [0, viewport - disp] (positive)
+            const minX = Math.min(0, viewportWidth - dispW);
+            const maxX = Math.max(0, viewportWidth - dispW);
+            const minY = Math.min(0, viewportHeight - dispH);
+            const maxY = Math.max(0, viewportHeight - dispH);
+            const nx = Math.max(minX, Math.min(maxX, drag.ox + (e.clientX - drag.startX)));
+            const ny = Math.max(minY, Math.min(maxY, drag.oy + (e.clientY - drag.startY)));
             offsetRef.current = { x: nx, y: ny };
             setOffset({ x: nx, y: ny });
           }}
