@@ -633,8 +633,7 @@ function SettingsPage() {
                   <img
                     src={avatarUrl}
                     alt=""
-                    className="max-h-24 max-w-24 rounded-lg object-contain ring-2 ring-border"
-                    style={{ aspectRatio: 'auto' }}
+                    className="size-24 rounded-full object-cover ring-2 ring-border"
                   />
                 ) : avatarUrl && !isValidAvatarUrl(avatarUrl) ? (
                   <div className="size-24 rounded-full bg-destructive/10 flex items-center justify-center text-xs text-destructive">
@@ -644,8 +643,7 @@ function SettingsPage() {
                   <img
                     src={googlePhotoURL}
                     alt=""
-                    className="max-h-24 max-w-24 rounded-lg object-contain ring-2 ring-border"
-                    style={{ aspectRatio: 'auto' }}
+                    className="size-24 rounded-full object-cover ring-2 ring-border"
                   />
                 ) : (
                   <div className="grid size-24 place-items-center rounded-full bg-gradient-to-br from-rose-500 to-red-700 text-4xl font-black text-white/90">
