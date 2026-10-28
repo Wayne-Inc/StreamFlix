@@ -29,6 +29,7 @@ import { profileHasPin, verifyProfilePin } from "@/lib/profiles";
 import { getSelectedProfile, clearSelectedProfile } from "@/lib/selected-profile";
 import { suggestTitles, getRandomTitle } from "@/lib/streamflix-data";
 import { LegalVersionBanner } from "./LegalVersionBanner";
+import { useDataSaver } from "@/lib/data-saver";
 
 const links = [
   { kind: "home", label: "Home" },
@@ -59,6 +60,7 @@ export function Navbar() {
   const [isVip, setIsVip] = useState(() => {
     try { return localStorage.getItem("sf:vip") === "1"; } catch { return false; }
   });
+  const { effectiveSaveData } = useDataSaver();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const searchKind = useRouterState({
     select: (s) => (s.location.search as { kind?: string } | undefined)?.kind ?? "home",
@@ -298,7 +300,7 @@ export function Navbar() {
                 key={i}
                 to="/browse"
                 search={{ kind: l.kind }}
-                preload="intent"
+                preload={effectiveSaveData ? false : "intent"}
                 className={`hover:text-foreground transition-colors ${
                   active ? "text-foreground font-semibold" : ""
                 }`}
@@ -309,7 +311,7 @@ export function Navbar() {
           })}
           <Link
             to="/explore"
-            preload="intent"
+            preload={effectiveSaveData ? false : "intent"}
             className={`hover:text-foreground transition-colors ${
               pathname.startsWith("/explore") ? "text-foreground font-semibold" : ""
             }`}
@@ -318,7 +320,7 @@ export function Navbar() {
           </Link>
           <Link
             to="/calendar"
-            preload="intent"
+            preload={effectiveSaveData ? false : "intent"}
             className={`hover:text-foreground transition-colors ${
               pathname === "/calendar" ? "text-foreground font-semibold" : ""
             }`}
@@ -327,7 +329,7 @@ export function Navbar() {
           </Link>
           <Link
             to="/assistant"
-            preload="intent"
+            preload={effectiveSaveData ? false : "intent"}
             className={`inline-flex items-center gap-1.5 transition-colors ${
               pathname === "/assistant" ? "font-semibold text-foreground" : "hover:text-foreground"
             }`}

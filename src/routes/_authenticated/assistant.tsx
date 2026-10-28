@@ -84,7 +84,10 @@ function AssistantPage() {
     setFailedRequest(null);
     setBusy(true);
     try {
-      const idToken = await auth.currentUser?.getIdToken();
+      // Force token refresh to avoid using expired cached tokens
+      const user = auth.currentUser;
+      if (!user) throw new Error(AI_ERROR_MESSAGES.auth);
+      const idToken = await user.getIdToken(true);
       if (!idToken) throw new Error(AI_ERROR_MESSAGES.auth);
       const interests = await interestsForRequest();
       const result = await askStreamflixAI({

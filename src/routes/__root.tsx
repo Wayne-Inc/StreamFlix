@@ -28,6 +28,8 @@ import { useNavTracker } from "@/lib/nav-history";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { ReduceMotionProvider } from "@/lib/reduce-motion";
+import { TVModeProvider, handleSpatialKeydown } from "@/lib/tv-mode";
+import { DataSaverProvider } from "@/lib/data-saver";
 
 function NotFoundComponent() {
   return (
@@ -321,11 +323,19 @@ function RootComponent() {
 
     window.addEventListener("offline", handleOffline);
     window.addEventListener("online", handleOnline);
+
+    // Spatial navigation keyboard handler for TV mode
+    const handleKeyDown = (event: KeyboardEvent) => {
+      handleSpatialKeydown(event);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
     return () => {
       unsub();
       document.removeEventListener("click", handleExternalLink, true);
       window.removeEventListener("offline", handleOffline);
       window.removeEventListener("online", handleOnline);
+      window.removeEventListener("keydown", handleKeyDown);
       hideOfflineToast(); // Cleanup on unmount
     };
   }, [router, queryClient]);
@@ -333,18 +343,22 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <ReduceMotionProvider>
-        <ExternalLinkWarningProvider>
-          <GlobalContextMenu>
-            <div className="wco-titlebar-padding">
-              <Toaster />
-              <Outlet />
-              <CookieConsent />
-              <ScreenSaver />
-              <Analytics />
-              <SpeedInsights />
-            </div>
-          </GlobalContextMenu>
-        </ExternalLinkWarningProvider>
+        <TVModeProvider>
+          <DataSaverProvider>
+            <ExternalLinkWarningProvider>
+              <GlobalContextMenu>
+                <div className="wco-titlebar-padding">
+                  <Toaster />
+                  <Outlet />
+                  <CookieConsent />
+                  <ScreenSaver />
+                  <Analytics />
+                  <SpeedInsights />
+                </div>
+              </GlobalContextMenu>
+            </ExternalLinkWarningProvider>
+          </DataSaverProvider>
+        </TVModeProvider>
       </ReduceMotionProvider>
     </QueryClientProvider>
   );

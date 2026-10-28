@@ -280,3 +280,63 @@ input[type="range"]::-moz-range-progress {
     scroll-behavior: auto !important;
   }
 }
+
+/* Spatial Navigation (TV mode) — focus styles for directional navigation */
+.spatial-nav *:focus-visible {
+  outline: 3px solid var(--color-primary) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px var(--color-background), 0 0 0 6px var(--color-primary) !important;
+  z-index: 100;
+}
+
+/* Ensure focus rings are visible on cards and interactive elements in spatial nav */
+.spatial-nav .focus-ring:focus-visible,
+.spatial-nav button:focus-visible,
+.spatial-nav a:focus-visible,
+.spatial-nav [tabindex]:focus-visible {
+  outline: 3px solid var(--color-primary) !important;
+  outline-offset: 2px !important;
+}
+
+/* Spatial nav specific - highlight the currently focused element more prominently */
+.spatial-nav [data-spatial-focus="true"] {
+  outline: 3px solid var(--color-primary) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px var(--color-background), 0 0 0 6px var(--color-primary) !important;
+}
+
+/* Data Saver mode — reduce image quality, disable prefetching */
+.data-saver .prefetch-disable {
+  display: none !important;
+}
+
+/* In data saver mode, use lower quality image placeholders */
+.data-saver [data-quality="high"] {
+  display: none !important;
+}
+.data-saver [data-quality="low"] {
+  display: block !important;
+}
+
+/* Reduce animation complexity in data saver mode */
+.data-saver *,
+.data-saver *::before,
+.data-saver *::after {
+  animation-duration: 0.5s !important;
+  transition-duration: 0.2s !important;
+}
+
+/* TV-specific: hide hover-only elements */
+@media (hover: none) and (pointer: coarse) {
+  .tv-hover-only {
+    display: none !important;
+  }
+}
+
+/* Ensure focus is visible on TV devices */
+@media (hover: none) and (pointer: coarse) {
+  *:focus-visible {
+    outline: 3px solid var(--color-primary) !important;
+    outline-offset: 2px !important;
+  }
+}

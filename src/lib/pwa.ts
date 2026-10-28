@@ -8,8 +8,10 @@ interface BeforeInstallPromptEvent extends Event {
 if (typeof window !== "undefined") {
   // Capture the install prompt as early as the module loads so UI buttons
   // can open it at any time.
+  // Note: We do NOT call preventDefault() here to allow the browser's
+  // native install prompt to appear automatically. The deferred prompt
+  // is still captured for manual triggering via promptInstall() if needed.
   window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
     deferredPrompt = e as BeforeInstallPromptEvent;
   });
 

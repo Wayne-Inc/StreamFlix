@@ -96,7 +96,11 @@ async function cacheFirst(request) {
     }
     return res;
   } catch {
-    return caches.match(OFFLINE_URL);
+    // Offline fallback - return basic offline response
+    return new Response("Offline", {
+      status: 503,
+      headers: { "Content-Type": "text/html" },
+    });
   }
 }
 
@@ -110,6 +114,11 @@ async function networkFirst(request) {
     return res;
   } catch {
     const cached = await caches.match(request);
-    return cached || caches.match(OFFLINE_URL);
+    if (cached) return cached;
+    // Offline fallback - return basic offline response
+    return new Response("Offline", {
+      status: 503,
+      headers: { "Content-Type": "text/html" },
+    });
   }
 }
