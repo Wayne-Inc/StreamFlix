@@ -6,7 +6,7 @@ import {
   initializeFirestore,
   enableIndexedDbPersistence,
 } from "firebase/firestore";
-import { initializeAppCheck, ReCaptchaV3Provider, getToken, type AppCheck } from "firebase/app-check";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider, getToken, type AppCheck } from "firebase/app-check";
 
 // Try to import persistent cache (available in newer Firebase versions)
 let persistentLocalCache: any;
@@ -39,45 +39,22 @@ if (typeof window !== "undefined") {
   console.log("[Debug] User Agent:", navigator.userAgent);
 
   if (import.meta.env.VITE_APP_CHECK_SITE_KEY) {
-    // Load reCAPTCHA script explicitly first
-    const loadRecaptcha = () => new Promise<void>((resolve) => {
-      if (window.grecaptcha?.enterprise) {
-        console.log("[Debug] reCAPTCHA already loaded");
-        return resolve();
-      }
-      const script = document.createElement("script");
-      script.src = `https://www.google.com/recaptcha/enterprise.js?render=${import.meta.env.VITE_APP_CHECK_SITE_KEY}`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => {
-        console.log("[Debug] reCAPTCHA script loaded");
-        resolve();
-      };
-      script.onerror = (err) => {
-        console.error("[Debug] reCAPTCHA script FAILED to load:", err);
-        resolve(); // Don't block app
-      };
-      document.head.appendChild(script);
-    });
+    try {
+      const appCheckInstance = initializeAppCheck(app, {
+        provider: new ReCaptchaEnterpriseProvider(import.meta.env.VITE_APP_CHECK_SITE_KEY),
+        isTokenAutoRefreshEnabled: true,
+      });
+      console.log("[App Check] Initialized with reCAPTCHA Enterprise");
 
-    loadRecaptcha().then(() => {
-      try {
-        const appCheckInstance = initializeAppCheck(app, {
-          provider: new ReCaptchaV3Provider(import.meta.env.VITE_APP_CHECK_SITE_KEY),
-          isTokenAutoRefreshEnabled: true,
-        });
-        console.log("[App Check] Initialized with reCAPTCHA v3");
-
-        // Test token retrieval
-        getToken(appCheckInstance).then(token => {
-          console.log("[Debug] App Check token:", token ? "OK" : "EMPTY");
-        }).catch(err => {
-          console.error("[Debug] App Check getToken error:", err);
-        });
-      } catch (e) {
-        console.error("[App Check] Failed to initialize:", e);
-      }
-    });
+      // Test token retrieval
+      getToken(appCheckInstance).then(token => {
+        console.log("[Debug] App Check token:", token ? "OK" : "EMPTY");
+      }).catch(err => {
+        console.error("[Debug] App Check getToken error:", err);
+      });
+    } catch (e) {
+      console.error("[App Check] Failed to initialize:", e);
+    }
   } else {
     console.warn("[App Check] SKIPPED - no site key");
   }
