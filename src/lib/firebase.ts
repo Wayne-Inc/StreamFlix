@@ -34,29 +34,25 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0
 export const auth = getAuth(app);
 
 // Initialize App Check for Firestore and Auth protection (client-side only)
+// Only enable if reCAPTCHA Enterprise is properly configured AND not disabled via env
 if (typeof window !== "undefined") {
-  console.log("[Debug] App Check init - VITE_APP_CHECK_SITE_KEY:", import.meta.env.VITE_APP_CHECK_SITE_KEY ? "SET" : "MISSING");
-  console.log("[Debug] User Agent:", navigator.userAgent);
+  // Allow disabling App Check via env var while fixing reCAPTCHA Enterprise config
+  const appCheckDisabled = import.meta.env.VITE_DISABLE_APP_CHECK === "true";
 
-  if (import.meta.env.VITE_APP_CHECK_SITE_KEY) {
+  if (import.meta.env.VITE_APP_CHECK_SITE_KEY && !appCheckDisabled) {
     try {
       const appCheckInstance = initializeAppCheck(app, {
         provider: new ReCaptchaEnterpriseProvider(import.meta.env.VITE_APP_CHECK_SITE_KEY),
         isTokenAutoRefreshEnabled: true,
       });
-      console.log("[App Check] Initialized with reCAPTCHA Enterprise");
 
       // Test token retrieval
-      getToken(appCheckInstance).then(token => {
-        console.log("[Debug] App Check token:", token ? "OK" : "EMPTY");
-      }).catch(err => {
-        console.error("[Debug] App Check getToken error:", err);
+      getToken(appCheckInstance).catch(() => {
+        // Ignore token errors - auth will work but without App Check protection
       });
-    } catch (e) {
-      console.error("[App Check] Failed to initialize:", e);
+    } catch {
+      // Ignore initialization errors
     }
-  } else {
-    console.warn("[App Check] SKIPPED - no site key");
   }
 }
 

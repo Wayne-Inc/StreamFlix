@@ -1,8 +1,5 @@
 export const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
-console.log("[Debug] Turnstile init - VITE_TURNSTILE_SITE_KEY:", TURNSTILE_SITE_KEY ? "SET" : "MISSING");
-console.log("[Debug] Turnstile - User Agent:", typeof navigator !== "undefined" ? navigator.userAgent : "SSR");
-
 declare global {
   interface Window {
     turnstile?: {
@@ -40,19 +37,11 @@ function loadTurnstileScript(): Promise<void> {
 }
 
 export async function executeTurnstile(action: string): Promise<string | null> {
-  if (typeof window === "undefined") {
-    console.log("[Debug] Turnstile: SSR, skipping");
-    return null;
-  }
+  if (typeof window === "undefined") return null;
 
-  console.log("[Debug] Turnstile: Loading script...");
   await loadTurnstileScript();
   const turnstile = window.turnstile;
-  if (!turnstile) {
-    console.error("[Debug] Turnstile: window.turnstile NOT available after load");
-    return null;
-  }
-  console.log("[Debug] Turnstile: Script loaded, rendering widget...");
+  if (!turnstile) return null;
 
   const div = document.createElement("div");
   div.style.display = "none";
@@ -66,7 +55,6 @@ export async function executeTurnstile(action: string): Promise<string | null> {
       const finish = (value: string | null) => {
         if (settled) return;
         settled = true;
-        console.log("[Debug] Turnstile: Callback fired, value:", value ? "TOKEN" : "NULL");
         resolve(value);
       };
 
@@ -75,29 +63,16 @@ export async function executeTurnstile(action: string): Promise<string | null> {
         action,
         execution: "execute",
         callback: (t: string) => finish(t || null),
-        "error-callback": () => {
-          console.error("[Debug] Turnstile: error-callback fired");
-          finish(null);
-        },
-        "timeout-callback": () => {
-          console.error("[Debug] Turnstile: timeout-callback fired");
-          finish(null);
-        },
-        "expired-callback": () => {
-          console.error("[Debug] Turnstile: expired-callback fired");
-          finish(null);
-        },
+        "error-callback": () => finish(null),
+        "timeout-callback": () => finish(null),
+        "expired-callback": () => finish(null),
       });
-      console.log("[Debug] Turnstile: Widget rendered, ID:", widgetId);
 
       turnstile.execute(widgetId);
-      console.log("[Debug] Turnstile: execute() called");
     });
 
-    console.log("[Debug] Turnstile: Final token:", token ? "OK" : "NULL");
     return token;
-  } catch (err) {
-    console.error("[Debug] Turnstile: Exception:", err);
+  } catch {
     return null;
   } finally {
     if (widgetId) turnstile.remove(widgetId);
