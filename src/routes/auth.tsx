@@ -145,13 +145,16 @@ function AuthPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[Debug] Auth: onSubmit", { mode, email: email ? "SET" : "EMPTY" });
     if (!checkRateLimit()) return;
     setBusy(true);
     setVerifyMsg("");
     try {
       if (mode === "signin") {
         const { executeTurnstile } = await import("@/lib/turnstile");
+        console.log("[Debug] Auth: Calling executeTurnstile for signin");
         const token = await executeTurnstile("signin");
+        console.log("[Debug] Auth: Turnstile token:", token ? "OK" : "NULL");
         if (!token) {
           toast.error("Verification failed. Please try again.");
           setBusy(false);
@@ -213,6 +216,7 @@ function AuthPage() {
         toast.success("Signed in.");
         navigate({ to: "/profiles" });
       } else {
+        console.log("[Debug] Auth: Signup flow - password policy check");
         if (!passwordMeetsPolicy(password)) {
           toast.error(
             "Password must include uppercase, lowercase, number, and special characters (min 8 characters).",
@@ -221,7 +225,9 @@ function AuthPage() {
           return;
         }
         const { executeTurnstile } = await import("@/lib/turnstile");
+        console.log("[Debug] Auth: Calling executeTurnstile for signup");
         const token = await executeTurnstile("signup");
+        console.log("[Debug] Auth: Turnstile token:", token ? "OK" : "NULL");
         if (!token) {
           toast.error("Verification failed. Please try again.");
           setBusy(false);
@@ -410,10 +416,13 @@ function AuthPage() {
   const onGoogle = async () => {
     setBusy(true);
     setPopupBlocked(false);
+    console.log("[Debug] Auth: Google sign-in started");
 
     // Verify Turnstile CAPTCHA before allowing OAuth popup
     const { executeTurnstile } = await import("@/lib/turnstile");
+    console.log("[Debug] Auth: Calling executeTurnstile for google-signin");
     const token = await executeTurnstile("google-signin");
+    console.log("[Debug] Auth: Turnstile token:", token ? "OK" : "NULL");
     if (!token) {
       toast.error("Verification failed. Please try again.");
       setBusy(false);
@@ -475,10 +484,13 @@ function AuthPage() {
 
   const onGitHub = async () => {
     setBusy(true);
+    console.log("[Debug] Auth: GitHub sign-in started");
 
     // Verify Turnstile CAPTCHA before allowing OAuth popup
     const { executeTurnstile } = await import("@/lib/turnstile");
+    console.log("[Debug] Auth: Calling executeTurnstile for github-signin");
     const token = await executeTurnstile("github-signin");
+    console.log("[Debug] Auth: Turnstile token:", token ? "OK" : "NULL");
     if (!token) {
       toast.error("Verification failed. Please try again.");
       setBusy(false);
