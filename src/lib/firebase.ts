@@ -6,7 +6,7 @@ import {
   initializeFirestore,
   enableIndexedDbPersistence,
 } from "firebase/firestore";
-import { initializeAppCheck, ReCaptchaV3Provider, getToken } from "firebase/app-check";
+import { initializeAppCheck, ReCaptchaV3Provider, getToken, type AppCheck } from "firebase/app-check";
 
 // Try to import persistent cache (available in newer Firebase versions)
 let persistentLocalCache: any;
@@ -62,14 +62,14 @@ if (typeof window !== "undefined") {
 
     loadRecaptcha().then(() => {
       try {
-        initializeAppCheck(app, {
+        const appCheckInstance = initializeAppCheck(app, {
           provider: new ReCaptchaV3Provider(import.meta.env.VITE_APP_CHECK_SITE_KEY),
           isTokenAutoRefreshEnabled: true,
         });
         console.log("[App Check] Initialized with reCAPTCHA v3");
 
         // Test token retrieval
-        getToken(appCheck).then(token => {
+        getToken(appCheckInstance).then(token => {
           console.log("[Debug] App Check token:", token ? "OK" : "EMPTY");
         }).catch(err => {
           console.error("[Debug] App Check getToken error:", err);
@@ -82,10 +82,6 @@ if (typeof window !== "undefined") {
     console.warn("[App Check] SKIPPED - no site key");
   }
 }
-
-// Import getToken and appCheck for debugging
-import { getAppCheck, getToken } from "firebase/app-check";
-const appCheck = getAppCheck(app);
 
 // Persistent local cache so watch history, my list and profiles keep working
 // offline and on flaky connections. Falls back to the in-memory cache when
