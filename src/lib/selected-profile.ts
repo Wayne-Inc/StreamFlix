@@ -8,15 +8,28 @@ export type SelectedProfile = {
 };
 
 const KEY = "sf:selectedProfile";
+const PERSIST_KEY = "sf:selectedProfile:persist";
 
 export function getSelectedProfile(): SelectedProfile | null {
   if (typeof window === "undefined") return null;
   try {
+    // First check sessionStorage (current session)
     const raw = window.sessionStorage.getItem(KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed.id !== "string") return null;
-    return parsed as SelectedProfile;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed.id === "string") return parsed as SelectedProfile;
+    }
+    // Fallback to localStorage (persisted across sessions)
+    const persisted = window.localStorage.getItem(PERSIST_KEY);
+    if (persisted) {
+      const parsed = JSON.parse(persisted);
+      if (parsed && typeof parsed.id === "string") {
+        // Restore to sessionStorage for this session
+        window.sessionStorage.setItem(KEY, persisted);
+        return parsed as SelectedProfile;
+      }
+    }
+    return null;
   } catch {
     return null;
   }
@@ -28,8 +41,9 @@ export function getSelectedProfileId(): string | null {
 
 export function setSelectedProfile(profile: SelectedProfile): void {
   try {
-    window.sessionStorage.setItem(KEY, JSON.stringify(profile));
-    window.localStorage.removeItem(KEY);
+    const serialized = JSON.stringify(profile);
+    window.sessionStorage.setItem(KEY, serialized);
+    window.localStorage.setItem(PERSIST_KEY, serialized);
   } catch {
     // Storage unavailable (private mode) — ignore.
   }
@@ -38,7 +52,7 @@ export function setSelectedProfile(profile: SelectedProfile): void {
 export function clearSelectedProfile(): void {
   try {
     window.sessionStorage.removeItem(KEY);
-    window.localStorage.removeItem(KEY);
+    window.localStorage.removeItem(PERSIST_KEY);
   } catch {
     // Storage unavailable (private mode) — ignore.
   }

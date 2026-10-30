@@ -33,7 +33,7 @@ import {
 } from "@/lib/profiles";
 import { getFavoriteGenres, setFavoriteGenres, GENRE_OPTIONS } from "@/lib/favorite-genres";
 import { isKidsProfile } from "@/lib/kids-mode";
-import { setSelectedProfile } from "@/lib/selected-profile";
+import { setSelectedProfile, getSelectedProfile } from "@/lib/selected-profile";
 import { ConfirmDialog } from "@/components/streamflix/ConfirmDialog";
 import { LegalVersionBanner } from "@/components/streamflix/LegalVersionBanner";
 
@@ -328,6 +328,11 @@ async function confirmDelete(
 
 export const Route = createFileRoute("/_authenticated/profiles")({
   beforeLoad: () => {
+    // If a profile is already selected (persisted from last session), go directly to browse
+    const selected = getSelectedProfile();
+    if (selected) {
+      throw redirect({ to: "/browse" });
+    }
     if (isKidsProfile()) {
       throw redirect({ to: "/browse" });
     }

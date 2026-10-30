@@ -35,15 +35,28 @@ export function Footer() {
 
     const initProductBridge = () => {
       const existingScript = document.querySelector('script[src="https://app.productbridge.io/sdk/pb-widget.js"]');
+
+      const initializeWidget = () => {
+        if (window.ProductBridge) {
+          window.ProductBridge.init({
+            organizationId: "b6336e27-6355-401a-b3ee-8b9645d9a8da",
+            customTrigger: true,
+            userToken: userToken || undefined,
+          });
+          setWidgetReady(true);
+        }
+      };
+
       if (existingScript) {
         // Script already exists, check if ProductBridge is ready
         if (window.ProductBridge) {
-          setWidgetReady(true);
+          // Re-initialize with the current token (in case token was fetched after initial load)
+          initializeWidget();
         } else {
           // Wait for it to initialize
           const checkReady = setInterval(() => {
             if (window.ProductBridge) {
-              setWidgetReady(true);
+              initializeWidget();
               clearInterval(checkReady);
             }
           }, 100);
@@ -56,14 +69,7 @@ export function Footer() {
       script.src = "https://app.productbridge.io/sdk/pb-widget.js";
       script.async = true;
       script.onload = () => {
-        if (window.ProductBridge) {
-          window.ProductBridge.init({
-            organizationId: "b6336e27-6355-401a-b3ee-8b9645d9a8da",
-            customTrigger: true,
-            userToken: userToken || undefined,
-          });
-          setWidgetReady(true);
-        }
+        initializeWidget();
       };
       script.onerror = () => {
         setWidgetError(true);
@@ -144,11 +150,11 @@ export function Footer() {
             />
           </div>
         </div>
-        <p className="mt-6 text-xs text-left text-muted-foreground">
+        <p className="mt-4 text-xs text-left text-muted-foreground">
           Made for the people, by the people. Not affiliated with Netflix. Film and series data from
           TMDB; this product uses the TMDB API but is not endorsed or certified by TMDB.
         </p>
-        <p className="mt-2 text-xs text-left text-muted-foreground">
+        <p className="mt-1 text-xs text-left text-muted-foreground">
           <strong>Disclaimer:</strong> StreamFlix is an indexing service for media that is already
           publicly available elsewhere. We do not store, upload, or modify any video files. Every
           stream is embedded from independent third-party providers, and ownership of that content
