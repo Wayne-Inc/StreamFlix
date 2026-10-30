@@ -48,6 +48,7 @@ class AiServiceError extends Error {
 
 async function verifyUser(idToken: string): Promise<string> {
   const apiKey = envValue("VITE_FIREBASE_API_KEY");
+  console.log("[StreamFlix AI] VITE_FIREBASE_API_KEY present:", !!apiKey, "prefix:", apiKey?.slice(0, 10));
   if (!apiKey) {
     console.error("[StreamFlix AI] VITE_FIREBASE_API_KEY is missing on the server.");
     throw new AiServiceError("notConfigured", AI_ERROR_MESSAGES.notConfigured);
@@ -58,11 +59,14 @@ async function verifyUser(idToken: string): Promise<string> {
     body: JSON.stringify({ idToken }),
     signal: AbortSignal.timeout(10000),
   });
+  console.log("[StreamFlix AI] Firebase token lookup response:", response.status, response.statusText);
   if (!response.ok) {
-    console.error(`[StreamFlix AI] Firebase token lookup failed (${response.status}).`);
+    const errorText = await response.text().catch(() => "unknown");
+    console.error(`[StreamFlix AI] Firebase token lookup failed (${response.status}):`, errorText);
     throw new AiServiceError("auth", AI_ERROR_MESSAGES.auth);
   }
   const data = await response.json();
+  console.log("[StreamFlix AI] Firebase token lookup data:", JSON.stringify(data).slice(0, 500));
   const uid = data.users?.[0]?.localId;
   if (typeof uid !== "string" || !uid) {
     console.error("[StreamFlix AI] Firebase token lookup returned no localId.");
@@ -138,6 +142,7 @@ function parseModelReply(raw: string): { message: string; picks: { id: string; r
 
 async function askModel(systemPrompt: string, userPrompt: string): Promise<string> {
   const config = getAiConfig();
+  console.log("[StreamFlix AI] NVIDIA config:", { baseUrl: config.baseUrl, model: config.model, hasApiKey: !!config.apiKey });
   if (!config.apiKey) {
     console.error("[StreamFlix AI] NVIDIA_API_KEY is missing on the server.");
     throw new AiServiceError("notConfigured", AI_ERROR_MESSAGES.notConfigured);
@@ -166,6 +171,7 @@ async function askModel(systemPrompt: string, userPrompt: string): Promise<strin
     console.error(`[StreamFlix AI] request to ${config.baseUrl} failed:`, cause);
     throw new AiServiceError("unavailable", AI_ERROR_MESSAGES.unavailable);
   }
+  console.log("[StreamFlix AI] NVIDIA response:", response.status, response.statusText);
   if (!response.ok) {
     const detail = (await response.text()).slice(0, 300);
     console.error(`NVIDIA AI request failed (${response.status}): ${detail}`);
@@ -188,8 +194,10 @@ async function askModel(systemPrompt: string, userPrompt: string): Promise<strin
 export const askStreamflixAI = createServerFn({ method: "POST" })
   .validator(requestSchema)
   .handler(async ({ data }): Promise<AiResult> => {
+    console.log("[StreamFlix AI] Request received:", { mode: data.mode, hasIdToken: !!data.idToken, idTokenPrefix: data.idToken?.slice(0, 20) });
     try {
       const uid = await verifyUser(data.idToken);
+      console.log("[StreamFlix AI] User verified:", uid);
       enforceRateLimit(uid);
       if (data.mode === "summary") {
         if (!data.titleId) throw new AiServiceError("needsTitle", AI_ERROR_MESSAGES.needsTitle);
