@@ -2,15 +2,26 @@ import { createFileRoute } from "@tanstack/react-router";
 import { authenticateRequest } from "@/server/server-auth";
 import { SignJWT } from "jose";
 
-const PRODUCTBRIDGE_SECRET = new TextEncoder().encode(
-  process.env.PRODUCTBRIDGE_SECRET_KEY || ""
-);
-
 export const Route = createFileRoute("/api/productbridge-token")({
   server: {
     handlers: {
       GET: async ({ request }: { request: Request }) => {
         try {
+          // Read secret at request time (env vars may not be loaded at module level)
+          const secretKey = process.env.PRODUCTBRIDGE_SECRET_KEY;
+          if (!secretKey) {
+            console.error("PRODUCTBRIDGE_SECRET_KEY environment variable not set");
+            return new Response(
+              JSON.stringify({ ok: false, error: "Server configuration error" }),
+              {
+                status: 500,
+                headers: { "Content-Type": "application/json" },
+              }
+            );
+          }
+
+          const PRODUCTBRIDGE_SECRET = new TextEncoder().encode(secretKey);
+
           const user = await authenticateRequest(request);
 
           if (!user) {
