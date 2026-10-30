@@ -25,11 +25,11 @@ export function CookieConsent() {
   if (decided) return null;
 
   return (
-    <div className="fixed inset-x-4 bottom-20 z-50 mx-auto w-[min(360px,calc(100%-2rem))] rounded-3xl border border-neutral-700 bg-neutral-900/95 p-2 shadow-[0_18px_40px_rgba(0,0,0,0.4)] backdrop-blur-xl text-xs text-white ring-1 ring-neutral-800 md:inset-x-auto md:right-4 md:bottom-4 md:mx-0 pb-[env(safe-area-inset-bottom)]">
+    <div className="fixed inset-x-4 bottom-20 z-50 mx-auto w-[min(360px,calc(100%-2rem))] rounded-2xl border border-border bg-card/95 p-2 shadow-[0_18px_40px_rgba(0,0,0,0.45)] backdrop-blur-2xl text-xs text-foreground md:inset-x-auto md:right-4 md:bottom-4 md:mx-0 pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-start gap-3">
         <div className="flex-1 space-y-1">
-          <p className="text-sm font-semibold tracking-tight text-white">Cookie Consent</p>
-          <p className="leading-relaxed text-white/80">
+          <p className="text-sm font-semibold tracking-tight text-foreground">Cookie Consent</p>
+          <p className="leading-relaxed text-muted-foreground">
             We use cookies and tracking to personalize content and analyze traffic. By accepting,
             you agree to our{" "}
             <Link to="/privacy-policy" className="text-primary hover:underline">
@@ -45,7 +45,7 @@ export function CookieConsent() {
               updateConsentMode(false);
               setDecided(true);
             }}
-            className="rounded-2xl border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs text-white hover:bg-neutral-700 transition-colors"
+            className="rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors"
           >
             Decline
           </button>
@@ -56,7 +56,7 @@ export function CookieConsent() {
               loadAnalytics();
               setDecided(true);
             }}
-            className="rounded-2xl bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+            className="rounded-xl bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
           >
             Accept
           </button>
