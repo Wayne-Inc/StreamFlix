@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { Movie } from "../types";
 import { UNSAFE_GENRE_IDS } from "../kids-mode";
 import { AI_ERROR_MESSAGES, type AiErrorKind } from "../ai-errors";
-import { aiRateLimiter } from "../rate-limiter";
+import { rateLimiter } from "../rate-limiter";
 
 const requestSchema = z.object({
   idToken: z.string().min(20).max(4096),
@@ -76,7 +76,12 @@ async function verifyUser(idToken: string): Promise<string> {
 }
 
 async function enforceRateLimit(uid: string) {
-  const result = await aiRateLimiter({ headers: new Headers() } as any);
+  // Use user ID as the rate limit key instead of IP
+  const result = await rateLimiter(new Request("https://internal"), {
+    max: 20,
+    windowMs: 60000,
+    key: `ai:user:${uid}`,
+  });
   if (!result.allowed) {
     throw new AiServiceError("rateLimit", AI_ERROR_MESSAGES.rateLimit);
   }
@@ -173,9 +178,33 @@ async function askModel(systemPrompt: string, userPrompt: string): Promise<strin
   }
   console.log("[StreamFlix AI] NVIDIA response:", response.status, response.statusText);
   if (!response.ok) {
-    const detail = (await response.text()).slice(0, 300);
-    console.error(`NVIDIA AI request failed (${response.status}): ${detail}`);
-    throw new AiServiceError("unavailable", AI_ERROR_MESSAGES.unavailable);
+    let detail = "";
+    let errorKind: AiErrorKind = "unavailable";
+    try {
+      const errorData = await response.json();
+      detail = JSON.stringify(errorData).slice(0, 500);
+      console.error(`NVIDIA AI request failed (${response.status}): ${detail}`);
+
+      // Check for specific NVIDIA API error messages
+      const errorMessage = errorData?.error?.message || errorData?.message || "";
+      if (typeof errorMessage === "string") {
+        const lowerMessage = errorMessage.toLowerCase();
+        if (lowerMessage.includes("session expired") ||
+            lowerMessage.includes("invalid api key") ||
+            lowerMessage.includes("unauthorized") ||
+            lowerMessage.includes("authentication failed") ||
+            lowerMessage.includes("api key") ||
+            lowerMessage.includes("your-session-expired")) {
+          errorKind = "providerAuth";
+        } else if (lowerMessage.includes("rate limit") || lowerMessage.includes("quota exceeded")) {
+          errorKind = "rateLimit";
+        }
+      }
+    } catch {
+      detail = (await response.text()).slice(0, 300);
+      console.error(`NVIDIA AI request failed (${response.status}): ${detail}`);
+    }
+    throw new AiServiceError(errorKind, AI_ERROR_MESSAGES[errorKind]);
   }
   let data: { choices?: { message?: { content?: unknown } }[] };
   try {

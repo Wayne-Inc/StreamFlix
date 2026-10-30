@@ -14,6 +14,8 @@ export const AI_ERROR_MESSAGES = {
   rateLimit:
     "You've made a lot of requests in a short time, so the assistant paused to catch its breath. Wait a minute and try again. Your request was fine.",
   auth: "Your session expired, so we couldn't verify your account. Sign in again and try once more. Your request was fine.",
+  providerAuth:
+    "StreamFlix AI's connection to our AI provider expired. That's a setup issue on our side. Please try again in a few minutes.",
   catalog:
     "We couldn't load the movie catalog just now. That's a temporary problem on our side. Please try again shortly.",
   titleDetails:
