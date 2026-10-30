@@ -25,6 +25,7 @@ import { Route as AuthenticatedProfilesRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as ApiClientIpRouteImport } from './routes/api/client-ip'
+import { Route as ApiProductbridgeTokenRouteImport } from './routes/api/productbridge-token'
 import { Route as ApiReleaseNotificationsCronRouteImport } from './routes/api/release-notifications-cron'
 import { Route as ApiSessionRouteImport } from './routes/api/session'
 import { Route as ApiVerifyRecaptchaRouteImport } from './routes/api/verify-recaptcha'
@@ -116,6 +117,11 @@ const ApiClientIpRoute = ApiClientIpRouteImport.update({
   path: '/api/client-ip',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiProductbridgeTokenRoute = ApiProductbridgeTokenRouteImport.update({
+  id: '/api/productbridge-token',
+  path: '/api/productbridge-token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiReleaseNotificationsCronRoute =
   ApiReleaseNotificationsCronRouteImport.update({
     id: '/api/release-notifications-cron',
@@ -186,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/client-ip': typeof ApiClientIpRoute
+  '/api/productbridge-token': typeof ApiProductbridgeTokenRoute
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
   '/api/session': typeof ApiSessionRoute
   '/api/verify-recaptcha': typeof ApiVerifyRecaptchaRoute
@@ -212,6 +219,7 @@ export interface FileRoutesByTo {
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/api/client-ip': typeof ApiClientIpRoute
+  '/api/productbridge-token': typeof ApiProductbridgeTokenRoute
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
   '/api/session': typeof ApiSessionRoute
   '/api/verify-recaptcha': typeof ApiVerifyRecaptchaRoute
@@ -241,6 +249,7 @@ export interface FileRoutesById {
   '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/api/client-ip': typeof ApiClientIpRoute
+  '/api/productbridge-token': typeof ApiProductbridgeTokenRoute
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
   '/api/session': typeof ApiSessionRoute
   '/api/verify-recaptcha': typeof ApiVerifyRecaptchaRoute
@@ -270,6 +279,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/api/client-ip'
+    | '/api/productbridge-token'
     | '/api/release-notifications-cron'
     | '/api/session'
     | '/api/verify-recaptcha'
@@ -296,6 +306,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/api/client-ip'
+    | '/api/productbridge-token'
     | '/api/release-notifications-cron'
     | '/api/session'
     | '/api/verify-recaptcha'
@@ -324,6 +335,7 @@ export interface FileRouteTypes {
     | '/_authenticated/search'
     | '/_authenticated/settings'
     | '/api/client-ip'
+    | '/api/productbridge-token'
     | '/api/release-notifications-cron'
     | '/api/session'
     | '/api/verify-recaptcha'
@@ -343,6 +355,7 @@ export interface RootRouteChildren {
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   TosRoute: typeof TosRoute
   ApiClientIpRoute: typeof ApiClientIpRoute
+  ApiProductbridgeTokenRoute: typeof ApiProductbridgeTokenRoute
   ApiReleaseNotificationsCronRoute: typeof ApiReleaseNotificationsCronRoute
   ApiSessionRoute: typeof ApiSessionRoute
   ApiVerifyRecaptchaRoute: typeof ApiVerifyRecaptchaRoute
@@ -460,6 +473,13 @@ declare module '@tanstack/react-router' {
       path: '/api/client-ip'
       fullPath: '/api/client-ip'
       preLoaderRoute: typeof ApiClientIpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/productbridge-token': {
+      id: '/api/productbridge-token'
+      path: '/api/productbridge-token'
+      fullPath: '/api/productbridge-token'
+      preLoaderRoute: typeof ApiProductbridgeTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/release-notifications-cron': {
@@ -602,6 +622,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   TosRoute: TosRoute,
   ApiClientIpRoute: ApiClientIpRoute,
+  ApiProductbridgeTokenRoute: ApiProductbridgeTokenRoute,
   ApiReleaseNotificationsCronRoute: ApiReleaseNotificationsCronRoute,
   ApiSessionRoute: ApiSessionRoute,
   ApiVerifyRecaptchaRoute: ApiVerifyRecaptchaRoute,

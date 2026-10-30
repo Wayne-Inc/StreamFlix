@@ -7,6 +7,28 @@ import { useEffect, useState } from "react";
 export function Footer() {
   const [widgetReady, setWidgetReady] = useState(false);
   const [widgetError, setWidgetError] = useState(false);
+  const [userToken, setUserToken] = useState<string | null>(null);
+
+  // Fetch user token for ProductBridge
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const fetchToken = async () => {
+      try {
+        const res = await fetch("/api/productbridge-token");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.ok && data.token) {
+            setUserToken(data.token);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch ProductBridge user token:", err);
+      }
+    };
+
+    fetchToken();
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -38,6 +60,7 @@ export function Footer() {
           window.ProductBridge.init({
             organizationId: "b6336e27-6355-401a-b3ee-8b9645d9a8da",
             customTrigger: true,
+            userToken: userToken || undefined,
           });
           setWidgetReady(true);
         }
@@ -50,7 +73,7 @@ export function Footer() {
     };
 
     initProductBridge();
-  }, []);
+  }, [userToken]);
 
   const openFeedback = () => {
     if (typeof window !== "undefined" && window.ProductBridge) {
