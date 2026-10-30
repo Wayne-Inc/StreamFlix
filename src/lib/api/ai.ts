@@ -170,13 +170,22 @@ async function askModel(systemPrompt: string, userPrompt: string): Promise<strin
   if (!response.ok) {
     let detail = "";
     let errorKind: AiErrorKind = "unavailable";
+    let errorData: unknown = null;
     try {
-      const errorData = await response.json();
-      detail = JSON.stringify(errorData).slice(0, 500);
+      // Read body once as text, then parse if needed
+      const responseText = await response.text();
+      detail = responseText.slice(0, 500);
       console.error(`NVIDIA AI request failed (${response.status}): ${detail}`);
 
+      // Try to parse as JSON for error analysis
+      try {
+        errorData = JSON.parse(responseText);
+      } catch {
+        // Not JSON, use text as-is
+      }
+
       // Check for specific NVIDIA API error messages
-      const errorMessage = errorData?.error?.message || errorData?.message || "";
+      const errorMessage = (errorData as any)?.error?.message || (errorData as any)?.message || "";
       if (typeof errorMessage === "string") {
         const lowerMessage = errorMessage.toLowerCase();
         if (lowerMessage.includes("session expired") ||
@@ -190,9 +199,8 @@ async function askModel(systemPrompt: string, userPrompt: string): Promise<strin
           errorKind = "rateLimit";
         }
       }
-    } catch {
-      detail = (await response.text()).slice(0, 300);
-      console.error(`NVIDIA AI request failed (${response.status}): ${detail}`);
+    } catch (e) {
+      console.error(`[StreamFlix AI] failed to read error response:`, e);
     }
     throw new AiServiceError(errorKind, AI_ERROR_MESSAGES[errorKind]);
   }
