@@ -25,7 +25,7 @@ export function CookieConsent() {
   if (decided) return null;
 
   return (
-    <div className="fixed inset-x-4 bottom-20 z-50 mx-auto w-[min(360px,calc(100%-2rem))] rounded-3xl border border-white/15 bg-white/10 p-2 shadow-[0_18px_40px_rgba(0,0,0,0.25)] backdrop-blur-2xl backdrop-saturate-150 text-xs text-white ring-1 ring-white/10 md:inset-x-auto md:right-4 md:bottom-4 md:mx-0 pb-[env(safe-area-inset-bottom)]">
+    <div className="fixed inset-x-4 bottom-20 z-50 mx-auto w-[min(360px,calc(100%-2rem))] rounded-3xl border border-neutral-700 bg-neutral-900/95 p-2 shadow-[0_18px_40px_rgba(0,0,0,0.4)] backdrop-blur-xl text-xs text-white ring-1 ring-neutral-800 md:inset-x-auto md:right-4 md:bottom-4 md:mx-0 pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-start gap-3">
         <div className="flex-1 space-y-1">
           <p className="text-sm font-semibold tracking-tight text-white">Cookie Consent</p>
@@ -45,7 +45,7 @@ export function CookieConsent() {
               updateConsentMode(false);
               setDecided(true);
             }}
-            className="rounded-2xl border border-white/15 bg-white/10 px-3 py-1.5 text-xs text-white hover:bg-white/15"
+            className="rounded-2xl border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-xs text-white hover:bg-neutral-700 transition-colors"
           >
             Decline
           </button>
