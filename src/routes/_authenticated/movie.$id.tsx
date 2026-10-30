@@ -207,7 +207,9 @@ function MoviePage() {
     setAiSummaryLoading(true);
     setAiSummaryError("");
     try {
-      const idToken = await auth.currentUser?.getIdToken();
+      const user = auth.currentUser;
+      if (!user) throw new Error(AI_ERROR_MESSAGES.auth);
+      const idToken = await user.getIdToken(true);
       if (!idToken) throw new Error(AI_ERROR_MESSAGES.auth);
       const result = await askStreamflixAI({ data: { idToken, mode: "summary", titleId: movie.id } });
       if (!result.ok) {
