@@ -47,7 +47,7 @@ class AiServiceError extends Error {
 }
 
 async function verifyUser(idToken: string): Promise<string> {
-  const apiKey = (import.meta as any).env?.VITE_FIREBASE_API_KEY as string | undefined;
+  const apiKey = envValue("VITE_FIREBASE_API_KEY");
   if (!apiKey) {
     console.error("[StreamFlix AI] VITE_FIREBASE_API_KEY is missing on the server.");
     throw new AiServiceError("notConfigured", AI_ERROR_MESSAGES.notConfigured);

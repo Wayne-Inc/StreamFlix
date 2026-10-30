@@ -689,6 +689,7 @@ export function ExploreGenreChipsSkeleton({ count = 12 }: { count?: number } = {
 export function BrowseSkeleton() {
   return (
     <div className="min-h-dvh bg-background">
+      <HeroBannerSkeleton />
       <div className="relative z-10 space-y-6 md:mt-12 md:space-y-12">
         <ContinueWatchingSkeleton count={5} />
         {[1, 2, 3, 4, 5].map((i) => (
