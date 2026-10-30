@@ -219,14 +219,14 @@ export const fetchMovie = createServerFn({ method: "POST" })
 export const fetchSimilar = createServerFn({ method: "POST" })
   .validator(z.object({ id: z.string() }))
   .handler(async ({ data }) => {
-    const { tmdbFetch, toMovie, toTv } = await import("./tmdb.server");
+    const { tmdbFetch, toMovie, toTv, enrichRuntimes } = await import("./tmdb.server");
     if (data.id.startsWith("tv-")) {
       const realId = data.id.slice(3);
       const res = await tmdbFetch(`/tv/${realId}/similar`);
-      return (res.results || []).slice(0, 10).map((m: any) => toTv(m));
+      return enrichRuntimes((res.results || []).slice(0, 10).map((m: any) => toTv(m)));
     }
     const res = await tmdbFetch(`/movie/${data.id}/similar`);
-    return (res.results || []).slice(0, 10).map((m: any) => toMovie(m));
+    return enrichRuntimes((res.results || []).slice(0, 10).map((m: any) => toMovie(m)));
   });
 
 const COMMON_LETTER_SUBSTITUTIONS: Record<string, string[]> = {
@@ -530,7 +530,7 @@ export const suggestTitles = createServerFn({ method: "POST" })
 export const discoverByGenre = createServerFn({ method: "POST" })
   .validator(z.object({ genreId: z.string() }))
   .handler(async ({ data }) => {
-    const { tmdbFetch, toMovie } = await import("./tmdb.server");
+    const { tmdbFetch, toMovie, enrichRuntimes } = await import("./tmdb.server");
     const [res1, res2, res3] = await Promise.all([
       tmdbFetch("/discover/movie", {
         with_genres: data.genreId,
@@ -553,13 +553,13 @@ export const discoverByGenre = createServerFn({ method: "POST" })
       ...(res2.results || []),
       ...(res3.results || []),
     ];
-    return combined.map((m: any) => toMovie(m));
+    return enrichRuntimes(combined.map((m: any) => toMovie(m)));
   });
 
 export const discoverByGenreMixed = createServerFn({ method: "POST" })
   .validator(z.object({ genreId: z.string() }))
   .handler(async ({ data }) => {
-    const { tmdbFetch, toMovie, toTv } = await import("./tmdb.server");
+    const { tmdbFetch, toMovie, toTv, enrichRuntimes } = await import("./tmdb.server");
     const [movieRes, tvRes] = await Promise.all([
       tmdbFetch("/discover/movie", {
         with_genres: data.genreId,
@@ -573,11 +573,12 @@ export const discoverByGenreMixed = createServerFn({ method: "POST" })
       }),
     ]);
     const seen = new Set<string>();
-    return [...(movieRes.results || []).map((m: any) => toMovie(m)), ...(tvRes.results || []).map((m: any) => toTv(m))].filter((m) => {
+    const combined = [...(movieRes.results || []).map((m: any) => toMovie(m)), ...(tvRes.results || []).map((m: any) => toTv(m))].filter((m) => {
       if (seen.has(m.id)) return false;
       seen.add(m.id);
       return true;
     });
+    return enrichRuntimes(combined);
   });
 
 export const fetchMoviesByIds = createServerFn({ method: "POST" })
@@ -600,14 +601,14 @@ export const fetchMoviesByIds = createServerFn({ method: "POST" })
 export const fetchRecommendations = createServerFn({ method: "POST" })
   .validator(z.object({ id: z.string() }))
   .handler(async ({ data }) => {
-    const { tmdbFetch, toMovie, toTv } = await import("./tmdb.server");
+    const { tmdbFetch, toMovie, toTv, enrichRuntimes } = await import("./tmdb.server");
     if (data.id.startsWith("tv-")) {
       const realId = data.id.slice(3);
       const res = await tmdbFetch(`/tv/${realId}/recommendations`);
-      return (res.results || []).slice(0, 10).map((m: any) => toTv(m));
+      return enrichRuntimes((res.results || []).slice(0, 10).map((m: any) => toTv(m)));
     }
     const res = await tmdbFetch(`/movie/${data.id}/recommendations`);
-    return (res.results || []).slice(0, 10).map((m: any) => toMovie(m));
+    return enrichRuntimes((res.results || []).slice(0, 10).map((m: any) => toMovie(m)));
   });
 
 export const searchPeople = createServerFn({ method: "POST" })

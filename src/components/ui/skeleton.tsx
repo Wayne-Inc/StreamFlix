@@ -625,7 +625,7 @@ export function MyListSkeleton({ count = 12 }: { count?: number } = {}) {
   return (
     <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
       {Array.from({ length: count }).map((_, i) => (
-        <MovieCardSkeleton key={i} />
+        <MovieCardSkeleton key={i} fluid />
       ))}
     </div>
   );
@@ -664,7 +664,7 @@ export function SearchResultsSkeleton({ count = 12 }: { count?: number } = {}) {
   return (
     <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
       {Array.from({ length: count }).map((_, i) => (
-        <MovieCardSkeleton key={i} />
+        <MovieCardSkeleton key={i} fluid />
       ))}
     </div>
   );
@@ -727,7 +727,7 @@ export function ExploreGenreSkeleton() {
         <ExploreGenreChipsSkeleton count={10} />
         <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
           {Array.from({ length: 12 }).map((_, i) => (
-            <MovieCardSkeleton key={i} />
+            <MovieCardSkeleton key={i} fluid />
           ))}
         </div>
       </div>
