@@ -68,6 +68,13 @@ export const Route = createFileRoute("/")({
         content: "Unlimited movies, TV shows, and more — anywhere, anytime.",
       },
     ],
+    scripts: [
+      {
+        async: true,
+        src: "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5529326688604668",
+        crossOrigin: "anonymous",
+      },
+    ],
   }),
   component: Landing,
 });
