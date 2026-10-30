@@ -1,12 +1,63 @@
-import { Github, Instagram, Mail, MessageCircle } from "lucide-react";
+import { Github, Instagram, Mail, MessageCircle, Loader2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { DownloadAppButton } from "@/components/streamflix/DownloadAppButton";
 import { ContactEmail } from "@/components/streamflix/ContactEmail";
+import { useEffect, useState } from "react";
 
 export function Footer() {
+  const [widgetReady, setWidgetReady] = useState(false);
+  const [widgetError, setWidgetError] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const initProductBridge = () => {
+      const existingScript = document.querySelector('script[src="https://app.productbridge.io/sdk/pb-widget.js"]');
+      if (existingScript) {
+        // Script already exists, check if ProductBridge is ready
+        if (window.ProductBridge) {
+          setWidgetReady(true);
+        } else {
+          // Wait for it to initialize
+          const checkReady = setInterval(() => {
+            if (window.ProductBridge) {
+              setWidgetReady(true);
+              clearInterval(checkReady);
+            }
+          }, 100);
+          setTimeout(() => clearInterval(checkReady), 10000);
+        }
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = "https://app.productbridge.io/sdk/pb-widget.js";
+      script.async = true;
+      script.onload = () => {
+        if (window.ProductBridge) {
+          window.ProductBridge.init({
+            organizationId: "b6336e27-6355-401a-b3ee-8b9645d9a8da",
+            customTrigger: true,
+          });
+          setWidgetReady(true);
+        }
+      };
+      script.onerror = () => {
+        setWidgetError(true);
+        console.warn("Failed to load ProductBridge widget");
+      };
+      document.head.appendChild(script);
+    };
+
+    initProductBridge();
+  }, []);
+
   const openFeedback = () => {
     if (typeof window !== "undefined" && window.ProductBridge) {
       window.ProductBridge.toggle();
+    } else if (!widgetReady) {
+      // Widget not loaded yet
+      console.warn("Feedback widget is still loading, please try again in a moment");
     }
   };
 
@@ -40,10 +91,23 @@ export function Footer() {
             </a>
             <button
               onClick={openFeedback}
-              className="inline-flex items-center gap-2 px-3 py-2 hover:text-foreground transition-colors whitespace-nowrap min-h-[44px] rounded-md"
+              disabled={!widgetReady}
+              className="inline-flex items-center gap-2 px-3 py-2 hover:text-foreground transition-colors whitespace-nowrap min-h-[44px] rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Give feedback"
             >
-              <MessageCircle className="size-4 sm:size-3.5" /> Feedback
+              {widgetError ? (
+                <>
+                  <MessageCircle className="size-4 sm:size-3.5" /> Feedback unavailable
+                </>
+              ) : widgetReady ? (
+                <>
+                  <MessageCircle className="size-4 sm:size-3.5" /> Feedback
+                </>
+              ) : (
+                <>
+                  <Loader2 className="size-4 sm:size-3.5 animate-spin" /> Loading...
+                </>
+              )}
             </button>
             <Link to="/tos" className="inline-flex items-center gap-2 px-3 py-2 hover:text-foreground transition-colors whitespace-nowrap min-h-[44px] rounded-md">
               Terms of Service
@@ -68,24 +132,6 @@ export function Footer() {
           remains entirely with its original rights holders.
         </p>
       </div>
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `
-            (function() {
-              var s = document.createElement('script');
-              s.src = 'https://app.productbridge.io/sdk/pb-widget.js';
-              s.async = true;
-              s.onload = function() {
-                ProductBridge.init({
-                  organizationId: 'b6336e27-6355-401a-b3ee-8b9645d9a8da',
-                  customTrigger: true,
-                });
-              };
-              document.head.appendChild(s);
-            })();
-          `,
-        }}
-      />
     </footer>
   );
 }
