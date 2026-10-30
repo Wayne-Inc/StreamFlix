@@ -88,7 +88,7 @@ function getAiConfig() {
   return {
     apiKey: envValue("NVIDIA_API_KEY") || envValue("NVIDIA_NIM_API_KEY"),
     baseUrl: (envValue("NVIDIA_BASE_URL") || "https://integrate.api.nvidia.com/v1").replace(/\/+$/, ""),
-    model: envValue("NVIDIA_MODEL") || "nvidia/nemotron-3-ultra",
+    model: envValue("NVIDIA_MODEL") || "meta/llama-3.1-8b-instruct",
   };
 }
 
