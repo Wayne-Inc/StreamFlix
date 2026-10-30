@@ -370,11 +370,24 @@ function ProfilesPage() {
     let cancelled = false;
     (async () => {
       try {
-        if (localStorage.getItem("sf:onboarded")) return;
+        // Check Firebase first (source of truth), then localStorage as fallback
         const genres = await getFavoriteGenres(u.uid);
-        if (!cancelled && genres.length === 0) setOnboardOpen(true);
+        if (!cancelled) {
+          if (genres.length > 0) {
+            // Genres exist in Firebase - user already onboarded
+            try { localStorage.setItem("sf:onboarded", "1"); } catch {}
+            return;
+          }
+          // No genres in Firebase - check localStorage as fallback
+          if (localStorage.getItem("sf:onboarded")) return;
+          // Neither has genres - show onboarding
+          setOnboardOpen(true);
+        }
       } catch {
-        /* skip onboarding if lookup fails */
+        // If Firebase lookup fails, fall back to localStorage
+        if (!cancelled && !localStorage.getItem("sf:onboarded")) {
+          setOnboardOpen(true);
+        }
       }
     })();
     return () => { cancelled = true; };

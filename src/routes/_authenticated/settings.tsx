@@ -61,7 +61,7 @@ import {
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { AvatarCropModal } from "@/components/streamflix/AvatarCropModal";
-import { Skeleton, SettingsSectionSkeleton, ProfileSettingsSkeleton, SecuritySettingsSkeleton, AccessibilitySettingsSkeleton, DevicesSettingsSkeleton, InterestsSettingsSkeleton, NotificationsSettingsSkeleton, SignOutSettingsSkeleton, ExportDataSettingsSkeleton, DeleteAccountSettingsSkeleton, DeviceListItemSkeleton } from "@/components/ui/skeleton";
+import { Skeleton, SettingsSectionSkeleton, ProfileSettingsSkeleton, SecuritySettingsSkeleton, AccessibilitySettingsSkeleton, DevicesSettingsSkeleton, InterestsSettingsSkeleton, NotificationsSettingsSkeleton, SignOutSettingsSkeleton, DeleteAccountSettingsSkeleton, DeviceListItemSkeleton } from "@/components/ui/skeleton";
 import { getDeviceId, recordCurrentDevice } from "@/lib/device-tracking";
 import { isKidsProfile } from "@/lib/kids-mode";
 import { useReduceMotion } from "@/lib/reduce-motion";
@@ -1124,16 +1124,18 @@ function SettingsPage() {
                 Download a JSON file with your profile, watch history, devices, and preferences.
               </p>
             </div>
-            {exportingData ? (
-              <ExportDataSettingsSkeleton />
-            ) : (
-              <button
-                onClick={exportUserData}
-                className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent shrink-0"
-              >
-                <Upload className="size-4" /> Export data
-              </button>
-            )}
+            <button
+              onClick={exportUserData}
+              disabled={exportingData}
+              className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium hover:bg-accent shrink-0 disabled:opacity-50 disabled:hover:bg-transparent"
+            >
+              {exportingData ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Upload className="size-4" />
+              )}
+              {exportingData ? "Exporting..." : "Export data"}
+            </button>
           </div>
         </section>
 
