@@ -205,7 +205,7 @@ export function Navbar() {
     localStorage.removeItem("sf:auth");
     localStorage.removeItem("sf:vip");
     toast.success("Signed out");
-    router.navigate({ to: "/auth", replace: true });
+    router.navigate({ to: "/auth", search: { email: "" }, replace: true });
   };
 
   const handleExitKids = async () => {

@@ -44,7 +44,7 @@ export const Route = createFileRoute("/_authenticated")({
 
     // Only redirect to /auth if BOTH server auth flag is missing AND Firebase Auth has no user
     if (!hasServerAuth && !user) {
-      throw redirect({ to: "/auth" });
+      throw redirect({ to: "/auth", search: { email: "" } });
     }
 
     let pending = false;

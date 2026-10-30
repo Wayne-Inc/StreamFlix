@@ -162,7 +162,7 @@ function ForcePasswordPage() {
             type="button"
             onClick={async () => {
               await signOut(auth);
-              navigate({ to: "/auth" });
+              navigate({ to: "/auth", search: { email: "" } });
             }}
             className="flex w-full items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground"
           >

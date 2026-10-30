@@ -213,7 +213,7 @@ function SettingsPage() {
       }
       await deleteUser(user);
       toast.success("Your account has been deleted.");
-      router.navigate({ to: "/auth", replace: true });
+      router.navigate({ to: "/auth", search: { email: "" }, replace: true });
     } catch (e) {
       const code = (e as { code?: string })?.code;
       if (code === "auth/wrong-password" || code === "auth/invalid-credential") {
@@ -583,7 +583,7 @@ function SettingsPage() {
       snap.forEach((d) => deleteDoc(doc(db, "user_devices", d.id)));
     }
     await firebaseSignOut(auth);
-    router.navigate({ to: "/auth", replace: true });
+    router.navigate({ to: "/auth", search: { email: "" }, replace: true });
   };
 
   const createdAt = user?.metadata?.creationTime ?? null;

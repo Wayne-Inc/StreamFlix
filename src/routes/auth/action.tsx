@@ -66,7 +66,7 @@ function ActionPage() {
     try {
       await confirmPasswordReset(auth, oobCode, newPw.trim());
       toast.success("Password reset successfully. You can now sign in.");
-      navigate({ to: "/auth" });
+      navigate({ to: "/auth", search: { email: "" } });
     } catch (err: any) {
       toast.error(err?.message ?? "Failed to reset password.");
     } finally {
@@ -112,7 +112,7 @@ function ActionPage() {
                 <h1 className="text-3xl font-bold">{status === "done" ? "Success" : "Error"}</h1>
                 <p className="mt-4 text-sm text-muted-foreground">{msg}</p>
                 <p className="mt-6">
-                  <Link to="/auth" className="text-sm text-foreground hover:underline">
+                  <Link to="/auth" search={{ email: "" }} className="text-sm text-foreground hover:underline">
                     ← Back to sign in
                   </Link>
                 </p>
@@ -129,7 +129,7 @@ function ActionPage() {
                 <>
                   <p className="mt-4 text-sm text-muted-foreground">{msg}</p>
                   <p className="mt-6">
-                    <Link to="/auth" className="text-sm text-foreground hover:underline">
+                    <Link to="/auth" search={{ email: "" }} className="text-sm text-foreground hover:underline">
                       ← Back to sign in
                     </Link>
                   </p>

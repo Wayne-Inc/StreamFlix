@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
@@ -53,14 +53,18 @@ function asAuthError(e: unknown): AuthLinkError {
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
+  validateSearch: (search) => ({
+    email: (search.email as string) ?? "",
+  }),
   head: () => ({ meta: [{ title: "Sign In — StreamFlix" }] }),
   component: AuthPage,
 });
 
 function AuthPage() {
   const navigate = useNavigate();
+  const search = useSearch({ strict: false });
   const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(search.email || "");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [showPw, setShowPw] = useState(false);

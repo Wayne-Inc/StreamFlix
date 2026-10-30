@@ -153,6 +153,7 @@ function Landing() {
               </a>
               <Link
                 to="/auth"
+                search={{ email: "" }}
                 className="rounded-md bg-primary px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base font-semibold text-primary-foreground hover:bg-primary/90 transition-all duration-300"
               >
                 Sign In
@@ -173,6 +174,7 @@ function Landing() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleGetStarted()}
                   placeholder="Enter your email"
                   className="min-w-0 flex-1 rounded-md bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/80 px-6 py-4 text-lg outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-300"
                   aria-label="Email address"
@@ -322,6 +324,7 @@ function Landing() {
             <p className="text-lg sm:text-xl">Ready to watch? It's free — dive right in.</p>
             <Link
               to="/auth"
+              search={{ email: "" }}
               className="mt-8 inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-base font-extrabold text-primary-foreground hover:bg-primary/90"
             >
               Get Started
