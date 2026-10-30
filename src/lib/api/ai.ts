@@ -61,9 +61,23 @@ async function verifyUser(idToken: string): Promise<string> {
   });
   console.log("[StreamFlix AI] Firebase token lookup response:", response.status, response.statusText);
   if (!response.ok) {
-    const errorText = await response.text().catch(() => "unknown");
-    console.error(`[StreamFlix AI] Firebase token lookup failed (${response.status}):`, errorText);
-    throw new AiServiceError("auth", AI_ERROR_MESSAGES.auth);
+    let errorText = "";
+    let errorKind: AiErrorKind = "auth";
+    try {
+      const errorData = await response.json();
+      errorText = JSON.stringify(errorData);
+      console.error(`[StreamFlix AI] Firebase token lookup failed (${response.status}):`, errorText);
+
+      // Check for Firebase App Check configuration error (server-side issue, not user session)
+      const errorMessage = errorData?.error?.message || "";
+      if (typeof errorMessage === "string" && errorMessage.toLowerCase().includes("app check")) {
+        errorKind = "notConfigured";
+      }
+    } catch {
+      errorText = (await response.text()).catch(() => "unknown");
+      console.error(`[StreamFlix AI] Firebase token lookup failed (${response.status}):`, errorText);
+    }
+    throw new AiServiceError(errorKind, AI_ERROR_MESSAGES[errorKind]);
   }
   const data = await response.json();
   console.log("[StreamFlix AI] Firebase token lookup data:", JSON.stringify(data).slice(0, 500));
