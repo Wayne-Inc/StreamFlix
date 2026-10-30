@@ -1,19 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getServerSession } from "@/server/server-auth";
+import { authenticateRequest } from "@/server/server-auth";
 import { SignJWT } from "jose";
 
 const PRODUCTBRIDGE_SECRET = new TextEncoder().encode(
-  process.env.PRODUCTBRIDGE_SECRET_KEY || "2b65430780af87a26ff12e92a406c5a05d938c9629ce3036feb9b93cf5917cd4"
+  process.env.PRODUCTBRIDGE_SECRET_KEY || ""
 );
 
 export const Route = createFileRoute("/api/productbridge-token")({
   server: {
     handlers: {
-      GET: async () => {
+      GET: async ({ request }: { request: Request }) => {
         try {
-          const session = await getServerSession();
+          const user = await authenticateRequest(request);
 
-          if (!session?.user) {
+          if (!user) {
             return new Response(
               JSON.stringify({ ok: false, error: "Not authenticated" }),
               {
@@ -23,14 +23,11 @@ export const Route = createFileRoute("/api/productbridge-token")({
             );
           }
 
-          const user = session.user;
-
           // Generate JWT token for ProductBridge
           const token = await new SignJWT({
             email: user.email,
-            name: user.displayName || user.email?.split("@")[0] || "User",
+            name: user.email?.split("@")[0] || "User",
             sub: user.uid,
-            avatar_url: user.photoURL || undefined,
             // User segmentation fields
             customer_status: "active",
             external_user_id: user.uid,
