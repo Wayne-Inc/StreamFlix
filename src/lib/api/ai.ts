@@ -4,6 +4,7 @@ import type { Movie } from "../types";
 import { UNSAFE_GENRE_IDS } from "../kids-mode";
 import { AI_ERROR_MESSAGES, type AiErrorKind } from "../ai-errors";
 import { rateLimiter } from "../rate-limiter";
+import { verifyIdToken, isAdminInitialized } from "../firebase-admin";
 
 const requestSchema = z.object({
   idToken: z.string().min(20).max(4096),
@@ -47,46 +48,21 @@ class AiServiceError extends Error {
 }
 
 async function verifyUser(idToken: string): Promise<string> {
-  const apiKey = envValue("VITE_FIREBASE_API_KEY");
-  console.log("[StreamFlix AI] VITE_FIREBASE_API_KEY present:", !!apiKey, "prefix:", apiKey?.slice(0, 10));
-  if (!apiKey) {
-    console.error("[StreamFlix AI] VITE_FIREBASE_API_KEY is missing on the server.");
+  console.log("[StreamFlix AI] Verifying user token via Admin SDK");
+
+  if (!isAdminInitialized()) {
+    console.error("[StreamFlix AI] Firebase Admin SDK not initialized. Check FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY env vars.");
     throw new AiServiceError("notConfigured", AI_ERROR_MESSAGES.notConfigured);
   }
-  const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ idToken }),
-    signal: AbortSignal.timeout(10000),
-  });
-  console.log("[StreamFlix AI] Firebase token lookup response:", response.status, response.statusText);
-  if (!response.ok) {
-    let errorText = "";
-    let errorKind: AiErrorKind = "auth";
-    try {
-      const errorData = await response.json();
-      errorText = JSON.stringify(errorData);
-      console.error(`[StreamFlix AI] Firebase token lookup failed (${response.status}):`, errorText);
 
-      // Check for Firebase App Check configuration error (server-side issue, not user session)
-      const errorMessage = errorData?.error?.message || "";
-      if (typeof errorMessage === "string" && errorMessage.toLowerCase().includes("app check")) {
-        errorKind = "notConfigured";
-      }
-    } catch {
-      errorText = (await response.text()).catch(() => "unknown");
-      console.error(`[StreamFlix AI] Firebase token lookup failed (${response.status}):`, errorText);
-    }
-    throw new AiServiceError(errorKind, AI_ERROR_MESSAGES[errorKind]);
-  }
-  const data = await response.json();
-  console.log("[StreamFlix AI] Firebase token lookup data:", JSON.stringify(data).slice(0, 500));
-  const uid = data.users?.[0]?.localId;
-  if (typeof uid !== "string" || !uid) {
-    console.error("[StreamFlix AI] Firebase token lookup returned no localId.");
+  const result = await verifyIdToken(idToken);
+  if (!result || !result.uid) {
+    console.error("[StreamFlix AI] Token verification failed or returned no UID");
     throw new AiServiceError("auth", AI_ERROR_MESSAGES.auth);
   }
-  return uid;
+
+  console.log("[StreamFlix AI] User verified via Admin SDK:", result.uid);
+  return result.uid;
 }
 
 async function enforceRateLimit(uid: string) {
