@@ -1,0 +1,44 @@
+export type CrewMember = {
+  name: string;
+  job: string;
+  profilePath: string;
+  id: string;
+};
+
+export type Movie = {
+  id: string;
+  title: string;
+  description: string;
+  year: number;
+  releaseDate?: string;
+  rating: string;
+  runtime: string;
+  runtimeMinutes?: number;
+  genres: string[];
+  genreIds: number[];
+  poster: string;
+  backdrop: string;
+  backdropSm?: string;
+  trailer?: string;
+  cast: string[];
+  castPfp: string[];
+  castRoles?: string[];
+  castIds?: string[];
+  director: string;
+  directorId: string;
+  directorPfp?: string;
+  crew?: CrewMember[];
+  match: number;
+  score?: number;
+  popularity?: number;
+  numberOfSeasons?: number;
+  numberOfEpisodes?: number;
+  logo?: { filePath: string };
+};
+
+export type Profile = {
+  id: string;
+  name: string;
+  color: string;
+  kids: boolean;
+};

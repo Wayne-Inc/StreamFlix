@@ -1,0 +1,24 @@
+name: Release Notifications
+
+on:
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Trigger release-notifications cron
+        run: |
+          curl -fsS -X GET \
+            "$SITE_URL/api/release-notifications-cron" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "User-Agent: vercel-cron"
+        env:
+          SITE_URL: ${{ vars.SITE_URL || 'https://streamflix.dpdns.org' }}

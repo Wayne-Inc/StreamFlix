@@ -1,0 +1,77 @@
+import type { Movie } from "./types";
+import { getSelectedProfile } from "./selected-profile";
+import { CONTENT_RATINGS, type ContentRating } from "./profiles";
+
+const RATING_TIERS: Record<string, number> = {
+  G: 0,
+  "TV-G": 0,
+  PG: 1,
+  "TV-PG": 1,
+  "PG-13": 2,
+  "TV-14": 2,
+  R: 3,
+  "TV-MA": 3,
+  "NC-17": 3,
+  NR: 2,
+};
+
+const KIDS_MAX_TIER = 1;
+
+export const UNSAFE_GENRE_IDS = new Set([27, 53, 10752, 10749, 80, 9648, 18]);
+
+function getProfileRatingLimit(): ContentRating | undefined {
+  if (typeof window === "undefined") return undefined;
+  return getSelectedProfile()?.contentRatingLimit;
+}
+
+export function isRatingBlockedForKids(rating: string | undefined): boolean {
+  if (!rating) return false;
+  const tier = RATING_TIERS[rating.toUpperCase()] ?? 2;
+  return tier > KIDS_MAX_TIER;
+}
+
+export function isKidsProfile(): boolean {
+  if (typeof window === "undefined") return false;
+  return getSelectedProfile()?.kids ?? false;
+}
+
+export function isGenreBlockedForKids(genreIds: number[]): boolean {
+  return genreIds.some((gid) => UNSAFE_GENRE_IDS.has(gid));
+}
+
+export function isContentAllowedForProfile(movie: Movie): boolean {
+  const profile = getSelectedProfile();
+  if (!profile) return true;
+  
+  // Kids profile - use existing logic
+  if (profile.kids) {
+    if (isGenreBlockedForKids(movie.genreIds ?? [])) return false;
+    if (movie.rating && isRatingBlockedForKids(movie.rating)) return false;
+    return true;
+  }
+  
+  // Non-kids profile with content rating limit
+  const limit = profile.contentRatingLimit;
+  if (limit && movie.rating) {
+    const limitTier = RATING_TIERS[limit.toUpperCase()] ?? 4;
+    const movieTier = RATING_TIERS[movie.rating.toUpperCase()] ?? 2;
+    if (movieTier > limitTier) return false;
+  }
+  
+  return true;
+}
+
+export function filterKidsContent(items: Movie[]): Movie[] {
+  return items.filter((m) => {
+    if (isGenreBlockedForKids(m.genreIds ?? [])) return false;
+    return true;
+  });
+}
+
+export function filterKidsHeroSlides(items: Movie[]): Movie[] {
+  return items.filter((m) => !isGenreBlockedForKids(m.genreIds ?? []));
+}
+
+export function filterContentForProfile(items: Movie[]): Movie[] {
+  return items.filter(isContentAllowedForProfile);
+}

@@ -1,0 +1,371 @@
+import type { Movie } from "./types";
+import { getSelectedProfile } from "./selected-profile";
+import {
+  saveHistoryToFirestore,
+  removeHistoryFromFirestore,
+} from "./history-firestore";
+
+const KEY = "streamflix:continue-watching";
+const HISTORY_KEY = "streamflix:watch-history";
+const MAX = 12;
+const HISTORY_MAX = 50;
+
+export type ContinueItem = {
+  id: string;
+  title: string;
+  poster: string;
+  backdrop: string;
+  rating: string;
+  runtime: string;
+  genres: string[];
+  genreIds: number[];
+  match: number;
+  score?: number;
+  description: string;
+  year: number;
+  cast: string[];
+  castPfp: string[];
+  director: string;
+  directorId: string;
+  progress: number;
+  duration: number;
+  updatedAt: number;
+  season?: number;
+  episode?: number;
+  episodeLabel?: string;
+};
+
+export type WatchHistoryItem = ContinueItem & {
+  watchedAt: number;
+};
+
+export function getSelectedProfileId(): string | null {
+  if (typeof window === "undefined") return null;
+  return getSelectedProfile()?.id ?? null;
+}
+
+function getKey(): string {
+  const profileId = getSelectedProfileId();
+  return profileId ? `streamflix:continue_${profileId}` : KEY;
+}
+
+function getHistoryKey(): string {
+  const profileId = getSelectedProfileId();
+  return profileId ? `streamflix:watch_history_${profileId}` : HISTORY_KEY;
+}
+
+function makeContinueId(movieId: string, season?: number, episode?: number) {
+  return season != null && episode != null ? `${movieId}:S${season}E${episode}` : movieId;
+}
+
+export function getContinueWatching(): ContinueItem[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(getKey());
+    if (!raw) return [];
+    const list = JSON.parse(raw) as ContinueItem[];
+    return list.sort((a, b) => b.updatedAt - a.updatedAt);
+  } catch {
+    return [];
+  }
+}
+
+export function getWatchHistory(): WatchHistoryItem[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(getHistoryKey());
+    if (!raw) return [];
+    const list = JSON.parse(raw) as WatchHistoryItem[];
+    return list.sort((a, b) => b.watchedAt - a.watchedAt);
+  } catch {
+    return [];
+  }
+}
+
+function saveHistoryItem(item: WatchHistoryItem): WatchHistoryItem | null {
+  if (typeof window === "undefined") return null;
+  const list = getWatchHistory().filter((x) => x.id !== item.id);
+  list.unshift(item);
+  window.localStorage.setItem(getHistoryKey(), JSON.stringify(list.slice(0, HISTORY_MAX)));
+  return item;
+}
+
+export function recordWatchHistory(
+  movie: Movie,
+  progress: number,
+  duration: number,
+  season?: number,
+  episode?: number,
+) {
+  if (typeof window === "undefined") return;
+  if (!duration || !isFinite(duration)) return;
+  const ratio = progress / duration;
+  if (ratio < 0.95 || progress <= 5) return;
+
+  const item = saveHistoryItem({
+    id: makeContinueId(movie.id, season, episode),
+    title: movie.title,
+    poster: movie.poster,
+    backdrop: movie.backdrop,
+    rating: movie.rating,
+    runtime: movie.runtime,
+    genres: movie.genres,
+    genreIds: movie.genreIds,
+    match: movie.match,
+    score: movie.score,
+    description: movie.description,
+    year: movie.year,
+    cast: movie.cast,
+    castPfp: movie.castPfp,
+    director: movie.director,
+    directorId: movie.directorId,
+    progress,
+    duration,
+    updatedAt: Date.now(),
+    watchedAt: Date.now(),
+    season,
+    episode,
+    episodeLabel: season != null && episode != null ? `S${season}E${episode}` : undefined,
+  });
+  if (item) {
+    saveHistoryToFirestore(item).catch(() => {});
+    window.dispatchEvent(new Event("sf:watchedUpdated"));
+  }
+}
+
+export function recordProgress(
+  movie: Movie,
+  progress: number,
+  duration: number,
+  season?: number,
+  episode?: number,
+) {
+  if (typeof window === "undefined") return;
+  if (!duration || !isFinite(duration)) return;
+  const ratio = progress / duration;
+  const itemId = makeContinueId(movie.id, season, episode);
+  const list = getContinueWatching().filter((x) => x.id !== itemId);
+
+  if (ratio < 0.95 && progress > 5) {
+    list.unshift({
+      id: itemId,
+      title: movie.title,
+      poster: movie.poster,
+      backdrop: movie.backdrop,
+      rating: movie.rating,
+      runtime: movie.runtime,
+      genres: movie.genres,
+      genreIds: movie.genreIds,
+      match: movie.match,
+      score: movie.score,
+      description: movie.description,
+      year: movie.year,
+      cast: movie.cast,
+      castPfp: movie.castPfp,
+      director: movie.director,
+      directorId: movie.directorId,
+      progress,
+      duration,
+      updatedAt: Date.now(),
+      season,
+      episode,
+      episodeLabel: season != null && episode != null ? `S${season}E${episode}` : undefined,
+    });
+  } else if (ratio >= 0.95 && progress > 5) {
+    recordWatchHistory(movie, progress, duration, season, episode);
+  }
+
+  window.localStorage.setItem(getKey(), JSON.stringify(list.slice(0, MAX)));
+}
+
+export function markAsWatched(movie: Movie) {
+  if (typeof window === "undefined") return;
+  const continueList = getContinueWatching().filter(
+    (x) => x.id !== movie.id && !x.id.startsWith(`${movie.id}:`),
+  );
+  window.localStorage.setItem(getKey(), JSON.stringify(continueList));
+
+  const now = Date.now();
+  const item = saveHistoryItem({
+    id: movie.id,
+    title: movie.title,
+    poster: movie.poster,
+    backdrop: movie.backdrop,
+    rating: movie.rating,
+    runtime: movie.runtime,
+    genres: movie.genres,
+    genreIds: movie.genreIds,
+    match: movie.match,
+    score: movie.score,
+    description: movie.description,
+    year: movie.year,
+    cast: movie.cast,
+    castPfp: movie.castPfp,
+    director: movie.director,
+    directorId: movie.directorId,
+    progress: 1,
+    duration: 1,
+    updatedAt: now,
+    watchedAt: now,
+  });
+  if (item) saveHistoryToFirestore(item).catch(() => {});
+}
+
+export function unmarkWatched(id: string) {
+  if (typeof window === "undefined") return;
+  const key = getHistoryKey();
+  const list = getWatchHistory().filter((x) => x.id !== id && !x.id.startsWith(`${id}:`));
+  window.localStorage.setItem(key, JSON.stringify(list));
+  removeHistoryFromFirestore(id).catch(() => {});
+}
+
+export function removeContinue(id: string) {
+  if (typeof window === "undefined") return;
+  const list = getContinueWatching().filter((x) => x.id !== id);
+  window.localStorage.setItem(getKey(), JSON.stringify(list));
+}
+
+export function toMovie(item: ContinueItem): Movie {
+  return {
+    id: item.id,
+    title: item.title,
+    description: item.description,
+    year: item.year,
+    rating: item.rating,
+    runtime: item.runtime,
+    genres: item.genres,
+    genreIds: item.genreIds,
+    poster: item.poster,
+    backdrop: item.backdrop,
+    cast: item.cast,
+    castPfp: item.castPfp,
+    director: item.director,
+    directorId: item.directorId,
+    match: item.match,
+    score: item.score,
+  };
+}
+
+function epKey(season: number, episode: number) {
+  return `S${season}E${episode}`;
+}
+
+export function getWatchedEpisodeSet(movieId: string): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  const set = new Set<string>();
+  for (const item of getWatchHistory()) {
+    if (item.id === movieId || item.id.startsWith(`${movieId}:`)) {
+      if (item.season != null && item.episode != null) {
+        set.add(epKey(item.season, item.episode));
+      }
+    }
+  }
+  return set;
+}
+
+export function isEpisodeWatched(movieId: string, season: number, episode: number): boolean {
+  return getWatchedEpisodeSet(movieId).has(epKey(season, episode));
+}
+
+export function markEpisodeWatched(
+  movie: Movie,
+  season: number,
+  episode: number,
+) {
+  if (typeof window === "undefined") return;
+  const itemId = `${movie.id}:S${season}E${episode}`;
+  const item = saveHistoryItem({
+    id: itemId,
+    title: movie.title,
+    poster: movie.poster,
+    backdrop: movie.backdrop,
+    rating: movie.rating,
+    runtime: movie.runtime,
+    genres: movie.genres,
+    genreIds: movie.genreIds,
+    match: movie.match,
+    score: movie.score,
+    description: movie.description,
+    year: movie.year,
+    cast: movie.cast,
+    castPfp: movie.castPfp,
+    director: movie.director,
+    directorId: movie.directorId,
+    progress: 1,
+    duration: 1,
+    updatedAt: Date.now(),
+    watchedAt: Date.now(),
+    season,
+    episode,
+    episodeLabel: epKey(season, episode),
+  });
+  if (item) {
+    saveHistoryToFirestore(item).catch(() => {});
+    window.dispatchEvent(new Event("sf:watchedUpdated"));
+  }
+}
+
+export function unmarkEpisodeWatched(movieId: string, season: number, episode: number) {
+  if (typeof window === "undefined") return;
+  const itemId = `${movieId}:S${season}E${episode}`;
+  const key = getHistoryKey();
+  const list = getWatchHistory().filter((x) => x.id !== itemId);
+  window.localStorage.setItem(key, JSON.stringify(list));
+  removeHistoryFromFirestore(itemId).catch(() => {});
+  window.dispatchEvent(new Event("sf:watchedUpdated"));
+}
+
+export function markSeasonWatched(movie: Movie, season: number, totalEpisodes: number) {
+  if (typeof window === "undefined") return;
+  const historyKey = getHistoryKey();
+  const list = getWatchHistory();
+  const now = Date.now();
+
+  for (let e = 1; e <= totalEpisodes; e++) {
+    const itemId = `${movie.id}:S${season}E${e}`;
+    // Remove existing entry if any
+    const filtered = list.filter((x) => x.id !== itemId);
+    // Add new entry
+    filtered.unshift({
+      id: itemId,
+      title: movie.title,
+      poster: movie.poster,
+      backdrop: movie.backdrop,
+      rating: movie.rating,
+      runtime: movie.runtime,
+      genres: movie.genres,
+      genreIds: movie.genreIds,
+      match: movie.match,
+      score: movie.score,
+      description: movie.description,
+      year: movie.year,
+      cast: movie.cast,
+      castPfp: movie.castPfp,
+      director: movie.director,
+      directorId: movie.directorId,
+      progress: 1,
+      duration: 1,
+      updatedAt: now,
+      watchedAt: now,
+      season,
+      episode: e,
+      episodeLabel: `S${season}E${e}`,
+    });
+    // Update list for next iteration
+    list.length = 0;
+    list.push(...filtered);
+  }
+
+  window.localStorage.setItem(historyKey, JSON.stringify(list.slice(0, HISTORY_MAX)));
+  saveHistoryToFirestore(list[0]).catch(() => {});
+  window.dispatchEvent(new Event("sf:watchedUpdated"));
+}
+
+export function unmarkSeasonWatched(movieId: string, season: number) {
+  if (typeof window === "undefined") return;
+  const prefix = `${movieId}:S${season}`;
+  const key = getHistoryKey();
+  const list = getWatchHistory().filter((x) => x.id !== prefix && !x.id.startsWith(`${prefix}E`));
+  window.localStorage.setItem(key, JSON.stringify(list));
+  removeHistoryFromFirestore(movieId).catch(() => {});
+}

@@ -1,0 +1,137 @@
+===========================
+FIX=
+Google API Key
+AIzaSyC4dcLiwMn3HH3GDAjntLgbNqFfN6g5c3A
+Public leak
+#4 opened7 days ago
+• Detected secret in src/lib/firebase.ts:6
+
+Google API Key
+AIzaSyAZRvFUP-7FAxO23sKIo33h3HPWO47Mk_c
+Public leak
+#3 opened7 days ago
+• Detected secret in android/app/google-services.json:24
+
+Google API Key
+AIzaSyD9vC8lVvHiscbheGuazhrlM3r46sBWwyI
+Public leak
+#2 opened7 days ago
+• Detected secret in public/firebase-messaging-sw.js:5
+
+Google API Key
+AIzaSyAGkLkcPKtUyRTStFXc9cm8XUYirP2yK-w
+Public leak
+#1 opened7 days ago
+• Detected secret in firebase-messaging-sw.js:5
+
+
+===========================
+
+
+Select all alerts
+
+Select alert #2: minimatch has potential denial of service via globparts amplification
+minimatch has potential denial of service via globparts amplification #2
+moderate
+Transitive
+Opened 2 days ago
+·
+Detected in minimatch (npm)
+·
+package-lock.json
+
+Select alert #3: uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided
+uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided #3
+moderate
+Transitive
+Opened 5 hours ago
+·
+Detected in uuid (npm)
+·
+functions/package-lock.json
+
+Select alert #1: Glob: AbortSignal cancellation bypass allows post-timeout filesystem traversal
+Glob: AbortSignal cancellation bypass allows post-timeout filesystem traversal #1
+moderate
+Transitive
+Opened 2 days ago
+·
+Detected in glob (npm)
+·
+package-lock.json
+
+
+===========================
+
+
+Select alert #8
+Incomplete URL substring sanitization
+High
+#8 opened 2 days ago • Detected by CodeQL in src/.../_authenticated/profiles.tsx :483
+main
+
+Select alert #7
+Incomplete URL substring sanitization
+High
+#7 opened 2 days ago • Detected by CodeQL in src/.../_authenticated/profiles.tsx :480
+main
+
+Select alert #6
+Incomplete URL substring sanitization
+High
+#6 opened 2 days ago • Detected by CodeQL in src/.../_authenticated/profiles.tsx :742
+main
+
+Select alert #5
+Incomplete URL substring sanitization
+High
+#5 opened 2 days ago • Detected by CodeQL in src/.../_authenticated/profiles.tsx :739
+main
+
+Select alert #2
+Incomplete URL substring sanitization
+High
+#2 opened 2 days ago • Detected by CodeQL in src/.../streamflix/Navbar.tsx :284
+main
+
+Select alert #1
+Incomplete URL substring sanitization
+High
+#1 opened 2 days ago • Detected by CodeQL in src/.../streamflix/Navbar.tsx :281
+main
+
+===========================
+FOR-THE-SLIDESHOW-TITLES,RETRIEVE-FROM-TMDB-WITH-THE-SAME-TECHNOLOGY-AS-TITLES-IN-THE-MOVIE-INFO-PAGE
+MOVE-THE-BROWSE-OPTIONS-TO-THE-HOME-PAGE-UNDER-THE-SLIDESHOWS-ON-MOBILE
+WHEN-I-NAVIGATE-TO-A-PAGE-THAT-NEEDS-TO-BE-AUTHENTICATED-AND-IT-REDIRECTS-ME-TO-THE-AUTH-PAGE,WHEN-I-FINISH-AUTHENTICATION,IT-SHOULD-REDIRECT-ME-TO-THAT-PAGE
+ADD-A-WHERE-TO-WATCH-IN-THE-MOVIE-INFO-PAGE.RETRIEVE-FROM-TMDB
+FIX-GENRE-PAGE-SCELETON-to-add-the-space-above-the-buttons
+FIX-PROFILES-PAGE-SCELETON.now-it-loocs-lice-an-overlay-instead-of-a-scelton
+FOR-SERIES-RUNTIME,SHOW-HOW-MANY-SEASONS-INSTEAD-OF-SERIES-on-the-posters
+FOR-SHOWS,SHOW-RATINGS-eg=TV-MA-ON-THE-SLIDESHOWS
+FOR-SHOWS,INSTEAD-OF-RUNTIME-SHOW-THE-NUMBER-OF-SEASONS-OF-THE-SHOW-IN-SLIDESHOWS-AND-ALL-SHOWS-RUNTIME-INSTANCES
+FOR-THE-NAVBAR-SEARCH,REMOVE-PEOPLE-EMOJIS-USE-THE-FIRST-LETTER-OF-THEIR-NAME
+FOR-MOVIES-AND-TV-SHOWS-IN-PEOPLE-RETURN-IT-TO-LANDSCAPE-CARDS
+FOR-THE-PEOPLE-PAGE-SCROLL-BUTTONS,WHEN-I-SCROLL-TO-THE-END-OF-THE-PICTURE-LIST-HIDE-THE-BUTTONS-TO-THAT-SIDE
+IN-THE-HOME-PAGE-UNDER-THE-SLIDESHOW-BUTTONS,SHOW-ONLY-FOR-MOBILE
+IN-THE-HOME-PAGE-UNDER-THE-SLIDESHOW-BUTTONS,SHOW-ONLY-FOR-MOBILE.SHOW-IN-THE-HOME-PAGE,MOVIE-PAGE,SHOWS-PAGE,TV-PAGE,NEW-PAGE.
+IN-THE-HOME-PAGE-UNDER-THE-SLIDESHOW-BUTTONS,ALSO-ADD-GENRES-AND-CALENDAR
+FOR-MOBILE,LONG-PRESING-THE-HOME-BUTTON-PROVIDES-OPTIONS-FOR-BROWSE,MOVIES,SHOWS,NEW,GENRES,CALENDAR
+FIX-RUNTIME-FOR-POPULAR-MOVIES-IN-THE-HOME-PAGE
+MIX-SHOWS-AND-MOVIES-IN-THE-PICED-FOR-YOU,RECOMMENDATIONS,TOP-RATED,NEW-RELEASES-IN-THE-HOME
+MACE-THE-MORE-INFO-BBUTTON-ON-SLIDESHOWS-MORE-TRANSLUCENT-INSTEAD-OF-TRANSPARENT
+
+
+
+WHILE-YOU-IMPLEMENT-THE-ABOVE,UPDATE-TO-DO-LIST-AND-FINISH-ONE-TASC-AT-A-TIME
+
+
+NOT-TO-BE-IMPLEMENTED-NOW
+|-CLICING-SEASONS-OPENS-A-SEASON-INFO-PAGE
+|-CLICING-EPISODES-OPENS-A-EPISODE-INFO-PAGE
+|-REMOVE-THE-RANDOM-SECTIONS-IN-MOVIE-INFO-PAGES-WHEN-THE-GENRE-SECTIONS-UNDER-MOVIE-INFO-PAGES-ARE-LESS-THAN-3
+|-ADD-A-BACDROPS-AND-POSTER-SECTION-IN-THE-MOVIE-INFO-PAGE.
+|-IF-A-MOVIE-HAS-COLLECTIONS-OF-OTHER-MOVIES-SHOW-THE-COLLECTION.RETRIEVE-FROM-TMDB.
+|-SHOW-PRODUCTION-COMPANIES-OF-THE-MOVIES-IN-THE-MOVIE-INFO-PAGE.
+|-REMOVE-TRAILER-BUTTON
+|-ADD-A-TRAILER-SECTION-WHERE-YOU-CAN-VIEW-MULTIPLE-TRAILERS.

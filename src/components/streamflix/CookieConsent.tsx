@@ -1,0 +1,67 @@
+import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { isConsentDecided, loadAnalytics, updateConsentMode } from "@/lib/consent";
+
+const STORAGE_KEY = "streamflix:cookieConsent";
+const COOKIE_NAME = "streamflix_cookie_consent";
+
+function setConsent(value: string) {
+  if (typeof document === "undefined") return;
+  localStorage.setItem(STORAGE_KEY, value);
+  const expires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString();
+  document.cookie = `${COOKIE_NAME}=${value}; path=/; expires=${expires}; SameSite=Lax`;
+}
+
+export function CookieConsent() {
+  const [decided, setDecided] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    if (isConsentDecided()) setDecided(true);
+  }, []);
+
+  if (!mounted) return null;
+  if (decided) return null;
+
+  return (
+    <div className="fixed inset-x-4 bottom-20 z-50 mx-auto w-[min(360px,calc(100%-2rem))] rounded-2xl border border-border bg-card/95 p-2 shadow-[0_18px_40px_rgba(0,0,0,0.45)] backdrop-blur-2xl text-xs text-foreground md:inset-x-auto md:right-4 md:bottom-4 md:mx-0 pb-[env(safe-area-inset-bottom)]">
+      <div className="flex items-start gap-3">
+        <div className="flex-1 space-y-1">
+          <p className="text-sm font-semibold tracking-tight text-foreground">Cookie Consent</p>
+          <p className="leading-relaxed text-muted-foreground">
+            We use cookies and tracking to personalize content and analyze traffic. By accepting,
+            you agree to our{" "}
+            <Link to="/privacy-policy" className="text-primary hover:underline">
+              Privacy Policy
+            </Link>
+            .
+          </p>
+        </div>
+        <div className="flex flex-col gap-2 shrink-0">
+          <button
+            onClick={() => {
+              setConsent("declined");
+              updateConsentMode(false);
+              setDecided(true);
+            }}
+            className="rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent transition-colors"
+          >
+            Decline
+          </button>
+          <button
+            onClick={() => {
+              setConsent("accepted");
+              updateConsentMode(true);
+              loadAnalytics();
+              setDecided(true);
+            }}
+            className="rounded-xl bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+          >
+            Accept
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

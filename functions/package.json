@@ -1,0 +1,27 @@
+{
+  "name": "streamflix-functions",
+  "version": "1.0.0",
+  "private": true,
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.4.0",
+    "uuid": "^11.1.1"
+  },
+  "devDependencies": {
+    "firebase-functions-test": "^3.4.0",
+    "typescript": "^5.8.3"
+  }
+}

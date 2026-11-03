@@ -1,0 +1,346 @@
+import { getServerConfig } from "../config.server";
+import { formatRuntime } from "../runtime";
+import type { Movie } from "../types";
+
+const TMDB_BASE = "https://api.themoviedb.org/3";
+const IMG_BASE = "https://image.tmdb.org/t/p/";
+
+const CACHE = new Map<string, { data: any; expiry: number }>();
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+function cacheGet(key: string): any | undefined {
+  const entry = CACHE.get(key);
+  if (!entry) return undefined;
+  if (Date.now() > entry.expiry) { CACHE.delete(key); return undefined; }
+  return entry.data;
+}
+
+function cacheSet(key: string, data: any) {
+  if (CACHE.size > 200) {
+    const oldest = CACHE.keys().next().value;
+    if (oldest !== undefined) CACHE.delete(oldest);
+  }
+  CACHE.set(key, { data, expiry: Date.now() + CACHE_TTL });
+}
+
+export async function tmdbFetch(path: string, params: Record<string, string> = {}) {
+  const { tmdbApiKey } = getServerConfig();
+  const url = new URL(`${TMDB_BASE}${path}`);
+  if (tmdbApiKey) {
+    url.searchParams.set("api_key", tmdbApiKey);
+  }
+  url.searchParams.set("language", "en-US");
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+
+  const cacheKey = url.toString();
+  const cached = cacheGet(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const res = await fetch(url.toString());
+    if (!res.ok) {
+      console.warn(`TMDB error ${res.status} for ${path}`);
+      return { results: [], genres: [] };
+    }
+    const data = await res.json();
+    cacheSet(cacheKey, data);
+    return data;
+  } catch (err) {
+    console.warn(`TMDB fetch failed for ${path}:`, err);
+    return { results: [], genres: [] };
+  }
+}
+
+export async function fetchMovieVideosData(id: string): Promise<string | null> {
+  const data = await tmdbFetch(`/movie/${id.replace(/^tv-/, "")}/videos`);
+  const trailer = (data.results || []).find(
+    (v: any) => v.type === "Trailer" && v.site === "YouTube",
+  );
+  return trailer?.key ?? null;
+}
+
+function extractCertification(m: any, country = "US"): string {
+  const source = m.release_dates?.results ?? m.content_ratings?.results ?? [];
+  const entry = source.find((r: any) => r.iso_3166_1 === country) ?? source[0];
+  const cert = entry?.release_dates?.[0]?.certification ?? entry?.rating ?? "";
+  return cert;
+}
+
+export function toMovie(m: any): Movie {
+  const credits = m.credits;
+  const castRaw = (credits?.cast || []).slice(0, 20);
+  const cast = castRaw.map((c: any) => c.name);
+  const castPfp = castRaw.map((c: any) =>
+    c.profile_path ? `https://image.tmdb.org/t/p/w185${c.profile_path}` : "",
+  );
+  const castRoles = castRaw.map((c: any) => c.character || "");
+  const castIds = castRaw.map((c: any) => String(c.id));
+  const dirCredit = (credits?.crew || []).find((c: any) => c.job === "Director");
+  const director = dirCredit?.name || "Unknown";
+  const directorId = dirCredit ? String(dirCredit.id) : "";
+  const directorPfp = dirCredit?.profile_path
+    ? `https://image.tmdb.org/t/p/w185${dirCredit.profile_path}`
+    : "";
+
+  // Extract key crew members (excluding director who's already separate)
+  const keyJobs = ["Producer", "Executive Producer", "Screenplay", "Writer", "Director of Photography", "Editor", "Original Music Composer", "Production Designer", "Casting Director"];
+  const crewRaw = (credits?.crew || []).filter((c: any) => keyJobs.includes(c.job));
+  const crew = crewRaw.slice(0, 10).map((c: any) => ({
+    name: c.name,
+    job: c.job,
+    profilePath: c.profile_path ? `https://image.tmdb.org/t/p/w185${c.profile_path}` : "",
+    id: String(c.id),
+  }));
+
+  const trailer = (m.videos?.results || []).find(
+    (v: any) => v.type === "Trailer" && v.site === "YouTube",
+  );
+
+  return {
+    id: String(m.id),
+    title: m.title,
+    description: m.overview || "No description available.",
+    year: m.release_date ? new Date(m.release_date).getFullYear() : new Date().getFullYear(),
+    releaseDate: m.release_date ?? undefined,
+    rating: extractCertification(m),
+    runtime: formatRuntime(m.runtime),
+    runtimeMinutes: typeof m.runtime === "number" && m.runtime > 0 ? m.runtime : undefined,
+    genres: (m.genres || []).map((g: any) => g.name),
+    genreIds: m.genre_ids || (m.genres || []).map((g: any) => g.id),
+    poster: m.poster_path ? `${IMG_BASE}w500${m.poster_path}` : "",
+    backdrop: m.backdrop_path ? `${IMG_BASE}original${m.backdrop_path}` : "",
+    backdropSm: m.backdrop_path ? `${IMG_BASE}w1280${m.backdrop_path}` : "",
+    trailer: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : undefined,
+    cast: cast.length ? cast : ["Unknown"],
+    castPfp: castPfp,
+    castRoles: castRoles,
+    castIds: castIds,
+    director,
+    directorId,
+    directorPfp,
+    crew,
+    match: m.vote_average ? Math.round(m.vote_average * 10) : 0,
+    score: m.vote_average ? Number(m.vote_average.toFixed(1)) : undefined,
+    popularity: typeof m.popularity === "number" ? m.popularity : undefined,
+  };
+}
+
+export async function fetchTitleLogoById(id: string) {
+  const isTv = id.startsWith("tv-");
+  const tmdbId = isTv ? id.slice(3) : id;
+  const res = await tmdbFetch(`/${isTv ? "tv" : "movie"}/${tmdbId}/images`, {
+    include_image_language: "en,null",
+  });
+  const logos: any[] = Array.isArray(res.logos) ? res.logos : [];
+  if (!logos.length) return null;
+  const candidates = [...logos].sort((a, b) => (b.vote_average ?? 0) - (a.vote_average ?? 0));
+  const best =
+    candidates.find((l) => l.iso_639_1 === "en") ??
+    candidates.find((l) => l.iso_639_1 === null) ??
+    candidates[0];
+  if (!best?.file_path) return null;
+  return {
+    filePath: best.file_path,
+    width: best.width ?? 0,
+    height: best.height ?? 0,
+  };
+}
+
+export async function fetchTitleLogosByIds(ids: string[]) {
+  const results = await Promise.allSettled(ids.map((id) => fetchTitleLogoById(id)));
+  const map: Record<string, string | null> = {};
+  ids.forEach((id, i) => {
+    const r = results[i];
+    map[id] = r.status === "fulfilled" && r.value ? r.value.filePath : null;
+  });
+  return map;
+}
+
+export async function enrichCertifications(items: Movie[]): Promise<Movie[]> {
+  const needIds = items.filter(m => !m.rating && !m.id.startsWith("tv-")).map(m => m.id);
+  if (!needIds.length) return items;
+
+  const details = await Promise.allSettled(
+    needIds.map(id =>
+      tmdbFetch(`/movie/${id}`, { append_to_response: "release_dates" }).then(r => ({
+        id,
+        cert: extractCertification(r),
+      }))
+    ),
+  );
+
+  const certMap = new Map<string, string>();
+  for (const d of details) {
+    if (d.status === "fulfilled") certMap.set(d.value.id, d.value.cert);
+  }
+
+  return items.map(m =>
+    certMap.has(m.id) ? { ...m, rating: certMap.get(m.id)! } : m
+  );
+}
+
+const RUNTIME_CONCURRENCY = 8;
+
+async function fetchRuntimeMinutes(id: string): Promise<number | undefined> {
+  const isTv = id.startsWith("tv-");
+  const tmdbId = isTv ? id.slice(3) : id;
+  const data = await tmdbFetch(`/${isTv ? "tv" : "movie"}/${tmdbId}`);
+  if (isTv) {
+    const ep = Array.isArray(data.episode_run_time) ? data.episode_run_time[0] : null;
+    return typeof ep === "number" && ep > 0 ? ep : undefined;
+  }
+  return typeof data.runtime === "number" && data.runtime > 0 ? data.runtime : undefined;
+}
+
+/**
+ * Fill in exact runtimes for titles whose list endpoints don't include them,
+ * by fetching the TMDB details endpoint (results are cached by tmdbFetch).
+ */
+export async function enrichRuntimes(items: Movie[]): Promise<Movie[]> {
+  const targets = items.filter((m) => !m.runtimeMinutes);
+  if (!targets.length) return items;
+
+  const runtimeMap = new Map<string, number>();
+  for (let i = 0; i < targets.length; i += RUNTIME_CONCURRENCY) {
+    const batch = targets.slice(i, i + RUNTIME_CONCURRENCY);
+    const results = await Promise.allSettled(
+      batch.map((m) => fetchRuntimeMinutes(m.id).then((minutes) => ({ id: m.id, minutes }))),
+    );
+    for (const r of results) {
+      if (r.status === "fulfilled" && r.value.minutes) {
+        runtimeMap.set(r.value.id, r.value.minutes);
+      }
+    }
+  }
+
+  if (!runtimeMap.size) return items;
+
+  return items.map((m) => {
+    const minutes = runtimeMap.get(m.id);
+    if (!minutes) return m;
+    return {
+      ...m,
+      runtimeMinutes: minutes,
+      runtime: m.id.startsWith("tv-") ? `${minutes}m / ep` : formatRuntime(minutes),
+    };
+  });
+}
+
+export function toTv(m: any): Movie {
+  const credits = m.credits;
+  const castRaw = (credits?.cast || []).slice(0, 20);
+  const cast = castRaw.map((c: any) => c.name);
+  const castPfp = castRaw.map((c: any) =>
+    c.profile_path ? `https://image.tmdb.org/t/p/w185${c.profile_path}` : "",
+  );
+  const castRoles = castRaw.map((c: any) => c.character || "");
+  const castIds = castRaw.map((c: any) => String(c.id));
+  const tvDir = m.created_by?.[0] || (credits?.crew || []).find((c: any) => c.job === "Director");
+  const creator = tvDir?.name || "Unknown";
+  const directorId = tvDir ? String(tvDir.id) : "";
+  const directorPfp = tvDir?.profile_path
+    ? `https://image.tmdb.org/t/p/w185${tvDir.profile_path}`
+    : "";
+
+  // Extract key crew members for TV (Executive Producers, Writers, etc.)
+  const keyJobs = ["Executive Producer", "Producer", "Writer", "Director of Photography", "Editor", "Original Music Composer", "Production Designer", "Casting Director"];
+  const crewRaw = (credits?.crew || []).filter((c: any) => keyJobs.includes(c.job));
+  const crew = crewRaw.slice(0, 10).map((c: any) => ({
+    name: c.name,
+    job: c.job,
+    profilePath: c.profile_path ? `https://image.tmdb.org/t/p/w185${c.profile_path}` : "",
+    id: String(c.id),
+  }));
+
+  const trailer = (m.videos?.results || []).find(
+    (v: any) => v.type === "Trailer" && v.site === "YouTube",
+  );
+  const epRuntime = Array.isArray(m.episode_run_time) ? m.episode_run_time[0] : null;
+  return {
+    id: `tv-${m.id}`,
+    title: m.name || m.original_name || "Untitled",
+    description: m.overview || "No description available.",
+    year: m.first_air_date ? new Date(m.first_air_date).getFullYear() : new Date().getFullYear(),
+    releaseDate: m.first_air_date ?? undefined,
+    rating: extractCertification(m),
+    runtime: epRuntime
+      ? `${epRuntime}m / ep`
+      : m.number_of_seasons
+        ? `${m.number_of_seasons} season${m.number_of_seasons > 1 ? "s" : ""}`
+        : "Series",
+    runtimeMinutes: typeof epRuntime === "number" && epRuntime > 0 ? epRuntime : undefined,
+    genres: (m.genres || []).map((g: any) => g.name),
+    genreIds: m.genre_ids || (m.genres || []).map((g: any) => g.id),
+    poster: m.poster_path ? `${IMG_BASE}w500${m.poster_path}` : "",
+    backdrop: m.backdrop_path ? `${IMG_BASE}original${m.backdrop_path}` : "",
+    backdropSm: m.backdrop_path ? `${IMG_BASE}w1280${m.backdrop_path}` : "",
+    trailer: trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : undefined,
+    cast: cast.length ? cast : ["Unknown"],
+    castPfp: castPfp,
+    castRoles: castRoles,
+    castIds: castIds,
+    director: creator,
+    directorId,
+    directorPfp,
+    crew,
+    match: m.vote_average ? Math.round(m.vote_average * 10) : 0,
+    score: m.vote_average ? Number(m.vote_average.toFixed(1)) : undefined,
+    popularity: typeof m.popularity === "number" ? m.popularity : undefined,
+    numberOfSeasons: m.number_of_seasons ?? undefined,
+    numberOfEpisodes: m.number_of_episodes ?? undefined,
+  };
+}
+
+export interface WatchProvider {
+  provider_id: number;
+  provider_name: string;
+  logo_path: string | null;
+  display_priority: number;
+  link: string;
+}
+
+export interface WatchProvidersResult {
+  results: Record<string, {
+    link: string;
+    flatrate?: WatchProvider[];
+    rent?: WatchProvider[];
+    buy?: WatchProvider[];
+    free?: WatchProvider[];
+    ads?: WatchProvider[];
+  }>;
+}
+
+export async function fetchWatchProviders(
+  tmdbId: string,
+  type: "movie" | "tv",
+): Promise<WatchProvidersResult["results"]> {
+  const data = await tmdbFetch(`/${type}/${tmdbId}/watch/providers`);
+  return data.results || {};
+}
+
+export async function fetchPopularPeople(page = 1): Promise<{
+  results: { id: number; name: string; profile_path: string | null; known_for_department: string; popularity: number }[];
+  page: number;
+  total_pages: number;
+}> {
+  const data = await tmdbFetch("/person/popular", { page: String(page) });
+  return data;
+}
+
+export async function fetchTrendingPeopleDay(page = 1): Promise<{
+  results: { id: number; name: string; profile_path: string | null; known_for_department: string; popularity: number }[];
+  page: number;
+  total_pages: number;
+}> {
+  const data = await tmdbFetch("/trending/person/day", { page: String(page) });
+  return data;
+}
+
+export async function fetchTrendingPeopleWeek(page = 1): Promise<{
+  results: { id: number; name: string; profile_path: string | null; known_for_department: string; popularity: number }[];
+  page: number;
+  total_pages: number;
+}> {
+  const data = await tmdbFetch("/trending/person/week", { page: String(page) });
+  return data;
+}

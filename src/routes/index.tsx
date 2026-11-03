@@ -1,0 +1,507 @@
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { useRef, useState } from "react";
+import {
+  ChevronRight,
+  Play,
+  ChevronDown,
+  Mail,
+  Instagram,
+  Tv,
+  Smartphone,
+  Monitor,
+  Shield,
+  Zap,
+  Globe,
+  ChevronLeft,
+  Github,
+  AlertCircle,
+  ArrowRight,
+  Sparkles,
+} from "lucide-react";
+import { Logo } from "@/components/streamflix/Logo";
+import { ContactEmail } from "@/components/streamflix/ContactEmail";
+import { DownloadAppButton } from "@/components/streamflix/DownloadAppButton";
+import { tmdbFetch, toMovie } from "@/lib/api/tmdb.server";
+import type { Movie } from "@/lib/types";
+import heroImg from "@/assets/landing.jpg";
+import heroImgSm from "@/assets/landing-sm.jpg";
+
+export const Route = createFileRoute("/")({
+  ssr: true,
+  beforeLoad: async () => {
+    if (typeof window === "undefined") return;
+    // Instant redirect from localStorage cache — no flash
+    try {
+      if (localStorage.getItem("sf:auth") === "1") {
+        throw redirect({ to: "/profiles" });
+      }
+    } catch (e) {
+      if (e && typeof e === "object" && "isRedirect" in e) throw e;
+    }
+    // Fallback: check Firebase (e.g. first visit or cache cleared)
+    const { auth } = await import("@/lib/firebase");
+    const { onAuthStateChanged } = await import("firebase/auth");
+    const user = await new Promise<unknown>((resolve) => {
+      const unsub = onAuthStateChanged(auth, (user) => {
+        unsub();
+        resolve(user);
+      });
+    });
+    if (user) {
+      try { localStorage.setItem("sf:auth", "1"); } catch {}
+      throw redirect({ to: "/profiles" });
+    }
+  },
+  loader: async () => {
+    const data = await tmdbFetch("/trending/movie/week");
+    return (data.results || []).slice(0, 10).map(toMovie);
+  },
+  head: () => ({
+    meta: [
+      { title: "StreamFlix — Unlimited movies, TV shows, and more" },
+      {
+        name: "description",
+        content: "StreamFlix — Free streaming service. Unlimited movies, TV shows, and more.",
+      },
+      { property: "og:title", content: "StreamFlix" },
+      {
+        property: "og:description",
+        content: "Unlimited movies, TV shows, and more — anywhere, anytime.",
+      },
+    ],
+    scripts: [
+      {
+        async: true,
+        src: "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5529326688604668",
+        crossOrigin: "anonymous",
+      },
+    ],
+  }),
+  component: Landing,
+});
+
+const faqs = [
+  [
+    "Is StreamFlix really free?",
+    "Yes, 100% free. No subscriptions, no hidden fees, no credit card needed. Just sign up and start watching instantly.",
+  ],
+  [
+    "Can I watch on my phone or TV?",
+    "Absolutely. StreamFlix works on any device with an internet connection — phones, tablets, laptops, smart TVs, gaming consoles, and more.",
+  ],
+  [
+    "Do I need to create an account?",
+    "Yes, you'll need a free account to personalize your experience, pick up where you left off, and create watchlists. It takes seconds to sign up.",
+  ],
+  [
+    "How is StreamFlix free?",
+    "StreamFlix is supported by our community and partners. We believe entertainment should be accessible to everyone, so we keep it free with no strings attached.",
+  ],
+  [
+    "What kind of content is available?",
+    "From blockbuster movies and binge-worthy TV shows to anime, documentaries, and original content — there's something for everyone.",
+  ],
+];
+
+function Landing() {
+  const trending: Movie[] = Route.useLoaderData();
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+  const [email, setEmail] = useState("");
+
+  const checkScroll = () => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  };
+
+  const scrollBy = (dir: number) => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * 300, behavior: "smooth" });
+  };
+
+  const handleGetStarted = () => {
+    // Navigate to auth page with email pre-filled
+    window.location.href = `/auth?email=${encodeURIComponent(email)}`;
+  };
+
+  return (
+    <main className="min-h-dvh bg-background text-foreground">
+      {/* Hero */}
+      <section className="relative min-h-[50vh] sm:min-h-[88vh] overflow-hidden">
+        <img
+          src={heroImg}
+          srcSet={`${heroImgSm} 800w, ${heroImg} 1400w`}
+          sizes="100vw"
+          width={1400}
+          height={788}
+          alt=""
+          fetchPriority="high"
+          decoding="async"
+          className="absolute inset-0 size-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-background" />
+        <div className="relative z-10">
+          <header className="relative flex items-center justify-between px-4 py-5 sm:px-12">
+            <Logo className="[&>span]:text-2xl [&>span]:sm:text-4xl" />
+            <div className="flex items-center gap-3 sm:gap-4">
+              <a
+                href="https://github.com/Wayne-Inc/StreamFlix"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex size-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground sm:size-11"
+                title="GitHub"
+                aria-label="GitHub"
+              >
+                <Github className="size-6 sm:size-7" />
+              </a>
+              <Link
+                to="/auth"
+                search={{ email: "" }}
+                className="rounded-md bg-primary px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base font-semibold text-primary-foreground hover:bg-primary/90 transition-all duration-300"
+              >
+                Sign In
+              </Link>
+            </div>
+          </header>
+
+          <div className="mx-auto mt-24 max-w-3xl px-4 text-center sm:mt-36">
+            <h1 className="text-shadow-hero text-5xl font-bold tracking-tight sm:text-7xl">
+              Unlimited movies, TV shows, and more.
+            </h1>
+            <p className="text-shadow-hero mt-6 text-xl sm:text-3xl font-medium">
+              Completely free. No subscriptions, no catches.
+            </p>
+            <div className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center sm:gap-4">
+              <div className="flex w-full flex-col gap-3 min-[480px]:flex-row sm:w-auto sm:items-center sm:flex-1">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleGetStarted()}
+                  placeholder="Enter your email"
+                  className="min-w-0 flex-1 rounded-md bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/80 px-6 py-4 text-lg outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-300"
+                  aria-label="Email address"
+                />
+                <button
+                  onClick={handleGetStarted}
+                  className="relative inline-flex items-center justify-center gap-2 rounded-md bg-primary px-8 py-4 text-lg font-black text-primary-foreground hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg shadow-primary/30 shrink-0"
+                >
+                  Get Started
+                  <ChevronRight className="size-5 fill-current" />
+                </button>
+              </div>
+              <DownloadAppButton className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-6 py-4 text-lg font-semibold text-primary hover:bg-primary/20 transition-colors disabled:opacity-50 sm:w-auto shrink-0" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Mobile Browse Navigation - Under Hero/Slideshow */}
+      <section className="bg-background py-6 sm:hidden border-y border-black/10">
+        <div className="mx-auto max-w-[1800px] px-4">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+            <Link
+              to="/browse"
+              search={{ kind: "home" }}
+              className="shrink-0 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300"
+            >
+              <span className="size-5">🏠</span> Home
+            </Link>
+            <Link
+              to="/browse"
+              search={{ kind: "movies" }}
+              className="shrink-0 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300"
+            >
+              <span className="size-5">🎬</span> Movies
+            </Link>
+            <Link
+              to="/browse"
+              search={{ kind: "tv" }}
+              className="shrink-0 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300"
+            >
+              <span className="size-5">📺</span> Shows
+            </Link>
+            <Link
+              to="/browse"
+              search={{ kind: "new" }}
+              className="shrink-0 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300"
+            >
+              <span className="size-5">✨</span> New
+            </Link>
+            <Link
+              to="/explore"
+              className="shrink-0 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300"
+            >
+              <span className="size-5">🎭</span> Genres
+            </Link>
+            <Link
+              to="/calendar"
+              className="shrink-0 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300"
+            >
+              <span className="size-5">📅</span> Calendar
+            </Link>
+            <Link
+              to="/assistant"
+              className="shrink-0 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300"
+            >
+              <Sparkles className="size-5" /> AI
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Trending */}
+      <section className="bg-background py-12 sm:py-16">
+        <div className="w-full px-4 sm:px-8">
+          <h2 className="px-1 text-2xl font-bold sm:text-3xl">Trending Now</h2>
+          <div className="relative mt-6">
+            {canScrollLeft && (
+              <button
+                onClick={() => scrollBy(-1)}
+                className="hidden md:flex absolute -left-3 top-1/2 -translate-y-1/2 z-10 size-10 items-center justify-center rounded-full bg-background/80 border border-border backdrop-blur-sm shadow-lg hover:bg-accent transition"
+                aria-label="Scroll left"
+              >
+                <ChevronLeft className="size-5" />
+              </button>
+            )}
+            <div
+              ref={scrollContainerRef}
+              onScroll={checkScroll}
+              className="flex gap-12 overflow-x-auto py-4 pl-8 pr-8 scrollbar-hide"
+            >
+              {trending.map((m, i) => (
+                <div key={m.id} className="shrink-0 relative transition duration-300 ease-out group hover:scale-105">
+                  <span
+                    aria-hidden="true"
+                    className="rank-badge absolute bottom-6 -left-5 text-[5rem] sm:text-[6.5rem] font-black leading-none select-none z-10 text-primary/30 group-hover:text-primary group-hover:opacity-100 transition-all duration-300"
+                  >
+                    {i + 1}
+                  </span>
+                  <Link
+                    to="/browse"
+                    className="block overflow-hidden rounded-lg relative transition-shadow duration-300 group-hover:shadow-[0_0_20px_rgba(239,68,68,0.5)]"
+                  >
+                    <img
+                      src={m.poster || "/placeholder.svg"}
+                      alt={m.title}
+                      className="h-60 w-40 object-cover sm:h-72 sm:w-52"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-100" />
+                    <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out">
+                      <p className="text-xs sm:text-sm font-semibold text-white leading-tight drop-shadow-lg">{m.title}</p>
+                    </div>
+                  </Link>
+                </div>
+              ))}
+            </div>
+            {canScrollRight && (
+              <button
+                onClick={() => scrollBy(1)}
+                className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 z-10 size-10 items-center justify-center rounded-full bg-background/80 border border-border backdrop-blur-sm shadow-lg hover:bg-accent transition"
+                aria-label="Scroll right"
+              >
+                <ChevronRight className="size-5" />
+              </button>
+            )}
+          </div>
+          <div className="mt-6 text-center">
+            <Link
+              to="/browse"
+              className="inline-flex items-center gap-2 text-primary hover:underline"
+            >
+              Browse the full catalog <ChevronRight className="size-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="border-y-8 border-black bg-background py-20 sm:py-28">
+        <div className="mx-auto max-w-6xl px-4">
+          <h2 className="text-center text-4xl font-black sm:text-5xl">
+            Why StreamFlix?
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-center text-lg text-muted-foreground">
+            Everything you love about streaming, minus the subscription fee.
+          </p>
+          <div className="mt-14 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+            <FeatureCard
+              icon={<Play className="size-6" />}
+              title="Instant Streaming"
+              description="Hit play and start watching instantly. No buffering, no waiting — just smooth playback on any device."
+            />
+            <FeatureCard
+              icon={<Globe className="size-6" />}
+              title="Watch Anywhere"
+              description="Works on your phone, tablet, laptop, or TV. Sign in once and pick up where you left off on any device."
+            />
+            <FeatureCard
+              icon={<Shield className="size-6" />}
+              title="Kids Safe"
+              description="Built-in parental controls with Kids profiles that filter age-inappropriate content automatically."
+            />
+            <FeatureCard
+              icon={<Tv className="size-6" />}
+              title="Movies & TV"
+              description="Thousands of movies and TV episodes across every genre — from blockbusters to hidden gems."
+            />
+            <FeatureCard
+              icon={<Zap className="size-6" />}
+              title="Smart Recommendations"
+              description="AI-powered suggestions that learn what you love and surface titles you won't want to miss."
+            />
+            <FeatureCard
+              icon={<Smartphone className="size-6" />}
+              title="Mobile Apps"
+              description="Download the Android app for a native experience with offline support and notifications."
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="border-y-8 border-black bg-background py-24">
+        <div className="mx-auto max-w-4xl px-4">
+          <h2 className="text-center text-4xl font-black sm:text-5xl">
+            Frequently Asked Questions
+          </h2>
+          <div className="mt-12 space-y-3">
+            {faqs.map(([q, a], i) => (
+              <FaqItem
+                key={i}
+                q={q}
+                a={a}
+                isOpen={openIndex === i}
+                onToggle={() => setOpenIndex(openIndex === i ? null : i)}
+              />
+            ))}
+          </div>
+          <div className="mt-14 text-center">
+            <p className="text-lg sm:text-xl">Ready to watch? It's free — dive right in.</p>
+            <Link
+              to="/auth"
+              search={{ email: "" }}
+              className="mt-8 inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-base font-extrabold text-primary-foreground hover:bg-primary/90"
+            >
+              Get Started
+              <ChevronRight className="size-5 fill-current" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t border-border px-4 py-10 text-sm text-muted-foreground">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+            <div className="flex items-center text-xl sm:text-2xl md:text-3xl font-black text-foreground">
+              <span className="text-primary">STREAM</span>
+              <span className="text-foreground">FLIX</span>
+            </div>
+            <div className="flex flex-wrap items-center justify-start gap-x-6 gap-y-2 text-xs text-muted-foreground">
+              <ContactEmail className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors">
+                <Mail className="size-3.5" />
+              </ContactEmail>
+              <a
+                href="https://instagram.com/itiswayneee"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+              >
+                <Instagram className="size-3.5" /> @itiswayneee
+              </a>
+              <a
+                href="https://github.com/Wayne-Inc/StreamFlix"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+              >
+                <Github className="size-3.5" /> GitHub
+              </a>
+              <Link to="/tos" className="hover:text-foreground transition-colors">
+                Terms of Service
+              </Link>
+              <Link to="/privacy-policy" className="hover:text-foreground transition-colors">
+                Privacy Policy
+              </Link>
+              <DownloadAppButton
+                iconClassName="size-3.5"
+                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors disabled:opacity-50"
+              />
+            </div>
+          </div>
+          <p className="mt-6 text-xs text-left text-muted-foreground">
+            Made for the people, by the people. Not affiliated with Netflix. Film and series data from TMDB; this product uses the TMDB API but is not endorsed or certified by TMDB.
+          </p>
+          <p className="mt-2 text-xs text-left text-muted-foreground">
+            <strong>Disclaimer:</strong> StreamFlix is an indexing service for media that is already publicly available elsewhere. We do not store, upload, or modify any video files. Every stream is embedded from independent third-party providers, and ownership of that content remains entirely with its original rights holders.
+          </p>
+        </div>
+      </footer>
+    </main>
+  );
+}
+
+function FaqItem({
+  q,
+  a,
+  isOpen,
+  onToggle,
+}: {
+  q: string;
+  a: string;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="overflow-hidden rounded-xl bg-surface">
+      <button
+        onClick={onToggle}
+        className="flex w-full items-center justify-between gap-4 px-8 py-6 text-left text-xl font-medium transition hover:bg-accent"
+        aria-expanded={isOpen}
+      >
+        <span>{q}</span>
+        <ChevronDown
+          className={`size-6 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+      <div
+        className={`grid transition-all duration-300 ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+      >
+        <div className="overflow-hidden">
+          <p className="px-8 pb-8 pt-2 text-lg text-muted-foreground leading-relaxed">{a}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FeatureCard({
+  icon,
+  title,
+  description,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-card/60 p-6 transition-all duration-300 hover:border-primary/40 hover:bg-card/80">
+      <div className="grid size-12 place-items-center rounded-lg bg-primary/10 text-primary">
+        {icon}
+      </div>
+      <h3 className="mt-4 text-lg font-bold">{title}</h3>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
+    </div>
+  );
+}
+
+
+
+
+

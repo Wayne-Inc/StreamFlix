@@ -1,0 +1,342 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --font-display: "Inter", system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0.5rem;
+  --background: oklch(0.16 0.005 270);
+  --foreground: oklch(0.985 0 0);
+  --surface: oklch(0.19 0.005 270);
+  --card: oklch(0.21 0.005 270);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.21 0.005 270);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.58 0.22 27);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.26 0.005 270);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.26 0.005 270);
+  --muted-foreground: oklch(0.72 0 0);
+  --accent: oklch(0.3 0.01 270);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.58 0.22 27);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 10%);
+  --ring: oklch(0.58 0.22 27);
+}
+
+.dark {
+  /* same as root — app is dark by default */
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html,
+  body,
+  #root {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    overflow-x: clip;
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (max-width: 640px) {
+    html {
+      font-size: clamp(13px, 4.1vw, 16px);
+    }
+  }
+  body {
+    -webkit-font-smoothing: antialiased;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    /* Safe area insets for edge-to-edge display */
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  body input,
+  body textarea,
+  body [contenteditable="true"] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+}
+
+@utility scrollbar-hide {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@utility scrollbar-thin {
+  &::-webkit-scrollbar {
+    display: block;
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.25);
+  }
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+@supports (display: window-controls-overlay) {
+  .wco-titlebar-padding {
+    padding-top: env(titlebar-area-height, 0);
+  }
+  header.wco-aware {
+    left: env(titlebar-area-left, 0);
+    right: calc(100% - env(titlebar-area-right, 100%));
+    top: env(titlebar-area-top, 0);
+    inset-inline: unset;
+  }
+}
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@utility text-shadow-hero {
+  text-shadow:
+    0 2px 24px rgba(0, 0, 0, 0.85),
+    0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes ken-burns {
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  100% {
+    transform: scale(1.12) translate(-1%, -1%);
+  }
+}
+@keyframes shimmer {
+  0% {
+    background-position: -800px 0;
+  }
+  100% {
+    background-position: 800px 0;
+  }
+}
+@keyframes checklist-drop {  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out both;
+}
+.animate-checklist-drop {
+  animation: checklist-drop 0.3s ease-out both;
+}
+.animate-ken-burns {
+  animation: ken-burns 20s ease-out infinite alternate;
+}
+.animate-shimmer {
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Custom range slider styles */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.2);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: white;
+  margin-top: -5px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: white;
+  border: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+input[type="range"]::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: #dc2626;
+}
+.volume-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Sonner toast — dismiss button on the right side, vertically centered */
+[data-sonner-toaster][data-sonner-theme="dark"] [data-sonner-toast][data-styled="true"] {
+  padding-right: 44px;
+}
+[data-sonner-toaster][data-sonner-theme="dark"] [data-sonner-toast][data-styled="true"] [data-close-button] {
+  left: auto;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Reduce motion — disables all CSS animations and transitions */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+.rank-badge {
+  -webkit-text-stroke: 3px rgba(255,255,255,0.6);
+  -webkit-text-fill-color: transparent;
+  transition: all 0.3s ease;
+}
+.group:hover .rank-badge {
+  -webkit-text-stroke: 3px #ef4444;
+  -webkit-text-fill-color: transparent;
+}
+@media (prefers-reduced-motion: reduce) {
+  *:not(.reduce-motion-opt-out) *:not(.reduce-motion-opt-out)::before,
+  *:not(.reduce-motion-opt-out) *:not(.reduce-motion-opt-out)::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Spatial Navigation (TV mode) — focus styles for directional navigation */
+.spatial-nav *:focus-visible {
+  outline: 3px solid var(--color-primary) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px var(--color-background), 0 0 0 6px var(--color-primary) !important;
+  z-index: 100;
+}
+
+/* Ensure focus rings are visible on cards and interactive elements in spatial nav */
+.spatial-nav .focus-ring:focus-visible,
+.spatial-nav button:focus-visible,
+.spatial-nav a:focus-visible,
+.spatial-nav [tabindex]:focus-visible {
+  outline: 3px solid var(--color-primary) !important;
+  outline-offset: 2px !important;
+}
+
+/* Spatial nav specific - highlight the currently focused element more prominently */
+.spatial-nav [data-spatial-focus="true"] {
+  outline: 3px solid var(--color-primary) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px var(--color-background), 0 0 0 6px var(--color-primary) !important;
+}
+
+/* Data Saver mode — reduce image quality, disable prefetching */
+.data-saver .prefetch-disable {
+  display: none !important;
+}
+
+/* In data saver mode, use lower quality image placeholders */
+.data-saver [data-quality="high"] {
+  display: none !important;
+}
+.data-saver [data-quality="low"] {
+  display: block !important;
+}
+
+/* Reduce animation complexity in data saver mode */
+.data-saver *,
+.data-saver *::before,
+.data-saver *::after {
+  animation-duration: 0.5s !important;
+  transition-duration: 0.2s !important;
+}
+
+/* TV-specific: hide hover-only elements */
+@media (hover: none) and (pointer: coarse) {
+  .tv-hover-only {
+    display: none !important;
+  }
+}
+
+/* Ensure focus is visible on TV devices */
+@media (hover: none) and (pointer: coarse) {
+  *:focus-visible {
+    outline: 3px solid var(--color-primary) !important;
+    outline-offset: 2px !important;
+  }
+}

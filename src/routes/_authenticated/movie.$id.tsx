@@ -1,0 +1,898 @@
+import {
+  createFileRoute,
+  Link,
+  notFound,
+  useLocation,
+  useNavigate,
+  useRouter,
+} from "@tanstack/react-router";
+import { useMemo, useState, useEffect, useRef } from "react";
+import {
+  Play,
+  Share2,
+  Clapperboard,
+  ArrowLeft,
+  ShieldOff,
+  Check,
+  Bookmark,
+  Star,
+  Calendar,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  ChevronDown,
+  Sparkles,
+  LoaderCircle,
+} from "lucide-react";
+import {
+  isKidsProfile,
+  isRatingBlockedForKids,
+  isGenreBlockedForKids,
+  filterKidsContent,
+} from "@/lib/kids-mode";
+import { toast } from "sonner";
+import { shareContent } from "@/lib/share";
+import { buildTitleLogoUrl } from "@/lib/title-logo";
+import { seoMetaFor, siteUrl } from "@/lib/seo";
+import { stepsToUsefulBackTarget } from "@/lib/nav-history";
+import {
+  getWatchHistory,
+  getWatchedEpisodeSet,
+  markAsWatched,
+  unmarkWatched,
+} from "@/lib/continue-watching";
+import { isInMyList, toggleMyList } from "@/lib/my-list";
+import { Navbar } from "@/components/streamflix/Navbar";
+import { Footer } from "@/components/streamflix/Footer";
+import { Row } from "@/components/streamflix/Row";
+import { Skeleton, MovieDetailSkeleton } from "@/components/ui/skeleton";
+import { movieById, loadSimilar, loadRecommendations, getWatchProviders, getGenres, type WatchProvider } from "@/lib/streamflix-data";
+import { discoverByGenre, fetchTitleLogo, fetchTvSeason, fetchTopRatedTv } from "@/lib/api/tmdb";
+import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
+import { TrailerModal } from "@/components/streamflix/TrailerModal";
+import { getWatchHistoryFromFirestore } from "@/lib/history-firestore";
+import { AgeRatingBadge } from "@/components/streamflix/AgeRatingBadge";
+import { askStreamflixAI } from "@/lib/api/ai";
+import { AI_ERROR_MESSAGES, aiErrorMessage } from "@/lib/ai-errors";
+import { auth } from "@/lib/firebase";
+
+const MovieSkeleton = () => (
+  <div className="min-h-dvh bg-background">
+    <Navbar />
+    <MovieDetailSkeleton />
+  </div>
+);
+
+export const Route = createFileRoute("/_authenticated/movie/$id")({
+  loader: async ({ params }) => {
+    const isTvShow = params.id.startsWith("tv-");
+    const [movie, similar, recommendations, logo, genres, topRatedTv] = await Promise.all([
+      movieById(params.id),
+      loadSimilar(params.id),
+      loadRecommendations(params.id),
+      fetchTitleLogo({ data: { id: params.id } }).catch(() => null),
+      getGenres(),
+      isTvShow ? fetchTopRatedTv() : Promise.resolve([]),
+    ]);
+    if (!movie) throw notFound();
+
+    // Fetch movies for each genre the current movie belongs to
+    const movieGenreIds = movie.genreIds.map(String);
+    const genreResults = await Promise.all(
+      movieGenreIds.map((gid) => discoverByGenre({ data: { genreId: gid } }).catch(() => [])),
+    );
+
+    const otherGenreIds = genres
+      .map((g) => String(g.id))
+      .filter((gid) => !movieGenreIds.includes(gid));
+
+    const rows: { genreId: string; items: any[] }[] = [];
+    const usedGenreIds = new Set<string>();
+
+    const takeGenre = async (gid: string) => {
+      const index = movieGenreIds.indexOf(gid);
+      const source =
+        index >= 0
+          ? genreResults[index]
+          : await discoverByGenre({ data: { genreId: gid } }).catch(() => []);
+      return (source || []).filter((m: any) => m.id !== params.id).slice(0, 12);
+    };
+
+    for (const gid of movieGenreIds) {
+      const items = await takeGenre(gid);
+      if (items.length > 0) {
+        rows.push({ genreId: gid, items });
+        usedGenreIds.add(gid);
+      }
+    }
+
+    // Ensure there are always 3 genre rows, filling with other genres.
+    for (const gid of otherGenreIds) {
+      if (rows.length >= 3) break;
+      if (usedGenreIds.has(gid)) continue;
+      const items = await takeGenre(gid);
+      if (items.length > 0) {
+        rows.push({ genreId: gid, items });
+        usedGenreIds.add(gid);
+      }
+    }
+
+    return { movie, similar, genreRows: rows, recommendations, logo, genres, topRatedTv };
+  },
+  head: ({ loaderData }) => {
+    const movie = loaderData?.movie;
+    const title = movie ? `${movie.title} (${movie.year}) — StreamFlix` : "Movie — StreamFlix";
+    const description = movie?.description
+      ? `${movie.description.slice(0, 200)}`
+      : "Watch movies and TV shows on StreamFlix.";
+    const image = movie?.backdropSm || movie?.poster || "";
+    const site = siteUrl();
+    const url = site ? `${site}/movie/${movie?.id ?? ""}` : "";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        ...(movie && movie.genres.length
+          ? [{ name: "keywords", content: movie.genres.join(", ") }]
+          : []),
+        ...seoMetaFor(
+          title,
+          description,
+          image,
+          movie?.id?.startsWith("tv-") ? "video.tv_show" : "video.movie",
+          url,
+        ),
+      ],
+      links: [...(url ? [{ rel: "canonical", href: url }] : [])],
+    };
+  },
+  notFoundComponent: () => (
+    <div className="grid min-h-dvh place-items-center bg-background">
+      <p className="text-muted-foreground">Title not found.</p>
+    </div>
+  ),
+  errorComponent: () => (
+    <div className="grid min-h-dvh place-items-center bg-background">
+      <p className="text-muted-foreground">Something went wrong.</p>
+    </div>
+  ),
+  component: MoviePage,
+  pendingComponent: MovieSkeleton,
+});
+
+function MoviePage() {
+  const { movie, similar, genreRows, recommendations, logo, genres, topRatedTv } = Route.useLoaderData();
+  const genreLabels: Record<string, string> = {
+    "27": "Horror",
+    "878": "Sci-Fi",
+    "35": "Comedy",
+    "53": "Thriller",
+    "28": "Action",
+    "12": "Adventure",
+    "18": "Drama",
+    "10749": "Romance",
+    "9648": "Mystery",
+  };
+  const isTv = movie.id.startsWith("tv-");
+  const titleLogoUrl = logo?.filePath ? buildTitleLogoUrl(logo.filePath) : null;
+  const [descExpanded, setDescExpanded] = useState(false);
+  const castScrollerRef = useRef<HTMLDivElement | null>(null);
+  const [showPicker, setShowPicker] = useState(true);
+  const [castScroll, setCastScroll] = useState({ left: 0, viewport: 0, width: 0 });
+
+  useEffect(() => {
+    const el = castScrollerRef.current;
+    if (!el) return;
+    const measure = () =>
+      setCastScroll({ left: el.scrollLeft, viewport: el.clientWidth, width: el.scrollWidth });
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    const onScroll = () =>
+      setCastScroll({ left: el.scrollLeft, viewport: el.clientWidth, width: el.scrollWidth });
+    el.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      el.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", measure);
+    };
+  }, [movie.id]);
+
+  const [trailerOpen, setTrailerOpen] = useState(false);
+  const [aiSummary, setAiSummary] = useState("");
+  const [aiSummaryError, setAiSummaryError] = useState("");
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
+
+  const generateAiSummary = async () => {
+    setAiSummaryLoading(true);
+    setAiSummaryError("");
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error(AI_ERROR_MESSAGES.auth);
+      const idToken = await user.getIdToken(true);
+      if (!idToken) throw new Error(AI_ERROR_MESSAGES.auth);
+      const result = await askStreamflixAI({ data: { idToken, mode: "summary", titleId: movie.id } });
+      if (!result.ok) {
+        setAiSummaryError(result.message);
+        return;
+      }
+      setAiSummary(result.message);
+    } catch (error) {
+      setAiSummaryError(aiErrorMessage(error));
+    } finally {
+      setAiSummaryLoading(false);
+    }
+  };
+
+  const [inList, setInList] = useState(false);
+  const [watched, setWatched] = useState(false);
+  const [playEpisode, setPlayEpisode] = useState<{ season: number; episode: number }>({
+    season: 1,
+    episode: 1,
+  });
+  const [offers, setOffers] = useState<WatchProvider[]>([]);
+  const [offersLoading, setOffersLoading] = useState(true);
+  const [showAllOffers, setShowAllOffers] = useState(false);
+
+  useEffect(() => {
+    setInList(isInMyList(movie.id));
+    setWatched(getWatchHistory().some((x) => x.id === movie.id || x.id.startsWith(`${movie.id}:`)));
+  }, [movie.id]);
+
+  useEffect(() => {
+    if (!isTv) return;
+    let cancelled = false;
+    let revision = 0;
+    const updateNextEpisode = async () => {
+      const currentRevision = ++revision;
+      const watchedEpisodes = getWatchedEpisodeSet(movie.id);
+      try {
+        const firestoreHistory = await getWatchHistoryFromFirestore();
+        for (const item of firestoreHistory) {
+          if (item.id === movie.id || item.id.startsWith(`${movie.id}:`)) {
+            if (item.season != null && item.episode != null) {
+              watchedEpisodes.add(`S${item.season}E${item.episode}`);
+            }
+          }
+        }
+      } catch {}
+      if (cancelled || currentRevision !== revision) return;
+
+      const seasonCount = Math.max(1, movie.numberOfSeasons ?? 1);
+      for (let season = 1; season <= seasonCount; season++) {
+        try {
+          const data = await fetchTvSeason({
+            data: { id: movie.id.replace(/^tv-/, ""), season },
+          });
+          const episodes = [...(data.episodes || [])].sort(
+            (a: { episode_number: number }, b: { episode_number: number }) =>
+              a.episode_number - b.episode_number,
+          );
+          const next = episodes.find(
+            (item: { episode_number: number }) =>
+              !watchedEpisodes.has(`S${season}E${item.episode_number}`),
+          );
+          if (next) {
+            if (!cancelled && currentRevision === revision) {
+              setPlayEpisode({ season, episode: next.episode_number });
+            }
+            return;
+          }
+        } catch {
+          // Skip unavailable seasons and continue looking for the next playable one.
+        }
+      }
+
+      if (!cancelled && currentRevision === revision) setPlayEpisode({ season: 1, episode: 1 });
+    };
+
+    updateNextEpisode();
+    let refreshTimer: ReturnType<typeof setTimeout> | undefined;
+    const scheduleUpdate = () => {
+      if (refreshTimer) clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(updateNextEpisode, 150);
+    };
+    window.addEventListener("sf:watchedUpdated", scheduleUpdate);
+    return () => {
+      cancelled = true;
+      if (refreshTimer) clearTimeout(refreshTimer);
+      window.removeEventListener("sf:watchedUpdated", scheduleUpdate);
+    };
+  }, [isTv, movie.id, movie.numberOfSeasons]);
+
+  // Fetch TMDB watch providers
+  useEffect(() => {
+    let cancelled = false;
+    setOffersLoading(true);
+    getWatchProviders(movie.id, isTv ? "tv" : "movie")
+      .then((results: Record<string, { link: string; flatrate?: WatchProvider[]; rent?: WatchProvider[]; buy?: WatchProvider[]; free?: WatchProvider[]; ads?: WatchProvider[] }>) => {
+        if (!cancelled) {
+          // Prefer US links, include every available offer type, and de-duplicate
+          // providers that appear in multiple regions or offer categories.
+          const byProvider = new Map<number, WatchProvider>();
+          const countries = Object.keys(results).sort((a, b) => a === "US" ? -1 : b === "US" ? 1 : 0);
+          for (const country of countries) {
+            const offers = results[country];
+            for (const category of [offers.flatrate, offers.rent, offers.buy, offers.free, offers.ads]) {
+              for (const provider of category ?? []) {
+                if (provider.link && !byProvider.has(provider.provider_id)) {
+                  byProvider.set(provider.provider_id, provider);
+                }
+              }
+            }
+          }
+          setOffers(
+            Array.from(byProvider.values()).sort(
+              (a, b) => a.display_priority - b.display_priority || a.provider_name.localeCompare(b.provider_name),
+            ),
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setOffersLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [movie.id, isTv]);
+
+  const navigate = useNavigate();
+  const router = useRouter();
+  const location = useLocation();
+  const goBack = () => {
+    const steps = stepsToUsefulBackTarget(location.pathname, [`/watch/${movie.id}`]);
+    if (steps !== null) {
+      router.history.go(-steps);
+    } else {
+      navigate({ to: "/browse" });
+    }
+  };
+
+  const scrollCast = (dir: 1 | -1) => {
+    const el = castScrollerRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * (7 * 104), behavior: "smooth" });
+  };
+
+  const kidsMode = useMemo(() => isKidsProfile(), []);  const blocked =
+    kidsMode &&
+    (isRatingBlockedForKids(movie.rating) || isGenreBlockedForKids(movie.genreIds ?? []));
+  const filteredSimilar = kidsMode ? filterKidsContent(similar) : similar;
+  const filteredRecommendations = kidsMode ? filterKidsContent(recommendations) : recommendations;
+  const filteredGenreRows = kidsMode
+    ? genreRows
+        .filter((gr) => filterKidsContent(gr.items).length > 0)
+        .map((gr) => ({ ...gr, items: filterKidsContent(gr.items) }))
+    : genreRows;
+
+  if (blocked) {
+    return (
+      <div className="min-h-dvh bg-background">
+        <Navbar />
+        <div className="grid min-h-[70vh] place-items-center gap-4 px-4">
+          <div className="grid size-24 place-items-center rounded-full bg-amber-500/15">
+            <ShieldOff className="size-12 text-amber-400" />
+          </div>
+          <div className="text-center space-y-2">
+            <h2 className="text-xl font-semibold text-foreground">
+              Content not available for kids
+            </h2>
+            <p className="max-w-sm text-sm text-muted-foreground">
+              This title isn't suitable for kids profiles. Try switching to a regular profile to
+              watch it.
+            </p>
+          </div>
+          <Link
+            to="/browse"
+            className="inline-flex items-center rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+          >
+            Back to Browse
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-dvh bg-background pb-20 md:pb-0">
+      <Navbar />
+      <section className="relative pt-16 md:flex md:min-h-[85vh] md:items-center md:pt-20">
+        <div className="pointer-events-none absolute inset-x-0 top-0 md:inset-y-0 aspect-video md:aspect-auto md:h-auto overflow-hidden">
+          <img src={movie.backdrop} alt="" className="absolute inset-0 size-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
+        </div>
+
+        <div className="relative z-10 w-full min-w-0 px-4 py-10 sm:px-8 md:px-12 md:py-16 lg:px-16">
+          <button
+            type="button"
+            onClick={goBack}
+            aria-label="Go back"
+            className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 px-4 py-2 text-sm font-medium text-white backdrop-blur transition hover:bg-black/60"
+          >
+            <ArrowLeft className="size-4" /> Back
+          </button>
+          <div className="grid w-full min-w-0 gap-10 md:grid-cols-3 md:items-center md:gap-8">
+            <div className="min-w-0 space-y-4 md:col-span-2">
+              {titleLogoUrl ? (
+                <img
+                  src={titleLogoUrl}
+                  alt={movie.title}
+                  draggable={false}
+                  className="mb-4 max-h-24 w-auto max-w-full object-contain select-none sm:max-h-32 md:max-h-36"
+                />
+              ) : (
+                <h1 className="mb-4 text-3xl md:text-4xl lg:text-5xl font-bold">{movie.title}</h1>
+              )}
+              <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+                {movie.score != null && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-xs font-semibold text-emerald-400 backdrop-blur-lg sm:px-3 sm:py-1.5">
+                    <Star className="size-3 fill-current" /> {movie.score.toFixed(1)}
+                  </span>
+                )}
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur-lg sm:px-3 sm:py-1.5">
+                  <Calendar className="size-3" /> {movie.year}
+                </span>
+                <AgeRatingBadge
+                  rating={movie.rating}
+                  className="rounded-full px-2.5 py-1 text-xs backdrop-blur-lg sm:px-3 sm:py-1.5"
+                />
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur-lg sm:px-3 sm:py-1.5">
+                  <Clock className="size-3" /> {movie.runtime || (movie.runtimeMinutes ? `${Math.floor(movie.runtimeMinutes / 60)}h ${movie.runtimeMinutes % 60}m` : '—')}
+                </span>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {movie.genreIds.map((gid: number, i: number) => {
+                  const label = genreLabels[String(gid)] || movie.genres[i] || "Explore";
+                  return (
+                    <Link
+                      key={`${gid}-${i}`}
+                      to="/explore/$genreId"
+                      params={{ genreId: String(gid) }}
+                      search={{ q: label }}
+                      className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-foreground backdrop-blur-lg transition hover:bg-white/10 hover:border-primary/50"
+                    >
+                      {label}
+                    </Link>
+                  );
+                })}
+              </div>
+              <div className="min-w-0">
+                <p
+                  onClick={() => setDescExpanded((v) => !v)}
+                  className={`max-w-xl break-words text-base md:text-lg text-gray-300 leading-relaxed cursor-pointer md:cursor-default ${
+                    descExpanded ? "" : "line-clamp-3"
+                  }`}
+                >
+                  {movie.description}
+                </p>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setDescExpanded((v) => !v); }}
+                  className="mt-1 text-xs font-medium text-primary hidden md:inline"
+                >
+                  {descExpanded ? "Show less" : "Show more"}
+                </button>
+                <button
+                  type="button"
+                  onClick={generateAiSummary}
+                  disabled={aiSummaryLoading}
+                  className="ml-4 inline-flex items-center gap-1.5 text-xs font-medium text-primary transition hover:text-primary/80 disabled:opacity-60"
+                >
+                  {aiSummaryLoading ? <LoaderCircle className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
+                  {aiSummaryLoading ? "Generating…" : aiSummary ? "Refresh AI summary" : "AI summary"}
+                </button>
+                {aiSummary && (
+                  <p className="mt-3 max-w-xl rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm leading-6 text-gray-200">
+                    <span className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-primary"><Sparkles className="size-3.5" />AI summary</span>
+                    {aiSummary}
+                  </p>
+                )}
+                {aiSummaryError && (
+                  <p role="alert" className="mt-2 text-xs leading-5 text-destructive">
+                    <span className="font-semibold">Something went wrong on our side. </span>
+                    {aiSummaryError}
+                  </p>
+                )}
+                {movie.director && (
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">Directed by</span> {" "}
+                    {movie.directorId ? (
+                      <Link
+                        to="/person/$id"
+                        params={{ id: movie.directorId }}
+                        className="text-primary hover:underline"
+                      >
+                        {movie.director}
+                      </Link>
+                    ) : (
+                      <span className="text-foreground">{movie.director}</span>
+                    )}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 pt-2 sm:gap-3">
+                <Link
+                  to="/watch/$id"
+                  params={{ id: movie.id }}
+                  search={
+                    isTv
+                      ? { autoplay: true, ...playEpisode }
+                      : { autoplay: true }
+                  }
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md bg-foreground px-5 py-2.5 text-sm font-semibold text-background hover:bg-foreground/85 sm:px-6 sm:py-3"
+                >
+                  <Play className="size-4 fill-current sm:size-5" />{" "}
+                  {isTv ? `Play S${playEpisode.season} E${playEpisode.episode}` : "Play"}
+                </Link>
+                {movie.trailer && (
+                  <button
+                    onClick={() => setTrailerOpen(true)}
+                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-white/10 sm:px-6 sm:py-3"
+                  >
+                    <Clapperboard className="size-4 sm:size-5" /> Trailer
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    if (watched) {
+                      unmarkWatched(movie.id);
+                      setWatched(false);
+                      toast.success(`${movie.title} marked as not watched`);
+                    } else {
+                      markAsWatched(movie);
+                      setWatched(true);
+                      toast.success(`${movie.title} marked as watched`);
+                    }
+                  }}
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-white/10 sm:px-4 sm:py-3"
+                >
+                  <Check className="size-4 sm:size-5" /> {watched ? "Watched" : "Unwatched"}
+                </button>
+                <button
+                  onClick={() => {
+                    const added = toggleMyList(movie);
+                    setInList(added);
+                    toast.success(added ? "Added to My List" : "Removed from My List");
+                  }}
+                  className={`grid size-11 sm:size-12 place-items-center rounded-full border ${
+                    inList
+                      ? "border-primary bg-primary/20 text-primary"
+                      : "border-border hover:border-foreground"
+                  }`}
+                  aria-label={inList ? "Remove from My List" : "Add to My List"}
+                >
+                  <Bookmark className={`size-4 sm:size-5 ${inList ? "fill-current" : ""}`} />
+                </button>
+                <button
+                  onClick={() => {
+                    const base = siteUrl();
+                    shareContent({
+                      title: `${movie.title} (${movie.year})`,
+                      text: `${movie.title} (${movie.year}) — ${movie.description}`,
+                      url: base ? `${base}/movie/${movie.id}` : window.location.href,
+                      image: movie.backdropSm || movie.backdrop || movie.poster || undefined,
+                    }).then((mode) => toast.success(mode === "shared" ? "Shared" : "Link copied"));
+                  }}
+                  className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground"
+                  aria-label="Share"
+                >
+                  <Share2 className="size-4 sm:size-5" />
+                </button>
+              </div>
+
+              <div className="min-w-0 pt-4">
+                <p className="mb-3 text-2xl font-bold tracking-tight">Cast</p>
+                  <div className="relative min-w-0 max-w-full" onDragStart={(event) => event.preventDefault()}>
+                  {movie.cast.length > 7 && castScroll.left > 2 && (
+                    <button
+                      type="button"
+                      onClick={() => scrollCast(-1)}
+                      aria-label="Scroll cast left"
+                      className="absolute left-1 top-1/2 z-10 hidden size-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-background text-foreground shadow-lg transition hover:bg-primary hover:text-primary-foreground sm:grid sm:size-9"
+                    >
+                      <ChevronLeft className="size-4 sm:size-5" />
+                    </button>
+                  )}
+                  {movie.cast.length > 7 &&
+                    castScroll.viewport > 0 &&
+                    castScroll.left + castScroll.viewport < castScroll.width - 2 && (
+                    <button
+                      type="button"
+                      onClick={() => scrollCast(1)}
+                      aria-label="Scroll cast right"
+                      className="absolute right-1 top-1/2 z-10 hidden size-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-background text-foreground shadow-lg transition hover:bg-primary hover:text-primary-foreground sm:grid sm:size-9"
+                    >
+                      <ChevronRight className="size-4 sm:size-5" />
+                    </button>
+                  )}
+                  <div
+                    ref={castScrollerRef}
+                    className="scrollbar-thin scrollbar-thumb-white/25 scrollbar-track-transparent flex gap-3 overflow-x-auto py-2"
+                  >
+                    {movie.cast.slice(0, 15).map((name: string, i: number) => {
+                      const personId = movie.castIds?.[i];
+                      const link = personId
+                        ? { to: "/person/$id" as const, params: { id: personId } }
+                        : {
+                            to: "/search" as const,
+                            search: { q: name, tab: "people" as const },
+                            params: {},
+                          };
+                      return (
+                        <Link
+                          key={`${name}-${i}`}
+                          to={link.to}
+                          {...(link.to === "/search"
+                            ? { search: (link as any).search }
+                            : { params: (link as any).params })}
+                          className="group z-10 w-20 shrink-0 text-center transition-transform duration-300 ease-out hover:z-20 hover:scale-110 sm:w-24"
+                        >
+                          <div className="aspect-square w-full overflow-hidden rounded-xl bg-surface ring-1 ring-border transition-shadow duration-300 group-hover:shadow-2xl group-hover:ring-2">
+                            {movie.castPfp[i] ? (
+                              <img
+                                src={movie.castPfp[i]}
+                                alt={name}
+                                draggable={false}
+                                className="size-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex size-full items-center justify-center text-sm font-bold text-muted-foreground">
+                                {name.charAt(0)}
+                              </div>
+                            )}
+                          </div>
+                          <span className="mt-1.5 block truncate text-[11px] font-semibold text-foreground group-hover:text-primary">
+                            {name}
+                          </span>
+                          {movie.castRoles?.[i] && (
+                            <span className="block truncate text-[10px] text-muted-foreground">
+                              {movie.castRoles[i]}
+                            </span>
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Crew Section */}
+              {movie.crew && movie.crew.length > 0 && (
+                <div className="min-w-0 pt-4">
+                  <p className="mb-3 text-2xl font-bold tracking-tight">Crew</p>
+                  <div className="relative min-w-0 max-w-full" onDragStart={(event) => event.preventDefault()}>
+                    <div className="scrollbar-thin scrollbar-thumb-white/25 scrollbar-track-transparent flex gap-3 overflow-x-auto py-2">
+                      {movie.crew.map((member, i) => (
+                        <Link
+                          key={`${member.id}-${i}`}
+                          to="/search"
+                          search={{ q: member.name, tab: "people" }}
+                          className="group z-10 w-20 shrink-0 text-center transition-transform duration-300 ease-out hover:z-20 hover:scale-110 sm:w-24"
+                        >
+                          <div className="aspect-square w-full overflow-hidden rounded-xl bg-surface ring-1 ring-border transition-shadow duration-300 group-hover:shadow-2xl group-hover:ring-2">
+                            {member.profilePath ? (
+                              <img
+                                src={member.profilePath}
+                                alt={member.name}
+                                draggable={false}
+                                className="size-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex size-full items-center justify-center text-sm font-bold text-muted-foreground">
+                                {member.name.charAt(0)}
+                              </div>
+                            )}
+                          </div>
+                          <span className="mt-1.5 block truncate text-[11px] font-semibold text-foreground group-hover:text-primary">
+                            {member.name}
+                          </span>
+                          <span className="block truncate text-[10px] text-muted-foreground">
+                            {member.job}
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            </div>
+
+            <div className="min-w-0 md:col-span-1">
+              {isTv && movie.numberOfSeasons && movie.numberOfSeasons > 0 ? (
+                <>
+                  <div className="relative hidden aspect-[2/3] w-full overflow-hidden rounded-xl md:block md:w-80">
+                    <div
+                      className={`absolute inset-0 z-0 transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                        showPicker ? "-translate-x-[25%]" : "translate-x-0"
+                      }`}
+                    >
+                      <div className="relative size-full overflow-hidden rounded-xl bg-surface shadow-2xl ring-1 ring-white/15">
+                        {movie.poster ? (
+                          <img
+                            src={movie.poster}
+                            alt={movie.title}
+                            className="size-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex size-full items-center justify-center text-2xl font-bold text-muted-foreground">
+                            {movie.title.charAt(0)}
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                      </div>
+                    </div>
+                    <aside
+                      className={`absolute inset-0 z-10 overflow-y-auto scrollbar-thin transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                        showPicker ? "translate-x-0" : "translate-x-full"
+                      }`}
+                    >
+                      <div className="min-h-full rounded-lg border border-border bg-background p-4 shadow-2xl sm:p-5">
+                        <SeasonEpisodePicker movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} movie={movie} />
+                      </div>
+                    </aside>
+                    {showPicker && (
+                      <div className="absolute inset-y-0 left-2 z-30 hidden items-center md:flex">
+                        <button
+                          type="button"
+                          onClick={() => setShowPicker(false)}
+                          aria-label="Show portrait"
+                          className="grid size-8 place-items-center rounded-full border border-border bg-background/80 text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
+                        >
+                          <ChevronLeft className="size-4" />
+                        </button>
+                      </div>
+                    )}
+                    {!showPicker && (
+                      <div className="absolute inset-y-0 right-2 z-30 hidden items-center md:flex">
+                        <button
+                          type="button"
+                          onClick={() => setShowPicker(true)}
+                          aria-label="Show season picker"
+                          className="grid size-8 place-items-center rounded-full border border-border bg-background/80 text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
+                        >
+                          <ChevronRight className="size-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <aside className="w-full rounded-lg border border-border bg-background/70 p-4 backdrop-blur-md sm:p-5 md:hidden">
+                    <SeasonEpisodePicker movieId={movie.id} numberOfSeasons={movie.numberOfSeasons} movie={movie} />
+                  </aside>
+                </>
+              ) : (
+                <div className="hidden w-full md:block md:w-80">
+                  <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-surface shadow-2xl ring-1 ring-white/15">
+                    {movie.poster ? (
+                      <img
+                        src={movie.poster}
+                        alt={movie.title}
+                        className="size-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex size-full items-center justify-center text-2xl font-bold text-muted-foreground">
+                        {movie.title.charAt(0)}
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {offersLoading && (
+        <section className="px-4 sm:px-8 md:px-12 lg:px-16 py-6">
+          <h2 className="mb-3 text-xl font-bold text-foreground">Where to Watch</h2>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <div key={i} className="flex h-[4.625rem] flex-col items-center gap-1.5 rounded-lg border border-border bg-surface p-2 animate-pulse">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-background/50" />
+                <div className="h-3 w-full rounded bg-muted" />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+      {!offersLoading && offers.length > 0 && (
+        <section className="px-4 sm:px-8 md:px-12 lg:px-16 py-6">
+          <h2 className="mb-3 text-xl font-bold text-foreground">Where to Watch</h2>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2">
+            {(showAllOffers ? offers : offers.slice(0, 7)).map((offer) => (
+              <a
+                key={offer.provider_id}
+                href={offer.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex h-[5.75rem] flex-col items-center gap-1.5 rounded-lg border border-border bg-surface p-2 transition-all hover:border-primary/50 hover:shadow-md"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-background/50">
+                  {offer.logo_path && (
+                    <img
+                      src={`https://image.tmdb.org/t/p/w92${offer.logo_path}`}
+                      alt={offer.provider_name}
+                      className="h-8 w-8 object-contain"
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                  )}
+                </div>
+                <span className="text-[10px] font-medium text-foreground truncate text-center w-full leading-tight">
+                  {offer.provider_name}
+                </span>
+              </a>
+            ))}
+          </div>
+          {offers.length > 7 && (
+            <div className="mt-3 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setShowAllOffers((v) => !v)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/80 px-4 py-2 text-sm font-medium text-foreground backdrop-blur transition hover:bg-background hover:border-primary/50"
+              >
+                {showAllOffers ? (
+                  <>
+                    <ChevronUp className="size-4" />
+                    Show less
+                  </>
+                ) : (
+                  <>
+                    Show more ({offers.length})
+                    <ChevronDown className="size-4" />
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </section>
+      )}
+      {filteredSimilar.length > 0 && (
+        <div className="space-y-2">
+          {(() => {
+            const groups = new Map<string, typeof filteredSimilar>();
+            for (const m of filteredSimilar) {
+              const g = m.genres[0] || "Other";
+              if (!groups.has(g)) groups.set(g, []);
+              groups.get(g)!.push(m);
+            }
+            return Array.from(groups.entries()).map(([genre, items]) => (
+              <Row key={genre} title={`More ${genre}`} items={items} />
+            ));
+          })()}
+        </div>
+      )}
+
+      {filteredRecommendations.length > 0 && (
+        <div className="space-y-2 pb-4">
+          <Row title={`Similar to ${movie.title}`} items={filteredRecommendations} />
+        </div>
+      )}
+
+      {isTv && topRatedTv.length > 0 && (
+        <div className="space-y-2 pb-4">
+          <Row title="Top Rated Series" items={topRatedTv.slice(0, 12)} />
+        </div>
+      )}
+
+      <div className="space-y-2 pb-10">
+        {filteredGenreRows.map((gr) => {
+          // Use the genre name from the available genres, then the movie's own labels.
+          const genreName =
+            genres.find((g: { id: number; name: string }) => String(g.id) === gr.genreId)?.name ||
+            movie.genres[movie.genreIds.indexOf(Number(gr.genreId))] ||
+            genreLabels[gr.genreId] ||
+            "Movies";
+          return <Row key={gr.genreId} title={`${genreName} Movies`} items={gr.items} />;
+        })}
+      </div>
+
+      {trailerOpen && movie.trailer && (
+        <TrailerModal url={movie.trailer} onClose={() => setTrailerOpen(false)} />
+      )}
+      <Footer />
+    </div>
+  );
+}
