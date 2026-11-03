@@ -501,7 +501,6 @@ function BrowsePage() {
           </Link>
         </nav>
       </div>
-      </div>
       <div className="relative z-10 mt-0 md:mt-12 space-y-6 md:space-y-12 pb-20 md:pb-0">
         {kind === "home" && continueLoading && <RowSkeleton />}
         {continueRow && kind === "home" && (
