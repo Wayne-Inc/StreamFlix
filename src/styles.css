@@ -64,7 +64,29 @@
   * {
     border-color: var(--color-border);
   }
-  html,
+  html {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    overflow-x: clip;
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    /* Thin styled scrollbar for all pages */
+    &::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.25);
+    }
+    &::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.35);
+    }
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+  }
   body,
   #root {
     background-color: var(--color-background);
@@ -118,11 +140,6 @@
   scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
 }
 
-
-*::-webkit-scrollbar {
-  display: none;
-}
-
 @supports (display: window-controls-overlay) {
   .wco-titlebar-padding {
     padding-top: env(titlebar-area-height, 0);
@@ -133,10 +150,6 @@
     top: env(titlebar-area-top, 0);
     inset-inline: unset;
   }
-}
-* {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
 }
 
 @utility text-shadow-hero {
