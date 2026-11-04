@@ -99,8 +99,8 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
           />
         );
       })}
-      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/50 to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background via-background/70 to-transparent md:h-72" />
+      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/60" />
+      <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-background via-background/80 to-transparent md:h-80" />
 
       <div className="relative z-10 flex h-full items-end justify-center px-4 pb-6 pt-8 text-center sm:pb-8 sm:pt-10 sm:px-8 md:items-end md:justify-start">
           {/* Bottom gradient for text contrast */}

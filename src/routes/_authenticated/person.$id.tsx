@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
-import { Calendar, MapPin, Film, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
+import { Calendar, MapPin, Film, ChevronLeft, ChevronDown } from "lucide-react";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { Skeleton, PersonDetailSkeleton } from "@/components/ui/skeleton";
@@ -52,6 +52,8 @@ function CreditSection({
   countLabel: string;
 }) {
   if (credits.length === 0) return null;
+  const [showAll, setShowAll] = useState(false);
+  const visible = showAll ? credits : credits.slice(0, 1);
 
   return (
     <div className="mb-8">
@@ -71,8 +73,9 @@ function CreditSection({
           </button>
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-3">
-          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 scroll-smooth">
-            {credits.map((item, idx) => (
+          {/* No horizontal scroll: show one card by default, rest stacked downwards on "Show all" */}
+          <div className="flex flex-col gap-3">
+            {visible.map((item, idx) => (
               <MovieCard
                 key={`${item.id}-${item.character}`}
                 movie={{
@@ -106,6 +109,16 @@ function CreditSection({
               />
             ))}
           </div>
+          {!showAll && credits.length > 1 && (
+            <button
+              type="button"
+              onClick={() => setShowAll(true)}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground"
+            >
+              Show all ({credits.length})
+              <ChevronDown className="size-4" />
+            </button>
+          )}
         </CollapsibleContent>
       </Collapsible>
     </div>
@@ -118,9 +131,10 @@ function PersonPage() {
   const router = useRouter();
   const [data, setData] = useState<PersonData | null>(null);
   const [images, setImages] = useState<Array<{ file_path: string }>>([]);
+  const [imagesShowAll, setImagesShowAll] = useState(false);
+  const imagesVisible = imagesShowAll ? images : images.slice(0, 1);
   const [loading, setLoading] = useState(true);
   const [bioExpanded, setBioExpanded] = useState(false);
-  const imagesScrollRef = useRef<HTMLDivElement>(null);
 
   const goBack = () => {
     if (window.history.length > 1) {
@@ -246,52 +260,32 @@ function PersonPage() {
             <div className="mb-8">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-2xl font-bold tracking-tight">Images ({images.length})</h2>
-              </div>
-              <div className="relative">
-                <div
-                  ref={imagesScrollRef}
-                  className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 scroll-smooth"
-                  onWheel={(e) => {
-                    if (e.deltaY !== 0) {
-                      e.currentTarget.scrollLeft += e.deltaY;
-                      e.preventDefault();
-                    }
-                  }}
-                >
-                  {images.map((img, idx) => (
-                    <div
-                      key={`${img.file_path}-${idx}`}
-                      className="flex-shrink-0 aspect-[2/3] w-48 rounded-lg bg-surface overflow-hidden group"
-                    >
-                      <img
-                        src={`https://image.tmdb.org/t/p/w342${img.file_path}`}
-                        alt={`${data?.name} profile ${idx + 1}`}
-                        loading="lazy"
-                        className="size-full object-cover transition duration-300 group-hover:scale-105"
-                      />
-                    </div>
-                  ))}
-                </div>
-                {images.length > 5 && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => imagesScrollRef.current?.scrollBy({ left: -300, behavior: 'smooth' })}
-                      className="absolute left-0 top-1/2 -translate-y-1/2 z-10 hidden sm:flex size-10 items-center justify-center rounded-full border border-border bg-background/80 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
-                      aria-label="Scroll images left"
-                    >
-                      <ChevronLeft className="size-5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => imagesScrollRef.current?.scrollBy({ left: 300, behavior: 'smooth' })}
-                      className="absolute right-0 top-1/2 -translate-y-1/2 z-10 hidden sm:flex size-10 items-center justify-center rounded-full border border-border bg-background/80 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
-                      aria-label="Scroll images right"
-                    >
-                      <ChevronRight className="size-5" />
-                    </button>
-                  </>
+                {images.length > 1 && !imagesShowAll && (
+                  <button
+                    type="button"
+                    onClick={() => setImagesShowAll(true)}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground"
+                  >
+                    Show all ({images.length})
+                    <ChevronDown className="size-4" />
+                  </button>
                 )}
+              </div>
+              {/* No horizontal scroll: one image by default, rest stacked downwards on "Show all" */}
+              <div className="flex flex-col gap-3">
+                {imagesVisible.map((img, idx) => (
+                  <div
+                    key={`${img.file_path}-${idx}`}
+                    className="aspect-[2/3] w-full max-w-md rounded-lg bg-surface overflow-hidden group"
+                  >
+                    <img
+                      src={`https://image.tmdb.org/t/p/w342${img.file_path}`}
+                      alt={`${data?.name} profile ${idx + 1}`}
+                      loading="lazy"
+                      className="size-full object-cover transition duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           )}

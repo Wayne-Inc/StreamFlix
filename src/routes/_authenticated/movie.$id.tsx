@@ -416,7 +416,7 @@ function MoviePage() {
           <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
         </div>
 
-        <div className="relative z-10 w-full min-w-0 px-4 py-10 sm:px-8 md:px-12 md:py-16 lg:px-16">
+        <div className="relative z-10 w-full min-w-0 px-4 pt-[44vh] sm:pt-[52vh] pb-10 sm:pb-10 md:pt-0 md:pb-16 md:px-12 lg:px-16">
           <button
             type="button"
             onClick={goBack}
@@ -863,6 +863,14 @@ function MoviePage() {
               </button>
             </div>
           )}
+        </section>
+      )}
+      {!offersLoading && offers.length === 0 && (
+        <section className="px-4 sm:px-8 md:px-12 lg:px-16 py-6">
+          <h2 className="mb-3 text-xl font-bold text-foreground">Where to Watch</h2>
+          <p className="text-muted-foreground">
+            No streaming providers available for this title.
+          </p>
         </section>
       )}
       {filteredSimilar.length > 0 && (
