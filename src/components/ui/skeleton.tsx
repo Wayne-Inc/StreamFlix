@@ -931,70 +931,130 @@ export function BrowseSkeleton() {
 
 /* ------------------------------------------------------------------ */
 /*  Explore page skeleton – hero + genre chips + rows                 */
+/*  Matches explore/index.tsx exactly: hero label/title/description,  */
+/*  chip row with Show all/Show less, and 5 Row carousels             */
 /* ------------------------------------------------------------------ */
 
 export function ExploreSkeleton() {
   return (
     <div className="min-h-dvh bg-background">
-      <div className="mx-auto max-w-[1800px] px-4 pb-16 md:pb-20 sm:px-8">
-        <div className="relative flex h-[38vh] items-end overflow-hidden sm:h-[46vh]">
-          <Skeleton className="absolute inset-0 size-full rounded-none bg-surface/60" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-          <div className="relative z-10 w-full px-4 pb-8 sm:px-8 md:px-16">
-            <div className="flex items-center gap-2 text-purple-300">
-              <Skeleton className="size-5 rounded" />
-              <Skeleton className="h-4 w-16 rounded" />
-            </div>
-            <Skeleton className="mt-1 h-10 w-3/4 max-w-[400px] rounded sm:h-14 sm:max-w-[600px]" />
-            <Skeleton className="mt-2 h-4 w-1/2 max-w-xl rounded sm:h-5" />
+      {/* Hero section – matches explore hero layout */}
+      <section className="relative flex h-[38vh] items-end overflow-hidden sm:h-[46vh]">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-700/50 via-surface to-background" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+        <div className="relative z-10 w-full px-4 pb-8 sm:px-8 md:px-16">
+          <div className="flex items-center gap-2 text-purple-300">
+            <Skeleton className="size-5 rounded" />
+            <Skeleton className="h-4 w-24 rounded" />
           </div>
+          <Skeleton className="mt-1 h-10 sm:h-14 w-3/4 max-w-[400px] rounded sm:max-w-[600px]" />
+          <Skeleton className="mt-2 h-4 sm:h-5 w-1/2 max-w-xl rounded" />
         </div>
-        <ExploreGenreChipsSkeleton count={12} className="mt-10 sm:mt-12" />
+      </section>
+
+      <main className="mx-auto max-w-[1800px] px-4 pb-16 md:pb-20 sm:px-8">
+        {/* Genre chip row – matches flex-wrap/flex-nowrap toggle + Show all/Show less */}
+        <div className="mt-8 flex items-center gap-2 flex-nowrap">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton
+              key={i}
+              className="flex items-center gap-1.5 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground h-9 rounded"
+            />
+          ))}
+          <Skeleton
+            className="flex flex-nowrap items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground whitespace-nowrap h-9 rounded"
+          />
+        </div>
+
+        {/* 5 slideshow rows */}
         <div className="mt-10 space-y-8">
           {Array.from({ length: 5 }).map((_, i) => (
-            <RowSkeleton key={i} />
+            <RowSkeleton key={i} title trending={false} />
           ))}
         </div>
-      </div>
+      </main>
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ */
 /*  Explore genre page skeleton – cinematic hero + chips + grid       */
+/*  Matches explore/$genreId.tsx exactly: hero label/title/description, */
+/*  mood chip row with Show all/Show less, movie grid, pagination,    */
+/*  and empty state                                                   */
 /* ------------------------------------------------------------------ */
 
 export function ExploreGenreSkeleton() {
   return (
     <div className="min-h-dvh bg-background">
-      <div className="mx-auto max-w-[1800px] px-4 pb-16 md:pb-20 sm:px-8">
-        {/* Cinematic hero */}
-        <section className="relative flex h-[42vh] items-end overflow-hidden sm:h-[52vh]">
-          <Skeleton className="absolute inset-0 size-full rounded-none bg-surface/60 animate-ken-burns" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-          <div className="relative z-10 w-full px-4 pb-8 sm:px-8 md:px-16">
-            <div className="flex items-center gap-2 text-emerald-400">
-              <Skeleton className="size-5 rounded" />
-              <Skeleton className="h-4 w-16 rounded" />
-            </div>
-            <Skeleton className="mt-1 h-10 w-3/4 max-w-[400px] rounded sm:h-14 sm:max-w-[600px]" />
-            <Skeleton className="mt-2 h-4 w-1/2 max-w-xl rounded sm:h-5" />
+      {/* Cinematic hero */}
+      <section className="relative flex h-[42vh] items-end overflow-hidden sm:h-[52vh]">
+        <Skeleton className="absolute inset-0 size-full rounded-none bg-surface/60 animate-ken-burns" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+        <div className="relative z-10 w-full px-4 pb-8 sm:px-8 md:px-16">
+          <div className="flex items-center gap-2 text-emerald-400">
+            <Skeleton className="size-5 rounded" />
+            <Skeleton className="h-4 w-16 rounded" />
           </div>
-        </section>
-
-        <ExploreGenreChipsSkeleton count={10} className="mt-10 sm:mt-12" />
-        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <MovieCardSkeleton key={i} fluid />
-          ))}
+          <Skeleton className="mt-1 h-10 sm:h-14 w-3/4 max-w-[400px] rounded sm:max-w-[600px]" />
+          <Skeleton className="mt-2 h-4 sm:h-5 w-1/2 max-w-xl rounded" />
         </div>
-      </div>
+      </section>
+
+      <main className="mx-auto max-w-[1800px] px-4 pb-16 md:pb-20 sm:px-8">
+        {/* Mood chip row – matches flex-wrap/flex-nowrap toggle + Show all/Show less */}
+        <div className="mt-8 flex items-center gap-2 flex-nowrap">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton
+              key={i}
+              className="rounded-lg border border-border px-4 py-2 text-sm transition h-8 rounded"
+            />
+          ))}
+          <Skeleton
+            className="flex flex-nowrap items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground whitespace-nowrap transition h-9 rounded"
+          />
+        </div>
+
+        {/* Movie grid – matches grid-cols-2 sm:3 md:4 lg:5 xl:6 2xl:7 */}
+        <div className="mt-8">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <Skeleton
+                key={i}
+                className="w-full text-left block"
+              >
+                <MovieCardSkeleton key={`card-${i}`} fluid />
+              </Skeleton>
+            ))}
+          </div>
+
+          {/* Pagination – Previous / page numbers / Next */}
+          <div className="mt-8 flex items-center justify-center gap-2">
+            <Skeleton
+              className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground transition hover:text-foreground h-9 rounded"
+            />
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton
+                key={i}
+                className="rounded-md px-3 py-2 text-sm transition border border-border text-muted-foreground hover:text-foreground h-9 rounded"
+              />
+            ))}
+            <Skeleton
+              className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground transition hover:text-foreground h-9 rounded"
+            />
+          </div>
+        </div>
+
+        {/* Empty state – "No titles found." */}
+        <Skeleton className="mt-12 h-4 w-32 text-center text-sm text-muted-foreground rounded" />
+      </main>
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Explore genre chips skeleton                                      */
+/*  Explore genre chips skeleton – matches chip links with Sparkles   */
+/*  icon + genre name text, plus Show all / Show less buttons         */
 /* ------------------------------------------------------------------ */
 
 export function ExploreGenreChipsSkeleton({
@@ -1004,7 +1064,10 @@ export function ExploreGenreChipsSkeleton({
   return (
     <div className={cn("mt-8 flex flex-wrap gap-2", className)}>
       {Array.from({ length: count }).map((_, i) => (
-        <Skeleton key={i} className="h-9 w-24 rounded-full" />
+        <Skeleton
+          key={i}
+          className="flex items-center gap-1.5 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground h-9 rounded"
+        />
       ))}
     </div>
   );

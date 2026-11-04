@@ -74,7 +74,14 @@ export async function authenticateRequest(request: Request): Promise<ServerUser 
   const sessionCookie = getSessionCookie(request);
   if (!sessionCookie) return null;
 
-  return await verifySessionCookie(sessionCookie);
+  try {
+    return await verifySessionCookie(sessionCookie);
+  } catch (error) {
+    // Session cookie is invalid, expired, or revoked (e.g. after revokeRefreshTokens).
+    // Return null so callers treat the request as unauthenticated rather than 500ing.
+    console.warn("[Server Auth] Session cookie verification failed:", error);
+    return null;
+  }
 }
 
 /**

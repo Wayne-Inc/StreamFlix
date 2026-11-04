@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { requireAuth } from "@/server/server-auth";
+import { requireAuth, clearSessionCookie } from "@/server/server-auth";
 import { getAdminDb, revokeRefreshTokens } from "@/server/firebase-admin";
 import { createErrorResponse, createSuccessResponse } from "@/lib/error-handler";
 
@@ -55,9 +55,13 @@ export const Route = createFileRoute("/api/revoke-other-sessions")({
             }
           }
 
-          return createSuccessResponse({
+          const response = createSuccessResponse({
             message: "Signed out of all other devices",
           });
+          // Revoking refresh tokens invalidates the current session cookie; clear it
+          // so the browser stops sending the now-revoked cookie.
+          clearSessionCookie(response);
+          return response;
         } catch (err) {
           if (err instanceof Response) return err;
           return createErrorResponse(err, 500);
