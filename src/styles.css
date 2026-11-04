@@ -69,10 +69,12 @@
     color: var(--color-foreground);
     overflow-x: clip;
     font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    /* Thin styled scrollbar for all pages */
-    &::-webkit-scrollbar {
+    /* Vertical-only scrollbar for main page — no horizontal scrollbar */
+    &::-webkit-scrollbar:vertical {
       width: 6px;
-      height: 6px;
+    }
+    &::-webkit-scrollbar:horizontal {
+      display: none;
     }
     &::-webkit-scrollbar-track {
       background: transparent;
@@ -87,6 +89,16 @@
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
   }
+
+  /* Hide all other scrollbars everywhere */
+  *::-webkit-scrollbar {
+    display: none;
+  }
+  * {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
   body,
   #root {
     background-color: var(--color-background);
