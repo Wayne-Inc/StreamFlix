@@ -472,13 +472,13 @@ function BrowsePage() {
       <Navbar />
       <HeroBanner slides={filteredHeroSlides} />
       <div className="mx-auto max-w-4xl px-4 sm:px-8 md:hidden">
-        <nav className="flex flex-wrap gap-2" aria-label="Browse categories">
+        <nav className="flex flex-nowrap gap-2 overflow-x-auto scrollbar-hide pb-1" aria-label="Browse categories">
           {(["home", "movies", "tv", "new"] as const).map((k, i) => (
             <Link
               key={i}
               to="/browse"
               search={{ kind: k }}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 kind === k
                   ? "bg-primary text-primary-foreground"
                   : "bg-surface text-muted-foreground hover:text-foreground hover:bg-accent"
@@ -489,13 +489,13 @@ function BrowsePage() {
           ))}
           <Link
             to="/explore"
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-surface text-muted-foreground hover:text-foreground hover:bg-accent"
+            className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors bg-surface text-muted-foreground hover:text-foreground hover:bg-accent"
           >
             Genres
           </Link>
           <Link
             to="/calendar"
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-surface text-muted-foreground hover:text-foreground hover:bg-accent"
+            className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors bg-surface text-muted-foreground hover:text-foreground hover:bg-accent"
           >
             Calendar
           </Link>

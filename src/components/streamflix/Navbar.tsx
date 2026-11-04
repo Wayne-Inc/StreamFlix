@@ -109,7 +109,6 @@ export function Navbar() {
   const searchBoxRef = useRef<HTMLDivElement | null>(null);
   const mobileNavRef = useRef<HTMLElement | null>(null);
   const [browseMenuOpen, setBrowseMenuOpen] = useState(false);
-  const homeLongPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const q = searchQ.trim();
@@ -613,27 +612,14 @@ export function Navbar() {
       className={`${pathname.startsWith("/watch/") ? "hidden" : "fixed bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] left-3 right-3 z-50 rounded-2xl border border-white/10 bg-background/60 px-2 pt-1.5 pb-1.5 shadow-[0_10px_40px_rgba(0,0,0,0.45)] backdrop-blur-2xl md:hidden"}`}
     >
       <div className="mx-auto flex max-w-lg items-center justify-around">
-        <div
-          onTouchStart={() => {
-            homeLongPressTimer.current = setTimeout(() => setBrowseMenuOpen(true), 500);
-          }}
-          onTouchEnd={() => {
-            if (homeLongPressTimer.current) clearTimeout(homeLongPressTimer.current);
-          }}
-          onTouchMove={() => {
-            if (homeLongPressTimer.current) clearTimeout(homeLongPressTimer.current);
-          }}
-          className="flex min-w-14 flex-col items-center gap-1 py-1"
+        <Link
+          to="/browse"
+          search={{ kind: "home" }}
+          aria-label="Home"
+          className={`flex min-w-14 flex-col items-center gap-1 py-1 text-[10px] ${pathname === "/browse" ? "text-foreground" : "text-muted-foreground"}`}
         >
-          <Link
-            to="/browse"
-            search={{ kind: "home" }}
-            aria-label="Home"
-            className={`flex flex-col items-center gap-1 text-[10px] ${pathname === "/browse" ? "text-foreground" : "text-muted-foreground"}`}
-          >
-            <Home className="size-5" /> Home
-          </Link>
-        </div>
+          <Home className="size-5" /> Home
+        </Link>
         <Link
           to="/search"
           aria-label="Search"
