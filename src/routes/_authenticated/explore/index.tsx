@@ -41,6 +41,17 @@ function ExplorePage() {
   const kidsMode = isKidsProfile();
   const safeGenres = genres;
   const [showAllGenres, setShowAllGenres] = useState(false);
+  // Default view shows as many genres as fit on screen: 2 mobile, 3 sm, 4 md, 5 lg, 6 xl
+  const [defaultGenresCount, setDefaultGenresCount] = useState(5);
+  useEffect(() => {
+    const update = () => {
+      const w = window.innerWidth;
+      setDefaultGenresCount(w >= 1280 ? 6 : w >= 1024 ? 5 : w >= 768 ? 4 : w >= 640 ? 3 : 2);
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
   const safeMoviesRows = moviesData.rows.map(row => ({
     ...row,
     items: kidsMode ? filterKidsContent(row.items) : row.items
@@ -73,10 +84,8 @@ function ExplorePage() {
       </section>
 
       <main className="mx-auto max-w-[1800px] px-4 pb-16 md:pb-20 sm:px-8">
-        <div
-          className={`mt-8 flex items-center gap-2 ${showAllGenres ? "flex-wrap" : "flex-nowrap overflow-x-auto scrollbar-hide pb-2 scroll-smooth"}`}
-        >
-          {safeGenres.map((g) => (
+        <div className={`mt-8 flex items-center gap-2 ${showAllGenres ? "flex-wrap" : "flex-nowrap"}`}>
+          {safeGenres.slice(0, defaultGenresCount).map((g) => (
             <Link
               key={g.id}
               to="/explore/$genreId"
@@ -87,21 +96,21 @@ function ExplorePage() {
               <Sparkles className="size-3.5 text-primary" /> {g.name}
             </Link>
           ))}
-          {safeGenres.length > 8 && !showAllGenres && (
+          {safeGenres.length > defaultGenresCount && !showAllGenres && (
             <button
               type="button"
               onClick={() => setShowAllGenres(true)}
-              className="flex items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground whitespace-nowrap transition hover:bg-primary hover:text-primary-foreground"
+              className="flex flex-nowrap items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground whitespace-nowrap transition hover:bg-primary hover:text-primary-foreground"
             >
               Show all ({safeGenres.length})
               <ChevronDown className="size-4" />
             </button>
           )}
-          {showAllGenres && safeGenres.length > 8 && (
+          {showAllGenres && safeGenres.length > defaultGenresCount && (
             <button
               type="button"
               onClick={() => setShowAllGenres(false)}
-              className="flex items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground whitespace-nowrap transition hover:bg-primary hover:text-primary-foreground"
+              className="flex flex-nowrap items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground whitespace-nowrap transition hover:bg-primary hover:text-primary-foreground"
             >
               Show less
               <ChevronUp className="size-4" />

@@ -14,9 +14,6 @@ const exploreSearchSchema = z.object({
   q: z.string().optional().catch(""),
 });
 
-// How many genre chips to show in the default row before "Show all".
-const GENRES_DEFAULT_SHOW = 8;
-
 export const Route = createFileRoute("/_authenticated/explore/$genreId")({
   validateSearch: exploreSearchSchema,
   loader: async ({ params }) => {
@@ -44,6 +41,17 @@ function ExploreGenrePage() {
   const { q } = Route.useSearch();
   const [page, setPage] = useState(1);
   const [showAllGenres, setShowAllGenres] = useState(false);
+  // Default view shows as many genres as fit on screen: 2 mobile, 3 sm, 4 md, 5 lg, 6 xl
+  const [defaultGenresCount, setDefaultGenresCount] = useState(5);
+  useEffect(() => {
+    const update = () => {
+      const w = window.innerWidth;
+      setDefaultGenresCount(w >= 1280 ? 6 : w >= 1024 ? 5 : w >= 768 ? 4 : w >= 640 ? 3 : 2);
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
   const navigate = useNavigate();
 
   const kidsMode = isKidsProfile();
@@ -51,7 +59,7 @@ function ExploreGenrePage() {
   const safeItems = kidsMode ? filterKidsContent(items) : items;
   const genreName = safeGenres.find((g) => String(g.id) === genreId)?.name || q || "Explore";
   const hero = safeItems[0];
-  const visibleGenres = showAllGenres ? safeGenres : safeGenres.slice(0, GENRES_DEFAULT_SHOW);
+  const visibleGenres = showAllGenres ? safeGenres : safeGenres.slice(0, defaultGenresCount);
 
   const pageCount = Math.max(1, Math.ceil(safeItems.length / 24));
   const visible = safeItems.slice((page - 1) * 24, page * 24);
@@ -81,10 +89,8 @@ function ExploreGenrePage() {
       </section>
 
       <main className="mx-auto max-w-[1800px] px-4 pb-16 md:pb-20 sm:px-8">
-        {/* Mood chips — one row by default (scrollable), Show All reveals all wrapped in rows */}
-        <div
-          className={`mt-8 flex items-center gap-2 ${showAllGenres ? "flex-wrap" : "flex-nowrap overflow-x-auto scrollbar-hide pb-2 scroll-smooth"}`}
-        >
+        {/* Mood chips — one row by default (not scrollable), Show All reveals all wrapped in rows */}
+        <div className={`mt-8 flex items-center gap-2 ${showAllGenres ? "flex-wrap" : "flex-nowrap"}`}>
           {visibleGenres.map((g) => {
             const active = String(g.id) === genreId;
             return (
@@ -104,21 +110,21 @@ function ExploreGenrePage() {
               </Link>
             );
           })}
-          {safeGenres.length > GENRES_DEFAULT_SHOW && !showAllGenres && (
+          {safeGenres.length > defaultGenresCount && !showAllGenres && (
             <button
               type="button"
               onClick={() => setShowAllGenres(true)}
-              className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground whitespace-nowrap transition hover:bg-primary hover:text-primary-foreground"
+              className="flex flex-nowrap items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground whitespace-nowrap transition hover:bg-primary hover:text-primary-foreground"
             >
               Show all ({safeGenres.length})
               <ChevronDown className="size-4" />
             </button>
           )}
-          {showAllGenres && safeGenres.length > GENRES_DEFAULT_SHOW && (
+          {showAllGenres && safeGenres.length > defaultGenresCount && (
             <button
               type="button"
               onClick={() => setShowAllGenres(false)}
-              className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground whitespace-nowrap transition hover:bg-primary hover:text-primary-foreground"
+              className="flex flex-nowrap items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground whitespace-nowrap transition hover:bg-primary hover:text-primary-foreground"
             >
               Show less
               <ChevronUp className="size-4" />
