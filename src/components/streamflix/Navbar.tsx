@@ -14,7 +14,6 @@ import {
   Bookmark,
   Home,
   BarChart3,
-  Sparkles,
   Crown,
   Shuffle,
   Bell,
@@ -43,7 +42,7 @@ const links = [
   { label: "New", to: "/browse", search: { kind: "new" } },
   { label: "Genres", to: "/explore" },
   { label: "Calendar", to: "/calendar" },
-  { label: "AI", to: "/assistant", icon: Sparkles },
+  { label: "AI", to: "/assistant" },
 ] as const;
 
 /** Properly check if a URL is from TMDB images (not a substring match). */
@@ -646,7 +645,7 @@ export function Navbar() {
           aria-label="AI"
           className={`flex min-w-14 flex-col items-center gap-1 py-1 text-[10px] ${pathname === "/assistant" ? "text-foreground" : "text-muted-foreground"}`}
         >
-          <Sparkles className="size-5" /> AI 
+          AI
         </Link>
         <button
           type="button"

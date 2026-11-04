@@ -270,8 +270,8 @@ function SearchPage() {
   const trendingPeopleWeekMapped = trendingPeopleWeek.map(mapPerson).slice(0, 10);
 
   // Map popular movies and TV shows
-  const popularMovies = popularMoviesQuery.data?.results ?? [];
-  const popularTvShows = popularTvQuery.data?.results ?? [];
+  const popularMovies = popularMoviesQuery.data ?? [];
+  const popularTvShows = popularTvQuery.data ?? [];
   const popularMoviesMapped = popularMovies.slice(0, 10);
   const popularTvShowsMapped = popularTvShows.slice(0, 10);
   const popularLoading = popularMoviesQuery.isLoading || popularTvQuery.isLoading;

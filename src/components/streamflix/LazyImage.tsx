@@ -82,7 +82,7 @@ export function LazyImage({ src, placeholder, width, height, alt = "", className
         onLoad={handleLoad}
         onError={handleError}
         className={cn(
-          "transition-opacity duration-700 ease-out",
+          "w-full h-full object-cover transition-opacity duration-700 ease-out",
           loaded ? "opacity-100" : "opacity-0",
           error ? "opacity-0" : ""
         )}

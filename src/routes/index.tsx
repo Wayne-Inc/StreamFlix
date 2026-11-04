@@ -208,7 +208,7 @@ function Landing() {
             {canScrollLeft && (
               <button
                 onClick={() => scrollBy(-1)}
-                className="hidden md:flex absolute -left-3 top-1/2 -translate-y-1/2 z-10 size-10 items-center justify-center rounded-full bg-background/80 border border-border backdrop-blur-sm shadow-lg hover:bg-accent transition"
+                className="hidden md:flex absolute -left-3 top-1/2 -translate-y-1/2 z-10 size-10 items-center justify-center rounded-xl bg-background/80 border border-border backdrop-blur-sm shadow-lg hover:bg-accent transition"
                 aria-label="Scroll left"
               >
                 <ChevronLeft className="size-5" />
@@ -248,7 +248,7 @@ function Landing() {
             {canScrollRight && (
               <button
                 onClick={() => scrollBy(1)}
-                className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 z-10 size-10 items-center justify-center rounded-full bg-background/80 border border-border backdrop-blur-sm shadow-lg hover:bg-accent transition"
+                className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 z-10 size-10 items-center justify-center rounded-xl bg-background/80 border border-border backdrop-blur-sm shadow-lg hover:bg-accent transition"
                 aria-label="Scroll right"
               >
                 <ChevronRight className="size-5" />

@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
 import { functions } from "@/lib/firebase";
+import { toast } from "sonner";
 import {
   signOut as firebaseSignOut,
   sendEmailVerification,

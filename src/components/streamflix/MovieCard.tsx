@@ -134,11 +134,11 @@ export function MovieCard({
           className="absolute top-2 right-2 z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
           aria-label={isInList ? "Remove from My List" : "Add to My List"}
         >
-          <div className="flex size-10 items-center justify-center rounded-full bg-black/60 text-white shadow-lg backdrop-blur-sm hover:bg-black/80 transition-colors">
+          <div className="flex size-8 items-center justify-center rounded-full bg-black/60 text-white shadow-lg backdrop-blur-sm hover:bg-black/80 transition-colors">
             {isInList ? (
-              <BookmarkCheck className="size-5 fill-current" />
+              <BookmarkCheck className="size-4 fill-current" />
             ) : (
-              <Bookmark className="size-5" />
+              <Bookmark className="size-4" />
             )}
           </div>
         </button>

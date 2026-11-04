@@ -20,8 +20,6 @@ import {
   Clock,
   ChevronLeft,
   ChevronRight,
-  ChevronUp,
-  ChevronDown,
   Sparkles,
   LoaderCircle,
 } from "lucide-react";
@@ -47,7 +45,7 @@ import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { Row } from "@/components/streamflix/Row";
 import { Skeleton, MovieDetailSkeleton } from "@/components/ui/skeleton";
-import { movieById, loadSimilar, loadRecommendations, getWatchProviders, getGenres, type WatchProvider } from "@/lib/streamflix-data";
+import { movieById, loadSimilar, loadRecommendations, getGenres } from "@/lib/streamflix-data";
 import { discoverByGenre, fetchTitleLogo, fetchTvSeason, fetchTopRatedTv } from "@/lib/api/tmdb";
 import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
 import { TrailerModal } from "@/components/streamflix/TrailerModal";
@@ -245,10 +243,6 @@ function MoviePage() {
     season: 1,
     episode: 1,
   });
-  const [offers, setOffers] = useState<WatchProvider[]>([]);
-  const [offersLoading, setOffersLoading] = useState(true);
-  const [showAllOffers, setShowAllOffers] = useState(false);
-
   useEffect(() => {
     setInList(isInMyList(movie.id));
     setWatched(getWatchHistory().some((x) => x.id === movie.id || x.id.startsWith(`${movie.id}:`)));
@@ -314,40 +308,6 @@ function MoviePage() {
       window.removeEventListener("sf:watchedUpdated", scheduleUpdate);
     };
   }, [isTv, movie.id, movie.numberOfSeasons]);
-
-  // Fetch TMDB watch providers
-  useEffect(() => {
-    let cancelled = false;
-    setOffersLoading(true);
-    getWatchProviders(movie.id, isTv ? "tv" : "movie")
-      .then((results: Record<string, { link: string; flatrate?: WatchProvider[]; rent?: WatchProvider[]; buy?: WatchProvider[]; free?: WatchProvider[]; ads?: WatchProvider[] }>) => {
-        if (!cancelled) {
-          // Prefer US links, include every available offer type, and de-duplicate
-          // providers that appear in multiple regions or offer categories.
-          const byProvider = new Map<number, WatchProvider>();
-          const countries = Object.keys(results).sort((a, b) => a === "US" ? -1 : b === "US" ? 1 : 0);
-          for (const country of countries) {
-            const offers = results[country];
-            for (const category of [offers.flatrate, offers.rent, offers.buy, offers.free, offers.ads]) {
-              for (const provider of category ?? []) {
-                if (provider.link && !byProvider.has(provider.provider_id)) {
-                  byProvider.set(provider.provider_id, provider);
-                }
-              }
-            }
-          }
-          setOffers(
-            Array.from(byProvider.values()).sort(
-              (a, b) => a.display_priority - b.display_priority || a.provider_name.localeCompare(b.provider_name),
-            ),
-          );
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setOffersLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, [movie.id, isTv]);
 
   const navigate = useNavigate();
   const router = useRouter();
@@ -421,7 +381,7 @@ function MoviePage() {
             type="button"
             onClick={goBack}
             aria-label="Go back"
-            className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 px-4 py-2 text-sm font-medium text-white backdrop-blur transition hover:bg-black/60"
+            className="mb-6 inline-flex items-center gap-2 rounded-xl border border-white/20 bg-black/40 px-4 py-2 text-sm font-medium text-white backdrop-blur transition hover:bg-black/60"
           >
             <ArrowLeft className="size-4" /> Back
           </button>
@@ -801,78 +761,6 @@ function MoviePage() {
         </div>
       </section>
 
-      {offersLoading && (
-        <section className="px-4 sm:px-8 md:px-12 lg:px-16 py-6">
-          <h2 className="mb-3 text-xl font-bold text-foreground">Where to Watch</h2>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
-            {Array.from({ length: 7 }).map((_, i) => (
-              <div key={i} className="flex h-[4.625rem] flex-col items-center gap-1.5 rounded-lg border border-border bg-surface p-2 animate-pulse">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-background/50" />
-                <div className="h-3 w-full rounded bg-muted" />
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-      {!offersLoading && offers.length > 0 && (
-        <section className="px-4 sm:px-8 md:px-12 lg:px-16 py-6">
-          <h2 className="mb-3 text-xl font-bold text-foreground">Where to Watch</h2>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2">
-            {(showAllOffers ? offers : offers.slice(0, 7)).map((offer) => (
-              <a
-                key={offer.provider_id}
-                href={offer.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex h-[5.75rem] flex-col items-center gap-1.5 rounded-lg border border-border bg-surface p-2 transition-all hover:border-primary/50 hover:shadow-md"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-background/50">
-                  {offer.logo_path && (
-                    <img
-                      src={`https://image.tmdb.org/t/p/w92${offer.logo_path}`}
-                      alt={offer.provider_name}
-                      className="h-8 w-8 object-contain"
-                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                    />
-                  )}
-                </div>
-                <span className="text-[10px] font-medium text-foreground truncate text-center w-full leading-tight">
-                  {offer.provider_name}
-                </span>
-              </a>
-            ))}
-          </div>
-          {offers.length > 7 && (
-            <div className="mt-3 flex justify-center">
-              <button
-                type="button"
-                onClick={() => setShowAllOffers((v) => !v)}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/80 px-4 py-2 text-sm font-medium text-foreground backdrop-blur transition hover:bg-background hover:border-primary/50"
-              >
-                {showAllOffers ? (
-                  <>
-                    <ChevronUp className="size-4" />
-                    Show less
-                  </>
-                ) : (
-                  <>
-                    Show more ({offers.length})
-                    <ChevronDown className="size-4" />
-                  </>
-                )}
-              </button>
-            </div>
-          )}
-        </section>
-      )}
-      {!offersLoading && offers.length === 0 && (
-        <section className="px-4 sm:px-8 md:px-12 lg:px-16 py-6">
-          <h2 className="mb-3 text-xl font-bold text-foreground">Where to Watch</h2>
-          <p className="text-muted-foreground">
-            No streaming providers available for this title.
-          </p>
-        </section>
-      )}
       {filteredSimilar.length > 0 && (
         <div className="space-y-2">
           {(() => {
