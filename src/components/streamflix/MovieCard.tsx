@@ -104,8 +104,8 @@ export function MovieCard({
           </div>
         )}
 
-        {/* Bottom gradient for text contrast - shows on hover */}
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background/95 via-background/40 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        {/* Bottom gradient for text contrast - shows on hover (always for sm cards) */}
+        <div className={`absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background/95 via-background/40 to-transparent pointer-events-none ${size === "sm" ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity duration-300`} />
 
         {/* Top-left rating badge - moved right when rank badge exists (Top 10/Trending) */}
         {movie.score != null && (
