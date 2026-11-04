@@ -101,23 +101,31 @@ async function getCandidates(): Promise<Candidate[]> {
     trendingDay,
     popularMovies1,
     popularMovies2,
+    popularMovies3,
     popularTv1,
     popularTv2,
+    popularTv3,
     topRatedMovies,
     topRatedTv,
     upcomingMovies,
+    nowPlayingMovies,
     airingTv,
+    airingTodayTv,
   ] = await Promise.all([
     tmdbFetch("/trending/all/week"),
     tmdbFetch("/trending/all/day"),
     tmdbFetch("/movie/popular", { page: "1" }),
     tmdbFetch("/movie/popular", { page: "2" }),
+    tmdbFetch("/movie/popular", { page: "3" }),
     tmdbFetch("/tv/popular", { page: "1" }),
     tmdbFetch("/tv/popular", { page: "2" }),
+    tmdbFetch("/tv/popular", { page: "3" }),
     tmdbFetch("/movie/top_rated"),
     tmdbFetch("/tv/top_rated"),
     tmdbFetch("/movie/upcoming"),
+    tmdbFetch("/movie/now_playing"),
     tmdbFetch("/tv/on_the_air"),
+    tmdbFetch("/tv/airing_today"),
   ]);
 
   const entries: Candidate[] = [
@@ -131,12 +139,16 @@ async function getCandidates(): Promise<Candidate[]> {
     })),
     ...(popularMovies1.results ?? []).map((item: any) => ({ movie: toMovie(item), mediaType: "movie" as const })),
     ...(popularMovies2.results ?? []).map((item: any) => ({ movie: toMovie(item), mediaType: "movie" as const })),
+    ...(popularMovies3.results ?? []).map((item: any) => ({ movie: toMovie(item), mediaType: "movie" as const })),
     ...(popularTv1.results ?? []).map((item: any) => ({ movie: toTv(item), mediaType: "tv" as const })),
     ...(popularTv2.results ?? []).map((item: any) => ({ movie: toTv(item), mediaType: "tv" as const })),
+    ...(popularTv3.results ?? []).map((item: any) => ({ movie: toTv(item), mediaType: "tv" as const })),
     ...(topRatedMovies.results ?? []).map((item: any) => ({ movie: toMovie(item), mediaType: "movie" as const })),
     ...(topRatedTv.results ?? []).map((item: any) => ({ movie: toTv(item), mediaType: "tv" as const })),
     ...(upcomingMovies.results ?? []).map((item: any) => ({ movie: toMovie(item), mediaType: "movie" as const })),
+    ...(nowPlayingMovies.results ?? []).map((item: any) => ({ movie: toMovie(item), mediaType: "movie" as const })),
     ...(airingTv.results ?? []).map((item: any) => ({ movie: toTv(item), mediaType: "tv" as const })),
+    ...(airingTodayTv.results ?? []).map((item: any) => ({ movie: toTv(item), mediaType: "tv" as const })),
   ];
 
   const unique = new Map<string, Candidate>();

@@ -8,8 +8,10 @@ import { askStreamflixAI } from "@/lib/api/ai";
 import { AI_ERROR_MESSAGES, aiErrorMessage } from "@/lib/ai-errors";
 import { getWatchHistory } from "@/lib/continue-watching";
 import { getFavoriteGenres } from "@/lib/favorite-genres";
+import { GENRE_OPTIONS } from "@/lib/favorite-genres";
 import { auth } from "@/lib/firebase";
 import { isKidsProfile } from "@/lib/kids-mode";
+import { getMyList } from "@/lib/my-list";
 import type { Movie } from "@/lib/types";
 
 type AssistantMessage = {
@@ -17,6 +19,61 @@ type AssistantMessage = {
   content: string;
   recommendations?: { movie: Movie; reason: string }[];
 };
+
+function buildSuggestions(kidsMode: boolean, interestGenres: string[]): string[] {
+  if (kidsMode) {
+    return ["A funny animated movie", "An animal adventure", "A cozy family show"];
+  }
+
+  const genreCounts = new Map<string, number>();
+  const addGenres = (ids: number[]) => {
+    for (const id of ids) {
+      const name = GENRE_OPTIONS.find((g) => g.id === id)?.name;
+      if (name) genreCounts.set(name, (genreCounts.get(name) ?? 0) + 1);
+    }
+  };
+
+  const recentTitles: string[] = [];
+  const history = getWatchHistory();
+  for (const item of history.slice(0, 8)) {
+    addGenres(item.genreIds ?? []);
+    if (!recentTitles.includes(item.title) && recentTitles.length < 3) {
+      recentTitles.push(item.title);
+    }
+  }
+
+  const myList = getMyList();
+  for (const entry of myList.slice(0, 8)) {
+    addGenres(entry.movie.genreIds ?? []);
+  }
+
+  for (const name of interestGenres) {
+    genreCounts.set(name, (genreCounts.get(name) ?? 0) + 1);
+  }
+
+  const topGenres = [...genreCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([name]) => name)
+    .slice(0, 4);
+
+  const suggestions: string[] = [];
+  for (const title of recentTitles) {
+    suggestions.push(`More like ${title}`);
+  }
+  for (const genre of topGenres) {
+    suggestions.push(`${genre} movies and shows`);
+  }
+
+  if (suggestions.length === 0) {
+    suggestions.push(
+      "Something uplifting and under two hours",
+      "A clever mystery without too much violence",
+      "A sci-fi show with great characters",
+    );
+  }
+
+  return suggestions.slice(0, 4);
+}
 
 export const Route = createFileRoute("/_authenticated/assistant")({
   head: () => ({ meta: [{ title: "AI Assistant — StreamFlix" }] }),
@@ -127,9 +184,27 @@ function AssistantPage() {
     void send(prompt);
   };
 
-  const suggestions = kidsMode
-    ? ["A funny animated movie", "An animal adventure", "A cozy family show"]
-    : ["A clever mystery without too much violence", "Something uplifting and under two hours", "A sci-fi show with great characters"];
+  const [interestGenres, setInterestGenres] = useState<string[]>([]);
+
+  // Load the user's favorite genres (interests) so suggestions reflect their taste.
+  useEffect(() => {
+    if (kidsMode) return;
+    const user = auth.currentUser;
+    if (!user) return;
+    getFavoriteGenres(user.uid)
+      .then((ids) => {
+        const names = ids
+          .map((id) => GENRE_OPTIONS.find((g) => g.id === id)?.name)
+          .filter((name): name is string => Boolean(name));
+        setInterestGenres(names.slice(0, 4));
+      })
+      .catch(() => setInterestGenres([]));
+  }, [kidsMode, auth.currentUser?.uid]);
+
+  const suggestions = useMemo(() => buildSuggestions(kidsMode, interestGenres), [
+    kidsMode,
+    interestGenres,
+  ]);
 
   return (
     <div className="flex h-[calc(100dvh-env(safe-area-inset-bottom,0px))] flex-col overflow-hidden bg-background text-foreground">
@@ -189,7 +264,7 @@ function AssistantPage() {
                       </div>
                       <div className="-mx-4 mt-0 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:justify-center">
                         {message.recommendations.map((rec, recIndex) => (
-                          <div key={rec.movie.id ?? recIndex} className="snap-start shrink-0">
+                          <div key={`${rec.movie.id}-${recIndex}`} className="snap-start shrink-0">
                             <MovieCard movie={rec.movie} reason={rec.reason} />
                           </div>
                         ))}

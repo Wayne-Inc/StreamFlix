@@ -105,24 +105,7 @@ const availableEmbedServers: EmbedServer[] = [
       tv: "https://embed.smashystream.com/playere.php?tmdb={id}&season={season}&episode={episode}",
     },
   },
-  {
-    id: "pstream",
-    name: "P-Stream",
-    isFrench: false,
-    urls: {
-      movie: "https://iframe.pstream.org/embed/tmdb-movie-{id}",
-      tv: "https://iframe.pstream.org/embed/tmdb-tv-{id}/{season}/{episode}",
-    },
-  },
-  {
-    id: "vidsrccc",
-    name: "VidSrc.cc",
-    isFrench: false,
-    urls: {
-      movie: "https://vidsrc.cc/v2/embed/movie/{id}",
-      tv: "https://vidsrc.cc/v2/embed/tv/{id}/{season}/{episode}",
-    },
-  },
+
   {
     id: "vidsrcto",
     name: "VidSrc.to",
@@ -148,6 +131,15 @@ const availableEmbedServers: EmbedServer[] = [
     urls: {
       movie: "https://vidsrc.su/embed/movie/{id}",
       tv: "https://vidsrc.su/embed/tv/{id}/{season}/{episode}",
+    },
+  },
+  {
+    id: "vidsrcmov",
+    name: "VidSrc.mov",
+    isFrench: false,
+    urls: {
+      movie: "https://vidsrc.mov/embed/movie/{id}",
+      tv: "https://vidsrc.mov/embed/tv/{id}/{season}/{episode}",
     },
   },
 ];

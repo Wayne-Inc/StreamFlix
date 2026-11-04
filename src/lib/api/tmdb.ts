@@ -163,7 +163,7 @@ export const probeEmbedUrl = createServerFn({ method: "POST" })
     try {
       const res = await fetch(data.url, {
         method: "GET",
-        redirect: "follow",
+        redirect: "manual",
         signal: AbortSignal.timeout(8000),
       });
       return res.ok;
