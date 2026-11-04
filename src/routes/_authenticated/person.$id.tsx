@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
-import { useEffect, useState, useRef, useCallback } from "react";
-import { Calendar, MapPin, Film, ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Calendar, MapPin, Film, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { Skeleton, PersonDetailSkeleton } from "@/components/ui/skeleton";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { fetchPersonDetails, fetchPersonImages } from "@/lib/api/tmdb";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import type { Movie } from "@/lib/types";
@@ -50,112 +51,63 @@ function CreditSection({
   credits: Credit[];
   countLabel: string;
 }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [showLeft, setShowLeft] = useState(false);
-  const [showRight, setShowRight] = useState(true);
-
   if (credits.length === 0) return null;
-
-  const checkScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    setShowLeft(el.scrollLeft > 4);
-    setShowRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
-  }, []);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    checkScroll();
-    el.addEventListener("scroll", checkScroll, { passive: true });
-    return () => el.removeEventListener("scroll", checkScroll);
-  }, [checkScroll]);
-
-  const scrollBy = useCallback((dir: number) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollBy({ left: dir * 300, behavior: "smooth" });
-  }, []);
 
   return (
     <div className="mb-8">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-2xl font-bold tracking-tight">
-          {title}{" "}
-          <span className="text-lg font-normal text-muted-foreground">
-            ({credits.length} {countLabel})
-          </span>
-        </h2>
-      </div>
-      <div className="relative">
-        <div
-          ref={scrollRef}
-          className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 scroll-smooth"
-          onWheel={(e) => {
-            if (e.deltaY !== 0) {
-              e.currentTarget.scrollLeft += e.deltaY;
-              e.preventDefault();
-            }
-          }}
-        >
-          {credits.map((item, idx) => (
-            <MovieCard
-              key={`${item.id}-${item.character}`}
-              movie={{
-                id: item.id,
-                title: item.title,
-                description: item.character ? `As ${item.character}` : "",
-                year: item.year ?? new Date().getFullYear(),
-                releaseDate: undefined,
-                rating: "",
-                runtime: "",
-                runtimeMinutes: 0,
-                genres: [],
-                genreIds: [],
-                poster: item.poster,
-                backdrop: item.backdrop,
-                backdropSm: item.backdrop,
-                trailer: undefined,
-                cast: [],
-                castPfp: [],
-                director: "",
-                directorId: "",
-                match: 0,
-                score: null,
-                popularity: 0,
-                numberOfSeasons: undefined,
-                numberOfEpisodes: undefined,
-                logo: undefined,
-              } as Movie}
-              landscape
-            />
-          ))}
-        </div>
-        {credits.length > 5 && (
-          <>
-            {showLeft && (
-              <button
-                type="button"
-                onClick={() => scrollBy(-1)}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 hidden sm:flex size-10 items-center justify-center rounded-full border border-border bg-background/80 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
-                aria-label={`Scroll ${title} left`}
-              >
-                <ChevronLeft className="size-5" />
-              </button>
-            )}
-            {showRight && (
-              <button
-                type="button"
-                onClick={() => scrollBy(1)}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 hidden sm:flex size-10 items-center justify-center rounded-full border border-border bg-background/80 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
-                aria-label={`Scroll ${title} right`}
-              >
-                <ChevronRight className="size-5" />
-              </button>
-            )}
-          </>
-        )}
-      </div>
+      <Collapsible>
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left rounded-lg border border-border bg-surface text-foreground hover:bg-accent transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold tracking-tight">{title}</h2>
+              <span className="text-base font-normal text-muted-foreground">
+                ({credits.length} {countLabel})
+              </span>
+            </div>
+            <ChevronDown className="size-4 shrink-0" />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-3">
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 scroll-smooth">
+            {credits.map((item, idx) => (
+              <MovieCard
+                key={`${item.id}-${item.character}`}
+                movie={{
+                  id: item.id,
+                  title: item.title,
+                  description: item.character ? `As ${item.character}` : "",
+                  year: item.year ?? new Date().getFullYear(),
+                  releaseDate: undefined,
+                  rating: "",
+                  runtime: "",
+                  runtimeMinutes: 0,
+                  genres: [],
+                  genreIds: [],
+                  poster: item.poster,
+                  backdrop: item.backdrop,
+                  backdropSm: item.backdrop,
+                  trailer: undefined,
+                  cast: [],
+                  castPfp: [],
+                  director: "",
+                  directorId: "",
+                  match: 0,
+                  score: null,
+                  popularity: 0,
+                  numberOfSeasons: undefined,
+                  numberOfEpisodes: undefined,
+                  logo: undefined,
+                } as Movie}
+                landscape
+                compact
+              />
+            ))}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }

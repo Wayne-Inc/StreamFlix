@@ -97,7 +97,7 @@ export const Route = createFileRoute("/api/release-notifications-cron")({
 
           // Build notification content
           const titles = newReleases.slice(0, 3).map((r) => r.title).join(", ");
-          const title = `🎬 New on StreamFlix: ${titles}${newReleases.length > 3 ? "..." : ""}`;
+          const title = `New on StreamFlix: ${titles}${newReleases.length > 3 ? "..." : ""}`;
           const body = `${newReleases.length} new title${newReleases.length > 1 ? "s" : ""} just dropped. Tap to explore!`;
 
           // Send push notifications

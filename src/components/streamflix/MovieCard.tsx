@@ -15,6 +15,7 @@ export function MovieCard({
   fluid = false,
   rank,
   landscape = false,
+  compact = false,
 }: {
   movie: Movie;
   progress?: number;
@@ -23,6 +24,7 @@ export function MovieCard({
   fluid?: boolean;
   rank?: number;
   landscape?: boolean;
+  compact?: boolean;
 }) {
   const navigate = useNavigate();
   const [isDragging, setIsDragging] = useState(false);
@@ -71,7 +73,15 @@ export function MovieCard({
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={() => setIsDragging(false)}
-      className={`group relative block ${fluid ? "w-full" : landscape ? "w-[280px] sm:w-[380px] shrink-0" : "w-[175px] sm:w-[220px] shrink-0"}`}
+      className={`group relative block ${fluid
+        ? "w-full"
+        : landscape
+          ? compact
+            ? "w-[230px] sm:w-[300px] shrink-0"
+            : "w-[280px] sm:w-[380px] shrink-0"
+          : compact
+            ? "w-[155px] sm:w-[195px] shrink-0"
+            : "w-[175px] sm:w-[220px] shrink-0"}`}
       data-context="movie"
       data-title={movie.title}
     >
@@ -143,20 +153,29 @@ export function MovieCard({
               className="mb-2 mx-auto max-h-16 w-auto max-w-full object-contain select-none"
             />
           ) : (
-            <p className={`font-bold text-white line-clamp-1 drop-shadow-lg select-none ${landscape ? "text-lg sm:text-xl" : "text-xs sm:text-sm"}`}>
+            <p className={`font-bold text-white line-clamp-1 drop-shadow-lg select-none ${compact ? landscape ? "text-base sm:text-lg" : "text-xs sm:text-sm" : landscape ? "text-lg sm:text-xl" : "text-xs sm:text-sm"}`}>
               {movie.title}
             </p>
           )}
-          <div className={`flex items-center gap-1.5 mt-0.5 ${landscape ? "text-base sm:text-lg" : "text-[10px] sm:text-xs"}`}>
+          <div className={`flex items-center gap-1.5 mt-0.5 ${compact ? "text-xs sm:text-sm" : landscape ? "text-base sm:text-lg" : "text-[10px] sm:text-xs"}`}>
             <span className="text-muted-foreground">{movie.year}</span>
             {movie.id.startsWith("tv-") && movie.numberOfSeasons && movie.numberOfSeasons > 0 ? (
               <>
                 <span className="text-muted-foreground/40">&middot;</span>
                 <span className="inline-flex items-center gap-1 text-white/80">
-                  <span className={landscape ? "text-base" : "text-[10px] sm:text-xs"}>
+                  <span className={compact ? "text-xs sm:text-sm" : landscape ? "text-base" : "text-[10px] sm:text-xs"}>
                     {movie.numberOfSeasons} {movie.numberOfSeasons === 1 ? "season" : "seasons"}
                   </span>
                 </span>
+                {movie.runtimeMinutes != null && movie.runtimeMinutes > 0 && (
+                  <>
+                    <span className="text-muted-foreground/40">&middot;</span>
+                    <span className="inline-flex items-center gap-1 text-white/80">
+                      <Clock className={landscape ? "size-4" : "size-2.5"} />
+                      {Math.floor(movie.runtimeMinutes / 60)}m / ep
+                    </span>
+                  </>
+                )}
               </>
             ) : movie.runtimeMinutes != null && movie.runtimeMinutes > 0 ? (
               <>

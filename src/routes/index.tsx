@@ -16,7 +16,6 @@ import {
   Github,
   AlertCircle,
   ArrowRight,
-  Sparkles,
 } from "lucide-react";
 import { Logo } from "@/components/streamflix/Logo";
 import { ContactEmail } from "@/components/streamflix/ContactEmail";
@@ -197,60 +196,6 @@ function Landing() {
               </div>
               <DownloadAppButton className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-6 py-4 text-lg font-semibold text-primary hover:bg-primary/20 transition-colors disabled:opacity-50 sm:w-auto shrink-0" />
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Mobile Browse Navigation - Under Hero/Slideshow */}
-      <section className="bg-background py-6 sm:hidden border-y border-black/10">
-        <div className="mx-auto max-w-[1800px] px-4">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
-            <Link
-              to="/browse"
-              search={{ kind: "home" }}
-              className="shrink-0 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300"
-            >
-              <span className="size-5">🏠</span> Home
-            </Link>
-            <Link
-              to="/browse"
-              search={{ kind: "movies" }}
-              className="shrink-0 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300"
-            >
-              <span className="size-5">🎬</span> Movies
-            </Link>
-            <Link
-              to="/browse"
-              search={{ kind: "tv" }}
-              className="shrink-0 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300"
-            >
-              <span className="size-5">📺</span> Shows
-            </Link>
-            <Link
-              to="/browse"
-              search={{ kind: "new" }}
-              className="shrink-0 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300"
-            >
-              <span className="size-5">✨</span> New
-            </Link>
-            <Link
-              to="/explore"
-              className="shrink-0 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300"
-            >
-              <span className="size-5">🎭</span> Genres
-            </Link>
-            <Link
-              to="/calendar"
-              className="shrink-0 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300"
-            >
-              <span className="size-5">📅</span> Calendar
-            </Link>
-            <Link
-              to="/assistant"
-              className="shrink-0 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300"
-            >
-              <Sparkles className="size-5" /> AI
-            </Link>
           </div>
         </div>
       </section>

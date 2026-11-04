@@ -177,9 +177,22 @@ function MoviePage() {
   const isTv = movie.id.startsWith("tv-");
   const titleLogoUrl = logo?.filePath ? buildTitleLogoUrl(logo.filePath) : null;
   const [descExpanded, setDescExpanded] = useState(false);
+  const [descTruncated, setDescTruncated] = useState(false);
+  const descRef = useRef<HTMLParagraphElement | null>(null);
   const castScrollerRef = useRef<HTMLDivElement | null>(null);
   const [showPicker, setShowPicker] = useState(true);
   const [castScroll, setCastScroll] = useState({ left: 0, viewport: 0, width: 0 });
+
+  // Only show "Show more" when the description is actually truncated by line-clamp.
+  useEffect(() => {
+    if (descExpanded) {
+      setDescTruncated(false);
+      return;
+    }
+    const el = descRef.current;
+    if (!el) return;
+    setDescTruncated(el.scrollHeight > el.clientHeight);
+  }, [descExpanded, movie.description]);
 
   useEffect(() => {
     const el = castScrollerRef.current;
@@ -397,7 +410,7 @@ function MoviePage() {
     <div className="min-h-dvh bg-background pb-20 md:pb-0">
       <Navbar />
       <section className="relative pt-16 md:flex md:min-h-[85vh] md:items-center md:pt-20">
-        <div className="pointer-events-none absolute inset-x-0 top-0 md:inset-y-0 aspect-video md:aspect-auto md:h-auto overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[40vh] sm:h-[48vh] md:inset-y-0 md:aspect-auto md:h-auto overflow-hidden">
           <img src={movie.backdrop} alt="" className="absolute inset-0 size-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
@@ -460,6 +473,7 @@ function MoviePage() {
               </div>
               <div className="min-w-0">
                 <p
+                  ref={descRef}
                   onClick={() => setDescExpanded((v) => !v)}
                   className={`max-w-xl break-words text-base md:text-lg text-gray-300 leading-relaxed cursor-pointer md:cursor-default ${
                     descExpanded ? "" : "line-clamp-3"
@@ -467,12 +481,14 @@ function MoviePage() {
                 >
                   {movie.description}
                 </p>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setDescExpanded((v) => !v); }}
-                  className="mt-1 text-xs font-medium text-primary hidden md:inline"
-                >
-                  {descExpanded ? "Show less" : "Show more"}
-                </button>
+                {descTruncated && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setDescExpanded((v) => !v); }}
+                    className="mt-1 text-xs font-medium text-primary hidden md:inline"
+                  >
+                    {descExpanded ? "Show less" : "Show more"}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={generateAiSummary}

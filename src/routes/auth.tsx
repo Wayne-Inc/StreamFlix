@@ -143,7 +143,10 @@ function AuthPage() {
         try {
           localStorage.setItem("sf:auth", "1");
         } catch {}
-        navigate({ to: "/profiles" });
+        // After signing in, send the user back to the page they originally
+        // tried to reach (stored in ?redirect= by the auth middleware), or
+        // to the profile chooser as a fallback.
+        navigate({ to: redirectTo });
       }
     });
     return () => unsub();

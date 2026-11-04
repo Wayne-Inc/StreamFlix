@@ -659,9 +659,12 @@ export function SearchResultsSkeleton({ count = 12 }: { count?: number } = {}) {
 /**
  * Explore genre chips skeleton
  */
-export function ExploreGenreChipsSkeleton({ count = 12 }: { count?: number } = {}) {
+export function ExploreGenreChipsSkeleton({
+  count = 12,
+  className,
+}: { count?: number; className?: string } = {}) {
   return (
-    <div className="mt-8 flex flex-wrap gap-2">
+    <div className={cn("mt-8 flex flex-wrap gap-2", className)}>
       {Array.from({ length: count }).map((_, i) => (
         <Skeleton key={i} className="h-9 w-24 rounded-full" />
       ))}
@@ -725,7 +728,7 @@ export function ExploreGenreSkeleton() {
           </div>
         </section>
 
-        <ExploreGenreChipsSkeleton count={10} />
+        <ExploreGenreChipsSkeleton count={10} className="mt-10 sm:mt-12" />
         <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
           {Array.from({ length: 12 }).map((_, i) => (
             <MovieCardSkeleton key={i} fluid />

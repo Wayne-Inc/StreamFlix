@@ -9,6 +9,10 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
   const [i, setI] = useState(0);
   const touchStart = useRef<number | null>(null);
   const touchDelta = useRef(0);
+  // Only reveal the slide's title/meta once its backdrop image has loaded (or
+  // failed), so titles never pop in ahead of / without their corresponding image.
+  const [loadedSlideId, setLoadedSlideId] = useState<string | null>(null);
+  const markSlideLoaded = useCallback((id: string) => setLoadedSlideId(id), []);
 
   useEffect(() => {
     if (slides.length === 0) return;
@@ -87,6 +91,8 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
             loading={idx === i ? "eager" : "lazy"}
             decoding="async"
             fetchPriority={idx === i ? "high" : "low"}
+            onLoad={() => markSlideLoaded(slide.id)}
+            onError={() => markSlideLoaded(slide.id)}
             className={`absolute inset-0 size-full object-cover transition-opacity duration-1000 ${
               idx === i ? "opacity-100 animate-ken-burns" : "opacity-0"
             }`}
@@ -100,10 +106,11 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
           {/* Bottom gradient for text contrast */}
           <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-background/95 via-background/40 to-transparent z-0 pointer-events-none" />
 
-          <div
-            key={s.id}
-            className="animate-fade-in w-full max-w-none space-y-2 sm:space-y-3 text-center md:max-w-3xl md:text-left"
-          >
+          {loadedSlideId === s.id && (
+            <div
+              key={s.id}
+              className="animate-fade-in w-full max-w-none space-y-2 sm:space-y-3 text-center md:max-w-3xl md:text-left"
+            >
             {titleLogoUrl ? (
               <img
                 src={titleLogoUrl}
@@ -163,6 +170,7 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
               </Link>
             </div>
           </div>
+          )}
         </div>
 
       <div className="absolute bottom-3 inset-x-0 z-10 flex items-center justify-center gap-2 sm:justify-end sm:right-8 sm:inset-x-auto">
