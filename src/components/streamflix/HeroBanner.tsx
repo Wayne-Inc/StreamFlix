@@ -172,7 +172,11 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
                 rating={s.rating}
                 className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm text-white/90 backdrop-blur-lg"
               />
-              {(s.runtime || s.runtimeMinutes) && (
+              {s.id.startsWith("tv-") && s.numberOfSeasons && s.numberOfSeasons > 0 ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm text-white/90 backdrop-blur-lg">
+                  {s.numberOfSeasons} {s.numberOfSeasons === 1 ? "season" : "seasons"}
+                </span>
+              ) : (s.runtime || s.runtimeMinutes) && (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm text-white/90 backdrop-blur-lg">
                   <Clock className="size-3.5" /> {s.runtime || (s.runtimeMinutes ? `${Math.floor(s.runtimeMinutes / 60)}h ${s.runtimeMinutes % 60}m` : '')}
                 </span>

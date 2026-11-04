@@ -167,15 +167,6 @@ export function MovieCard({
                     {movie.numberOfSeasons} {movie.numberOfSeasons === 1 ? "season" : "seasons"}
                   </span>
                 </span>
-                {movie.runtimeMinutes != null && movie.runtimeMinutes > 0 && (
-                  <>
-                    <span className="text-muted-foreground/40">&middot;</span>
-                    <span className="inline-flex items-center gap-1 text-white/80">
-                      <Clock className={landscape ? "size-4" : "size-2.5"} />
-                      {Math.floor(movie.runtimeMinutes / 60)}m / ep
-                    </span>
-                  </>
-                )}
               </>
             ) : movie.runtimeMinutes != null && movie.runtimeMinutes > 0 ? (
               <>

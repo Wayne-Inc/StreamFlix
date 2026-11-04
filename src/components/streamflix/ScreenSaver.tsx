@@ -128,6 +128,31 @@ export function ScreenSaver() {
 
   const titleLogo = logoMap[currentMovie.id];
 
+  // For series, display the season count instead of a runtime (show posters
+  // don't carry a single runtime). Fall back to nothing when unknown.
+  let runtimeText: string | null = null;
+  const isTv = currentMovie.id.startsWith("tv-");
+  if (isTv) {
+    if (currentMovie.numberOfSeasons) {
+      runtimeText = `${currentMovie.numberOfSeasons} season${
+        currentMovie.numberOfSeasons > 1 ? "s" : ""
+      }`;
+      if (currentMovie.numberOfEpisodes) {
+        runtimeText += ` · ${currentMovie.numberOfEpisodes} ep${
+          currentMovie.numberOfEpisodes > 1 ? "s" : ""
+        }`;
+      }
+    } else if (currentMovie.numberOfEpisodes) {
+      runtimeText = `${currentMovie.numberOfEpisodes} ep${
+        currentMovie.numberOfEpisodes > 1 ? "s" : ""
+      }`;
+    }
+  } else if (currentMovie.runtime && currentMovie.runtime !== "—") {
+    runtimeText = currentMovie.runtime;
+  } else if (currentMovie.runtimeMinutes) {
+    runtimeText = formatRuntime(currentMovie.runtimeMinutes);
+  }
+
   return (
     <div
       onClick={() => setActive(false)}
@@ -191,20 +216,11 @@ export function ScreenSaver() {
             rating={currentMovie.rating}
             className="rounded-full px-2.5 py-1 text-xs backdrop-blur-lg sm:px-3 sm:py-1.5"
           />
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-white/80 backdrop-blur-lg sm:px-3 sm:py-1.5">
-            <Clock className="size-3" />
-            {currentMovie.id.startsWith("tv-")
-              ? currentMovie.numberOfSeasons
-                ? `${currentMovie.numberOfSeasons} season${currentMovie.numberOfSeasons > 1 ? "s" : ""}${currentMovie.numberOfEpisodes ? ` · ${currentMovie.numberOfEpisodes} ep${currentMovie.numberOfEpisodes > 1 ? "s" : ""}` : ""}`
-                : currentMovie.numberOfEpisodes
-                ? `${currentMovie.numberOfEpisodes} ep${currentMovie.numberOfEpisodes > 1 ? "s" : ""}`
-                : "TV Series"
-              : currentMovie.runtime && currentMovie.runtime !== "—"
-                ? currentMovie.runtime
-                : currentMovie.runtimeMinutes
-                  ? formatRuntime(currentMovie.runtimeMinutes)
-                  : "—"}
-          </span>
+          {runtimeText != null && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-white/80 backdrop-blur-lg sm:px-3 sm:py-1.5">
+              {!isTv && <Clock className="size-3" />}{runtimeText}
+            </span>
+          )}
         </div>
       </div>
     </div>
