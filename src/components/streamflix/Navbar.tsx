@@ -105,6 +105,7 @@ export function Navbar() {
     { id: string; title: string; year: number | null; poster: string; mediaType: string; photo?: string }[]
   >([]);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
   const searchBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchBoxRef = useRef<HTMLDivElement | null>(null);
   const mobileNavRef = useRef<HTMLElement | null>(null);
@@ -114,15 +115,18 @@ export function Navbar() {
     const q = searchQ.trim();
     if (q.length < 2) {
       setSearchSuggestions([]);
+      setSearchLoading(false);
       return;
     }
     let cancelled = false;
+    setSearchLoading(true);
     const t = setTimeout(async () => {
       const [titleRes, peopleRes] = await Promise.all([
         suggestTitles(q),
         searchByPerson(q).catch(() => []),
       ]);
       if (!cancelled) {
+        setSearchLoading(false);
         // Combine title and people suggestions, prioritizing titles
         const combined = [
           ...titleRes.slice(0, 5),
@@ -405,8 +409,10 @@ export function Navbar() {
             {searchFocused && searchQ.trim().length >= 2 && (
               <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-border bg-card/95 shadow-2xl backdrop-blur animate-fade-in">
                 <ul className="max-h-72 overflow-y-auto py-1">
-                  {searchSuggestions.length === 0 ? (
+                  {searchLoading ? (
                     <li className="px-3 py-2 text-sm text-muted-foreground">Searching…</li>
+                  ) : searchSuggestions.length === 0 ? (
+                    <li className="px-3 py-2 text-sm text-muted-foreground">No results found</li>
                   ) : (
                     searchSuggestions.map((s) => (
                       <li key={s.id}>
