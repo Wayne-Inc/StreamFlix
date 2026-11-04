@@ -747,10 +747,10 @@ function ProfileEditor({
             <img
               src={avatarUrl}
               alt=""
-              className={avatarUrl.includes("image.tmdb.org")
+              className={isTmdbImageUrl(avatarUrl)
                 ? "size-20 rounded-lg object-cover ring-2 ring-border"
                 : "max-h-20 max-w-20 rounded-lg object-contain ring-2 ring-border"}
-              style={avatarUrl.includes("image.tmdb.org") ? {} : { aspectRatio: 'auto' }}
+              style={isTmdbImageUrl(avatarUrl) ? {} : { aspectRatio: 'auto' }}
             />
           ) : (
             <div
