@@ -4,6 +4,7 @@ import { Play, Info, Calendar, Clock, Star } from "lucide-react";
 import type { Movie } from "@/lib/types";
 import { AgeRatingBadge } from "./AgeRatingBadge";
 import { buildTitleLogoUrl } from "@/lib/title-logo";
+import { fetchTitleLogo } from "@/lib/api/tmdb";
 
 export function HeroBanner({ slides }: { slides: Movie[] }) {
   const [i, setI] = useState(0);
@@ -12,6 +13,9 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
   // Only reveal the slide's title/meta once its backdrop image has loaded (or
   // failed), so titles never pop in ahead of / without their corresponding image.
   const [loadedSlideId, setLoadedSlideId] = useState<string | null>(null);
+  // Logos prefetched ahead of time for upcoming slides so they're ready when
+  // that slide becomes active (avoids title/logo popping in late).
+  const [prefetchedLogos, setPrefetchedLogos] = useState<Record<string, string>>({});
   const markSlideLoaded = useCallback((id: string) => setLoadedSlideId(id), []);
 
   useEffect(() => {
@@ -19,6 +23,34 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
     const t = setInterval(() => setI((v) => (v + 1) % slides.length), 8000);
     return () => clearInterval(t);
   }, [slides.length]);
+
+  // While the current slide is being displayed, prefetch the NEXT slide's
+  // backdrop image and title logo so they're ready (cached) before the
+  // slideshow advances — no late-loading of images or titles.
+  useEffect(() => {
+    if (slides.length === 0) return;
+    const nextIdx = (i + 1) % slides.length;
+    const next = slides[nextIdx];
+
+    // Preload next slide's backdrop image into the browser cache.
+    const img = new Image();
+    img.src = next.backdrop;
+
+    // Prefetch next slide's title logo if we don't already have one.
+    let cancelled = false;
+    if (!next.logo?.filePath && !prefetchedLogos[next.id]) {
+      fetchTitleLogo({ data: { id: next.id } })
+        .then((logo) => {
+          if (!cancelled && logo?.filePath) {
+            setPrefetchedLogos((prev) => ({ ...prev, [next.id]: logo.filePath }));
+          }
+        })
+        .catch(() => {});
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [i, slides, prefetchedLogos]);
 
   const go = useCallback((dir: -1 | 1) => {
     setI((v) => (v + dir + slides.length) % slides.length);
@@ -72,7 +104,10 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
       ? `${s.description.slice(0, MAX_DESC_CHARS - 3).trimEnd()}...`
       : s.description;
 
-  const titleLogoUrl = s.logo?.filePath ? buildTitleLogoUrl(s.logo.filePath) : null;
+  const titleLogoUrl =
+    s.logo?.filePath || prefetchedLogos[s.id]
+      ? buildTitleLogoUrl(s.logo?.filePath ?? prefetchedLogos[s.id]!)
+      : null;
 
   return (
     <section
