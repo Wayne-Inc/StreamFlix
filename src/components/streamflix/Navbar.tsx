@@ -102,7 +102,7 @@ export function Navbar() {
 
   const [searchQ, setSearchQ] = useState("");
   const [searchSuggestions, setSearchSuggestions] = useState<
-    { id: string; title: string; year: number | null; poster: string; mediaType: string; knownFor?: string; photo?: string }[]
+    { id: string; title: string; year: number | null; poster: string; mediaType: string; photo?: string }[]
   >([]);
   const [searchFocused, setSearchFocused] = useState(false);
   const searchBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -132,7 +132,6 @@ export function Navbar() {
             year: null,
             poster: p.photo || "",
             mediaType: "person",
-            knownFor: p.known_for,
             photo: p.photo,
           })),
         ];
@@ -404,7 +403,7 @@ export function Navbar() {
               className="h-9 w-44 rounded-full border border-border bg-background/40 pl-9 pr-4 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all duration-200 focus:w-60 focus:border-primary/60 focus:bg-background/70"
             />
             {searchFocused && searchQ.trim().length >= 2 && (
-              <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-xl border border-border bg-card/95 shadow-2xl backdrop-blur animate-fade-in">
+              <div className="absolute right-0 top-full z-50 mt-2 w-96 overflow-hidden rounded-xl border border-border bg-card/95 shadow-2xl backdrop-blur animate-fade-in">
                 <ul className="max-h-72 overflow-y-auto py-1">
                   {searchSuggestions.length === 0 ? (
                     <li className="px-3 py-2 text-sm text-muted-foreground">Searching…</li>
@@ -438,9 +437,6 @@ export function Navbar() {
                             </span>
                           )}
                           <span className="truncate">{s.title}</span>
-                          {s.knownFor && (
-                            <span className="text-[10px] text-muted-foreground truncate max-w-[120px]">{s.knownFor}</span>
-                          )}
                         </button>
                       </li>
                     ))

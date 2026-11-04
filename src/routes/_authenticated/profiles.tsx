@@ -160,16 +160,17 @@ async function saveOnboard(
     return;
   }
   try {
-    localStorage.setItem("sf:onboarded", "1");
-  } catch {}
-  setOnboardOpen(false);
-  toast.success("Preferences saved");
-  try {
+    // Persist to Firebase (source of truth) first so interests carry over to
+    // other devices. Only mark as onboarded once the server write succeeds.
     await setFavoriteGenres(u.uid, pickedGenres);
+    try { localStorage.setItem("sf:onboarded", "1"); } catch {}
+    setOnboardOpen(false);
+    toast.success("Preferences saved");
   } catch {
-    console.warn("Couldn't sync genres to server");
+    toast.error("Failed to save preferences. Please try again.");
+  } finally {
+    setOnboardBusy(false);
   }
-  setOnboardBusy(false);
 }
 
 async function saveProfile(
