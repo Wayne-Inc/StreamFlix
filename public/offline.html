@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>You're offline — StreamFlix</title>
+    <meta name="theme-color" content="#0C0D0F" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: #0c0d0f;
+        color: #fafafa;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 0;
+        margin-bottom: 24px;
+      }
+      .logo span {
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        font-size: 28px;
+      }
+      .logo .stream {
+        color: #e50914;
+      }
+      .logo .flix {
+        color: #fafafa;
+      }
+      .card {
+        background: #18181b;
+        border: 1px solid #27272a;
+        border-radius: 16px;
+        padding: 40px 24px;
+        max-width: 400px;
+        width: 100%;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3),
+          0 10px 10px -5px rgba(0, 0, 0, 0.2);
+      }
+      .icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 16px;
+        opacity: 0.5;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+      }
+      p {
+        margin: 0 0 24px;
+        color: #a1a1aa;
+        font-size: 15px;
+        line-height: 1.5;
+      }
+      button {
+        background: #e50914;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 24px;
+        color: #fff;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+      }
+      button:hover {
+        background: #f6121d;
+      }
+      button:active {
+        transform: scale(0.98);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="logo">
+      <span class="stream">STREAM</span><span class="flix">FLIX</span>
+    </div>
+    <div class="card">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M1 1l22 22" />
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" />
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" />
+        <path d="M10.71 5.05A16 16 0 0 1 22.58 9" />
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88" />
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+        <line x1="12" x2="12.01" y1="19" y2="19" />
+      </svg>
+      <h1>You're offline</h1>
+      <p>
+        Check your internet connection and try again. Your watch page will keep working if you're
+        already watching.
+      </p>
+      <button onclick="window.location.reload()">Try again</button>
+    </div>
+  </body>
+</html>

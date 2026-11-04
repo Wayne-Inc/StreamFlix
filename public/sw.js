@@ -1,7 +1,7 @@
 const CACHE_NAME = "streamflix-cache-v2";
 const ASSET_CACHE = "streamflix-assets-v2";
 
-const PRECACHE_URLS = ["/", "/browse"];
+const PRECACHE_URLS = ["/", "/browse", "/offline.html"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -78,6 +78,10 @@ async function navigationFallback(request) {
   } catch {
     const cached = await caches.match(request);
     if (cached) return cached;
+    // Serve the offline page for failed navigations instead of a generic text response.
+    // This only affects new navigation requests; users already on a page are untouched.
+    const offline = await caches.match("/offline.html");
+    if (offline) return offline;
     return new Response("Offline", {
       status: 503,
       headers: { "Content-Type": "text/html" },

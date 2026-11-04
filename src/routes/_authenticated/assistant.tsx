@@ -20,9 +20,31 @@ type AssistantMessage = {
   recommendations?: { movie: Movie; reason: string }[];
 };
 
+type MoodPrompt = { label: string; prompt: string };
+
+const MOOD_PROMPTS: MoodPrompt[] = [
+  { label: "Date night", prompt: "I'm planning a date night. Recommend something romantic and cozy." },
+  { label: "Kids asleep", prompt: "The kids are asleep. Recommend something for grown-ups." },
+  { label: "Background noise", prompt: "Recommend something good to play in the background while I do other things." },
+  { label: "Under 90 minutes", prompt: "Recommend a movie under 90 minutes." },
+  { label: "Feel-good", prompt: "Recommend something uplifting and feel-good." },
+  { label: "Scary movie night", prompt: "I want a scary movie for movie night." },
+  { label: "Sunday binge", prompt: "Recommend a TV show I can binge-watch on a Sunday." },
+  { label: "With friends", prompt: "Recommend something fun to watch with a group of friends." },
+  { label: "Classic cinema", prompt: "Recommend a classic movie everyone should see." },
+  { label: "Documentary", prompt: "Recommend an interesting documentary." },
+];
+
+const KIDS_MOOD_PROMPTS: MoodPrompt[] = [
+  { label: "Animal adventure", prompt: "Recommend a fun animal adventure for kids." },
+  { label: "Funny animated movie", prompt: "Recommend a funny animated movie for the whole family." },
+  { label: "Cozy family show", prompt: "Recommend a cozy family-friendly show." },
+  { label: "Feel-good", prompt: "Recommend something uplifting and feel-good for kids." },
+];
+
 function buildSuggestions(kidsMode: boolean, interestGenres: string[]): string[] {
   if (kidsMode) {
-    return ["A funny animated movie", "An animal adventure", "A cozy family show"];
+    return KIDS_MOOD_PROMPTS.map((m) => m.label);
   }
 
   const genreCounts = new Map<string, number>();
@@ -73,6 +95,10 @@ function buildSuggestions(kidsMode: boolean, interestGenres: string[]): string[]
   }
 
   return suggestions.slice(0, 4);
+}
+
+function buildMoodPrompts(kidsMode: boolean): MoodPrompt[] {
+  return kidsMode ? KIDS_MOOD_PROMPTS : MOOD_PROMPTS;
 }
 
 export const Route = createFileRoute("/_authenticated/assistant")({
@@ -166,6 +192,20 @@ function AssistantPage() {
         setFailedRequest({ text: request, mode });
         return;
       }
+      // Empty state: AI responded but found no matching titles
+      if (!result.recommendations || result.recommendations.length === 0) {
+        setMessages((current) => [
+          ...current,
+          {
+            role: "assistant",
+            content:
+              result.message ||
+              "I couldn't find any titles that match your request. Try rephrasing or pick a suggestion above.",
+            recommendations: [],
+          },
+        ]);
+        return;
+      }
       setMessages((current) => [
         ...current,
         { role: "assistant", content: result.message, recommendations: result.recommendations },
@@ -185,6 +225,7 @@ function AssistantPage() {
   };
 
   const [interestGenres, setInterestGenres] = useState<string[]>([]);
+  const [selectedMood, setSelectedMood] = useState<MoodPrompt | null>(null);
 
   // Load the user's favorite genres (interests) so suggestions reflect their taste.
   useEffect(() => {
@@ -201,6 +242,7 @@ function AssistantPage() {
       .catch(() => setInterestGenres([]));
   }, [kidsMode, auth.currentUser?.uid]);
 
+  const moodPrompts = buildMoodPrompts(kidsMode);
   const suggestions = useMemo(() => buildSuggestions(kidsMode, interestGenres), [
     kidsMode,
     interestGenres,
@@ -226,6 +268,33 @@ function AssistantPage() {
                 {messages[0]?.content}
               </p>
               <div className="mt-6 flex max-w-2xl flex-wrap justify-center gap-2 sm:mt-8">
+                {moodPrompts.length > 0 && (
+                  <>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Mood
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {moodPrompts.map((mood) => (
+                        <button
+                          key={mood.label}
+                          type="button"
+                          disabled={busy}
+                          onClick={() => {
+                            setSelectedMood(mood);
+                            void send(mood.prompt);
+                          }}
+                          className={`rounded-full border px-3 py-1.5 text-xs transition disabled:opacity-50 ${
+                            selectedMood?.label === mood.label
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                          } sm:px-4 sm:py-2 sm:text-sm`}
+                        >
+                          {mood.label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
                 {suggestions.map((suggestion) => (
                   <button
                     key={suggestion}
@@ -270,6 +339,24 @@ function AssistantPage() {
                         ))}
                       </div>
                     </>
+                  ) : message.role === "assistant" ? (
+                    <div className="mr-auto max-w-[90%] sm:max-w-[80%]">
+                      <div className="rounded-xl bg-muted/50 p-4 text-center">
+                        <div className="space-y-2">
+                          <div className="break-words whitespace-pre-wrap text-sm leading-6">
+                            {message.content}
+                          </div>
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => void send("", "recommendations")}
+                            className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition hover:bg-primary/20 disabled:opacity-50"
+                          >
+                            <RotateCcw className="size-3.5" /> Try again
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   ) : (
                     <div className={message.role === "user" ? "ml-auto max-w-[90%] sm:max-w-[80%]" : "mr-auto max-w-[90%] sm:max-w-[80%]"}>
                       <div className={message.role === "user" ? "rounded-2xl bg-primary px-4 py-3 text-primary-foreground" : "rounded-xl bg-muted/50 p-4"}>
@@ -322,6 +409,33 @@ function AssistantPage() {
           )}
           {hasConversation && (
             <div className="mb-2 flex flex-nowrap gap-2 overflow-x-auto scrollbar-hide overscroll-x-contain sm:flex-wrap sm:overflow-visible">
+              {moodPrompts.length > 0 && (
+                <>
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Mood
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {moodPrompts.map((mood) => (
+                      <button
+                        key={mood.label}
+                        type="button"
+                        disabled={busy}
+                        onClick={() => {
+                          setSelectedMood(mood);
+                          void send(mood.prompt);
+                        }}
+                        className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs transition disabled:opacity-50 ${
+                          selectedMood?.label === mood.label
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-background/70 text-muted-foreground shadow-sm backdrop-blur-md hover:border-primary/50 hover:text-foreground"
+                        }`}
+                      >
+                        {mood.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
               {suggestions.map((suggestion) => (
                 <button
                   key={suggestion}
