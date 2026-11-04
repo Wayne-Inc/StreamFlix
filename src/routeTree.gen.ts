@@ -29,6 +29,8 @@ import { Route as ApiProductbridgeTokenRouteImport } from './routes/api/productb
 import { Route as ApiReleaseNotificationsCronRouteImport } from './routes/api/release-notifications-cron'
 import { Route as ApiSessionRouteImport } from './routes/api/session'
 import { Route as ApiVerifyRecaptchaRouteImport } from './routes/api/verify-recaptcha'
+import { Route as ApiRevokeDeviceSessionRouteImport } from './routes/api/revoke-device-session'
+import { Route as ApiRevokeOtherSessionsRouteImport } from './routes/api/revoke-other-sessions'
 import { Route as AuthActionRouteImport } from './routes/auth/action'
 import { Route as AuthenticatedExploreIndexRouteImport } from './routes/_authenticated/explore/index'
 import { Route as AuthenticatedExploreGenreIdRouteImport } from './routes/_authenticated/explore/$genreId'
@@ -138,6 +140,16 @@ const ApiVerifyRecaptchaRoute = ApiVerifyRecaptchaRouteImport.update({
   path: '/api/verify-recaptcha',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRevokeDeviceSessionRoute = ApiRevokeDeviceSessionRouteImport.update({
+  id: '/api/revoke-device-session',
+  path: '/api/revoke-device-session',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRevokeOtherSessionsRoute = ApiRevokeOtherSessionsRouteImport.update({
+  id: '/api/revoke-other-sessions',
+  path: '/api/revoke-other-sessions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthActionRoute = AuthActionRouteImport.update({
   id: '/action',
   path: '/action',
@@ -196,6 +208,8 @@ export interface FileRoutesByFullPath {
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
   '/api/session': typeof ApiSessionRoute
   '/api/verify-recaptcha': typeof ApiVerifyRecaptchaRoute
+  '/api/revoke-device-session': typeof ApiRevokeDeviceSessionRoute
+  '/api/revoke-other-sessions': typeof ApiRevokeOtherSessionsRoute
   '/auth/action': typeof AuthActionRoute
   '/movie/': typeof AuthenticatedMovieRoute
   '/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
@@ -223,6 +237,8 @@ export interface FileRoutesByTo {
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
   '/api/session': typeof ApiSessionRoute
   '/api/verify-recaptcha': typeof ApiVerifyRecaptchaRoute
+  '/api/revoke-device-session': typeof ApiRevokeDeviceSessionRoute
+  '/api/revoke-other-sessions': typeof ApiRevokeOtherSessionsRoute
   '/auth/action': typeof AuthActionRoute
   '/movie': typeof AuthenticatedMovieRoute
   '/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
@@ -253,6 +269,8 @@ export interface FileRoutesById {
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
   '/api/session': typeof ApiSessionRoute
   '/api/verify-recaptcha': typeof ApiVerifyRecaptchaRoute
+  '/api/revoke-device-session': typeof ApiRevokeDeviceSessionRoute
+  '/api/revoke-other-sessions': typeof ApiRevokeOtherSessionsRoute
   '/auth/action': typeof AuthActionRoute
   '/_authenticated/movie/': typeof AuthenticatedMovieRoute
   '/_authenticated/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
@@ -310,6 +328,8 @@ export interface FileRouteTypes {
     | '/api/release-notifications-cron'
     | '/api/session'
     | '/api/verify-recaptcha'
+    | '/api/revoke-device-session'
+    | '/api/revoke-other-sessions'
     | '/auth/action'
     | '/movie'
     | '/explore/$genreId'
@@ -339,6 +359,8 @@ export interface FileRouteTypes {
     | '/api/release-notifications-cron'
     | '/api/session'
     | '/api/verify-recaptcha'
+    | '/api/revoke-device-session'
+    | '/api/revoke-other-sessions'
     | '/auth/action'
     | '/_authenticated/movie/'
     | '/_authenticated/explore/$genreId'
@@ -359,6 +381,8 @@ export interface RootRouteChildren {
   ApiReleaseNotificationsCronRoute: typeof ApiReleaseNotificationsCronRoute
   ApiSessionRoute: typeof ApiSessionRoute
   ApiVerifyRecaptchaRoute: typeof ApiVerifyRecaptchaRoute
+  ApiRevokeDeviceSessionRoute: typeof ApiRevokeDeviceSessionRoute
+  ApiRevokeOtherSessionsRoute: typeof ApiRevokeOtherSessionsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -501,6 +525,20 @@ declare module '@tanstack/react-router' {
       path: '/api/verify-recaptcha'
       fullPath: '/api/verify-recaptcha'
       preLoaderRoute: typeof ApiVerifyRecaptchaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/revoke-device-session': {
+      id: '/api/revoke-device-session'
+      path: '/api/revoke-device-session'
+      fullPath: '/api/revoke-device-session'
+      preLoaderRoute: typeof ApiRevokeDeviceSessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/revoke-other-sessions': {
+      id: '/api/revoke-other-sessions'
+      path: '/api/revoke-other-sessions'
+      fullPath: '/api/revoke-other-sessions'
+      preLoaderRoute: typeof ApiRevokeOtherSessionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/action': {

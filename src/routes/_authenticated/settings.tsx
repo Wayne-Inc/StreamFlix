@@ -488,8 +488,12 @@ function SettingsPage() {
   const removeDevice = useMutation({
     mutationFn: async (d: Device) => {
       if (d.device_id === currentDeviceId) return;
-      const revokeDeviceSession = httpsCallable(functions, "revokeDeviceSession");
-      await revokeDeviceSession({ deviceId: d.id });
+      const res = await fetch("/api/revoke-device-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deviceId: d.id }),
+      });
+      if (!res.ok) throw new Error(await res.text());
     },
     onMutate: async (d: Device) => {
       if (d.device_id === currentDeviceId) return { prev: undefined };
@@ -519,8 +523,12 @@ function SettingsPage() {
   const removeAllOthers = useMutation({
     mutationFn: async () => {
       if (!user) return;
-      const revokeOtherSessions = httpsCallable(functions, "revokeOtherSessions");
-      await revokeOtherSessions({ currentDeviceId });
+      const res = await fetch("/api/revoke-other-sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentDeviceId }),
+      });
+      if (!res.ok) throw new Error(await res.text());
     },
     onMutate: async () => {
       await qc.cancelQueries({ queryKey: deviceQueryKey });
