@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import { ChevronLeft, ChevronRight, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { Navbar } from "@/components/streamflix/Navbar";
