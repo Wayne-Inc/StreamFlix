@@ -14,6 +14,7 @@ import {
   Bookmark,
   Home,
   BarChart3,
+  Sparkles,
   Crown,
   Shuffle,
   Bell,
@@ -645,7 +646,7 @@ export function Navbar() {
           aria-label="AI"
           className={`flex min-w-14 flex-col items-center gap-1 py-1 text-[10px] ${pathname === "/assistant" ? "text-foreground" : "text-muted-foreground"}`}
         >
-          AI
+          <Sparkles className="size-5" /> AI
         </Link>
         <button
           type="button"
