@@ -86,8 +86,9 @@ function CreditSection({
           </button>
         )}
       </div>
-      {/* Responsive grid of credits so they fit within device boundaries in rows & columns */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {/* Responsive grid of credits so they fit within device boundaries in rows & columns.
+           Mobile: 2 cards per row (2 rows for the default 4). Desktop: 4 cards in one row. */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {visible.map((item, idx) => (
           <MovieCard
             key={`${item.id}-${item.character}`}
@@ -117,8 +118,9 @@ function CreditSection({
               numberOfEpisodes: undefined,
               logo: undefined,
             } as Movie}
-            fluid
-            landscape
+            fluid={false}
+            landscape={false}
+            compact
             character={item.character}
           />
         ))}
