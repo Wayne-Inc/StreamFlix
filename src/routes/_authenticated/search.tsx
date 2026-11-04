@@ -203,19 +203,6 @@ function SearchPage() {
 
   const curatedGenres = CURATED_GENRES;
 
-  const trending = [
-    "Action",
-    "Comedy",
-    "Drama",
-    "Horror",
-    "Sci-Fi",
-    "Thriller",
-    "Romance",
-    "Animation",
-    "Documentary",
-    "Fantasy",
-  ];
-
   const pushFilters = (next: {
     year?: number;
     genre?: number;
@@ -301,13 +288,13 @@ function SearchPage() {
     <div className="space-y-4 py-4">
       <h2 className="px-4 sm:px-8 mb-4 sm:mb-6 text-3xl sm:text-4xl font-bold tracking-tight">{title}</h2>
       {loading ? (
-        <div className="scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-8">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 px-4 sm:px-8">
           {[1, 2, 3, 4, 5].map((i) => (
             <PersonCardSkeleton key={i} />
           ))}
         </div>
       ) : people.length > 0 ? (
-        <div className="scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-8">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 px-4 sm:px-8">
           {people.map((p) => (
             <PersonCard key={p.id} person={p} />
           ))}
@@ -335,7 +322,7 @@ function SearchPage() {
               onClick={() => navigate({ to: "/movie/$id", params: { id: m.id } })}
               className="w-full text-left"
             >
-              <MovieCard movie={m} fluid />
+              <MovieCard movie={m} />
             </button>
           ))}
         </div>
@@ -405,33 +392,6 @@ function SearchPage() {
                 movies={popularTvShowsMapped}
                 loading={popularLoading}
               />
-              <div className="mt-6">
-                <p className="text-sm text-muted-foreground">Trending searches</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {trending.map((t) => {
-                    const match = curatedGenres.find((g) => g.name.toLowerCase() === t.toLowerCase());
-                    return match ? (
-                      <Link
-                        key={t}
-                        to="/explore/$genreId"
-                        params={{ genreId: String(match.id) }}
-                        search={{ q: match.name }}
-                        className="rounded-full border border-border px-3 py-1.5 text-sm transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:border-foreground"
-                      >
-                        {t}
-                      </Link>
-                    ) : (
-                      <button
-                        key={t}
-                        onClick={() => setQ(t)}
-                        className="rounded-full border border-border px-3 py-1.5 text-sm transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:border-foreground"
-                      >
-                        {t}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
             </>
           )}
 
@@ -553,7 +513,7 @@ function SearchPage() {
                         onClick={() => navigate({ to: "/movie/$id", params: { id: m.id } })}
                         className="w-full text-left"
                       >
-                        <MovieCard movie={m} fluid />
+                        <MovieCard movie={m} />
                       </button>
                     ))}
                   </div>

@@ -502,7 +502,11 @@ function SettingsPage() {
     },
     onError: (e: Error, _d, context) => {
       if (context?.prev) qc.setQueryData(deviceQueryKey, context.prev);
-      toast.error(e.message);
+      const msg =
+        e.message?.includes("CORS") || e.message?.includes("Failed to fetch")
+          ? "Unable to reach the server (CORS/network issue). Please try again later."
+          : e.message;
+      toast.error(msg);
     },
     onSuccess: () => {
       toast.success("Device session revoked");
@@ -528,7 +532,11 @@ function SettingsPage() {
     },
     onError: (e: Error, _vars, context) => {
       if (context?.prev) qc.setQueryData(deviceQueryKey, context.prev);
-      toast.error(e.message);
+      const msg =
+        e.message?.includes("CORS") || e.message?.includes("Failed to fetch")
+          ? "Unable to reach the server (CORS/network issue). Please try again later."
+          : e.message;
+      toast.error(msg);
     },
     onSuccess: () => {
       toast.success("Signed out of all other devices");
@@ -940,7 +948,7 @@ function SettingsPage() {
                       type="button"
                       onClick={() => toggleGenre(g.id)}
                       aria-pressed={active}
-                      className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition ${
+                      className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-sm transition ${
                         active
                           ? "border-primary bg-primary text-primary-foreground"
                           : "border-border text-muted-foreground hover:border-primary hover:text-foreground"
