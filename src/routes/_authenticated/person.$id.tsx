@@ -86,15 +86,15 @@ function CreditSection({
           </button>
         )}
       </div>
-      {/* Horizontal row of credits instead of one-per-row stacking */}
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 scroll-smooth">
+      {/* Responsive grid of credits so they fit within device boundaries in rows & columns */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {visible.map((item, idx) => (
           <MovieCard
             key={`${item.id}-${item.character}`}
             movie={{
               id: item.id,
               title: item.title,
-              description: item.character ? `As ${item.character}` : "",
+              description: "",
               year: item.year ?? new Date().getFullYear(),
               releaseDate: undefined,
               rating: "",
@@ -117,8 +117,9 @@ function CreditSection({
               numberOfEpisodes: undefined,
               logo: undefined,
             } as Movie}
+            fluid
             landscape
-            compact
+            character={item.character}
           />
         ))}
       </div>

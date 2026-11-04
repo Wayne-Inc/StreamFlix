@@ -16,6 +16,7 @@ export function MovieCard({
   rank,
   landscape = false,
   compact = false,
+  character,
 }: {
   movie: Movie;
   progress?: number;
@@ -25,6 +26,7 @@ export function MovieCard({
   rank?: number;
   landscape?: boolean;
   compact?: boolean;
+  character?: string;
 }) {
   const navigate = useNavigate();
   const [isDragging, setIsDragging] = useState(false);
@@ -159,6 +161,12 @@ export function MovieCard({
           )}
           <div className={`flex items-center gap-1.5 mt-0.5 ${compact ? "text-xs sm:text-sm" : landscape ? "text-base sm:text-lg" : "text-[10px] sm:text-xs"}`}>
             <span className="text-muted-foreground">{movie.year}</span>
+            {character && movie.year ? (
+              <>
+                <span className="text-muted-foreground/40">&middot;</span>
+                <span className="text-white/80">{character}</span>
+              </>
+            ) : null}
             {movie.id.startsWith("tv-") && movie.numberOfSeasons && movie.numberOfSeasons > 0 ? (
               <>
                 <span className="text-muted-foreground/40">&middot;</span>
