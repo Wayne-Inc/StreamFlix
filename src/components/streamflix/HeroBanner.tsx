@@ -10,13 +10,9 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
   const [i, setI] = useState(0);
   const touchStart = useRef<number | null>(null);
   const touchDelta = useRef(0);
-  // Only reveal the slide's title/meta once its backdrop image has loaded (or
-  // failed), so titles never pop in ahead of / without their corresponding image.
-  const [loadedSlideId, setLoadedSlideId] = useState<string | null>(null);
   // Logos prefetched ahead of time for upcoming slides so they're ready when
   // that slide becomes active (avoids title/logo popping in late).
   const [prefetchedLogos, setPrefetchedLogos] = useState<Record<string, string>>({});
-  const markSlideLoaded = useCallback((id: string) => setLoadedSlideId(id), []);
 
   useEffect(() => {
     if (slides.length === 0) return;
@@ -126,27 +122,24 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
             loading={idx === i ? "eager" : "lazy"}
             decoding="async"
             fetchPriority={idx === i ? "high" : "low"}
-            onLoad={() => markSlideLoaded(slide.id)}
-            onError={() => markSlideLoaded(slide.id)}
             className={`absolute inset-0 size-full object-cover transition-opacity duration-1000 ${
               idx === i ? "opacity-100 animate-ken-burns" : "opacity-0"
             }`}
           />
         );
       })}
-      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-background/60" />
-      <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-background via-background/80 to-transparent md:h-80" />
+      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/50 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background via-background/70 to-transparent md:h-72" />
 
       <div className="relative z-10 flex h-full items-end justify-center px-4 pb-6 pt-8 text-center sm:pb-8 sm:pt-10 sm:px-8 md:items-end md:justify-start">
           {/* Bottom gradient for text contrast */}
           <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-background/95 via-background/40 to-transparent z-0 pointer-events-none" />
 
-          {loadedSlideId === s.id && (
-            <div
-              key={s.id}
-              className="animate-fade-in w-full max-w-none space-y-2 sm:space-y-3 text-center md:max-w-3xl md:text-left"
-            >
-            {titleLogoUrl ? (
+          <div
+            key={s.id}
+            className="animate-fade-in w-full max-w-none space-y-2 sm:space-y-3 text-center md:max-w-3xl md:text-left"
+          >
+          {titleLogoUrl ? (
               <img
                 src={titleLogoUrl}
                 alt={s.title}
@@ -205,7 +198,6 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
               </Link>
             </div>
           </div>
-          )}
         </div>
 
       <div className="absolute bottom-3 inset-x-0 z-10 flex items-center justify-center gap-2 sm:justify-end sm:right-8 sm:inset-x-auto">

@@ -6,7 +6,6 @@ import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import { HeroBannerSkeleton, Skeleton, ExploreGenreSkeleton } from "@/components/ui/skeleton";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { getGenres, searchByGenre } from "@/lib/streamflix-data";
 import type { Movie } from "@/lib/types";
 import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
@@ -14,6 +13,9 @@ import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
 const exploreSearchSchema = z.object({
   q: z.string().optional().catch(""),
 });
+
+// How many genre chips to show in the default row before "Show all".
+const GENRES_DEFAULT_SHOW = 8;
 
 export const Route = createFileRoute("/_authenticated/explore/$genreId")({
   validateSearch: exploreSearchSchema,
@@ -43,14 +45,13 @@ function ExploreGenrePage() {
   const [page, setPage] = useState(1);
   const [showAllGenres, setShowAllGenres] = useState(false);
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
 
   const kidsMode = isKidsProfile();
   const safeGenres = genres;
   const safeItems = kidsMode ? filterKidsContent(items) : items;
   const genreName = safeGenres.find((g) => String(g.id) === genreId)?.name || q || "Explore";
   const hero = safeItems[0];
-  const visibleGenres = isMobile && !showAllGenres ? safeGenres.slice(0, 6) : safeGenres;
+  const visibleGenres = showAllGenres ? safeGenres : safeGenres.slice(0, GENRES_DEFAULT_SHOW);
 
   const pageCount = Math.max(1, Math.ceil(safeItems.length / 24));
   const visible = safeItems.slice((page - 1) * 24, page * 24);
@@ -80,8 +81,8 @@ function ExploreGenrePage() {
       </section>
 
       <main className="mx-auto max-w-[1800px] px-4 pb-16 md:pb-20 sm:px-8">
-        {/* Mood chips */}
-        <div className="mt-8 flex flex-wrap gap-2">
+        {/* Mood chips — one row by default, Show All reveals the rest on the same row */}
+        <div className="mt-8 flex flex-wrap items-center gap-2">
           {visibleGenres.map((g) => {
             const active = String(g.id) === genreId;
             return (
@@ -101,24 +102,27 @@ function ExploreGenrePage() {
               </Link>
             );
           })}
+          {safeGenres.length > GENRES_DEFAULT_SHOW && !showAllGenres && (
+            <button
+              type="button"
+              onClick={() => setShowAllGenres(true)}
+              className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground"
+            >
+              Show all ({safeGenres.length})
+              <ChevronDown className="size-4" />
+            </button>
+          )}
+          {showAllGenres && safeGenres.length > GENRES_DEFAULT_SHOW && (
+            <button
+              type="button"
+              onClick={() => setShowAllGenres(false)}
+              className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground"
+            >
+              Show less
+              <ChevronUp className="size-4" />
+            </button>
+          )}
         </div>
-        {isMobile && safeGenres.length > 6 && (
-          <button
-            type="button"
-            onClick={() => setShowAllGenres((v) => !v)}
-            className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:border-primary"
-          >
-            {showAllGenres ? (
-              <>
-                <ChevronUp className="size-4" /> Show fewer genres
-              </>
-            ) : (
-              <>
-                <ChevronDown className="size-4" /> Show all genres ({safeGenres.length})
-              </>
-            )}
-          </button>
-        )}
 
         {safeItems.length > 0 ? (
           <div className="mt-8">

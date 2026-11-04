@@ -410,7 +410,7 @@ function MoviePage() {
     <div className="min-h-dvh bg-background pb-20 md:pb-0">
       <Navbar />
       <section className="relative pt-16 md:flex md:min-h-[85vh] md:items-center md:pt-20">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-[40vh] sm:h-[48vh] md:inset-y-0 md:aspect-auto md:h-auto overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[48vh] sm:h-[60vh] md:inset-y-0 md:aspect-auto md:h-auto overflow-hidden">
           <img src={movie.backdrop} alt="" className="absolute inset-0 size-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />

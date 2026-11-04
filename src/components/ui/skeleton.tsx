@@ -696,7 +696,7 @@ export function ExploreSkeleton() {
   return (
     <div className="min-h-dvh bg-background">
       <div className="mx-auto max-w-[1800px] px-4 pb-16 md:pb-20 sm:px-8">
-        <ExploreGenreChipsSkeleton count={12} />
+        <ExploreGenreChipsSkeleton count={12} className="mt-10 sm:mt-12" />
         <div className="mt-10 space-y-8">
           {Array.from({ length: 5 }).map((_, i) => (
             <RowSkeleton key={i} />

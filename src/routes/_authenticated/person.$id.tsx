@@ -1,10 +1,9 @@
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
-import { Calendar, MapPin, Film, ChevronLeft, ChevronDown } from "lucide-react";
+import { Calendar, MapPin, Film, ChevronLeft, ChevronUp, ChevronDown } from "lucide-react";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { Skeleton, PersonDetailSkeleton } from "@/components/ui/skeleton";
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { fetchPersonDetails, fetchPersonImages } from "@/lib/api/tmdb";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import type { Movie } from "@/lib/types";
@@ -42,6 +41,9 @@ type PersonData = {
   tvShows: Credit[];
 };
 
+// How many credits to show by default (one horizontal row's worth).
+const CREDITS_DEFAULT_SHOW = 4;
+
 function CreditSection({
   title,
   credits,
@@ -53,74 +55,73 @@ function CreditSection({
 }) {
   if (credits.length === 0) return null;
   const [showAll, setShowAll] = useState(false);
-  const visible = showAll ? credits : credits.slice(0, 1);
+  const visible = showAll ? credits : credits.slice(0, CREDITS_DEFAULT_SHOW);
 
   return (
     <div className="mb-8">
-      <Collapsible>
-        <CollapsibleTrigger asChild>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-bold tracking-tight">{title}</h2>
+          <span className="text-base font-normal text-muted-foreground">
+            ({credits.length} {countLabel})
+          </span>
+        </div>
+        {credits.length > CREDITS_DEFAULT_SHOW && (
           <button
             type="button"
-            className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left rounded-lg border border-border bg-surface text-foreground hover:bg-accent transition-colors"
+            onClick={() => setShowAll((v) => !v)}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground"
           >
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold tracking-tight">{title}</h2>
-              <span className="text-base font-normal text-muted-foreground">
-                ({credits.length} {countLabel})
-              </span>
-            </div>
-            <ChevronDown className="size-4 shrink-0" />
+            {showAll ? (
+              <>
+                Show less
+                <ChevronUp className="size-4" />
+              </>
+            ) : (
+              <>
+                Show all ({credits.length})
+                <ChevronDown className="size-4" />
+              </>
+            )}
           </button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="mt-3">
-          {/* No horizontal scroll: show one card by default, rest stacked downwards on "Show all" */}
-          <div className="flex flex-col gap-3">
-            {visible.map((item, idx) => (
-              <MovieCard
-                key={`${item.id}-${item.character}`}
-                movie={{
-                  id: item.id,
-                  title: item.title,
-                  description: item.character ? `As ${item.character}` : "",
-                  year: item.year ?? new Date().getFullYear(),
-                  releaseDate: undefined,
-                  rating: "",
-                  runtime: "",
-                  runtimeMinutes: 0,
-                  genres: [],
-                  genreIds: [],
-                  poster: item.poster,
-                  backdrop: item.backdrop,
-                  backdropSm: item.backdrop,
-                  trailer: undefined,
-                  cast: [],
-                  castPfp: [],
-                  director: "",
-                  directorId: "",
-                  match: 0,
-                  score: null,
-                  popularity: 0,
-                  numberOfSeasons: undefined,
-                  numberOfEpisodes: undefined,
-                  logo: undefined,
-                } as Movie}
-                landscape
-                compact
-              />
-            ))}
-          </div>
-          {!showAll && credits.length > 1 && (
-            <button
-              type="button"
-              onClick={() => setShowAll(true)}
-              className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground"
-            >
-              Show all ({credits.length})
-              <ChevronDown className="size-4" />
-            </button>
-          )}
-        </CollapsibleContent>
-      </Collapsible>
+        )}
+      </div>
+      {/* Horizontal row of credits instead of one-per-row stacking */}
+      <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 scroll-smooth">
+        {visible.map((item, idx) => (
+          <MovieCard
+            key={`${item.id}-${item.character}`}
+            movie={{
+              id: item.id,
+              title: item.title,
+              description: item.character ? `As ${item.character}` : "",
+              year: item.year ?? new Date().getFullYear(),
+              releaseDate: undefined,
+              rating: "",
+              runtime: "",
+              runtimeMinutes: 0,
+              genres: [],
+              genreIds: [],
+              poster: item.poster,
+              backdrop: item.backdrop,
+              backdropSm: item.backdrop,
+              trailer: undefined,
+              cast: [],
+              castPfp: [],
+              director: "",
+              directorId: "",
+              match: 0,
+              score: null,
+              popularity: 0,
+              numberOfSeasons: undefined,
+              numberOfEpisodes: undefined,
+              logo: undefined,
+            } as Movie}
+            landscape
+            compact
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -260,23 +261,32 @@ function PersonPage() {
             <div className="mb-8">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-2xl font-bold tracking-tight">Images ({images.length})</h2>
-                {images.length > 1 && !imagesShowAll && (
+                {images.length > 1 && (
                   <button
                     type="button"
-                    onClick={() => setImagesShowAll(true)}
+                    onClick={() => setImagesShowAll((v) => !v)}
                     className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground"
                   >
-                    Show all ({images.length})
-                    <ChevronDown className="size-4" />
+                    {imagesShowAll ? (
+                      <>
+                        Show less
+                        <ChevronUp className="size-4" />
+                      </>
+                    ) : (
+                      <>
+                        Show all ({images.length})
+                        <ChevronDown className="size-4" />
+                      </>
+                    )}
                   </button>
                 )}
               </div>
-              {/* No horizontal scroll: one image by default, rest stacked downwards on "Show all" */}
-              <div className="flex flex-col gap-3">
+              {/* Horizontal row of smaller images instead of vertical stacking */}
+              <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 scroll-smooth">
                 {imagesVisible.map((img, idx) => (
                   <div
                     key={`${img.file_path}-${idx}`}
-                    className="aspect-[2/3] w-full max-w-md rounded-lg bg-surface overflow-hidden group"
+                    className="aspect-[2/3] w-32 shrink-0 rounded-lg bg-surface overflow-hidden group"
                   >
                     <img
                       src={`https://image.tmdb.org/t/p/w342${img.file_path}`}
