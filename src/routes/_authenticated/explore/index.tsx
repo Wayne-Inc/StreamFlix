@@ -40,6 +40,7 @@ function ExplorePage() {
 
   const kidsMode = isKidsProfile();
   const safeGenres = genres;
+  const [showAllGenres, setShowAllGenres] = useState(false);
   const safeMoviesRows = moviesData.rows.map(row => ({
     ...row,
     items: kidsMode ? filterKidsContent(row.items) : row.items
@@ -72,18 +73,40 @@ function ExplorePage() {
       </section>
 
       <main className="mx-auto max-w-[1800px] px-4 pb-16 md:pb-20 sm:px-8">
-        <div className="mt-8 flex flex-wrap gap-2">
+        <div
+          className={`mt-8 flex items-center gap-2 ${showAllGenres ? "flex-wrap" : "flex-nowrap overflow-x-auto scrollbar-hide pb-2 scroll-smooth"}`}
+        >
           {safeGenres.map((g) => (
             <Link
               key={g.id}
               to="/explore/$genreId"
               params={{ genreId: String(g.id) }}
               search={{ q: g.name }}
-              className="flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm text-muted-foreground transition hover:border-primary hover:text-foreground"
+              className="flex items-center gap-1.5 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition hover:border-primary hover:text-foreground"
             >
               <Sparkles className="size-3.5 text-primary" /> {g.name}
             </Link>
           ))}
+          {safeGenres.length > 8 && !showAllGenres && (
+            <button
+              type="button"
+              onClick={() => setShowAllGenres(true)}
+              className="flex items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground whitespace-nowrap transition hover:bg-primary hover:text-primary-foreground"
+            >
+              Show all ({safeGenres.length})
+              <ChevronDown className="size-4" />
+            </button>
+          )}
+          {showAllGenres && safeGenres.length > 8 && (
+            <button
+              type="button"
+              onClick={() => setShowAllGenres(false)}
+              className="flex items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground whitespace-nowrap transition hover:bg-primary hover:text-primary-foreground"
+            >
+              Show less
+              <ChevronUp className="size-4" />
+            </button>
+          )}
         </div>
 
         {/* 5 Slideshows using Row components */}
