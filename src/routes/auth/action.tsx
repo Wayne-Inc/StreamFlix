@@ -112,7 +112,7 @@ function ActionPage() {
                 <h1 className="text-3xl font-bold">{status === "done" ? "Success" : "Error"}</h1>
                 <p className="mt-4 text-sm text-muted-foreground">{msg}</p>
                 <p className="mt-6">
-                  <Link to="/auth" search={{ email: "" }} className="text-sm text-foreground hover:underline">
+                  <Link to="/auth" search={{ email: "" }} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground">
                     ← Back to sign in
                   </Link>
                 </p>
@@ -129,7 +129,7 @@ function ActionPage() {
                 <>
                   <p className="mt-4 text-sm text-muted-foreground">{msg}</p>
                   <p className="mt-6">
-                    <Link to="/auth" search={{ email: "" }} className="text-sm text-foreground hover:underline">
+                    <Link to="/auth" search={{ email: "" }} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground">
                       ← Back to sign in
                     </Link>
                   </p>

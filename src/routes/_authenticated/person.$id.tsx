@@ -196,7 +196,7 @@ function PersonPage() {
           <button
             type="button"
             onClick={goBack}
-            className="inline-block rounded-lg border border-white/60 px-3 py-1.5 text-xs text-white hover:bg-white/10 transition"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground"
           >
             ← Back
           </button>
@@ -214,7 +214,7 @@ function PersonPage() {
           <button
             type="button"
             onClick={goBack}
-            className="mb-4 inline-flex items-center gap-1.5 rounded-lg border border-white/60 px-3 py-1.5 text-xs text-white hover:bg-white/10 transition"
+            className="mb-4 inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground"
           >
             <ChevronLeft className="size-3.5" /> Back
           </button>
@@ -276,7 +276,7 @@ function PersonPage() {
             <div className="mb-8">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-2xl font-bold tracking-tight">Images ({images.length})</h2>
-                {images.length > 1 && (
+                {images.length > defaultImagesCount && (
                   <button
                     type="button"
                     onClick={() => setImagesShowAll((v) => !v)}

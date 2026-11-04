@@ -11,7 +11,6 @@ import { auth } from "@/lib/firebase";
 import { startSession, endSession } from "@/lib/session-tracking";
 import { toast } from "sonner";
 import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
-import { WatchSkeleton } from "@/components/ui/skeleton";
 import { seoMetaFor } from "@/lib/seo";
 import { isKidsProfile, isRatingBlockedForKids, isGenreBlockedForKids } from "@/lib/kids-mode";
 
@@ -749,7 +748,7 @@ function PlayerPage() {
             This title isn't suitable for kids profiles. Switch to a regular profile to watch it.
           </p>
         </div>
-        <Link to="/browse" className="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+        <Link to="/browse" className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground">
           Back to Browse
         </Link>
       </div>
@@ -1038,7 +1037,7 @@ function PlayerPage() {
               </button>
               <button
                 onClick={goBack}
-                className="rounded bg-white/10 px-6 py-2 text-sm font-semibold text-white hover:bg-white/20 transition"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground"
               >
                 Back to Movie
               </button>
@@ -1084,11 +1083,6 @@ export const Route = createFileRoute("/_authenticated/watch/$id")({
     };
   },
   component: PlayerPage,
-  pendingComponent: () => (
-    <div className="min-h-dvh bg-black">
-      <WatchSkeleton />
-    </div>
-  ),
   errorComponent: ({ error }) => (
     <div className="grid min-h-dvh place-items-center gap-4 bg-black p-8 text-white">
       <p className="text-red-400">Error: {(error as Error).message}</p>

@@ -557,7 +557,7 @@ function AuthPage() {
           <Logo />
           <Link
             to="/"
-            className="rounded-md border border-border px-4 py-2 text-sm text-muted-foreground hover:border-foreground hover:text-foreground"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground"
           >
             Back to Home
           </Link>
@@ -649,7 +649,7 @@ function AuthPage() {
                   setForgotPw(false);
                   setResetSent(false);
                 }}
-                className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground"
               >
                 <ArrowLeft className="size-3" /> Back to sign in
               </button>

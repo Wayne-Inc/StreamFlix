@@ -1192,7 +1192,7 @@ function SettingsPage() {
         </section>
 
         <div className="mt-8 text-center">
-          <Link to="/browse" className="text-xs text-muted-foreground hover:text-foreground">
+          <Link to="/browse" className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground">
             ← Back to browsing
           </Link>
         </div>

@@ -357,7 +357,7 @@ function MoviePage() {
           </div>
           <Link
             to="/browse"
-            className="inline-flex items-center rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground"
           >
             Back to Browse
           </Link>
@@ -381,7 +381,7 @@ function MoviePage() {
             type="button"
             onClick={goBack}
             aria-label="Go back"
-            className="mb-6 inline-flex items-center gap-2 rounded-xl border border-white/20 bg-black/40 px-4 py-2 text-sm font-medium text-white backdrop-blur transition hover:bg-black/60"
+            className="mb-6 inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground"
           >
             <ArrowLeft className="size-4" /> Back
           </button>
