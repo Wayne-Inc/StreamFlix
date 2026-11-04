@@ -320,7 +320,7 @@ function SearchPage() {
             <button
               key={m.id}
               onClick={() => navigate({ to: "/movie/$id", params: { id: m.id } })}
-              className="w-full text-left"
+              className="shrink-0 text-left"
             >
               <MovieCard movie={m} />
             </button>
