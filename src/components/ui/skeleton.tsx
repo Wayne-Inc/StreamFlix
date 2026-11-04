@@ -799,9 +799,9 @@ export function MovieDetailSkeleton() {
  * Person card skeleton - matches PersonCard component in search page
  * Portrait aspect ratio with name placeholder
  */
-export function PersonCardSkeleton() {
+export function PersonCardSkeleton({ fluid = false }: { fluid?: boolean } = {}) {
   return (
-    <div className="flex-shrink-0 w-[160px] sm:w-[180px] md:w-[200px]">
+    <div className={`flex-shrink-0 ${fluid ? "w-full" : "w-[160px] sm:w-[180px] md:w-[200px]"}`}>
       <div className="relative aspect-[2/3] overflow-hidden rounded-lg bg-surface">
         <Skeleton className="size-full" />
       </div>

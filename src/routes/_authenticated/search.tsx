@@ -263,11 +263,11 @@ function SearchPage() {
   const popularTvShowsMapped = popularTvShows.slice(0, 10);
   const popularLoading = popularMoviesQuery.isLoading || popularTvQuery.isLoading;
 
-  const PersonCard = ({ person }: { person: PersonResult }) => (
+  const PersonCard = ({ person, fluid = false }: { person: PersonResult; fluid?: boolean }) => (
     <Link
       to="/person/$id"
       params={{ id: person.id }}
-      className="flex flex-col gap-2 group flex-shrink-0 w-[160px] sm:w-[180px] md:w-[200px]"
+      className={`flex flex-col gap-2 group flex-shrink-0 ${fluid ? "w-full" : "w-[160px] sm:w-[180px] md:w-[200px]"}`}
     >
       {person.photo ? (
         <LazyImage
@@ -288,15 +288,15 @@ function SearchPage() {
     <div className="space-y-4 py-4">
       <h2 className="px-4 sm:px-8 mb-4 sm:mb-6 text-3xl sm:text-4xl font-bold tracking-tight">{title}</h2>
       {loading ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 px-4 sm:px-8">
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 px-4 sm:px-8">
           {[1, 2, 3, 4, 5].map((i) => (
-            <PersonCardSkeleton key={i} />
+            <PersonCardSkeleton key={i} fluid />
           ))}
         </div>
       ) : people.length > 0 ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 px-4 sm:px-8">
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 px-4 sm:px-8">
           {people.map((p) => (
-            <PersonCard key={p.id} person={p} />
+            <PersonCard key={p.id} person={p} fluid />
           ))}
         </div>
       ) : (
@@ -506,14 +506,14 @@ function SearchPage() {
               )}
               {!loading && results.length > 0 && (
                 <>
-                  <div className="mt-6 grid gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                  <div className="mt-6 grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
                     {visible.map((m) => (
                       <button
                         key={m.id}
                         onClick={() => navigate({ to: "/movie/$id", params: { id: m.id } })}
                         className="overflow-hidden w-full text-left"
                       >
-                        <MovieCard movie={m} />
+                        <MovieCard movie={m} fluid />
                       </button>
                     ))}
                   </div>
@@ -572,19 +572,17 @@ function SearchPage() {
               ) : (
                 <div className="space-y-3">
                   {peopleQuery.isLoading ? (
-                    <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 px-4 sm:px-8 pb-4">
+                    <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 px-4 sm:px-8 pb-4">
                       {[1, 2, 3, 4, 5].map((i) => (
-                        <PersonCardSkeleton key={i} />
+                        <PersonCardSkeleton key={i} fluid />
                       ))}
                     </div>
                   ) : people.length === 0 ? (
                     <p className="px-4 sm:px-8 text-sm text-muted-foreground">No people found</p>
                   ) : (
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 px-4 sm:px-8 pb-4">
+                    <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 px-4 sm:px-8 pb-4">
                       {people.map((p: PersonResult) => (
-                        <div className="overflow-hidden">
-                          <PersonCard key={p.id} person={p} />
-                        </div>
+                        <PersonCard key={p.id} person={p} fluid />
                       ))}
                     </div>
                   )}
