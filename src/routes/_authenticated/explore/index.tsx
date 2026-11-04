@@ -85,7 +85,7 @@ function ExplorePage() {
 
       <main className="mx-auto max-w-[1800px] px-4 pb-16 md:pb-20 sm:px-8">
         <div className={`mt-8 flex items-center gap-2 ${showAllGenres ? "flex-wrap" : "flex-nowrap"}`}>
-          {safeGenres.slice(0, defaultGenresCount).map((g) => (
+          {(showAllGenres ? safeGenres : safeGenres.slice(0, defaultGenresCount)).map((g) => (
             <Link
               key={g.id}
               to="/explore/$genreId"
