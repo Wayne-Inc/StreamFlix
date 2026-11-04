@@ -144,7 +144,7 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
                 src={titleLogoUrl}
                 alt={s.title}
                 draggable={false}
-                className="mb-2 sm:mb-4 mx-auto md:mx-0 max-h-28 w-auto max-w-full object-contain select-none sm:max-h-32 md:max-h-36"
+                className="mb-2 sm:mb-4 mx-auto md:mx-0 max-h-24 w-auto max-w-full object-contain select-none sm:max-h-32 md:max-h-36"
               />
             ) : (
               <h1 className="mb-2 sm:mb-4 text-3xl md:text-3xl lg:text-4xl font-bold">{s.title}</h1>

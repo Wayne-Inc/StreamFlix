@@ -478,7 +478,7 @@ function BrowsePage() {
               key={i}
               to="/browse"
               search={{ kind: k }}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 kind === k
                   ? "bg-primary text-primary-foreground"
                   : "bg-surface text-muted-foreground hover:text-foreground hover:bg-accent"
@@ -489,13 +489,13 @@ function BrowsePage() {
           ))}
           <Link
             to="/explore"
-            className="px-4 py-2 rounded-full text-sm font-medium transition-colors bg-surface text-muted-foreground hover:text-foreground hover:bg-accent"
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-surface text-muted-foreground hover:text-foreground hover:bg-accent"
           >
             Genres
           </Link>
           <Link
             to="/calendar"
-            className="px-4 py-2 rounded-full text-sm font-medium transition-colors bg-surface text-muted-foreground hover:text-foreground hover:bg-accent"
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-surface text-muted-foreground hover:text-foreground hover:bg-accent"
           >
             Calendar
           </Link>
