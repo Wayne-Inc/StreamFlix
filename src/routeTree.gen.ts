@@ -27,10 +27,10 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as ApiClientIpRouteImport } from './routes/api/client-ip'
 import { Route as ApiProductbridgeTokenRouteImport } from './routes/api/productbridge-token'
 import { Route as ApiReleaseNotificationsCronRouteImport } from './routes/api/release-notifications-cron'
-import { Route as ApiSessionRouteImport } from './routes/api/session'
-import { Route as ApiVerifyRecaptchaRouteImport } from './routes/api/verify-recaptcha'
 import { Route as ApiRevokeDeviceSessionRouteImport } from './routes/api/revoke-device-session'
 import { Route as ApiRevokeOtherSessionsRouteImport } from './routes/api/revoke-other-sessions'
+import { Route as ApiSessionRouteImport } from './routes/api/session'
+import { Route as ApiVerifyRecaptchaRouteImport } from './routes/api/verify-recaptcha'
 import { Route as AuthActionRouteImport } from './routes/auth/action'
 import { Route as AuthenticatedExploreIndexRouteImport } from './routes/_authenticated/explore/index'
 import { Route as AuthenticatedExploreGenreIdRouteImport } from './routes/_authenticated/explore/$genreId'
@@ -130,16 +130,6 @@ const ApiReleaseNotificationsCronRoute =
     path: '/api/release-notifications-cron',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiSessionRoute = ApiSessionRouteImport.update({
-  id: '/api/session',
-  path: '/api/session',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiVerifyRecaptchaRoute = ApiVerifyRecaptchaRouteImport.update({
-  id: '/api/verify-recaptcha',
-  path: '/api/verify-recaptcha',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiRevokeDeviceSessionRoute = ApiRevokeDeviceSessionRouteImport.update({
   id: '/api/revoke-device-session',
   path: '/api/revoke-device-session',
@@ -148,6 +138,16 @@ const ApiRevokeDeviceSessionRoute = ApiRevokeDeviceSessionRouteImport.update({
 const ApiRevokeOtherSessionsRoute = ApiRevokeOtherSessionsRouteImport.update({
   id: '/api/revoke-other-sessions',
   path: '/api/revoke-other-sessions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSessionRoute = ApiSessionRouteImport.update({
+  id: '/api/session',
+  path: '/api/session',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiVerifyRecaptchaRoute = ApiVerifyRecaptchaRouteImport.update({
+  id: '/api/verify-recaptcha',
+  path: '/api/verify-recaptcha',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthActionRoute = AuthActionRouteImport.update({
@@ -206,10 +206,10 @@ export interface FileRoutesByFullPath {
   '/api/client-ip': typeof ApiClientIpRoute
   '/api/productbridge-token': typeof ApiProductbridgeTokenRoute
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
-  '/api/session': typeof ApiSessionRoute
-  '/api/verify-recaptcha': typeof ApiVerifyRecaptchaRoute
   '/api/revoke-device-session': typeof ApiRevokeDeviceSessionRoute
   '/api/revoke-other-sessions': typeof ApiRevokeOtherSessionsRoute
+  '/api/session': typeof ApiSessionRoute
+  '/api/verify-recaptcha': typeof ApiVerifyRecaptchaRoute
   '/auth/action': typeof AuthActionRoute
   '/movie/': typeof AuthenticatedMovieRoute
   '/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
@@ -235,10 +235,10 @@ export interface FileRoutesByTo {
   '/api/client-ip': typeof ApiClientIpRoute
   '/api/productbridge-token': typeof ApiProductbridgeTokenRoute
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
-  '/api/session': typeof ApiSessionRoute
-  '/api/verify-recaptcha': typeof ApiVerifyRecaptchaRoute
   '/api/revoke-device-session': typeof ApiRevokeDeviceSessionRoute
   '/api/revoke-other-sessions': typeof ApiRevokeOtherSessionsRoute
+  '/api/session': typeof ApiSessionRoute
+  '/api/verify-recaptcha': typeof ApiVerifyRecaptchaRoute
   '/auth/action': typeof AuthActionRoute
   '/movie': typeof AuthenticatedMovieRoute
   '/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
@@ -267,10 +267,10 @@ export interface FileRoutesById {
   '/api/client-ip': typeof ApiClientIpRoute
   '/api/productbridge-token': typeof ApiProductbridgeTokenRoute
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
-  '/api/session': typeof ApiSessionRoute
-  '/api/verify-recaptcha': typeof ApiVerifyRecaptchaRoute
   '/api/revoke-device-session': typeof ApiRevokeDeviceSessionRoute
   '/api/revoke-other-sessions': typeof ApiRevokeOtherSessionsRoute
+  '/api/session': typeof ApiSessionRoute
+  '/api/verify-recaptcha': typeof ApiVerifyRecaptchaRoute
   '/auth/action': typeof AuthActionRoute
   '/_authenticated/movie/': typeof AuthenticatedMovieRoute
   '/_authenticated/explore/$genreId': typeof AuthenticatedExploreGenreIdRoute
@@ -299,6 +299,8 @@ export interface FileRouteTypes {
     | '/api/client-ip'
     | '/api/productbridge-token'
     | '/api/release-notifications-cron'
+    | '/api/revoke-device-session'
+    | '/api/revoke-other-sessions'
     | '/api/session'
     | '/api/verify-recaptcha'
     | '/auth/action'
@@ -326,10 +328,10 @@ export interface FileRouteTypes {
     | '/api/client-ip'
     | '/api/productbridge-token'
     | '/api/release-notifications-cron'
-    | '/api/session'
-    | '/api/verify-recaptcha'
     | '/api/revoke-device-session'
     | '/api/revoke-other-sessions'
+    | '/api/session'
+    | '/api/verify-recaptcha'
     | '/auth/action'
     | '/movie'
     | '/explore/$genreId'
@@ -357,10 +359,10 @@ export interface FileRouteTypes {
     | '/api/client-ip'
     | '/api/productbridge-token'
     | '/api/release-notifications-cron'
-    | '/api/session'
-    | '/api/verify-recaptcha'
     | '/api/revoke-device-session'
     | '/api/revoke-other-sessions'
+    | '/api/session'
+    | '/api/verify-recaptcha'
     | '/auth/action'
     | '/_authenticated/movie/'
     | '/_authenticated/explore/$genreId'
@@ -379,10 +381,10 @@ export interface RootRouteChildren {
   ApiClientIpRoute: typeof ApiClientIpRoute
   ApiProductbridgeTokenRoute: typeof ApiProductbridgeTokenRoute
   ApiReleaseNotificationsCronRoute: typeof ApiReleaseNotificationsCronRoute
-  ApiSessionRoute: typeof ApiSessionRoute
-  ApiVerifyRecaptchaRoute: typeof ApiVerifyRecaptchaRoute
   ApiRevokeDeviceSessionRoute: typeof ApiRevokeDeviceSessionRoute
   ApiRevokeOtherSessionsRoute: typeof ApiRevokeOtherSessionsRoute
+  ApiSessionRoute: typeof ApiSessionRoute
+  ApiVerifyRecaptchaRoute: typeof ApiVerifyRecaptchaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -513,20 +515,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiReleaseNotificationsCronRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/session': {
-      id: '/api/session'
-      path: '/api/session'
-      fullPath: '/api/session'
-      preLoaderRoute: typeof ApiSessionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/verify-recaptcha': {
-      id: '/api/verify-recaptcha'
-      path: '/api/verify-recaptcha'
-      fullPath: '/api/verify-recaptcha'
-      preLoaderRoute: typeof ApiVerifyRecaptchaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/revoke-device-session': {
       id: '/api/revoke-device-session'
       path: '/api/revoke-device-session'
@@ -539,6 +527,20 @@ declare module '@tanstack/react-router' {
       path: '/api/revoke-other-sessions'
       fullPath: '/api/revoke-other-sessions'
       preLoaderRoute: typeof ApiRevokeOtherSessionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/session': {
+      id: '/api/session'
+      path: '/api/session'
+      fullPath: '/api/session'
+      preLoaderRoute: typeof ApiSessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/verify-recaptcha': {
+      id: '/api/verify-recaptcha'
+      path: '/api/verify-recaptcha'
+      fullPath: '/api/verify-recaptcha'
+      preLoaderRoute: typeof ApiVerifyRecaptchaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/action': {
@@ -662,6 +664,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiClientIpRoute: ApiClientIpRoute,
   ApiProductbridgeTokenRoute: ApiProductbridgeTokenRoute,
   ApiReleaseNotificationsCronRoute: ApiReleaseNotificationsCronRoute,
+  ApiRevokeDeviceSessionRoute: ApiRevokeDeviceSessionRoute,
+  ApiRevokeOtherSessionsRoute: ApiRevokeOtherSessionsRoute,
   ApiSessionRoute: ApiSessionRoute,
   ApiVerifyRecaptchaRoute: ApiVerifyRecaptchaRoute,
 }

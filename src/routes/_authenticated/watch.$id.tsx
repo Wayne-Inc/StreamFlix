@@ -11,6 +11,7 @@ import { auth } from "@/lib/firebase";
 import { startSession, endSession } from "@/lib/session-tracking";
 import { toast } from "sonner";
 import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
+import { WatchSkeleton } from "@/components/ui/skeleton";
 import { seoMetaFor } from "@/lib/seo";
 import { isKidsProfile, isRatingBlockedForKids, isGenreBlockedForKids } from "@/lib/kids-mode";
 
@@ -1083,6 +1084,11 @@ export const Route = createFileRoute("/_authenticated/watch/$id")({
     };
   },
   component: PlayerPage,
+  pendingComponent: () => (
+    <div className="min-h-dvh bg-black">
+      <WatchSkeleton />
+    </div>
+  ),
   errorComponent: ({ error }) => (
     <div className="grid min-h-dvh place-items-center gap-4 bg-black p-8 text-white">
       <p className="text-red-400">Error: {(error as Error).message}</p>
