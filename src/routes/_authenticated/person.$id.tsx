@@ -136,7 +136,6 @@ function PersonPage() {
   const [data, setData] = useState<PersonData | null>(null);
   const [images, setImages] = useState<Array<{ file_path: string }>>([]);
   const [imagesShowAll, setImagesShowAll] = useState(false);
-  // Default row shows a few images; pressing "Show all" reveals the rest stacked downwards.
   const imagesVisible = imagesShowAll ? images : images.slice(0, 3);
   const [loading, setLoading] = useState(true);
   const [bioExpanded, setBioExpanded] = useState(false);
@@ -286,11 +285,11 @@ function PersonPage() {
                 )}
               </div>
               {imagesShowAll ? (
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-4">
                   {imagesVisible.map((img, idx) => (
                     <div
                       key={`${img.file_path}-${idx}`}
-                      className="aspect-[2/3] w-full max-w-md rounded-lg bg-surface overflow-hidden group"
+                      className="aspect-[2/3] w-[280px] sm:w-[380px] shrink-0 rounded-lg bg-surface overflow-hidden group"
                     >
                       <img
                         src={`https://image.tmdb.org/t/p/w342${img.file_path}`}
@@ -302,11 +301,11 @@ function PersonPage() {
                   ))}
                 </div>
               ) : (
-                <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 scroll-smooth">
+                <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 scroll-smooth">
                   {imagesVisible.map((img, idx) => (
                     <div
                       key={`${img.file_path}-${idx}`}
-                      className="aspect-[2/3] w-32 shrink-0 rounded-lg bg-surface overflow-hidden group"
+                      className="aspect-[2/3] w-[280px] sm:w-[380px] shrink-0 rounded-lg bg-surface overflow-hidden group"
                     >
                       <img
                         src={`https://image.tmdb.org/t/p/w342${img.file_path}`}
