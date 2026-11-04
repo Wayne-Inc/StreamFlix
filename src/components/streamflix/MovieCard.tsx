@@ -17,6 +17,7 @@ export function MovieCard({
   landscape = false,
   compact = false,
   character,
+  size = "md",
 }: {
   movie: Movie;
   progress?: number;
@@ -27,6 +28,7 @@ export function MovieCard({
   landscape?: boolean;
   compact?: boolean;
   character?: string;
+  size?: "md" | "sm";
 }) {
   const navigate = useNavigate();
   const [isDragging, setIsDragging] = useState(false);
@@ -155,11 +157,11 @@ export function MovieCard({
               className="mb-2 mx-auto max-h-16 w-auto max-w-full object-contain select-none"
             />
           ) : (
-            <p className={`font-bold text-white line-clamp-1 drop-shadow-lg select-none ${compact ? landscape ? "text-base sm:text-lg" : "text-xs sm:text-sm" : landscape ? "text-lg sm:text-xl" : "text-xs sm:text-sm"}`}>
+            <p className={`font-bold text-white line-clamp-1 drop-shadow-lg select-none ${compact ? landscape ? (size === "sm" ? "text-sm sm:text-base" : "text-base sm:text-lg") : "text-xs sm:text-sm" : landscape ? (size === "sm" ? "text-sm sm:text-base" : "text-lg sm:text-xl") : "text-xs sm:text-sm"}`}>
               {movie.title}
             </p>
           )}
-          <div className={`flex items-center gap-1.5 mt-0.5 ${compact ? "text-xs sm:text-sm" : landscape ? "text-base sm:text-lg" : "text-[10px] sm:text-xs"}`}>
+          <div className={`flex items-center gap-1.5 mt-0.5 ${compact ? "text-xs sm:text-sm" : landscape ? (size === "sm" ? "text-xs sm:text-sm" : "text-base sm:text-lg") : "text-[10px] sm:text-xs"}`}>
             <span className="text-muted-foreground">{movie.year}</span>
             {character && movie.year ? (
               <>
@@ -171,7 +173,7 @@ export function MovieCard({
               <>
                 <span className="text-muted-foreground/40">&middot;</span>
                 <span className="inline-flex items-center gap-1 text-white/80">
-                  <span className={compact ? "text-xs sm:text-sm" : landscape ? "text-base" : "text-[10px] sm:text-xs"}>
+                  <span className={compact ? "text-xs sm:text-sm" : landscape ? (size === "sm" ? "text-sm" : "text-base") : "text-[10px] sm:text-xs"}>
                     {movie.numberOfSeasons} {movie.numberOfSeasons === 1 ? "season" : "seasons"}
                   </span>
                 </span>
@@ -187,7 +189,7 @@ export function MovieCard({
             ) : null}
           </div>
           {reason && (
-            <p className={`mt-1 flex items-center gap-1 text-purple-300 ${landscape ? "text-base sm:text-lg" : "text-[10px] sm:text-[11px]"}`}>
+            <p className={`mt-1 flex items-center gap-1 text-purple-300 ${landscape ? (size === "sm" ? "text-xs sm:text-sm" : "text-base sm:text-lg") : "text-[10px] sm:text-[11px]"}`}>
               <Sparkles className={landscape ? "size-4" : "size-3"} shrink-0 />
               {reasonLink ? (
                 <span

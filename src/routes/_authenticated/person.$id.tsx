@@ -118,9 +118,9 @@ function CreditSection({
               numberOfEpisodes: undefined,
               logo: undefined,
             } as Movie}
-            fluid={false}
-            landscape={false}
-            compact
+            fluid
+            landscape
+            size="sm"
             character={item.character}
           />
         ))}
