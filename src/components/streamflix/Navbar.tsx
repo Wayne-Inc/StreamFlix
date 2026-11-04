@@ -686,25 +686,6 @@ export function Navbar() {
             <Link to="/mylist" onClick={() => setMenuOpen(false)} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"><Bookmark className="size-4" /> My List</Link>
             <button
               type="button"
-              onClick={async () => {
-                setMenuOpen(false);
-                try {
-                  const random = await getRandomTitle();
-                  if (random?.id) {
-                    router.navigate({ to: "/movie/$id", params: { id: random.id } });
-                  } else {
-                    toast.error("Could not fetch random title");
-                  }
-                } catch (e) {
-                  toast.error("Could not fetch random title");
-                }
-              }}
-              className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <Shuffle className="size-4" /> Random
-            </button>
-            <button
-              type="button"
               onClick={() => {
                 setMenuOpen(false);
                 void signOut();
