@@ -285,11 +285,11 @@ function PersonPage() {
                 )}
               </div>
               {imagesShowAll ? (
-                <div className="flex flex-col gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                   {imagesVisible.map((img, idx) => (
                     <div
                       key={`${img.file_path}-${idx}`}
-                      className="aspect-[2/3] w-[280px] sm:w-[380px] shrink-0 rounded-lg bg-surface overflow-hidden group"
+                      className="aspect-[2/3] w-full shrink-0 rounded-lg bg-surface overflow-hidden group"
                     >
                       <img
                         src={`https://image.tmdb.org/t/p/w342${img.file_path}`}
@@ -301,11 +301,11 @@ function PersonPage() {
                   ))}
                 </div>
               ) : (
-                <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 scroll-smooth">
+                <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 scroll-smooth">
                   {imagesVisible.map((img, idx) => (
                     <div
                       key={`${img.file_path}-${idx}`}
-                      className="aspect-[2/3] w-[280px] sm:w-[380px] shrink-0 rounded-lg bg-surface overflow-hidden group"
+                      className="aspect-[2/3] w-32 shrink-0 rounded-lg bg-surface overflow-hidden group"
                     >
                       <img
                         src={`https://image.tmdb.org/t/p/w342${img.file_path}`}
