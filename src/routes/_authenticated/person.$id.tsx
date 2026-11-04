@@ -133,7 +133,8 @@ function PersonPage() {
   const [data, setData] = useState<PersonData | null>(null);
   const [images, setImages] = useState<Array<{ file_path: string }>>([]);
   const [imagesShowAll, setImagesShowAll] = useState(false);
-  const imagesVisible = imagesShowAll ? images : images.slice(0, 1);
+  // Default row shows a few images; pressing "Show all" reveals the rest stacked downwards.
+  const imagesVisible = imagesShowAll ? images : images.slice(0, 3);
   const [loading, setLoading] = useState(true);
   const [bioExpanded, setBioExpanded] = useState(false);
 
@@ -281,22 +282,39 @@ function PersonPage() {
                   </button>
                 )}
               </div>
-              {/* Horizontal row of smaller images instead of vertical stacking */}
-              <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 scroll-smooth">
-                {imagesVisible.map((img, idx) => (
-                  <div
-                    key={`${img.file_path}-${idx}`}
-                    className="aspect-[2/3] w-32 shrink-0 rounded-lg bg-surface overflow-hidden group"
-                  >
-                    <img
-                      src={`https://image.tmdb.org/t/p/w342${img.file_path}`}
-                      alt={`${data?.name} profile ${idx + 1}`}
-                      loading="lazy"
-                      className="size-full object-cover transition duration-300 group-hover:scale-105"
-                    />
-                  </div>
-                ))}
-              </div>
+              {imagesShowAll ? (
+                <div className="flex flex-col gap-3">
+                  {imagesVisible.map((img, idx) => (
+                    <div
+                      key={`${img.file_path}-${idx}`}
+                      className="aspect-[2/3] w-full max-w-md rounded-lg bg-surface overflow-hidden group"
+                    >
+                      <img
+                        src={`https://image.tmdb.org/t/p/w342${img.file_path}`}
+                        alt={`${data?.name} profile ${idx + 1}`}
+                        loading="lazy"
+                        className="size-full object-cover transition duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 scroll-smooth">
+                  {imagesVisible.map((img, idx) => (
+                    <div
+                      key={`${img.file_path}-${idx}`}
+                      className="aspect-[2/3] w-32 shrink-0 rounded-lg bg-surface overflow-hidden group"
+                    >
+                      <img
+                        src={`https://image.tmdb.org/t/p/w342${img.file_path}`}
+                        alt={`${data?.name} profile ${idx + 1}`}
+                        loading="lazy"
+                        className="size-full object-cover transition duration-300 group-hover:scale-105"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
