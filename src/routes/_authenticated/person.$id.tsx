@@ -136,16 +136,17 @@ function PersonPage() {
   const [data, setData] = useState<PersonData | null>(null);
   const [images, setImages] = useState<Array<{ file_path: string }>>([]);
   const [imagesShowAll, setImagesShowAll] = useState(false);
-  // Default view shows fewer images: 2 on mobile, 4 on desktop
-  const [defaultImagesCount, setDefaultImagesCount] = useState(
-    typeof window !== "undefined" && window.innerWidth < 640 ? 2 : 4
-  );
+  // Default view shows as many images as fit in the first row of the Show-All grid:
+  // 2 on mobile, 3 on sm, 4 on lg, 5 on xl
+  const [defaultImagesCount, setDefaultImagesCount] = useState(2);
   useEffect(() => {
-    const handleResize = () => {
-      setDefaultImagesCount(window.innerWidth < 640 ? 2 : 4);
+    const update = () => {
+      const w = window.innerWidth;
+      setDefaultImagesCount(w >= 1280 ? 5 : w >= 1024 ? 4 : w >= 640 ? 3 : 2);
     };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
   }, []);
   const imagesVisible = imagesShowAll ? images : images.slice(0, defaultImagesCount);
   const [loading, setLoading] = useState(true);
@@ -312,11 +313,11 @@ function PersonPage() {
                   ))}
                 </div>
               ) : (
-                <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 scroll-smooth">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                   {imagesVisible.map((img, idx) => (
                     <div
                       key={`${img.file_path}-${idx}`}
-                      className="aspect-[2/3] w-[280px] sm:w-[380px] shrink-0 rounded-lg bg-surface overflow-hidden group"
+                      className="aspect-[2/3] w-full shrink-0 rounded-lg bg-surface overflow-hidden group"
                     >
                       <img
                         src={`https://image.tmdb.org/t/p/w342${img.file_path}`}

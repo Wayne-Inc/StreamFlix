@@ -437,6 +437,9 @@ export function Navbar() {
                             </span>
                           )}
                           <span className="truncate">{s.title}</span>
+                          {s.mediaType === "person" && (
+                            <span className="ml-1 text-[10px] text-red-400">(person)</span>
+                          )}
                         </button>
                       </li>
                     ))

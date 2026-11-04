@@ -81,8 +81,10 @@ function ExploreGenrePage() {
       </section>
 
       <main className="mx-auto max-w-[1800px] px-4 pb-16 md:pb-20 sm:px-8">
-        {/* Mood chips — one row by default, Show All reveals the rest on the same row */}
-        <div className="mt-8 flex flex-wrap items-center gap-2">
+        {/* Mood chips — one row by default (scrollable), Show All reveals all wrapped in rows */}
+        <div
+          className={`mt-8 flex items-center gap-2 ${showAllGenres ? "flex-wrap" : "flex-nowrap overflow-x-auto scrollbar-hide pb-2 scroll-smooth"}`}
+        >
           {visibleGenres.map((g) => {
             const active = String(g.id) === genreId;
             return (
@@ -92,7 +94,7 @@ function ExploreGenrePage() {
                 params={{ genreId: String(g.id) }}
                 search={{ q: g.name }}
                 onClick={() => setPage(1)}
-                className={`rounded-full border px-4 py-2 text-sm transition ${
+                className={`rounded-lg border px-4 py-2 text-sm transition ${
                   active
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border text-muted-foreground hover:border-primary hover:text-foreground"
@@ -106,7 +108,7 @@ function ExploreGenrePage() {
             <button
               type="button"
               onClick={() => setShowAllGenres(true)}
-              className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground"
+              className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground whitespace-nowrap transition hover:bg-primary hover:text-primary-foreground"
             >
               Show all ({safeGenres.length})
               <ChevronDown className="size-4" />
@@ -116,7 +118,7 @@ function ExploreGenrePage() {
             <button
               type="button"
               onClick={() => setShowAllGenres(false)}
-              className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground"
+              className="rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground whitespace-nowrap transition hover:bg-primary hover:text-primary-foreground"
             >
               Show less
               <ChevronUp className="size-4" />
