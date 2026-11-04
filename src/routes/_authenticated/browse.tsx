@@ -471,7 +471,7 @@ function BrowsePage() {
     <div className="min-h-dvh bg-background">
       <Navbar />
       <HeroBanner slides={filteredHeroSlides} />
-      <div className="mx-auto max-w-4xl px-4 sm:px-8 md:hidden">
+      <div className="mx-auto max-w-4xl px-4 sm:px-8 mb-4 sm:mb-0 md:hidden">
         <nav className="flex flex-nowrap gap-2 overflow-x-auto scrollbar-hide pb-1" aria-label="Browse categories">
           {(["home", "movies", "tv", "new"] as const).map((k, i) => (
             <Link
