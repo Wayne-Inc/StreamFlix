@@ -136,7 +136,18 @@ function PersonPage() {
   const [data, setData] = useState<PersonData | null>(null);
   const [images, setImages] = useState<Array<{ file_path: string }>>([]);
   const [imagesShowAll, setImagesShowAll] = useState(false);
-  const imagesVisible = imagesShowAll ? images : images.slice(0, 3);
+  // Default view shows fewer images: 2 on mobile, 4 on desktop
+  const [defaultImagesCount, setDefaultImagesCount] = useState(
+    typeof window !== "undefined" && window.innerWidth < 640 ? 2 : 4
+  );
+  useEffect(() => {
+    const handleResize = () => {
+      setDefaultImagesCount(window.innerWidth < 640 ? 2 : 4);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+  const imagesVisible = imagesShowAll ? images : images.slice(0, defaultImagesCount);
   const [loading, setLoading] = useState(true);
   const [bioExpanded, setBioExpanded] = useState(false);
 
@@ -305,7 +316,7 @@ function PersonPage() {
                   {imagesVisible.map((img, idx) => (
                     <div
                       key={`${img.file_path}-${idx}`}
-                      className="aspect-[2/3] w-32 shrink-0 rounded-lg bg-surface overflow-hidden group"
+                      className="aspect-[2/3] w-[280px] sm:w-[380px] shrink-0 rounded-lg bg-surface overflow-hidden group"
                     >
                       <img
                         src={`https://image.tmdb.org/t/p/w342${img.file_path}`}
