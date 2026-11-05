@@ -7,8 +7,8 @@ import { HeroBanner } from "@/components/streamflix/HeroBanner";
 import { Row } from "@/components/streamflix/Row";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import { Footer } from "@/components/streamflix/Footer";
-import { RowSkeleton } from "@/components/streamflix/RowSkeleton";
-import { HeroBannerSkeleton, ContinueWatchingSkeleton, BrowseSkeleton as BrowseSkeletonComponent } from "@/components/ui/skeleton";
+import { RowSkeleton } from "@/components/ui/skeleton";
+import { BrowsePageSkeleton } from "@/components/ui/skeleton-pages";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { loadBrowseData, searchByGenre, type BrowseKind } from "@/lib/streamflix-data";
 import { fetchPopular, fetchPopularTv, enrichRuntimes } from "@/lib/api/tmdb";
@@ -35,13 +35,6 @@ const searchSchema = z.object({
   kind: z.enum(["home", "movies", "tv", "new"]).catch("home").default("home"),
 });
 
-const BrowseSkeleton = () => (
-  <div className="min-h-dvh bg-background">
-    <Navbar />
-    <BrowseSkeletonComponent />
-  </div>
-);
-
 export const Route = createFileRoute("/_authenticated/browse")({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => ({ kind: search.kind }),
@@ -50,7 +43,7 @@ export const Route = createFileRoute("/_authenticated/browse")({
   },
   head: () => ({ meta: [{ title: "Browse — StreamFlix" }] }),
   component: BrowsePage,
-  pendingComponent: BrowseSkeleton,
+  pendingComponent: BrowsePageSkeleton,
 });
 
 function BrowsePage() {

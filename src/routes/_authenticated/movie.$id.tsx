@@ -44,7 +44,7 @@ import { isInMyList, toggleMyList } from "@/lib/my-list";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { Row } from "@/components/streamflix/Row";
-import { Skeleton, MovieDetailSkeleton } from "@/components/ui/skeleton";
+import { MovieDetailPageSkeleton } from "@/components/ui/skeleton-pages";
 import { movieById, loadSimilar, loadRecommendations, getGenres } from "@/lib/streamflix-data";
 import { discoverByGenre, fetchTitleLogo, fetchTvSeason, fetchTopRatedTv } from "@/lib/api/tmdb";
 import { SeasonEpisodePicker } from "@/components/streamflix/SeasonEpisodePicker";
@@ -54,13 +54,6 @@ import { AgeRatingBadge } from "@/components/streamflix/AgeRatingBadge";
 import { askStreamflixAI } from "@/lib/api/ai";
 import { AI_ERROR_MESSAGES, aiErrorMessage } from "@/lib/ai-errors";
 import { auth } from "@/lib/firebase";
-
-const MovieSkeleton = () => (
-  <div className="min-h-dvh bg-background">
-    <Navbar />
-    <MovieDetailSkeleton />
-  </div>
-);
 
 export const Route = createFileRoute("/_authenticated/movie/$id")({
   loader: async ({ params }) => {
@@ -156,7 +149,7 @@ export const Route = createFileRoute("/_authenticated/movie/$id")({
     </div>
   ),
   component: MoviePage,
-  pendingComponent: MovieSkeleton,
+  pendingComponent: MovieDetailPageSkeleton,
 });
 
 function MoviePage() {

@@ -5,8 +5,7 @@ import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import { Row } from "@/components/streamflix/Row";
-import { RowSkeleton } from "@/components/streamflix/RowSkeleton";
-import { HeroBannerSkeleton, Skeleton, ExploreSkeleton, ExploreGenreSkeleton } from "@/components/ui/skeleton";
+import { ExplorePageSkeleton } from "@/components/ui/skeleton-pages";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getGenres, loadMovies, loadTv } from "@/lib/streamflix-data";
 import { fetchPopular } from "@/lib/api/tmdb";
@@ -24,13 +23,8 @@ export const Route = createFileRoute("/_authenticated/explore/")({
     return { genres, moviesData, tvData, items: popular };
   },
   head: () => ({ meta: [{ title: "Explore — StreamFlix" }] }),
-  pendingComponent: () => (
-    <div className="min-h-dvh bg-background">
-      <Navbar />
-      <ExploreSkeleton />
-    </div>
-  ),
   component: ExplorePage,
+  pendingComponent: ExplorePageSkeleton,
 });
 
 function ExplorePage() {

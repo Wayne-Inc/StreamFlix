@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Sparkles, ChevronDown, ChevronUp } from "luc
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { MovieCard } from "@/components/streamflix/MovieCard";
-import { HeroBannerSkeleton, Skeleton, ExploreGenreSkeleton } from "@/components/ui/skeleton";
+import { ExploreGenrePageSkeleton } from "@/components/ui/skeleton-pages";
 import { getGenres, searchByGenre } from "@/lib/streamflix-data";
 import type { Movie } from "@/lib/types";
 import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
@@ -27,13 +27,8 @@ export const Route = createFileRoute("/_authenticated/explore/$genreId")({
   head: ({ loaderData }) => ({
     meta: [{ title: `${loaderData?.genreName || "Explore"} — StreamFlix` }],
   }),
-  pendingComponent: () => (
-    <div className="min-h-dvh bg-background">
-      <Navbar />
-      <ExploreGenreSkeleton />
-    </div>
-  ),
   component: ExploreGenrePage,
+  pendingComponent: ExploreGenrePageSkeleton,
 });
 
 function ExploreGenrePage() {

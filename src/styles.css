@@ -150,20 +150,47 @@
     transform: translateY(0);
   }
 }
+
+/* ------------------------------------------------------------------ */
+/*  Skeleton animations (new centralized skeleton system)             */
+/* ------------------------------------------------------------------ */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-skeleton-shimmer {
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+.animate-skeleton-pulse {
+  animation: skeleton-pulse 2s ease-in-out infinite;
+}
+
+/* Reduce motion disables skeleton animations */
+.reduce-motion .animate-skeleton-shimmer,
+.reduce-motion .animate-skeleton-pulse {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+}
 @keyframes ken-burns {
   0% {
     transform: scale(1) translate(0, 0);
   }
   100% {
     transform: scale(1.12) translate(-1%, -1%);
-  }
-}
-@keyframes shimmer {
-  0% {
-    background-position: -800px 0;
-  }
-  100% {
-    background-position: 800px 0;
   }
 }
 @keyframes checklist-drop {  from {
@@ -185,10 +212,6 @@
 .animate-ken-burns {
   animation: ken-burns 20s ease-out infinite alternate;
 }
-.animate-shimmer {
-  animation: shimmer 1.5s ease-in-out infinite;
-}
-
 /* Custom range slider styles */
 input[type="range"] {
   -webkit-appearance: none;

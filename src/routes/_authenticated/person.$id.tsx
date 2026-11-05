@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { Calendar, MapPin, Film, ChevronLeft, ChevronUp, ChevronDown } from "lucide-react";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
-import { Skeleton, PersonDetailSkeleton } from "@/components/ui/skeleton";
+import { PersonDetailPageSkeleton } from "@/components/ui/skeleton-pages";
 import { fetchPersonDetails, fetchPersonImages } from "@/lib/api/tmdb";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import type { Movie } from "@/lib/types";
@@ -181,7 +181,7 @@ function PersonPage() {
     return (
       <div className="min-h-dvh bg-background">
         <Navbar />
-        <PersonDetailSkeleton />
+        <PersonDetailPageSkeleton />
         <Footer />
       </div>
     );

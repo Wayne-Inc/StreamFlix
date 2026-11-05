@@ -5,7 +5,7 @@ import { Trash2, Clock, Play, Film, X, ChevronDown, ChevronRight, Tv } from "luc
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { LazyImage } from "@/components/streamflix/LazyImage";
-import { Skeleton, HistoryItemSkeleton } from "@/components/ui/skeleton";
+import { HistoryPageSkeleton } from "@/components/ui/skeleton-pages";
 import { getWatchHistory, type WatchHistoryItem } from "@/lib/continue-watching";
 import {
   getWatchHistoryFromFirestore,
@@ -165,9 +165,7 @@ function HistoryPage() {
           )}
         </div>
 
-        {!loaded ? (
-          <HistoryItemSkeleton />
-        ) : history.length === 0 ? (
+        {!loaded ? <HistoryPageSkeleton /> : history.length === 0 ? (
           <div className="mt-20 text-center">
             <Film className="mx-auto size-12 text-muted-foreground/50 mb-3" />
             <p className="text-muted-foreground">No watch history yet.</p>

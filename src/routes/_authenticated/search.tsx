@@ -13,7 +13,13 @@ import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import { LazyImage } from "@/components/streamflix/LazyImage";
-import { Skeleton, MyListSkeleton, SearchResultsSkeleton, PersonCardSkeleton } from "@/components/ui/skeleton";
+import {
+  SkeletonGrid,
+  MovieCardSkeleton,
+  PersonCardSkeleton,
+  SkeletonText,
+  SkeletonButton,
+} from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -288,11 +294,7 @@ function SearchPage() {
     <div className="space-y-4 py-4">
       <h2 className="px-4 sm:px-8 mb-4 sm:mb-6 text-3xl sm:text-4xl font-bold tracking-tight">{title}</h2>
       {loading ? (
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 px-4 sm:px-8">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <PersonCardSkeleton key={i} fluid />
-          ))}
-        </div>
+        <SkeletonGrid count={5} className="px-4 sm:px-8" cellAspect="aspect-[2/3]" />
       ) : people.length > 0 ? (
         <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 px-4 sm:px-8">
           {people.map((p) => (
@@ -310,8 +312,8 @@ function SearchPage() {
       <h2 className="px-4 sm:px-8 mb-4 sm:mb-6 text-3xl sm:text-4xl font-bold tracking-tight">{title}</h2>
       {loading ? (
         <div className="scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-8">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <SearchResultsSkeleton key={i} />
+          {Array.from({ length: 5 }).map((_, i) => (
+            <MovieCardSkeleton key={i} />
           ))}
         </div>
       ) : movies.length > 0 ? (
@@ -497,7 +499,7 @@ function SearchPage() {
                     : `${results.length} title${results.length === 1 ? "" : "s"} matching your filters`}
               </p>
               {loading && (
-                <SearchResultsSkeleton count={12} />
+                <SkeletonGrid count={12} className="mt-6" />
               )}
               {!loading && results.length === 0 && (
                 <p className="mt-10 text-center text-sm text-muted-foreground">
@@ -572,11 +574,7 @@ function SearchPage() {
               ) : (
                 <div className="space-y-3">
                   {peopleQuery.isLoading ? (
-                    <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 px-4 sm:px-8 pb-4">
-                      {[1, 2, 3, 4, 5].map((i) => (
-                        <PersonCardSkeleton key={i} fluid />
-                      ))}
-                    </div>
+                    <SkeletonGrid count={5} className="px-4 sm:px-8 pb-4" cellAspect="aspect-[2/3]" />
                   ) : people.length === 0 ? (
                     <p className="px-4 sm:px-8 text-sm text-muted-foreground">No people found</p>
                   ) : (

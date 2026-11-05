@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { Logo } from "@/components/streamflix/Logo";
 import { AvatarCropModal } from "@/components/streamflix/AvatarCropModal";
 import { TmdbAvatarPicker } from "@/components/streamflix/TmdbAvatarPicker";
-import { Skeleton, ProfileSkeleton } from "@/components/ui/skeleton";
+import { ProfilesPageSkeleton } from "@/components/ui/skeleton-pages";
 import { auth } from "@/lib/firebase";
 import type { User } from "firebase/auth";
 import { getWatchHistory } from "@/lib/continue-watching";
@@ -471,9 +471,7 @@ function ProfilesPage() {
           {editing ? "Manage Profiles:" : "Who's watching?"}
         </h1>
 
-        {profiles === null ? (
-          <ProfileSkeleton />
-        ) : (
+        {profiles === null ? <ProfilesPageSkeleton /> : (
           <>
             <ul className="mt-8 flex flex-wrap justify-center gap-3 sm:mt-10 sm:gap-8">
               {(profilesExpanded ? profiles : profiles.slice(0, 5)).map((p) => (

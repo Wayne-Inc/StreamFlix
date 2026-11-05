@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { LazyImage } from "@/components/streamflix/LazyImage";
-import { Skeleton, CalendarSkeleton } from "@/components/ui/skeleton";
+import { CalendarPageSkeleton } from "@/components/ui/skeleton-pages";
 import { loadUpcomingCalendar, loadAiringCalendar } from "@/lib/streamflix-data";
 import type { CalendarTitle } from "@/lib/api/tmdb";
 import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
@@ -17,10 +17,8 @@ export const Route = createFileRoute("/_authenticated/calendar")({
     return { items: [...movies, ...tv] };
   },
   head: () => ({ meta: [{ title: "New & Coming Soon — StreamFlix" }] }),
-  pendingComponent: () => (
-    <CalendarSkeleton />
-  ),
   component: CalendarPage,
+  pendingComponent: CalendarPageSkeleton,
 });
 
 const DAY_HEADERS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

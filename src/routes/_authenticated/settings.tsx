@@ -63,7 +63,13 @@ import {
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { AvatarCropModal } from "@/components/streamflix/AvatarCropModal";
-import { Skeleton, SettingsSectionSkeleton, ProfileSettingsSkeleton, SecuritySettingsSkeleton, AccessibilitySettingsSkeleton, DevicesSettingsSkeleton, InterestsSettingsSkeleton, NotificationsSettingsSkeleton, SignOutSettingsSkeleton, DeleteAccountSettingsSkeleton, DeviceListItemSkeleton } from "@/components/ui/skeleton";
+import {
+  Skeleton,
+  SkeletonText,
+  SkeletonAvatar,
+  SkeletonButton,
+  SkeletonGrid,
+} from "@/components/ui/skeleton";
 import { getDeviceId, recordCurrentDevice } from "@/lib/device-tracking";
 import { isKidsProfile } from "@/lib/kids-mode";
 import { useReduceMotion } from "@/lib/reduce-motion";
@@ -647,7 +653,33 @@ function SettingsPage() {
             <UserIcon className="size-4" /> Profile
           </div>
           {profileLoading ? (
-            <ProfileSettingsSkeleton />
+            <section className="mt-8 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Skeleton className="size-4" />
+                <SkeletonText className="h-5 w-24" />
+              </div>
+              <div className="mt-5 flex flex-col sm:flex-row gap-6">
+                <div className="flex flex-col items-center gap-3">
+                  <SkeletonAvatar className="size-24 rounded-full" />
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <SkeletonButton className="h-8 w-20 rounded-md" />
+                    <SkeletonButton className="h-8 w-28 rounded-md" />
+                    <SkeletonButton className="h-8 w-16 rounded-md" />
+                  </div>
+                </div>
+                <div className="flex-1 grid gap-4 sm:grid-cols-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className={i === 4 ? "sm:col-span-2" : ""}>
+                      <SkeletonText className="h-3 w-20 mb-1" />
+                      <Skeleton className="h-10 w-full rounded-md" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end">
+                <SkeletonButton className="h-10 w-28 rounded-md" />
+              </div>
+            </section>
           ) : (
             <div className="mt-5 flex flex-col sm:flex-row gap-6">
               <div className="flex flex-col items-center gap-3">
@@ -883,8 +915,18 @@ function SettingsPage() {
           <div className="mt-5 divide-y divide-border rounded-md border border-border bg-background/40">
             {devicesQ.isLoading && (
               <div className="divide-y divide-border">
-                {[1, 2, 3].map((i) => (
-                  <DeviceListItemSkeleton key={i} />
+                {Array.from({ length: 3 }).map((i) => (
+                  <div key={i} className="flex items-center gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-4">
+                    <Skeleton className="grid size-10 shrink-0 place-items-center rounded-md bg-accent" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <SkeletonText className="h-4 w-32" />
+                        <Skeleton className="h-4 w-20 rounded-full" />
+                      </div>
+                      <SkeletonText className="mt-0.5 h-3 w-40 text-xs text-muted-foreground" />
+                    </div>
+                    <SkeletonButton className="h-8 w-20 rounded-md shrink-0" />
+                  </div>
                 ))}
               </div>
             )}
@@ -944,7 +986,26 @@ function SettingsPage() {
             Pick the genres you love. We'll use them to personalise what you see.
           </p>
           {!genresLoaded ? (
-            <InterestsSettingsSkeleton />
+            <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Skeleton className="size-4" />
+                <SkeletonText className="h-5 w-20" />
+              </div>
+              <SkeletonText className="mt-1 h-3 w-64 text-xs text-muted-foreground" />
+              <div className="mt-4 flex flex-wrap gap-2">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <SkeletonButton
+                    key={i}
+                    size="px-3.5 py-1.5 text-sm"
+                    className="border-border text-muted-foreground"
+                  />
+                ))}
+              </div>
+              <div className="mt-4 flex items-center gap-3">
+                <SkeletonButton className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground" />
+                <SkeletonText className="text-xs text-muted-foreground" />
+              </div>
+            </section>
           ) : (
             <>
               <div className="mt-4 flex flex-wrap gap-2">
@@ -991,7 +1052,27 @@ function SettingsPage() {
         {/* Notifications */}
         <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
           {notifBusy ? (
-            <NotificationsSettingsSkeleton />
+            <section className="mt-6 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="grid size-10 shrink-0 place-items-center rounded-md bg-accent" />
+                  <div>
+                    <SkeletonText className="text-sm font-semibold" />
+                    <SkeletonText className="text-xs text-muted-foreground mt-0.5" />
+                  </div>
+                </div>
+                <SkeletonButton className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground" />
+              </div>
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="mt-4 flex items-center justify-between gap-4 rounded-md border border-border bg-background/60 px-4 py-3">
+                  <div>
+                    <SkeletonText className="text-sm font-semibold" />
+                    <SkeletonText className="text-xs text-muted-foreground mt-0.5 w-64" />
+                  </div>
+                  <Skeleton className="relative inline-flex h-6 w-11 shrink-0 rounded-full border-2" />
+                </div>
+              ))}
+            </section>
           ) : (
             <>
               <div className="flex items-center justify-between gap-3">

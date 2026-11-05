@@ -4,7 +4,7 @@ import { Bookmark } from "lucide-react";
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { MovieCard } from "@/components/streamflix/MovieCard";
-import { Skeleton, MyListSkeleton } from "@/components/ui/skeleton";
+import { MyListPageSkeleton } from "@/components/ui/skeleton-pages";
 import { getMyList, MY_LIST_EVENT, wasRecentlyRemoved, type MyListEntry } from "@/lib/my-list";
 import { getMyListFromFirestore } from "@/lib/my-list-firestore";
 import { isKidsProfile, filterKidsContent } from "@/lib/kids-mode";
@@ -69,9 +69,7 @@ function MyListPage() {
           <Bookmark className="size-6 fill-current text-primary" /> My List
         </h1>
 
-        {!loaded ? (
-          <MyListSkeleton count={12} />
-        ) : items.length === 0 ? (
+        {!loaded ? <MyListPageSkeleton /> : items.length === 0 ? (
           <div className="mt-20 text-center">
             <Bookmark className="mx-auto size-12 text-muted-foreground/50 mb-3" />
             <p className="text-muted-foreground">Your list is empty.</p>
