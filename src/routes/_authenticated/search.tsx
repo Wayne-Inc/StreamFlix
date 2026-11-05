@@ -313,7 +313,21 @@ function SearchPage() {
           ))}
         </div>
       ) : people.length > 0 ? (
-        <div className="scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-8 pb-4">
+        <div className="relative scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-8 pb-4">
+          <button
+            type="button"
+            aria-label="Scroll back"
+            className="absolute left-1 sm:left-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
+          >
+            <ChevronLeft className="size-5" />
+          </button>
+          <button
+            type="button"
+            aria-label="Scroll forward"
+            className="absolute right-1 sm:right-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
+          >
+            <ChevronRight className="size-5" />
+          </button>
           {people.map((p) => (
             <PersonCard key={p.id} person={p} />
           ))}
@@ -348,7 +362,21 @@ function SearchPage() {
           ))}
         </div>
       ) : movies.length > 0 ? (
-        <div className="scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-8">
+        <div className="relative scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-8">
+          <button
+            type="button"
+            aria-label="Scroll back"
+            className="absolute left-1 sm:left-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
+          >
+            <ChevronLeft className="size-5" />
+          </button>
+          <button
+            type="button"
+            aria-label="Scroll forward"
+            className="absolute right-1 sm:right-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
+          >
+            <ChevronRight className="size-5" />
+          </button>
           {movies.map((m) => (
             <button
               key={m.id}
