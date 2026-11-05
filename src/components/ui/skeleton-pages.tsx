@@ -426,6 +426,21 @@ export function SettingsPageSkeleton() {
       <main className="mx-auto max-w-4xl px-4 pt-28 pb-20 sm:px-8">
         <SkeletonText className="text-3xl font-bold tracking-tight w-48" />
         <SkeletonText className="mt-1 text-sm text-muted-foreground w-64" />
+        {/* VIP */}
+        <section className="mt-8 rounded-lg border border-yellow-500/30 bg-gradient-to-r from-yellow-500/15 via-amber-500/5 to-transparent p-4 sm:p-6">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="grid size-12 shrink-0 place-items-center rounded-full bg-yellow-500/20 text-yellow-400">
+              <Skeleton className="size-6 fill-current text-yellow-400" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <SkeletonText className="h-5 w-24 text-yellow-400" />
+                <Skeleton className="rounded-full bg-yellow-500/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-yellow-400 h-5 w-16" />
+              </div>
+              <SkeletonText className="mt-0.5 text-sm text-muted-foreground w-3/4" />
+            </div>
+          </div>
+        </section>
         {/* Profile */}
         <section className="mt-8 rounded-lg border border-border bg-card/40 p-4 sm:p-6">
           <div className="flex items-center gap-2 text-sm font-semibold">
@@ -442,16 +457,44 @@ export function SettingsPageSkeleton() {
               </div>
             </div>
             <div className="flex-1 grid gap-4 sm:grid-cols-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className={i === 4 ? "sm:col-span-2" : ""}>
-                  <SkeletonText className="h-3 w-20 mb-1" />
-                  <Skeleton className="h-10 w-full rounded-md" />
+              {/* Email row */}
+              <div>
+                <SkeletonText className="h-3 w-20 mb-1" />
+                <div className="mt-1 flex items-center gap-2 rounded-md border border-border bg-background/60 px-3 py-2 text-sm">
+                  <Skeleton className="size-4 text-muted-foreground shrink-0" />
+                  <SkeletonText className="min-w-0 truncate h-4 w-48" />
+                  <SkeletonButton className="ml-auto shrink-0 rounded-md border border-border px-2 py-0.5 text-[10px] h-7" />
                 </div>
-              ))}
+              </div>
+              {/* Display name row */}
+              <div>
+                <SkeletonText className="h-3 w-20 mb-1" />
+                <div className="mt-1 flex gap-2">
+                  <Skeleton className="flex-1 rounded-md border border-border bg-background/60 px-3 py-2 text-sm h-10" />
+                  <SkeletonButton className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground h-10 w-16" />
+                </div>
+              </div>
+              {/* Member since row */}
+              <div>
+                <SkeletonText className="h-3 w-20 mb-1" />
+                <div className="mt-1 rounded-md border border-border bg-background/60 px-3 py-2 text-sm">
+                  <SkeletonText className="h-4 w-24" />
+                </div>
+              </div>
+              {/* User ID row */}
+              <div>
+                <SkeletonText className="h-3 w-20 mb-1" />
+                <div className="mt-1 truncate sm:truncate sm:rounded-md border border-border bg-background/60 px-3 py-2 text-xs font-mono text-muted-foreground break-all cursor-pointer hover:bg-background/80 select-all">
+                  <SkeletonText className="h-4 w-full font-mono" />
+                </div>
+              </div>
+              {/* Save button (spans both cols on sm+) */}
+              <div key="save" className="sm:col-span-2">
+                <div className="mt-1">
+                  <SkeletonButton className="h-10 w-28 rounded-md" />
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="mt-6 flex justify-end">
-            <SkeletonButton className="h-10 w-28 rounded-md" />
           </div>
         </section>
         {/* Password */}
@@ -536,6 +579,14 @@ export function SettingsPageSkeleton() {
               </div>
             </div>
             <SkeletonButton className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground" />
+          </div>
+          {/* Upcoming movie notifications toggle */}
+          <div className="mt-4 flex items-center justify-between gap-4 rounded-md border border-border bg-background/60 px-4 py-3">
+            <div>
+              <SkeletonText className="text-sm font-semibold" />
+              <SkeletonText className="text-xs text-muted-foreground mt-0.5 w-64" />
+            </div>
+            <Skeleton className="relative inline-flex h-6 w-11 shrink-0 rounded-full border-2" />
           </div>
           {Array.from({ length: 2 }).map((_, i) => (
             <div key={i} className="mt-4 flex items-center justify-between gap-4 rounded-md border border-border bg-background/60 px-4 py-3">
