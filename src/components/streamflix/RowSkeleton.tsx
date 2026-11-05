@@ -17,16 +17,16 @@ export function RowSkeleton({
         <button
           type="button"
           aria-label="Scroll back"
-          className="absolute left-1 sm:left-2 top-1/2 z-30 hidden sm:grid size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
+          className="absolute left-1 sm:left-2 top-1/2 z-30 hidden sm:grid size-9 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
         >
-          <Skeleton className="size-5" />
+          <Skeleton className="size-4" />
         </button>
         <button
           type="button"
           aria-label="Scroll forward"
-          className="absolute right-1 sm:right-2 top-1/2 z-30 hidden sm:grid size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
+          className="absolute right-1 sm:right-2 top-1/2 z-30 hidden sm:grid size-9 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
         >
-          <Skeleton className="size-5" />
+          <Skeleton className="size-4" />
         </button>
 
         <div className="scrollbar-hide flex min-w-0 gap-4 overflow-x-auto overscroll-x-contain scroll-smooth px-4 sm:gap-6 sm:px-8 pb-4 sm:pb-10">
