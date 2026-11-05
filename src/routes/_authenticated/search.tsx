@@ -301,7 +301,7 @@ function SearchPage() {
     return (
       <div
         ref={ref}
-        className={`relative scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto pl-12 sm:pl-16 pr-12 sm:pr-16 ${className}`}
+        className={`relative scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-8 ${className}`}
       >
         <button
           type="button"
