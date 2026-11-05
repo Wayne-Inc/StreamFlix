@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Search as SearchIcon,
   X,
@@ -289,49 +289,56 @@ function SearchPage() {
     </Link>
   );
 
+  const ScrollableRow = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => {
+    const ref = useRef<HTMLDivElement>(null);
+    const scrollLeft = () => {
+      ref.current?.scrollBy({ left: -320, behavior: "smooth" });
+    };
+    const scrollRight = () => {
+      ref.current?.scrollBy({ left: 320, behavior: "smooth" });
+    };
+
+    return (
+      <div
+        ref={ref}
+        className={`relative scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto pl-12 sm:pl-16 pr-12 sm:pr-16 ${className}`}
+      >
+        <button
+          type="button"
+          onClick={scrollLeft}
+          aria-label="Scroll back"
+          className="absolute left-1 sm:left-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
+        >
+          <ChevronLeft className="size-5" />
+        </button>
+        <button
+          type="button"
+          onClick={scrollRight}
+          aria-label="Scroll forward"
+          className="absolute right-1 sm:right-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
+        >
+          <ChevronRight className="size-5" />
+        </button>
+        {children}
+      </div>
+    );
+  };
+
   const PeopleSection = ({ title, people, loading }: { title: string; people: PersonResult[]; loading: boolean }) => (
     <div className="space-y-4 py-4">
       <h2 className="px-4 sm:px-8 mb-4 sm:mb-6 text-3xl sm:text-4xl font-bold tracking-tight">{title}</h2>
       {loading ? (
-        <div className="relative scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-8">
-          <button
-            type="button"
-            aria-label="Scroll back"
-            className="absolute left-1 sm:left-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
-          >
-            <ChevronLeft className="size-5" />
-          </button>
-          <button
-            type="button"
-            aria-label="Scroll forward"
-            className="absolute right-1 sm:right-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
-          >
-            <ChevronRight className="size-5" />
-          </button>
+        <ScrollableRow>
           {[1, 2, 3, 4, 5].map((i) => (
             <PersonCardSkeleton key={i} />
           ))}
-        </div>
+        </ScrollableRow>
       ) : people.length > 0 ? (
-        <div className="relative scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-8 pb-4">
-          <button
-            type="button"
-            aria-label="Scroll back"
-            className="absolute left-1 sm:left-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
-          >
-            <ChevronLeft className="size-5" />
-          </button>
-          <button
-            type="button"
-            aria-label="Scroll forward"
-            className="absolute right-1 sm:right-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
-          >
-            <ChevronRight className="size-5" />
-          </button>
+        <ScrollableRow className="pb-4">
           {people.map((p) => (
             <PersonCard key={p.id} person={p} />
           ))}
-        </div>
+        </ScrollableRow>
       ) : (
         <p className="px-4 sm:px-8 text-sm text-muted-foreground">No people found</p>
       )}
@@ -342,41 +349,13 @@ function SearchPage() {
     <div className="space-y-4 py-4">
       <h2 className="px-4 sm:px-8 mb-4 sm:mb-6 text-3xl sm:text-4xl font-bold tracking-tight">{title}</h2>
       {loading ? (
-        <div className="relative scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-8">
-          <button
-            type="button"
-            aria-label="Scroll back"
-            className="absolute left-1 sm:left-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
-          >
-            <ChevronLeft className="size-5" />
-          </button>
-          <button
-            type="button"
-            aria-label="Scroll forward"
-            className="absolute right-1 sm:right-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
-          >
-            <ChevronRight className="size-5" />
-          </button>
+        <ScrollableRow>
           {Array.from({ length: 5 }).map((_, i) => (
             <MovieCardSkeleton key={i} />
           ))}
-        </div>
+        </ScrollableRow>
       ) : movies.length > 0 ? (
-        <div className="relative scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-8">
-          <button
-            type="button"
-            aria-label="Scroll back"
-            className="absolute left-1 sm:left-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
-          >
-            <ChevronLeft className="size-5" />
-          </button>
-          <button
-            type="button"
-            aria-label="Scroll forward"
-            className="absolute right-1 sm:right-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
-          >
-            <ChevronRight className="size-5" />
-          </button>
+        <ScrollableRow>
           {movies.map((m) => (
             <button
               key={m.id}
@@ -386,7 +365,7 @@ function SearchPage() {
               <MovieCard movie={m} />
             </button>
           ))}
-        </div>
+        </ScrollableRow>
       ) : (
         <p className="px-4 sm:px-8 text-sm text-muted-foreground">No titles found</p>
       )}
@@ -637,33 +616,19 @@ function SearchPage() {
               ) : (
                 <div className="space-y-3">
                   {peopleQuery.isLoading ? (
-                    <div className="relative scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-8 pb-4">
-                      <button
-                        type="button"
-                        aria-label="Scroll back"
-                        className="absolute left-1 sm:left-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
-                      >
-                        <ChevronLeft className="size-5" />
-                      </button>
-                      <button
-                        type="button"
-                        aria-label="Scroll forward"
-                        className="absolute right-1 sm:right-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
-                      >
-                        <ChevronRight className="size-5" />
-                      </button>
+                    <ScrollableRow className="pb-4">
                       {[1, 2, 3, 4, 5].map((i) => (
-                        <PersonCardSkeleton key={i} fluid />
+                        <PersonCardSkeleton key={i} />
                       ))}
-                    </div>
+                    </ScrollableRow>
                   ) : people.length === 0 ? (
                     <p className="px-4 sm:px-8 text-sm text-muted-foreground">No people found</p>
                   ) : (
-                    <div className="scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-8 pb-4">
+                    <ScrollableRow className="pb-4">
                       {people.map((p: PersonResult) => (
                         <PersonCard key={p.id} person={p} />
                       ))}
-                    </div>
+                    </ScrollableRow>
                   )}
                 </div>
               )}
