@@ -8,10 +8,8 @@ import { askStreamflixAI } from "@/lib/api/ai";
 import { AI_ERROR_MESSAGES, aiErrorMessage } from "@/lib/ai-errors";
 import { getWatchHistory } from "@/lib/continue-watching";
 import { getFavoriteGenres } from "@/lib/favorite-genres";
-import { GENRE_OPTIONS } from "@/lib/favorite-genres";
 import { auth } from "@/lib/firebase";
 import { isKidsProfile } from "@/lib/kids-mode";
-import { getMyList } from "@/lib/my-list";
 import type { Movie } from "@/lib/types";
 
 type AssistantMessage = {
@@ -19,87 +17,6 @@ type AssistantMessage = {
   content: string;
   recommendations?: { movie: Movie; reason: string }[];
 };
-
-type MoodPrompt = { label: string; prompt: string };
-
-const MOOD_PROMPTS: MoodPrompt[] = [
-  { label: "Date night", prompt: "I'm planning a date night. Recommend something romantic and cozy." },
-  { label: "Kids asleep", prompt: "The kids are asleep. Recommend something for grown-ups." },
-  { label: "Background noise", prompt: "Recommend something good to play in the background while I do other things." },
-  { label: "Under 90 minutes", prompt: "Recommend a movie under 90 minutes." },
-  { label: "Feel-good", prompt: "Recommend something uplifting and feel-good." },
-  { label: "Scary movie night", prompt: "I want a scary movie for movie night." },
-  { label: "Sunday binge", prompt: "Recommend a TV show I can binge-watch on a Sunday." },
-  { label: "With friends", prompt: "Recommend something fun to watch with a group of friends." },
-  { label: "Classic cinema", prompt: "Recommend a classic movie everyone should see." },
-  { label: "Documentary", prompt: "Recommend an interesting documentary." },
-];
-
-const KIDS_MOOD_PROMPTS: MoodPrompt[] = [
-  { label: "Animal adventure", prompt: "Recommend a fun animal adventure for kids." },
-  { label: "Funny animated movie", prompt: "Recommend a funny animated movie for the whole family." },
-  { label: "Cozy family show", prompt: "Recommend a cozy family-friendly show." },
-  { label: "Feel-good", prompt: "Recommend something uplifting and feel-good for kids." },
-];
-
-function buildSuggestions(kidsMode: boolean, interestGenres: string[]): string[] {
-  if (kidsMode) {
-    return KIDS_MOOD_PROMPTS.map((m) => m.label);
-  }
-
-  const genreCounts = new Map<string, number>();
-  const addGenres = (ids: number[]) => {
-    for (const id of ids) {
-      const name = GENRE_OPTIONS.find((g) => g.id === id)?.name;
-      if (name) genreCounts.set(name, (genreCounts.get(name) ?? 0) + 1);
-    }
-  };
-
-  const recentTitles: string[] = [];
-  const history = getWatchHistory();
-  for (const item of history.slice(0, 8)) {
-    addGenres(item.genreIds ?? []);
-    if (!recentTitles.includes(item.title) && recentTitles.length < 3) {
-      recentTitles.push(item.title);
-    }
-  }
-
-  const myList = getMyList();
-  for (const entry of myList.slice(0, 8)) {
-    addGenres(entry.movie.genreIds ?? []);
-  }
-
-  for (const name of interestGenres) {
-    genreCounts.set(name, (genreCounts.get(name) ?? 0) + 1);
-  }
-
-  const topGenres = [...genreCounts.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .map(([name]) => name)
-    .slice(0, 4);
-
-  const suggestions: string[] = [];
-  for (const title of recentTitles) {
-    suggestions.push(`More like ${title}`);
-  }
-  for (const genre of topGenres) {
-    suggestions.push(`${genre} movies and shows`);
-  }
-
-  if (suggestions.length === 0) {
-    suggestions.push(
-      "Something uplifting and under two hours",
-      "A clever mystery without too much violence",
-      "A sci-fi show with great characters",
-    );
-  }
-
-  return suggestions.slice(0, 4);
-}
-
-function buildMoodPrompts(kidsMode: boolean): MoodPrompt[] {
-  return kidsMode ? KIDS_MOOD_PROMPTS : MOOD_PROMPTS;
-}
 
 export const Route = createFileRoute("/_authenticated/assistant")({
   head: () => ({ meta: [{ title: "AI Assistant — StreamFlix" }] }),
@@ -200,7 +117,7 @@ function AssistantPage() {
             role: "assistant",
             content:
               result.message ||
-              "I couldn't find any titles that match your request. Try rephrasing or pick a suggestion above.",
+              "I couldn't find any titles that match your request. Try rephrasing.",
             recommendations: [],
           },
         ]);
@@ -224,30 +141,6 @@ function AssistantPage() {
     void send(prompt);
   };
 
-  const [interestGenres, setInterestGenres] = useState<string[]>([]);
-  const [selectedMood, setSelectedMood] = useState<MoodPrompt | null>(null);
-
-  // Load the user's favorite genres (interests) so suggestions reflect their taste.
-  useEffect(() => {
-    if (kidsMode) return;
-    const user = auth.currentUser;
-    if (!user) return;
-    getFavoriteGenres(user.uid)
-      .then((ids) => {
-        const names = ids
-          .map((id) => GENRE_OPTIONS.find((g) => g.id === id)?.name)
-          .filter((name): name is string => Boolean(name));
-        setInterestGenres(names.slice(0, 4));
-      })
-      .catch(() => setInterestGenres([]));
-  }, [kidsMode, auth.currentUser?.uid]);
-
-  const moodPrompts = buildMoodPrompts(kidsMode);
-  const suggestions = useMemo(() => buildSuggestions(kidsMode, interestGenres), [
-    kidsMode,
-    interestGenres,
-  ]);
-
   return (
     <div className="flex h-[calc(100dvh-env(safe-area-inset-bottom,0px))] flex-col overflow-hidden bg-background text-foreground">
       <Navbar />
@@ -268,44 +161,6 @@ function AssistantPage() {
                 {messages[0]?.content}
               </p>
               <div className="mt-6 flex max-w-2xl flex-wrap justify-center gap-2 sm:mt-8">
-                {moodPrompts.length > 0 && (
-                  <>
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Mood
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {moodPrompts.map((mood) => (
-                        <button
-                          key={mood.label}
-                          type="button"
-                          disabled={busy}
-                          onClick={() => {
-                            setSelectedMood(mood);
-                            void send(mood.prompt);
-                          }}
-                          className={`rounded-full border px-3 py-1.5 text-xs transition disabled:opacity-50 ${
-                            selectedMood?.label === mood.label
-                              ? "border-primary bg-primary/10 text-primary"
-                              : "border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
-                          } sm:px-4 sm:py-2 sm:text-sm`}
-                        >
-                          {mood.label}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
-                {suggestions.map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void send(suggestion)}
-                    className="rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground transition hover:border-primary/50 hover:text-foreground disabled:opacity-50 sm:px-4 sm:py-2 sm:text-sm"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
                 <button
                   type="button"
                   disabled={busy}
@@ -409,44 +264,6 @@ function AssistantPage() {
           )}
           {hasConversation && (
             <div className="mb-2 flex flex-nowrap gap-2 overflow-x-auto scrollbar-hide overscroll-x-contain sm:flex-wrap sm:overflow-visible">
-              {moodPrompts.length > 0 && (
-                <>
-                  <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Mood
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {moodPrompts.map((mood) => (
-                      <button
-                        key={mood.label}
-                        type="button"
-                        disabled={busy}
-                        onClick={() => {
-                          setSelectedMood(mood);
-                          void send(mood.prompt);
-                        }}
-                        className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs transition disabled:opacity-50 ${
-                          selectedMood?.label === mood.label
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-border bg-background/70 text-muted-foreground shadow-sm backdrop-blur-md hover:border-primary/50 hover:text-foreground"
-                        }`}
-                      >
-                        {mood.label}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-              {suggestions.map((suggestion) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void send(suggestion)}
-                  className="shrink-0 whitespace-nowrap rounded-full border border-border bg-background/70 px-3 py-1.5 text-xs text-muted-foreground shadow-sm backdrop-blur-md transition hover:border-primary/50 hover:text-foreground disabled:opacity-50"
-                >
-                  {suggestion}
-                </button>
-              ))}
               <button
                 type="button"
                 disabled={busy}
