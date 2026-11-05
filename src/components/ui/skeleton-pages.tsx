@@ -14,27 +14,55 @@ export function BrowsePageSkeleton() {
         <SkeletonImage className="size-full" />
         <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background via-background/70 to-transparent md:h-72" />
         <div className="relative z-10 flex h-full items-end justify-center px-4 pb-10 pt-8 text-center sm:pb-8 sm:pt-10 sm:px-8 md:items-end md:justify-start">
+          <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-background/95 via-background/40 to-transparent z-0 pointer-events-none" />
           <div className="animate-fade-in w-full max-w-none space-y-2 sm:space-y-3 text-center md:max-w-3xl md:text-left">
-            <SkeletonText className="mb-2 sm:mb-4 mx-auto md:mx-0 h-8 w-56 max-w-full rounded-md sm:h-10 sm:w-64 lg:h-12 lg:w-72" />
+            {/** Title logo or title text */}
+            <div className="mb-2 sm:mb-4 mx-auto md:mx-0 max-h-20 w-auto max-w-full object-contain select-none sm:max-h-32 md:max-h-36">
+              <SkeletonImage className="size-full" aspect="none" />
+            </div>
+            {/** Genre chips */}
             <div className="mb-1.5 sm:mb-2 flex flex-wrap items-center justify-center md:justify-start gap-1.5 text-base font-normal text-white/80 tracking-wide">
-              <Skeleton className="h-5 w-16 rounded-full" />
-              <Skeleton className="h-5 w-20 rounded-full" />
-              <Skeleton className="h-5 w-24 rounded-full" />
+              <span className="flex items-center gap-1.5">
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </span>
+              <span className="flex items-center gap-1.5 text-white/40">·</span>
+              <span className="flex items-center gap-1.5">
+                <Skeleton className="h-5 w-20 rounded-full" />
+              </span>
+              <span className="flex items-center gap-1.5 text-white/40">·</span>
+              <span className="flex items-center gap-1.5">
+                <Skeleton className="h-5 w-24 rounded-full" />
+              </span>
             </div>
+            {/** Score, year, age rating, seasons/runtime badges */}
             <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 text-sm md:justify-start md:text-sm">
-              <Skeleton className="h-7 w-20 rounded-full" />
-              <Skeleton className="h-7 w-16 rounded-full" />
-              <Skeleton className="h-7 w-24 rounded-full" />
-              <Skeleton className="h-7 w-20 rounded-full" />
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1.5 text-sm font-semibold text-emerald-400 backdrop-blur-lg">
+                <Skeleton className="size-3.5 fill-current text-emerald-400" />
+                <Skeleton className="h-4 w-12 rounded-full" />
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm text-white/90 backdrop-blur-lg">
+                <Skeleton className="size-3.5" />
+                <Skeleton className="h-4 w-16 rounded-full" />
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm text-white/90 backdrop-blur-lg">
+                <Skeleton className="h-4 w-20 rounded-full" />
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm text-white/90 backdrop-blur-lg">
+                <Skeleton className="size-3.5" />
+                <Skeleton className="h-4 w-24 rounded-full" />
+              </span>
             </div>
-            <SkeletonText className="hidden md:block mx-auto md:mx-0 h-4 w-full max-w-xl rounded lg:h-5" />
-            <SkeletonText className="hidden md:block mx-auto md:mx-0 h-4 w-full max-w-xl rounded lg:h-5" />
-            <SkeletonText className="hidden md:block mx-auto md:mx-0 h-4 w-2/3 max-w-xl rounded lg:h-5" />
+            {/** Description */}
+            <p className="hidden md:block mx-auto md:mx-0 text-lg lg:text-xl text-gray-200 leading-relaxed max-w-xl">
+              <SkeletonText className="h-6 w-3/4 max-w-full rounded" />
+            </p>
+            {/** Play and More Info buttons */}
             <div className="mx-auto md:mx-0 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full sm:w-auto md:justify-start px-4 sm:px-0">
-              <SkeletonButton className="h-10 w-28 rounded-md sm:h-11 sm:w-32 lg:h-12 lg:w-36" />
-              <SkeletonButton className="h-10 w-28 rounded-md sm:h-11 sm:w-36 lg:h-12 lg:w-40" />
+              <SkeletonButton className="inline-flex w-full sm:w-auto max-w-[90%] sm:max-w-none items-center justify-center gap-2 rounded-md bg-foreground/80 backdrop-blur-xl px-6 py-3 sm:px-8 sm:py-3.5 text-base font-bold text-background transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 hover:bg-foreground/95" />
+              <SkeletonButton className="inline-flex w-full sm:w-auto max-w-[90%] sm:max-w-none items-center justify-center gap-2 whitespace-nowrap border border-white/30 text-white font-bold px-6 py-3 sm:px-8 sm:py-3.5 text-base rounded-md transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 bg-white/10 backdrop-blur-xl hover:bg-white/20" />
             </div>
           </div>
+          {/** Slide navigation dots */}
           <div className="absolute bottom-3 inset-x-0 z-10 flex items-center justify-center gap-2 sm:justify-end sm:right-8 sm:inset-x-auto">
             <Skeleton className="w-8 h-2 rounded-full" />
             <Skeleton className="w-2 h-2 rounded-full" />
