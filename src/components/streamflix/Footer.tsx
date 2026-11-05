@@ -91,7 +91,7 @@ export function Footer() {
   };
 
   return (
-    <footer className="border-t border-border bg-background px-4 pt-6 pb-28 text-sm text-muted-foreground sm:px-8 md:pb-12">
+    <footer className="border-t border-border bg-background px-4 pt-6 pb-12 text-sm text-muted-foreground sm:px-8 md:pb-12">
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center text-2xl sm:text-2xl md:text-3xl font-black text-foreground shrink-0">
