@@ -63,7 +63,9 @@ export function MovieCard({
     }
   };
 
-  const handleCardClick = () => {
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Prevent the Link's internal handler from also navigating (double navigation).
+    e.preventDefault();
     if (!isDragging) {
       goToInfo();
     }
@@ -86,7 +88,7 @@ export function MovieCard({
           : compact
             ? "w-[155px] sm:w-[195px] shrink-0"
             : "w-[175px] sm:w-[220px] shrink-0"}`}
-      data-context="movie"
+      data-context={movie.id.startsWith("tv-") ? "tv" : "movie"}
       data-title={movie.title}
     >
       <div className={`relative ${landscape ? "aspect-video" : "aspect-[2/3]"} overflow-hidden rounded-xl bg-surface shadow-md transition-shadow duration-300 group-hover:shadow-2xl`}>
