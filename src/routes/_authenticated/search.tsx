@@ -309,13 +309,13 @@ function SearchPage() {
             <ChevronRight className="size-5" />
           </button>
           {[1, 2, 3, 4, 5].map((i) => (
-            <PersonCardSkeleton key={i} fluid />
+            <PersonCardSkeleton key={i} />
           ))}
         </div>
       ) : people.length > 0 ? (
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 px-4 sm:px-8">
+        <div className="scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-8 pb-4">
           {people.map((p) => (
-            <PersonCard key={p.id} person={p} fluid />
+            <PersonCard key={p.id} person={p} />
           ))}
         </div>
       ) : (
@@ -631,9 +631,9 @@ function SearchPage() {
                   ) : people.length === 0 ? (
                     <p className="px-4 sm:px-8 text-sm text-muted-foreground">No people found</p>
                   ) : (
-                    <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 px-4 sm:px-8 pb-4">
+                    <div className="scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-8 pb-4">
                       {people.map((p: PersonResult) => (
-                        <PersonCard key={p.id} person={p} fluid />
+                        <PersonCard key={p.id} person={p} />
                       ))}
                     </div>
                   )}
