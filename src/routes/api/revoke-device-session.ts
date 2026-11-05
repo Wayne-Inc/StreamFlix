@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { requireAuth, clearSessionCookie } from "@/server/server-auth";
-import { getAdminDb, revokeRefreshTokens } from "@/server/firebase-admin";
+import { requireAuth } from "@/server/server-auth";
+import { getAdminDb } from "@/server/firebase-admin";
 import { createErrorResponse, createSuccessResponse } from "@/lib/error-handler";
 
 export const Route = createFileRoute("/api/revoke-device-session")({
@@ -21,12 +21,16 @@ export const Route = createFileRoute("/api/revoke-device-session")({
             );
           }
 
-          // Revoke all refresh tokens (Firebase Admin SDK limitation - can't target specific tokens)
-          await revokeRefreshTokens(user.uid);
-
-          // Delete the specific device record if it belongs to this user
+          // NOTE: We deliberately do NOT call revokeRefreshTokens(user.uid) here.
+          // Firebase Admin SDK can only revoke ALL refresh tokens for a user, which
+          // would invalidate this device's own session cookie too and log the user
+          // out of their current device. Instead we only remove this (previous)
+          // device's record and FCM token so it no longer appears in the devices
+          // list and stops receiving push notifications, without affecting the
+          // current session.
           const adminDb = getAdminDb();
           if (adminDb) {
+            // Delete the specific device record if it belongs to this user
             const deviceRef = adminDb.collection("user_devices").doc(deviceId);
             const deviceSnap = await deviceRef.get();
             if (deviceSnap.exists) {
@@ -47,11 +51,7 @@ export const Route = createFileRoute("/api/revoke-device-session")({
             await batch.commit();
           }
 
-          const response = createSuccessResponse({ message: "Device session revoked" });
-          // Revoking refresh tokens invalidates the current session cookie; clear it
-          // so the browser stops sending the now-revoked cookie.
-          clearSessionCookie(response);
-          return response;
+          return createSuccessResponse({ message: "Device session revoked" });
         } catch (err) {
           if (err instanceof Response) return err;
           return createErrorResponse(err, 500);

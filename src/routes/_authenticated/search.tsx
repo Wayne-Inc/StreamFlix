@@ -14,7 +14,6 @@ import { Footer } from "@/components/streamflix/Footer";
 import { MovieCard } from "@/components/streamflix/MovieCard";
 import { LazyImage } from "@/components/streamflix/LazyImage";
 import {
-  SkeletonGrid,
   MovieCardSkeleton,
   PersonCardSkeleton,
   SkeletonText,
@@ -294,7 +293,25 @@ function SearchPage() {
     <div className="space-y-4 py-4">
       <h2 className="px-4 sm:px-8 mb-4 sm:mb-6 text-3xl sm:text-4xl font-bold tracking-tight">{title}</h2>
       {loading ? (
-        <SkeletonGrid count={5} className="px-4 sm:px-8" cellAspect="aspect-[2/3]" />
+        <div className="relative scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-8">
+          <button
+            type="button"
+            aria-label="Scroll back"
+            className="absolute left-1 sm:left-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
+          >
+            <ChevronLeft className="size-5" />
+          </button>
+          <button
+            type="button"
+            aria-label="Scroll forward"
+            className="absolute right-1 sm:right-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
+          >
+            <ChevronRight className="size-5" />
+          </button>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <PersonCardSkeleton key={i} fluid />
+          ))}
+        </div>
       ) : people.length > 0 ? (
         <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 px-4 sm:px-8">
           {people.map((p) => (
@@ -311,7 +328,21 @@ function SearchPage() {
     <div className="space-y-4 py-4">
       <h2 className="px-4 sm:px-8 mb-4 sm:mb-6 text-3xl sm:text-4xl font-bold tracking-tight">{title}</h2>
       {loading ? (
-        <div className="scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-8">
+        <div className="relative scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-8">
+          <button
+            type="button"
+            aria-label="Scroll back"
+            className="absolute left-1 sm:left-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
+          >
+            <ChevronLeft className="size-5" />
+          </button>
+          <button
+            type="button"
+            aria-label="Scroll forward"
+            className="absolute right-1 sm:right-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
+          >
+            <ChevronRight className="size-5" />
+          </button>
           {Array.from({ length: 5 }).map((_, i) => (
             <MovieCardSkeleton key={i} />
           ))}
@@ -499,7 +530,11 @@ function SearchPage() {
                     : `${results.length} title${results.length === 1 ? "" : "s"} matching your filters`}
               </p>
               {loading && (
-                <SkeletonGrid count={12} className="mt-6" />
+                <div className="mt-6 grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+                  {Array.from({ length: 12 }).map((_, i) => (
+                    <MovieCardSkeleton key={i} fluid />
+                  ))}
+                </div>
               )}
               {!loading && results.length === 0 && (
                 <p className="mt-10 text-center text-sm text-muted-foreground">
@@ -574,7 +609,25 @@ function SearchPage() {
               ) : (
                 <div className="space-y-3">
                   {peopleQuery.isLoading ? (
-                    <SkeletonGrid count={5} className="px-4 sm:px-8 pb-4" cellAspect="aspect-[2/3]" />
+                    <div className="relative scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-8 pb-4">
+                      <button
+                        type="button"
+                        aria-label="Scroll back"
+                        className="absolute left-1 sm:left-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
+                      >
+                        <ChevronLeft className="size-5" />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Scroll forward"
+                        className="absolute right-1 sm:right-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
+                      >
+                        <ChevronRight className="size-5" />
+                      </button>
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <PersonCardSkeleton key={i} fluid />
+                      ))}
+                    </div>
                   ) : people.length === 0 ? (
                     <p className="px-4 sm:px-8 text-sm text-muted-foreground">No people found</p>
                   ) : (
