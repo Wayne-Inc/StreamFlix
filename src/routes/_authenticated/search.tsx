@@ -290,36 +290,73 @@ function SearchPage() {
   );
 
   const ScrollableRow = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => {
-    const ref = useRef<HTMLDivElement>(null);
-    const scrollLeft = () => {
-      ref.current?.scrollBy({ left: -320, behavior: "smooth" });
-    };
-    const scrollRight = () => {
-      ref.current?.scrollBy({ left: 320, behavior: "smooth" });
+    const scrollerRef = useRef<HTMLDivElement | null>(null);
+    const [scrollLeft, setScrollLeft] = useState(0);
+    const [viewportW, setViewportW] = useState(0);
+    const [scrollWidth, setScrollWidth] = useState(0);
+
+    useEffect(() => {
+      const el = scrollerRef.current;
+      if (!el) return;
+
+      const measure = () => {
+        setViewportW(el.clientWidth);
+        setScrollLeft(el.scrollLeft);
+        setScrollWidth(el.scrollWidth);
+      };
+      measure();
+
+      const onScroll = () => {
+        setScrollLeft(el.scrollLeft);
+        setScrollWidth(el.scrollWidth);
+      };
+      el.addEventListener("scroll", onScroll, { passive: true });
+
+      return () => {
+        el.removeEventListener("scroll", onScroll);
+      };
+    }, []);
+
+    const isSm = typeof window !== "undefined" ? window.innerWidth >= 640 : false;
+    const canScrollLeft = isSm && scrollLeft > 2;
+    const canScrollRight =
+      isSm && viewportW > 0 && scrollLeft + viewportW < scrollWidth - 2;
+
+    const scrollBy = (dir: 1 | -1) => {
+      const el = scrollerRef.current;
+      if (!el) return;
+      el.scrollBy({ left: dir * 320, behavior: "smooth" });
     };
 
     return (
-      <div
-        ref={ref}
-        className={`relative scrollbar-hide flex gap-4 sm:gap-6 overflow-x-auto px-4 sm:px-8 ${className}`}
-      >
-        <button
-          type="button"
-          onClick={scrollLeft}
-          aria-label="Scroll back"
-          className="absolute left-1 sm:left-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
+      <div className="relative">
+        {canScrollLeft && (
+          <button
+            type="button"
+            onClick={() => scrollBy(-1)}
+            aria-label="Scroll back"
+            className="absolute left-1 sm:left-2 top-1/2 z-30 hidden sm:grid size-9 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
+          >
+            <ChevronLeft className="size-4" />
+          </button>
+        )}
+        {canScrollRight && (
+          <button
+            type="button"
+            onClick={() => scrollBy(1)}
+            aria-label="Scroll forward"
+            className="absolute right-1 sm:right-2 top-1/2 z-30 hidden sm:grid size-9 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground"
+          >
+            <ChevronRight className="size-4" />
+          </button>
+        )}
+        <div
+          ref={scrollerRef}
+          className={`scrollbar-hide flex min-w-0 gap-4 overflow-x-auto overscroll-x-contain scroll-smooth px-4 sm:gap-6 sm:px-8 pb-4 sm:pb-10 ${className}`}
+          style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x pan-y" }}
         >
-          <ChevronLeft className="size-5" />
-        </button>
-        <button
-          type="button"
-          onClick={scrollRight}
-          aria-label="Scroll forward"
-          className="absolute right-1 sm:right-2 top-1/2 z-30 hidden size-10 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/90 text-foreground shadow-lg backdrop-blur transition hover:bg-primary hover:text-primary-foreground sm:grid"
-        >
-          <ChevronRight className="size-5" />
-        </button>
-        {children}
+          {children}
+        </div>
       </div>
     );
   };
