@@ -115,10 +115,10 @@ export function ExplorePageSkeleton() {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
         <div className="relative z-10 w-full px-4 pb-8 sm:px-8 md:px-16">
           <div className="flex items-center gap-2 text-purple-300">
-            <Skeleton className="size-5 rounded" />
-            <SkeletonText className="h-4 w-24" />
+            <Skeleton className="size-5 shrink-0" />
+            <SkeletonText className="h-4 w-20 rounded" />
           </div>
-          <SkeletonText className="mt-1 h-10 sm:h-14 w-3/4 max-w-[400px] rounded sm:max-w-[600px]" />
+          <SkeletonText className="mt-1 h-10 sm:h-14 w-[320px] max-w-[400px] rounded sm:w-[480px] sm:max-w-[600px]" />
           <SkeletonText className="mt-2 h-4 sm:h-5 w-1/2 max-w-xl rounded" />
         </div>
       </section>
@@ -127,11 +127,11 @@ export function ExplorePageSkeleton() {
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton
               key={i}
-              className="flex items-center gap-1.5 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground h-9 rounded"
+              className="flex items-center gap-1.5 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground h-9 shrink-0"
             />
           ))}
           <Skeleton
-            className="flex flex-nowrap items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground whitespace-nowrap h-9 rounded"
+            className="flex flex-nowrap items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground whitespace-nowrap h-9 shrink-0"
           />
         </div>
         <div className="mt-10 space-y-8">
@@ -158,10 +158,10 @@ export function ExploreGenrePageSkeleton() {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
         <div className="relative z-10 w-full px-4 pb-8 sm:px-8 md:px-16">
           <div className="flex items-center gap-2 text-emerald-400">
-            <Skeleton className="size-5 rounded" />
-            <SkeletonText className="h-4 w-16" />
+            <Skeleton className="size-5 shrink-0" />
+            <SkeletonText className="h-4 w-20 rounded" />
           </div>
-          <SkeletonText className="mt-1 h-10 sm:h-14 w-3/4 max-w-[400px] rounded sm:max-w-[600px]" />
+          <SkeletonText className="mt-1 h-10 sm:h-14 w-[320px] max-w-[400px] rounded sm:w-[480px] sm:max-w-[600px]" />
           <SkeletonText className="mt-2 h-4 sm:h-5 w-1/2 max-w-xl rounded" />
         </div>
       </section>
@@ -170,11 +170,11 @@ export function ExploreGenrePageSkeleton() {
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton
               key={i}
-              className="rounded-lg border border-border px-4 py-2 text-sm transition h-8 rounded"
+              className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground h-8 shrink-0 rounded-lg"
             />
           ))}
           <Skeleton
-            className="flex flex-nowrap items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground whitespace-nowrap transition h-9 rounded"
+            className="flex flex-nowrap items-center gap-1 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground whitespace-nowrap h-9 shrink-0 rounded-md"
           />
         </div>
         <div className="mt-8">
@@ -184,14 +184,29 @@ export function ExploreGenrePageSkeleton() {
             ))}
           </div>
           <div className="mt-8 flex items-center justify-center gap-2">
-            <SkeletonButton className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground h-9 rounded" />
+            <button
+              className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground h-8 shrink-0"
+              disabled
+            >
+              <Skeleton className="size-4 shrink-0" />
+              <SkeletonText className="h-4 w-20 rounded" />
+            </button>
             {Array.from({ length: 5 }).map((_, i) => (
-              <SkeletonButton
+              <button
                 key={i}
-                className="rounded-md px-3 py-2 text-sm border border-border text-muted-foreground h-9 rounded"
-              />
+                className="rounded-md border border-border px-3 py-2 text-sm text-muted-foreground h-8 shrink-0"
+                disabled
+              >
+                <SkeletonText className="h-4 w-8 rounded" />
+              </button>
             ))}
-            <SkeletonButton className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground h-9 rounded" />
+            <button
+              className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground h-8 shrink-0"
+              disabled
+            >
+              <SkeletonText className="h-4 w-16 rounded" />
+              <Skeleton className="size-4 shrink-0" />
+            </button>
           </div>
         </div>
         <SkeletonText className="mt-12 h-4 w-32 text-center text-sm text-muted-foreground rounded" />
@@ -316,30 +331,36 @@ export function ProfilesPageSkeleton() {
       </div>
       <header className="absolute inset-x-0 top-0 px-4 sm:px-12 py-5 z-10 flex items-center justify-between">
         <Skeleton className="h-8 w-32 rounded" />
-        <Skeleton className="size-10 rounded-lg" />
+        <Skeleton className="size-10 rounded-lg shrink-0" />
       </header>
       <Skeleton className="absolute inset-x-0 top-14 h-4 sm:top-20" />
       <div className="relative z-20 w-full max-w-4xl px-4 text-center">
-        <SkeletonText className="mx-auto h-10 w-48 rounded sm:h-14 sm:w-64" />
+        <SkeletonText className="mx-auto h-10 sm:h-14 w-[300px] max-w-full rounded sm:w-[400px]" />
         <div className="mt-8 flex flex-wrap justify-center gap-3 sm:mt-10 sm:gap-8">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="flex flex-col items-center gap-3">
               <div className="relative size-28 overflow-hidden rounded-lg bg-surface sm:size-32">
                 <SkeletonImage className="absolute inset-0 size-full rounded-lg" />
-                {i === 1 && <Skeleton className="absolute bottom-1 right-1 size-5 rounded-full" />}
+                {i === 1 && (
+                  <Skeleton className="absolute bottom-1 right-1 grid size-5 place-items-center rounded-full sm:size-6" />
+                )}
               </div>
-              <SkeletonText className="h-4 w-24 rounded sm:w-28" />
-              {i === 0 && <Skeleton className="h-4 w-16 rounded-full" />}
+              <SkeletonText className="h-4 shrink-0" />
+              {i === 0 && (
+                <span className="ml-1 rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px]">
+                  <Skeleton className="h-4 w-16 rounded-full shrink-0" />
+                </span>
+              )}
             </div>
           ))}
           <div className="flex flex-col items-center gap-3">
             <div className="grid size-28 place-items-center rounded-lg border border-dashed border-border sm:size-32">
-              <Skeleton className="size-8 rounded" />
+              <Skeleton className="size-8 sm:size-10 shrink-0" />
             </div>
-            <SkeletonText className="h-4 w-24 rounded" />
+            <SkeletonText className="h-4 shrink-0" />
           </div>
         </div>
-        <SkeletonButton className="mx-auto mt-8 h-10 w-40 rounded border sm:mt-12" />
+        <SkeletonButton className="mx-auto mt-8 h-8 px-6 rounded border text-sm sm:mt-12 shrink-0" />
       </div>
     </main>
   );
@@ -357,7 +378,7 @@ export function SearchPageSkeleton() {
         <div className="mx-auto max-w-4xl">
           <div className="relative">
             <Skeleton className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
-            <Skeleton className="w-full rounded-full border border-border bg-surface pl-12 pr-12 py-3.5 sm:py-4 text-base sm:text-lg" style={{ height: 52 }} />
+            <Skeleton className="w-full rounded-full border border-border bg-surface pl-12 pr-12 py-3.5 sm:py-4 text-base sm:text-lg h-11 sm:h-12" />
           </div>
           <div className="mt-4 flex gap-2 border-b border-border overflow-x-auto">
             {["titles", "people"].map((t) => (
