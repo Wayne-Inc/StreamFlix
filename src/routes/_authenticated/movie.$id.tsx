@@ -595,7 +595,7 @@ function MoviePage() {
                           type="button"
                           onClick={() => scrollCast(-1)}
                           aria-label="Scroll cast left"
-                          className="absolute left-1 top-1/2 z-30 size-9 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/80 backdrop-blur-md text-foreground shadow-lg transition-all hover:bg-primary hover:text-primary-foreground hidden md:flex"
+                          className="absolute left-1 top-1/2 z-30 size-9 -translate-y-1/2 items-center justify-center rounded-md border border-border bg-background/80 backdrop-blur-md text-foreground shadow-lg transition-all hover:bg-primary hover:text-primary-foreground hidden md:flex"
                         >
                           <ChevronLeft className="size-4 sm:size-5" />
                         </button>
@@ -608,7 +608,7 @@ function MoviePage() {
                           type="button"
                           onClick={() => scrollCast(1)}
                           aria-label="Scroll cast right"
-                          className="absolute right-1 top-1/2 z-30 size-9 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/80 backdrop-blur-md text-foreground shadow-lg transition-all hover:bg-primary hover:text-primary-foreground hidden md:flex"
+                          className="absolute right-1 top-1/2 z-30 size-9 -translate-y-1/2 items-center justify-center rounded-md border border-border bg-background/80 backdrop-blur-md text-foreground shadow-lg transition-all hover:bg-primary hover:text-primary-foreground hidden md:flex"
                         >
                           <ChevronRight className="size-4 sm:size-5" />
                         </button>
@@ -678,7 +678,7 @@ function MoviePage() {
                             type="button"
                             onClick={() => scrollCrew(-1)}
                             aria-label="Scroll crew left"
-                            className="absolute left-1 top-1/2 z-30 size-9 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/80 backdrop-blur-md text-foreground shadow-lg transition-all hover:bg-primary hover:text-primary-foreground hidden md:flex"
+                            className="absolute left-1 top-1/2 z-30 size-9 -translate-y-1/2 items-center justify-center rounded-md border border-border bg-background/80 backdrop-blur-md text-foreground shadow-lg transition-all hover:bg-primary hover:text-primary-foreground hidden md:flex"
                           >
                             <ChevronLeft className="size-4 sm:size-5" />
                           </button>
@@ -691,7 +691,7 @@ function MoviePage() {
                             type="button"
                             onClick={() => scrollCrew(1)}
                             aria-label="Scroll crew right"
-                            className="absolute right-1 top-1/2 z-30 size-9 -translate-y-1/2 place-items-center rounded-md border border-border bg-background/80 backdrop-blur-md text-foreground shadow-lg transition-all hover:bg-primary hover:text-primary-foreground hidden md:flex"
+                            className="absolute right-1 top-1/2 z-30 size-9 -translate-y-1/2 items-center justify-center rounded-md border border-border bg-background/80 backdrop-blur-md text-foreground shadow-lg transition-all hover:bg-primary hover:text-primary-foreground hidden md:flex"
                           >
                             <ChevronRight className="size-4 sm:size-5" />
                           </button>
