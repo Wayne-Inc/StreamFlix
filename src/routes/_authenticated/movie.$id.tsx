@@ -390,14 +390,14 @@ function MoviePage() {
     <div className="min-h-dvh bg-background pb-20 md:pb-0">
       <Navbar />
       <section className="relative pt-16 md:flex md:min-h-[85vh] md:items-center md:pt-20">
-        {/* Landscape backdrop starting behind the top bar; details overlay on top of its bottom on mobile */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-[48vh] sm:h-[60vh] md:inset-y-0 md:aspect-auto md:h-auto overflow-hidden">
+        {/* 16:9 landscape backdrop starting behind the top bar; details overlay on its bottom on mobile */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 w-full aspect-[16/9] md:inset-y-0 md:aspect-auto md:h-auto overflow-hidden">
           <img src={movie.backdrop} alt="" className="absolute inset-0 size-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
         </div>
 
-        <div className="relative z-10 w-full min-w-0 px-4 pt-[34vh] sm:pt-[44vh] pb-10 sm:pb-10 md:pt-0 md:pb-16 md:px-12 lg:px-16">
+        <div className="relative z-10 w-full min-w-0 px-4 pt-[20vh] sm:pt-[44vh] pb-10 sm:pb-10 md:pt-0 md:pb-16 md:px-12 lg:px-16">
           <button
             type="button"
             onClick={goBack}
