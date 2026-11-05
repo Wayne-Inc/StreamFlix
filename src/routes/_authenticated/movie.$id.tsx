@@ -390,14 +390,14 @@ function MoviePage() {
     <div className="min-h-dvh bg-background pb-20 md:pb-0">
       <Navbar />
       <section className="relative pt-16 md:flex md:min-h-[85vh] md:items-center md:pt-20">
-        {/* Landscape backdrop on top; details stack below it on mobile so they never overlap the image */}
-        <div className="pointer-events-none relative w-full overflow-hidden h-[48vh] sm:h-[60vh] md:absolute md:inset-0 md:aspect-auto md:h-auto">
+        {/* Landscape backdrop starting behind the top bar; details overlay on top of its bottom on mobile */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[48vh] sm:h-[60vh] md:inset-y-0 md:aspect-auto md:h-auto overflow-hidden">
           <img src={movie.backdrop} alt="" className="absolute inset-0 size-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/70 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
         </div>
 
-        <div className="relative z-10 w-full min-w-0 px-4 pt-4 sm:pt-6 pb-10 sm:pb-10 md:pt-0 md:pb-16 md:px-12 lg:px-16">
+        <div className="relative z-10 w-full min-w-0 px-4 pt-[34vh] sm:pt-[44vh] pb-10 sm:pb-10 md:pt-0 md:pb-16 md:px-12 lg:px-16">
           <button
             type="button"
             onClick={goBack}
@@ -451,62 +451,6 @@ function MoviePage() {
                     </Link>
                   );
                 })}
-              </div>
-              <div className="min-w-0">
-                <p
-                  ref={descRef}
-                  onClick={() => setDescExpanded((v) => !v)}
-                  className={`max-w-xl break-words text-base md:text-lg text-gray-300 leading-relaxed cursor-pointer md:cursor-default ${
-                    descExpanded ? "" : "line-clamp-3"
-                  }`}
-                >
-                  {movie.description}
-                </p>
-                {descTruncated && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setDescExpanded((v) => !v); }}
-                    className="mt-1 text-xs font-medium text-primary hidden md:inline"
-                  >
-                    {descExpanded ? "Show less" : "Show more"}
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={generateAiSummary}
-                  disabled={aiSummaryLoading}
-                  className="ml-4 inline-flex items-center gap-1.5 text-xs font-medium text-primary transition hover:text-primary/80 disabled:opacity-60"
-                >
-                  {aiSummaryLoading ? <LoaderCircle className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
-                  {aiSummaryLoading ? "Generating…" : aiSummary ? "Refresh AI summary" : "AI summary"}
-                </button>
-                {aiSummary && (
-                  <p className="mt-3 max-w-xl rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm leading-6 text-gray-200">
-                    <span className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-primary"><Sparkles className="size-3.5" />AI summary</span>
-                    {aiSummary}
-                  </p>
-                )}
-                {aiSummaryError && (
-                  <p role="alert" className="mt-2 text-xs leading-5 text-destructive">
-                    <span className="font-semibold">Something went wrong on our side. </span>
-                    {aiSummaryError}
-                  </p>
-                )}
-                {movie.director && (
-                  <p className="mt-3 text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground">Directed by</span> {" "}
-                    {movie.directorId ? (
-                      <Link
-                        to="/person/$id"
-                        params={{ id: movie.directorId }}
-                        className="text-primary hover:underline"
-                      >
-                        {movie.director}
-                      </Link>
-                    ) : (
-                      <span className="text-foreground">{movie.director}</span>
-                    )}
-                  </p>
-                )}
               </div>
 
               <div className="flex flex-wrap items-center gap-2 pt-2 sm:gap-3">
@@ -577,6 +521,63 @@ function MoviePage() {
                 >
                   <Share2 className="size-4 sm:size-5" />
                 </button>
+              </div>
+
+              <div className="min-w-0">
+                <p
+                  ref={descRef}
+                  onClick={() => setDescExpanded((v) => !v)}
+                  className={`max-w-xl break-words text-base md:text-lg text-gray-300 leading-relaxed cursor-pointer md:cursor-default ${
+                    descExpanded ? "" : "line-clamp-3"
+                  }`}
+                >
+                  {movie.description}
+                </p>
+                {descTruncated && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setDescExpanded((v) => !v); }}
+                    className="mt-1 text-xs font-medium text-primary hidden md:inline"
+                  >
+                    {descExpanded ? "Show less" : "Show more"}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={generateAiSummary}
+                  disabled={aiSummaryLoading}
+                  className="ml-4 inline-flex items-center gap-1.5 text-xs font-medium text-primary transition hover:text-primary/80 disabled:opacity-60"
+                >
+                  {aiSummaryLoading ? <LoaderCircle className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5" />}
+                  {aiSummaryLoading ? "Generating…" : aiSummary ? "Refresh AI summary" : "AI summary"}
+                </button>
+                {aiSummary && (
+                  <p className="mt-3 max-w-xl rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm leading-6 text-gray-200">
+                    <span className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-primary"><Sparkles className="size-3.5" />AI summary</span>
+                    {aiSummary}
+                  </p>
+                )}
+                {aiSummaryError && (
+                  <p role="alert" className="mt-2 text-xs leading-5 text-destructive">
+                    <span className="font-semibold">Something went wrong on our side. </span>
+                    {aiSummaryError}
+                  </p>
+                )}
+                {movie.director && (
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">Directed by</span> {" "}
+                    {movie.directorId ? (
+                      <Link
+                        to="/person/$id"
+                        params={{ id: movie.directorId }}
+                        className="text-primary hover:underline"
+                      >
+                        {movie.director}
+                      </Link>
+                    ) : (
+                      <span className="text-foreground">{movie.director}</span>
+                    )}
+                  </p>
+                )}
               </div>
 
               <div className="min-w-0 pt-4">
