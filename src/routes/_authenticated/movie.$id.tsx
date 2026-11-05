@@ -615,7 +615,7 @@ function MoviePage() {
                   )}
                   <div
                     ref={castScrollerRef}
-                    className="scrollbar-hide flex gap-3 overflow-x-auto py-2"
+                    className="scrollbar-hide flex gap-3 overflow-x-auto py-2 md:pl-10 md:pr-10"
                   >
                     {movie.cast.slice(0, 15).map((name: string, i: number) => {
                       const personId = movie.castIds?.[i];
@@ -694,9 +694,9 @@ function MoviePage() {
                         </button>
                       </>
                     )}
-                    <div
-                      ref={crewScrollerRef}
-                      className="scrollbar-hide flex gap-3 overflow-x-auto py-2">
+                      <div
+                        ref={crewScrollerRef}
+                        className="scrollbar-hide flex gap-3 overflow-x-auto py-2 md:pl-10 md:pr-10">
                       {movie.crew.map((member, i) => (
                         <Link
                           key={`${member.id}-${i}`}
