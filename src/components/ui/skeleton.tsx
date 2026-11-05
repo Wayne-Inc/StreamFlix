@@ -304,7 +304,7 @@ export function RowSkeleton({
         </button>
 
         <div
-          className="scrollbar-thin flex min-w-0 gap-4 overflow-x-auto overscroll-x-contain scroll-smooth px-4 sm:gap-6 sm:px-8 pb-4 sm:pb-10"
+          className="scrollbar-hide flex min-w-0 gap-4 overflow-x-auto overscroll-x-contain scroll-smooth px-4 sm:gap-6 sm:px-8 pb-4 sm:pb-10"
         >
           {trending
             ? // Landscape/trending cards
@@ -334,7 +334,7 @@ export function ContinueWatchingSkeleton({ count = 5 }: { count?: number } = {})
     <section className="relative space-y-0 py-0 sm:space-y-0 sm:py-0">
       <Skeleton className="px-4 sm:px-8 mb-4 sm:mb-6 h-8 sm:h-9 w-52 rounded" />
       <div className="relative">
-        <div className="scrollbar-thin flex min-w-0 gap-4 overflow-x-auto overscroll-x-contain scroll-smooth px-4 sm:gap-6 sm:px-8 pb-4 sm:pb-10">
+        <div className="scrollbar-hide flex min-w-0 gap-4 overflow-x-auto overscroll-x-contain scroll-smooth px-4 sm:gap-6 sm:px-8 pb-4 sm:pb-10">
           {Array.from({ length: count }).map((_, i) => (
             <MovieCardSkeleton key={i} progress />
           ))}

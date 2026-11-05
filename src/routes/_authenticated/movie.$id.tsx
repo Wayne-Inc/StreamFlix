@@ -178,8 +178,10 @@ function MoviePage() {
   const [descTruncated, setDescTruncated] = useState(false);
   const descRef = useRef<HTMLParagraphElement | null>(null);
   const castScrollerRef = useRef<HTMLDivElement | null>(null);
+  const crewScrollerRef = useRef<HTMLDivElement | null>(null);
   const [showPicker, setShowPicker] = useState(true);
   const [castScroll, setCastScroll] = useState({ left: 0, viewport: 0, width: 0 });
+  const [crewScroll, setCrewScroll] = useState({ left: 0, viewport: 0, width: 0 });
 
   // Only show "Show more" when the description is actually truncated by line-clamp.
   useEffect(() => {
@@ -202,6 +204,25 @@ function MoviePage() {
     ro.observe(el);
     const onScroll = () =>
       setCastScroll({ left: el.scrollLeft, viewport: el.clientWidth, width: el.scrollWidth });
+    el.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      el.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", measure);
+    };
+  }, [movie.id]);
+
+  useEffect(() => {
+    const el = crewScrollerRef.current;
+    if (!el) return;
+    const measure = () =>
+      setCrewScroll({ left: el.scrollLeft, viewport: el.clientWidth, width: el.scrollWidth });
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    const onScroll = () =>
+      setCrewScroll({ left: el.scrollLeft, viewport: el.clientWidth, width: el.scrollWidth });
     el.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", measure);
     return () => {
@@ -323,6 +344,12 @@ function MoviePage() {
 
   const scrollCast = (dir: 1 | -1) => {
     const el = castScrollerRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * (7 * 104), behavior: "smooth" });
+  };
+
+  const scrollCrew = (dir: 1 | -1) => {
+    const el = crewScrollerRef.current;
     if (!el) return;
     el.scrollBy({ left: dir * (7 * 104), behavior: "smooth" });
   };
@@ -585,7 +612,7 @@ function MoviePage() {
                   )}
                   <div
                     ref={castScrollerRef}
-                    className="scrollbar-thin scrollbar-thumb-white/25 scrollbar-track-transparent flex gap-3 overflow-x-auto py-2"
+                    className="scrollbar-hide flex gap-3 overflow-x-auto py-2"
                   >
                     {movie.cast.slice(0, 15).map((name: string, i: number) => {
                       const personId = movie.castIds?.[i];
@@ -639,7 +666,31 @@ function MoviePage() {
                 <div className="min-w-0 pt-4">
                   <p className="mb-3 text-2xl font-bold tracking-tight">Crew</p>
                   <div className="relative min-w-0 max-w-full" onDragStart={(event) => event.preventDefault()}>
-                    <div className="scrollbar-thin scrollbar-thumb-white/25 scrollbar-track-transparent flex gap-3 overflow-x-auto py-2">
+                    {movie.crew.length > 7 && crewScroll.left > 2 && (
+                      <button
+                        type="button"
+                        onClick={() => scrollCrew(-1)}
+                        aria-label="Scroll crew left"
+                        className="absolute left-1 top-1/2 z-10 hidden size-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-background text-foreground shadow-lg transition hover:bg-primary hover:text-primary-foreground sm:grid sm:size-9"
+                      >
+                        <ChevronLeft className="size-4 sm:size-5" />
+                      </button>
+                    )}
+                    {movie.crew.length > 7 &&
+                      crewScroll.viewport > 0 &&
+                      crewScroll.left + crewScroll.viewport < crewScroll.width - 2 && (
+                      <button
+                        type="button"
+                        onClick={() => scrollCrew(1)}
+                        aria-label="Scroll crew right"
+                        className="absolute right-1 top-1/2 z-10 hidden size-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-background text-foreground shadow-lg transition hover:bg-primary hover:text-primary-foreground sm:grid sm:size-9"
+                      >
+                        <ChevronRight className="size-4 sm:size-5" />
+                      </button>
+                    )}
+                    <div
+                      ref={crewScrollerRef}
+                      className="scrollbar-hide flex gap-3 overflow-x-auto py-2">
                       {movie.crew.map((member, i) => (
                         <Link
                           key={`${member.id}-${i}`}
@@ -701,7 +752,7 @@ function MoviePage() {
                       </div>
                     </div>
                     <aside
-                      className={`absolute inset-0 z-10 overflow-y-auto scrollbar-thin transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                      className={`absolute inset-0 z-10 overflow-y-auto scrollbar-hide transition-transform duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] ${
                         showPicker ? "translate-x-0" : "translate-x-full"
                       }`}
                     >

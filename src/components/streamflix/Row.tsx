@@ -146,7 +146,7 @@ export function Row({
           ref={scrollerRef}
           onKeyDown={handleKeyDown}
           tabIndex={0}
-          className="scrollbar-thin flex min-w-0 gap-4 overflow-x-auto overscroll-x-contain scroll-smooth px-4 sm:gap-6 sm:px-8 pb-4 sm:pb-10"
+          className="scrollbar-hide flex min-w-0 gap-4 overflow-x-auto overscroll-x-contain scroll-smooth px-4 sm:gap-6 sm:px-8 pb-4 sm:pb-10"
           style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x pan-y" }}
           role="region"
           aria-label={`${title} carousel`}

@@ -88,7 +88,7 @@ function ExploreGenrePage() {
         </div>
       </section>
 
-      <main className="mx-auto max-w-[1800px] px-4 pb-16 md:pb-20 sm:px-8">
+      <main className="mx-auto max-w-[1800px] px-4 pb-16 md:pb-20 sm:px-8 md:px-16">
         {/* Mood chips — one row by default (not scrollable), Show All reveals all wrapped in rows */}
         <div className={`mt-8 flex items-center gap-2 ${showAllGenres ? "flex-wrap" : "flex-nowrap"}`}>
           {visibleGenres.map((g) => {

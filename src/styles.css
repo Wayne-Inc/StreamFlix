@@ -69,25 +69,12 @@
     color: var(--color-foreground);
     overflow-x: clip;
     font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    /* Vertical-only scrollbar for main page — no horizontal scrollbar */
-    &::-webkit-scrollbar:vertical {
-      width: 6px;
-    }
-    &::-webkit-scrollbar:horizontal {
+    /* Hide scrollbar on main page */
+    &::-webkit-scrollbar {
       display: none;
     }
-    &::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    &::-webkit-scrollbar-thumb {
-      border-radius: 9999px;
-      background: rgba(255, 255, 255, 0.25);
-    }
-    &::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.35);
-    }
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
 
   /* Hide all other scrollbars everywhere */
@@ -133,23 +120,6 @@
   }
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
-
-@utility scrollbar-thin {
-  &::-webkit-scrollbar {
-    display: block;
-    width: 6px;
-    height: 6px;
-  }
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  &::-webkit-scrollbar-thumb {
-    border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.25);
-  }
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
 }
 
 @supports (display: window-controls-overlay) {

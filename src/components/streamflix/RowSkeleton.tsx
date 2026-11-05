@@ -29,7 +29,7 @@ export function RowSkeleton({
           <Skeleton className="size-5" />
         </button>
 
-        <div className="scrollbar-thin flex min-w-0 gap-4 overflow-x-auto overscroll-x-contain scroll-smooth px-4 sm:gap-6 sm:px-8 pb-4 sm:pb-10">
+        <div className="scrollbar-hide flex min-w-0 gap-4 overflow-x-auto overscroll-x-contain scroll-smooth px-4 sm:gap-6 sm:px-8 pb-4 sm:pb-10">
           {trending
             ? // Landscape/trending cards (matching Row landscape widths)
               Array.from({ length: 3 }).map((_, i) => (
