@@ -588,16 +588,16 @@ function MoviePage() {
               <div className="min-w-0 pt-4">
                 <p className="mb-3 text-2xl font-bold tracking-tight">Cast</p>
                   <div className="relative min-w-0 max-w-full" onDragStart={(event) => event.preventDefault()}>
-                  {movie.cast.length > 7 && (
+                  {movie.cast.length > 0 && (
                     <>
                       <button
                         type="button"
                         onClick={() => scrollCast(-1)}
                         disabled={castScroll.left <= 2}
                         aria-label="Scroll cast left"
-                        className="absolute left-1 top-1/2 z-10 size-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-background text-foreground shadow-lg transition hover:bg-primary hover:text-primary-foreground disabled:opacity-50 disabled:pointer-events-none hidden md:grid md:size-9"
+                        className="absolute left-1 top-1/2 z-10 size-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/90 backdrop-blur-sm text-foreground shadow-xl transition hover:bg-primary hover:text-primary-foreground disabled:opacity-40 disabled:pointer-events-none hidden md:flex md:size-10"
                       >
-                        <ChevronLeft className="size-4 sm:size-5" />
+                        <ChevronLeft className="size-5 sm:size-6" />
                       </button>
                       <button
                         type="button"
@@ -607,9 +607,9 @@ function MoviePage() {
                           castScroll.left + castScroll.viewport >= castScroll.width - 2
                         }
                         aria-label="Scroll cast right"
-                        className="absolute right-1 top-1/2 z-10 size-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-background text-foreground shadow-lg transition hover:bg-primary hover:text-primary-foreground disabled:opacity-50 disabled:pointer-events-none hidden md:grid md:size-9"
+                        className="absolute right-1 top-1/2 z-10 size-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/90 backdrop-blur-sm text-foreground shadow-xl transition hover:bg-primary hover:text-primary-foreground disabled:opacity-40 disabled:pointer-events-none hidden md:flex md:size-10"
                       >
-                        <ChevronRight className="size-4 sm:size-5" />
+                        <ChevronRight className="size-5 sm:size-6" />
                       </button>
                     </>
                   )}
@@ -669,16 +669,16 @@ function MoviePage() {
                 <div className="min-w-0 pt-4">
                   <p className="mb-3 text-2xl font-bold tracking-tight">Crew</p>
                   <div className="relative min-w-0 max-w-full" onDragStart={(event) => event.preventDefault()}>
-                    {movie.crew.length > 7 && (
+                    {movie.crew.length > 0 && (
                       <>
                         <button
                           type="button"
                           onClick={() => scrollCrew(-1)}
                           disabled={crewScroll.left <= 2}
                           aria-label="Scroll crew left"
-                          className="absolute left-1 top-1/2 z-10 size-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-background text-foreground shadow-lg transition hover:bg-primary hover:text-primary-foreground disabled:opacity-50 disabled:pointer-events-none hidden md:grid md:size-9"
+                          className="absolute left-1 top-1/2 z-10 size-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/90 backdrop-blur-sm text-foreground shadow-xl transition hover:bg-primary hover:text-primary-foreground disabled:opacity-40 disabled:pointer-events-none hidden md:flex md:size-10"
                         >
-                          <ChevronLeft className="size-4 sm:size-5" />
+                          <ChevronLeft className="size-5 sm:size-6" />
                         </button>
                         <button
                           type="button"
@@ -688,9 +688,9 @@ function MoviePage() {
                             crewScroll.left + crewScroll.viewport >= crewScroll.width - 2
                           }
                           aria-label="Scroll crew right"
-                          className="absolute right-1 top-1/2 z-10 size-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-background text-foreground shadow-lg transition hover:bg-primary hover:text-primary-foreground disabled:opacity-50 disabled:pointer-events-none hidden md:grid md:size-9"
+                          className="absolute right-1 top-1/2 z-10 size-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-background/90 backdrop-blur-sm text-foreground shadow-xl transition hover:bg-primary hover:text-primary-foreground disabled:opacity-40 disabled:pointer-events-none hidden md:flex md:size-10"
                         >
-                          <ChevronRight className="size-4 sm:size-5" />
+                          <ChevronRight className="size-5 sm:size-6" />
                         </button>
                       </>
                     )}
