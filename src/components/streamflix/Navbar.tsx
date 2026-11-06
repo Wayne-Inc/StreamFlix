@@ -346,7 +346,7 @@ export function Navbar() {
           : "bg-gradient-to-b from-black/80 to-transparent"
       }`}
     >
-      <div className="mx-auto flex h-14 items-center gap-3 px-4 sm:h-16 sm:gap-6 sm:px-8">
+      <div className="mx-auto flex h-12 items-center gap-3 px-4 sm:h-16 sm:gap-6 sm:px-8">
         <Logo />
         <nav className="hidden md:flex items-center gap-5 text-sm text-muted-foreground">
           {links.map((l, i) => (
@@ -377,10 +377,10 @@ export function Navbar() {
                 toast.error("Could not fetch random title");
               }
             }}
-            className="inline-flex items-center justify-center text-muted-foreground hover:text-foreground md:hidden"
+            className="inline-flex items-center justify-center h-9 text-muted-foreground hover:text-foreground md:hidden"
             aria-label="Random"
           >
-            <Shuffle className="size-7" />
+            <Shuffle className="size-6" />
           </button>
           {/* Search bar - moved next to profile pic */}
           <div className="relative hidden md:block" ref={searchBoxRef}>
