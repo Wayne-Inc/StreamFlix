@@ -36,6 +36,7 @@ import { getSelectedProfile, clearSelectedProfile } from "@/lib/selected-profile
 import { clearStreamFlixLocalStorage } from "@/lib/clear-local-storage";
 import { suggestTitles, getRandomTitle, searchByPerson } from "@/lib/streamflix-data";
 import { useDataSaver } from "@/lib/data-saver";
+import { useMobileNavbar } from "@/components/streamflix/mobile-navbar-context";
 
 const links = [
   { label: "Home", to: "/browse", search: { kind: "home" } },
@@ -110,6 +111,14 @@ export function Navbar() {
   const searchBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchBoxRef = useRef<HTMLDivElement | null>(null);
   const mobileNavRef = useRef<HTMLElement | null>(null);
+  const { setIsVisible } = useMobileNavbar();
+
+  useEffect(() => {
+    // The mobile bottom navbar is hidden on /watch/ pages, so the cookie
+    // consent should anchor to the bottom edge there instead of floating.
+    setIsVisible(!pathname.startsWith("/watch/"));
+  }, [pathname, setIsVisible]);
+
   const [browseMenuOpen, setBrowseMenuOpen] = useState(false);
 
   useEffect(() => {

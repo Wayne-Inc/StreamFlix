@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { isConsentDecided, loadAnalytics, updateConsentMode } from "@/lib/consent";
+import { useMobileNavbar } from "@/components/streamflix/mobile-navbar-context";
 
 const STORAGE_KEY = "streamflix:cookieConsent";
 const COOKIE_NAME = "streamflix_cookie_consent";
@@ -15,17 +16,24 @@ function setConsent(value: string) {
 export function CookieConsent() {
   const [decided, setDecided] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { isVisible: isMobileNavbarVisible } = useMobileNavbar();
 
   useEffect(() => {
     setMounted(true);
     if (isConsentDecided()) setDecided(true);
   }, []);
 
+  // Anchor to the bottom edge when there's no bottom navbar (so it doesn't look
+  // floating); sit just above the navbar when it is displayed.
+  const bottomClass = isMobileNavbarVisible
+    ? "bottom-20"
+    : "bottom-[env(safe-area-inset-bottom)]";
+
   if (!mounted) return null;
   if (decided) return null;
 
   return (
-    <div className="fixed inset-x-4 bottom-20 z-50 mx-auto w-[min(360px,calc(100%-2rem))] rounded-2xl border border-border bg-card/95 p-2 shadow-[0_18px_40px_rgba(0,0,0,0.45)] backdrop-blur-2xl text-xs text-foreground md:inset-x-auto md:right-4 md:bottom-4 md:mx-0 pb-[env(safe-area-inset-bottom)]">
+    <div className={`fixed inset-x-4 ${bottomClass} z-50 mx-auto w-[min(360px,calc(100%-2rem))] rounded-2xl border border-border bg-card/95 p-2 shadow-[0_18px_40px_rgba(0,0,0,0.45)] backdrop-blur-2xl text-xs text-foreground md:inset-x-auto md:right-4 md:bottom-4 md:mx-0 pb-[env(safe-area-inset-bottom)]`}>
       <div className="flex items-start gap-3">
         <div className="flex-1 space-y-1">
           <p className="text-sm font-semibold tracking-tight text-foreground">Cookie Consent</p>

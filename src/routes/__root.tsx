@@ -18,6 +18,7 @@ import { registerSW } from "../lib/pwa";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { CookieConsent } from "@/components/streamflix/CookieConsent";
+import { MobileNavbarProvider } from "@/components/streamflix/mobile-navbar-context";
 
 import { GlobalContextMenu } from "@/components/streamflix/GlobalContextMenu";
 import { ExternalLinkWarningProvider, triggerExternalLinkWarning } from "@/components/streamflix/ExternalLinkWarning";
@@ -349,8 +350,10 @@ function RootComponent() {
               <GlobalContextMenu>
                 <div className="wco-titlebar-padding">
                   <Toaster />
-                  <Outlet />
-                  <CookieConsent />
+                  <MobileNavbarProvider>
+                    <Outlet />
+                    <CookieConsent />
+                  </MobileNavbarProvider>
                   <ScreenSaver />
                   <Analytics />
                   <SpeedInsights />
