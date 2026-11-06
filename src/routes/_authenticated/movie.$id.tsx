@@ -403,7 +403,7 @@ function MoviePage() {
             type="button"
             onClick={goBack}
             aria-label="Go back"
-            className="mb-6 inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground"
+            className="mb-6 inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-medium text-foreground backdrop-blur-lg transition hover:bg-white/20"
           >
             <ArrowLeft className="size-4" /> Back
           </button>
@@ -488,7 +488,7 @@ function MoviePage() {
                       toast.success(`${movie.title} marked as watched`);
                     }
                   }}
-                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-white/10 sm:px-4 sm:py-3"
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md border border-white/10 bg-white/10 px-4 py-2.5 text-sm font-semibold text-foreground backdrop-blur-lg transition hover:bg-white/20 sm:px-4 sm:py-3"
                 >
                   <Check className="size-4 sm:size-5" /> {watched ? "Watched" : "Unwatched"}
                 </button>
@@ -498,10 +498,10 @@ function MoviePage() {
                     setInList(added);
                     toast.success(added ? "Added to My List" : "Removed from My List");
                   }}
-                  className={`grid size-11 sm:size-12 place-items-center rounded-full border ${
+                  className={`grid size-11 sm:size-12 place-items-center rounded-full border border-white/10 bg-white/10 backdrop-blur-lg ${
                     inList
                       ? "border-primary bg-primary/20 text-primary"
-                      : "border-border hover:border-foreground"
+                      : "border-border hover:border-foreground hover:bg-white/20"
                   }`}
                   aria-label={inList ? "Remove from My List" : "Add to My List"}
                 >
@@ -517,7 +517,7 @@ function MoviePage() {
                       image: movie.backdropSm || movie.backdrop || movie.poster || undefined,
                     }).then((mode) => toast.success(mode === "shared" ? "Shared" : "Link copied"));
                   }}
-                  className="grid size-11 sm:size-12 place-items-center rounded-full border border-border hover:border-foreground"
+                  className="grid size-11 sm:size-12 place-items-center rounded-full border border-white/10 bg-white/10 backdrop-blur-lg hover:bg-white/20"
                   aria-label="Share"
                 >
                   <Share2 className="size-4 sm:size-5" />
