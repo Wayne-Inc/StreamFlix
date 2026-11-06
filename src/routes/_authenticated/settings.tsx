@@ -63,6 +63,7 @@ import {
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { AvatarCropModal } from "@/components/streamflix/AvatarCropModal";
+import { clearStreamFlixLocalStorage } from "@/lib/clear-local-storage";
 import { SettingsPageSkeleton } from "@/components/ui/skeleton-pages";
 import {
   Skeleton,
@@ -610,6 +611,7 @@ function SettingsPage() {
         snap.forEach((d) => deleteDoc(doc(db, "user_devices", d.id)));
       }
       await firebaseSignOut(auth);
+      clearStreamFlixLocalStorage();
       router.navigate({ to: "/auth", search: { email: "" }, replace: true });
     } finally {
       setSigningOut(false);

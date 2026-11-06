@@ -33,6 +33,7 @@ import { signOut as firebaseSignOut } from "firebase/auth";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { profileHasPin, verifyProfilePin } from "@/lib/profiles";
 import { getSelectedProfile, clearSelectedProfile } from "@/lib/selected-profile";
+import { clearStreamFlixLocalStorage } from "@/lib/clear-local-storage";
 import { suggestTitles, getRandomTitle, searchByPerson } from "@/lib/streamflix-data";
 import { useDataSaver } from "@/lib/data-saver";
 
@@ -259,8 +260,7 @@ export function Navbar() {
       console.warn("Could not clear server session cookie", err);
     }
     await firebaseSignOut(auth);
-    localStorage.removeItem("sf:auth");
-    localStorage.removeItem("sf:vip");
+    clearStreamFlixLocalStorage();
     router.navigate({ to: "/auth", search: { email: "" }, replace: true });
   };
 

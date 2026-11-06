@@ -12,6 +12,7 @@ import {
 import { passwordMeetsPolicy } from "@/lib/password";
 import { PasswordPolicyChecklist } from "@/components/streamflix/PasswordPolicyChecklist";
 import { PasswordStrengthMeter } from "@/components/streamflix/PasswordStrengthMeter";
+import { clearStreamFlixLocalStorage } from "@/lib/clear-local-storage";
 
 export const Route = createFileRoute("/_authenticated/force-password")({
   ssr: false,
@@ -160,6 +161,7 @@ function ForcePasswordPage() {
             type="button"
             onClick={async () => {
               await signOut(auth);
+              clearStreamFlixLocalStorage();
               navigate({ to: "/auth", search: { email: "" } });
             }}
             className="flex w-full items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground"
