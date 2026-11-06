@@ -5,6 +5,7 @@ import type { Movie } from "@/lib/types";
 import { AgeRatingBadge } from "./AgeRatingBadge";
 import { buildTitleLogoUrl } from "@/lib/title-logo";
 import { fetchTitleLogo } from "@/lib/api/tmdb";
+import { HeroBannerDetailsSkeleton } from "@/components/ui/skeleton";
 
 export function HeroBanner({ slides }: { slides: Movie[] }) {
   const [i, setI] = useState(0);
@@ -91,7 +92,7 @@ export function HeroBanner({ slides }: { slides: Movie[] }) {
     "53": "Thriller",
   };
 
-  if (slides.length === 0) return null;
+  if (slides.length === 0) return <HeroBannerDetailsSkeleton />;
   const s = slides[i];
   if (!s) return null;
   const MAX_DESC_CHARS = 150;
