@@ -63,6 +63,7 @@ import {
 import { Navbar } from "@/components/streamflix/Navbar";
 import { Footer } from "@/components/streamflix/Footer";
 import { AvatarCropModal } from "@/components/streamflix/AvatarCropModal";
+import { SettingsPageSkeleton } from "@/components/ui/skeleton-pages";
 import {
   Skeleton,
   SkeletonText,
@@ -81,6 +82,7 @@ import { orderBy } from "firebase/firestore";
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Account Settings — StreamFlix" }] }),
   component: SettingsPage,
+  pendingComponent: SettingsPageSkeleton,
 });
 
 type Device = {
