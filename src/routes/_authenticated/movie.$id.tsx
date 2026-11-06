@@ -471,7 +471,7 @@ function MoviePage() {
                 {movie.trailer && (
                   <button
                     onClick={() => setTrailerOpen(true)}
-                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-white/10 sm:px-6 sm:py-3"
+                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md border border-white/10 bg-white/10 px-5 py-2.5 text-sm font-semibold text-foreground backdrop-blur-lg transition hover:bg-white/20 sm:px-6 sm:py-3"
                   >
                     <Clapperboard className="size-4 sm:size-5" /> Trailer
                   </button>
