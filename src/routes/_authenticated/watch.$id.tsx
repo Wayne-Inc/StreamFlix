@@ -424,6 +424,17 @@ function PlayerPage() {
     return () => nav.removeEventListener("navigate", handler);
   }, []);
 
+  // Block navigation away from the watch page: prompt before any unload so
+  // embedded players / scripts cannot silently redirect to outer sites.
+  useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, []);
+
   const lastSaveErrorAtRef = useRef(0);
   const notifySaveError = useCallback((err?: unknown) => {
     const now = Date.now();
