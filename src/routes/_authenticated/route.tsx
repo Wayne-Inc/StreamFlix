@@ -44,8 +44,9 @@ export const Route = createFileRoute("/_authenticated")({
 
     // Only redirect to /auth if BOTH server auth flag is missing AND Firebase Auth has no user
     if (!hasServerAuth && !user) {
-      // Store the intended destination to redirect back after auth
-      const returnTo = location.pathname + location.search;
+      // Store the intended destination to redirect back after auth.
+      // `location.search` is a parsed object (TSearchObj), not a string, so use `searchStr`.
+      const returnTo = location.pathname + location.searchStr;
       throw redirect({ to: "/auth", search: { email: "", redirect: returnTo } });
     }
 

@@ -350,47 +350,30 @@ export function MyListPageSkeleton() {
 
 export function ProfilesPageSkeleton() {
   return (
-    <main className="relative grid min-h-dvh place-items-center overflow-hidden bg-background">
-      <div className="absolute inset-0">
-        {Array.from({ length: 3 }).map((i) => (
-          <SkeletonImage key={i} className="absolute inset-0 size-full object-cover bg-surface/30" aspect="16/9" />
-        ))}
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/60 to-background" />
-      </div>
-      <header className="absolute inset-x-0 top-0 px-4 sm:px-12 py-5 z-10 flex items-center justify-between">
-        <Skeleton className="h-8 w-32 rounded" />
-        <Skeleton className="size-10 rounded-lg shrink-0" />
-      </header>
-      <Skeleton className="absolute inset-x-0 top-14 h-4 sm:top-20" />
-      <div className="relative z-20 w-full max-w-4xl px-4 text-center">
-        <SkeletonText className="mx-auto h-10 sm:h-14 w-[300px] max-w-full rounded sm:w-[400px]" />
-        <div className="mt-8 flex flex-wrap justify-center gap-3 sm:mt-10 sm:gap-8">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="flex flex-col items-center gap-3">
-              <div className="relative size-28 overflow-hidden rounded-lg bg-surface sm:size-32">
-                <SkeletonImage className="absolute inset-0 size-full rounded-lg" />
-                {i === 1 && (
-                  <Skeleton className="absolute bottom-1 right-1 grid size-5 place-items-center rounded-full sm:size-6" />
-                )}
-              </div>
-              <SkeletonText className="h-4 shrink-0" />
-              {i === 0 && (
-                <span className="ml-1 rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px]">
-                  <Skeleton className="h-4 w-16 rounded-full shrink-0" />
-                </span>
-              )}
-            </div>
-          ))}
-          <div className="flex flex-col items-center gap-3">
-            <div className="grid size-28 place-items-center rounded-lg border border-dashed border-border sm:size-32">
-              <Skeleton className="size-8 sm:size-10 shrink-0" />
-            </div>
-            <SkeletonText className="h-4 shrink-0" />
+    <div className="mt-8 flex flex-wrap justify-center gap-3 sm:mt-10 sm:gap-8">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="flex flex-col items-center gap-3">
+          <div className="relative size-28 overflow-hidden rounded-lg bg-surface sm:size-32">
+            <SkeletonImage className="absolute inset-0 size-full rounded-lg" />
+            {i === 1 && (
+              <Skeleton className="absolute bottom-1 right-1 grid size-5 place-items-center rounded-full sm:size-6" />
+            )}
           </div>
+          <SkeletonText className="h-4 shrink-0" />
+          {i === 0 && (
+            <span className="ml-1 rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px]">
+              <Skeleton className="h-4 w-16 rounded-full shrink-0" />
+            </span>
+          )}
         </div>
-        <SkeletonButton className="mx-auto mt-8 h-8 px-6 rounded border text-sm sm:mt-12 shrink-0" />
+      ))}
+      <div className="flex flex-col items-center gap-3">
+        <div className="grid size-28 place-items-center rounded-lg border border-dashed border-border sm:size-32">
+          <Skeleton className="size-8 sm:size-10 shrink-0" />
+        </div>
+        <SkeletonText className="h-4 shrink-0" />
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -680,10 +663,11 @@ export function MovieDetailPageSkeleton() {
     <div className="min-h-dvh bg-background pb-20 md:pb-0">
       <Navbar />
       <section className="relative pt-16 md:flex md:min-h-[85vh] md:items-center md:pt-20">
+        {/* Landscape backdrop starting behind the top bar; details overlay on top of it like desktop */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[48vh] sm:h-[60vh] md:inset-y-0 md:aspect-auto md:h-auto overflow-hidden">
           <SkeletonImage className="absolute inset-0 size-full rounded-none bg-surface/60" />
         </div>
-        <div className="relative z-10 w-full min-w-0 px-4 pt-[44vh] sm:pt-[52vh] pb-10 sm:pb-10 md:pt-0 md:pb-16 md:px-12 lg:px-16">
+        <div className="relative z-10 w-full min-w-0 px-4 pt-0 sm:pt-0 pb-10 sm:pb-10 md:pt-0 md:pb-16 md:px-12 lg:px-16">
           <SkeletonButton size="h-9 w-24 rounded-full" className="mb-6" />
           <div className="grid w-full min-w-0 gap-10 md:grid-cols-3 md:items-center md:gap-8">
             <div className="min-w-0 space-y-4 md:col-span-2">
