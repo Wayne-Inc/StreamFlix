@@ -179,7 +179,7 @@ function PersonPage() {
 
   if (loading) {
     return (
-      <div className="min-h-dvh bg-background">
+      <div className="min-h-dvh bg-background pb-20 md:pb-0">
         <Navbar />
         <PersonDetailPageSkeleton />
         <Footer />
@@ -189,7 +189,7 @@ function PersonPage() {
 
   if (!data) {
     return (
-      <div className="min-h-dvh bg-background">
+      <div className="min-h-dvh bg-background pb-20 md:pb-0">
         <Navbar />
         <main className="px-4 pt-28 pb-16 sm:px-8 text-center text-muted-foreground">
           <p>Person not found.</p>
@@ -207,7 +207,7 @@ function PersonPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-background pb-20 md:pb-0">
       <Navbar />
       <main className="px-4 pt-28 pb-16 sm:px-8">
         <div className="mx-auto max-w-6xl">

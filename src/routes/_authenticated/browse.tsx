@@ -461,7 +461,7 @@ function BrowsePage() {
   const popularMovies = popularMoviesQuery.data ?? [];
   const popularTvShows = popularTvQuery.data ?? [];
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-background pb-20 md:pb-0">
       <Navbar />
       <HeroBanner slides={filteredHeroSlides} />
       <div className="mx-auto max-w-4xl px-4 sm:px-8 mb-4 sm:mb-0 md:hidden">

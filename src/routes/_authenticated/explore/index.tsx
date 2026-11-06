@@ -59,7 +59,7 @@ function ExplorePage() {
   const allRows = [...safeMoviesRows, ...safeTvRows].slice(0, 5);
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-background pb-20 md:pb-0">
       <Navbar />
 
       <section className="relative flex h-[38vh] items-end overflow-hidden sm:h-[46vh]">

@@ -64,7 +64,7 @@ function CalendarPage() {
   }, [month]);
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-background pb-20 md:pb-0">
       <Navbar />
       <main className="mx-auto max-w-6xl px-4 pt-24 pb-16 md:pb-20 sm:px-8">
         <div className="flex items-center gap-2 text-primary">

@@ -62,7 +62,7 @@ function MyListPage() {
   const items = kidsMode ? filterKidsContent(list.map((e) => e.movie)) : list.map((e) => e.movie);
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-background pb-20 md:pb-0">
       <Navbar />
       <main className="mx-auto max-w-[1800px] px-4 pt-24 pb-16 sm:px-8">
         <h1 className="flex items-center gap-2 text-2xl font-bold sm:text-3xl">

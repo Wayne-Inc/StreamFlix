@@ -60,7 +60,7 @@ function ExploreGenrePage() {
   const visible = safeItems.slice((page - 1) * 24, page * 24);
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-background pb-20 md:pb-0">
       <Navbar />
 
       {/* Cinematic hero */}

@@ -410,7 +410,7 @@ function SearchPage() {
   );
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-background pb-20 md:pb-0">
       <Navbar />
       <main className="px-4 pt-24 pb-16 sm:px-8">
         <div className="mx-auto max-w-4xl">

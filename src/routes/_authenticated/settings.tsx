@@ -617,7 +617,7 @@ function SettingsPage() {
   const createdAt = user?.metadata?.creationTime ?? null;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground pb-20 md:pb-0">
       <Navbar />
       <main className="mx-auto max-w-4xl px-4 pt-28 pb-20 sm:px-8">
         <h1 className="text-3xl font-bold tracking-tight">Account</h1>

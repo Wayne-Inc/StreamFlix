@@ -147,7 +147,7 @@ function HistoryPage() {
   };
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-background pb-20 md:pb-0">
       <Navbar />
       <main className="mx-auto max-w-6xl px-4 pt-24 pb-12 sm:px-8">
         <div className="flex items-center justify-between mb-8">
