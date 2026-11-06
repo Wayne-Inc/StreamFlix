@@ -196,7 +196,7 @@ function PersonPage() {
           <button
             type="button"
             onClick={goBack}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-medium text-foreground backdrop-blur-lg transition hover:bg-white/20"
           >
             ← Back
           </button>
@@ -214,7 +214,7 @@ function PersonPage() {
           <button
             type="button"
             onClick={goBack}
-            className="mb-4 inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground transition hover:bg-primary hover:text-primary-foreground"
+            className="mb-4 inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-medium text-foreground backdrop-blur-lg transition hover:bg-white/20"
           >
             <ChevronLeft className="size-3.5" /> Back
           </button>
