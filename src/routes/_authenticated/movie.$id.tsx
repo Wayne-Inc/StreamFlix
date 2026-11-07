@@ -421,19 +421,19 @@ function MoviePage() {
               )}
               <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
                 {movie.score != null && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-xs font-semibold text-emerald-400 backdrop-blur-lg sm:px-3 sm:py-1.5">
-                    <Star className="size-3 fill-current" /> {movie.score.toFixed(1)}
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1.5 text-sm font-semibold text-emerald-400 backdrop-blur-lg sm:px-4 sm:py-2">
+                    <Star className="size-4 fill-current" /> {movie.score.toFixed(1)}
                   </span>
                 )}
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur-lg sm:px-3 sm:py-1.5">
-                  <Calendar className="size-3" /> {movie.year}
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-muted-foreground backdrop-blur-lg sm:px-4 sm:py-2">
+                  <Calendar className="size-4" /> {movie.year}
                 </span>
                 <AgeRatingBadge
                   rating={movie.rating}
-                  className="rounded-full px-2.5 py-1 text-xs backdrop-blur-lg sm:px-3 sm:py-1.5"
+                  className="rounded-full px-3 py-1.5 text-sm backdrop-blur-lg sm:px-4 sm:py-2"
                 />
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur-lg sm:px-3 sm:py-1.5">
-                  <Clock className="size-3" /> {movie.runtime || (movie.runtimeMinutes ? `${Math.floor(movie.runtimeMinutes / 60)}h ${movie.runtimeMinutes % 60}m` : '—')}
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-muted-foreground backdrop-blur-lg sm:px-4 sm:py-2">
+                  <Clock className="size-4" /> {movie.runtime || (movie.runtimeMinutes ? `${Math.floor(movie.runtimeMinutes / 60)}h ${movie.runtimeMinutes % 60}m` : '—')}
                 </span>
               </div>
 
@@ -446,7 +446,7 @@ function MoviePage() {
                       to="/explore/$genreId"
                       params={{ genreId: String(gid) }}
                       search={{ q: label }}
-                      className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-foreground backdrop-blur-lg transition hover:bg-white/10 hover:border-primary/50"
+                      className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-medium text-foreground backdrop-blur-lg transition hover:bg-white/10 hover:border-primary/50"
                     >
                       {label}
                     </Link>
@@ -528,7 +528,7 @@ function MoviePage() {
                 <p
                   ref={descRef}
                   onClick={() => setDescExpanded((v) => !v)}
-                  className={`max-w-xl break-words text-base md:text-lg text-gray-300 leading-relaxed cursor-pointer md:cursor-default ${
+                  className={`max-w-xl break-words text-sm md:text-base text-gray-300 leading-relaxed cursor-pointer md:cursor-default ${
                     descExpanded ? "" : "line-clamp-3"
                   }`}
                 >
@@ -564,7 +564,7 @@ function MoviePage() {
                   </p>
                 )}
                 {movie.director && (
-                  <p className="mt-3 text-sm text-muted-foreground">
+                  <p className="mt-3 text-base text-muted-foreground">
                     <span className="font-medium text-foreground">Directed by</span> {" "}
                     {movie.directorId ? (
                       <Link
