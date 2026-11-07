@@ -421,18 +421,18 @@ function MoviePage() {
               )}
               <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
                 {movie.score != null && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1.5 text-sm font-semibold text-emerald-400 backdrop-blur-lg sm:px-4 sm:py-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-sm font-semibold text-emerald-400 backdrop-blur-lg sm:px-4 sm:py-1.5">
                     <Star className="size-4 fill-current" /> {movie.score.toFixed(1)}
                   </span>
                 )}
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-muted-foreground backdrop-blur-lg sm:px-4 sm:py-2">
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1 text-sm text-muted-foreground backdrop-blur-lg sm:px-4 sm:py-1.5">
                   <Calendar className="size-4" /> {movie.year}
                 </span>
                 <AgeRatingBadge
                   rating={movie.rating}
-                  className="rounded-full px-3 py-1.5 text-sm backdrop-blur-lg sm:px-4 sm:py-2"
+                  className="rounded-lg px-3 py-1 text-sm backdrop-blur-lg sm:px-4 sm:py-1.5"
                 />
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-muted-foreground backdrop-blur-lg sm:px-4 sm:py-2">
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1 text-sm text-muted-foreground backdrop-blur-lg sm:px-4 sm:py-1.5">
                   <Clock className="size-4" /> {movie.runtime || (movie.runtimeMinutes ? `${Math.floor(movie.runtimeMinutes / 60)}h ${movie.runtimeMinutes % 60}m` : '—')}
                 </span>
               </div>
@@ -446,7 +446,7 @@ function MoviePage() {
                       to="/explore/$genreId"
                       params={{ genreId: String(gid) }}
                       search={{ q: label }}
-                      className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-medium text-foreground backdrop-blur-lg transition hover:bg-white/10 hover:border-primary/50"
+                      className="rounded-lg border border-white/10 bg-white/5 px-3 py-1 text-sm font-medium text-foreground backdrop-blur-lg transition hover:bg-white/10 hover:border-primary/50"
                     >
                       {label}
                     </Link>
