@@ -107,7 +107,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:title", content: "StreamFlix" },
       { name: "twitter:description", content: "Unlimited movies, TV shows, and more" },
       { name: "twitter:image", content: metaImageUrl() },
-      { name: "google-adsense-account", content: "ca-pub-5529326688604668" },
     ],
     links: [
       {
