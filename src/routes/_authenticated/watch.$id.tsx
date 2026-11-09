@@ -92,8 +92,8 @@ const availableEmbedServers: EmbedServer[] = [
     name: "VidEasy",
     isFrench: false,
     urls: {
-      movie: "https://player.videasy.net/movie/{id}",
-      tv: "https://player.videasy.net/tv/{id}/{season}/{episode}",
+      movie: "https://player.videasy.xyz/movie/{id}?theme=#DF2225",
+      tv: "https://player.videasy.xyz/tv/{id}/{season}/{episode}?theme=#DF2225",
     },
   },
   {
