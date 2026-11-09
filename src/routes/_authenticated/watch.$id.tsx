@@ -65,8 +65,8 @@ const availableEmbedServers: EmbedServer[] = [
     name: "Vidy",
     isFrench: false,
     urls: {
-      movie: "https://vsembed.su/tv/{id}/{season}/{episode}?color=#DF2225",
-      tv: "https://vsembed.su/tv/{id}/{season}/{episode}?color=#DF2225",
+      movie: "https://vidy.st/movie/{id}?color=DF2225",
+      tv: "https://vidy.st/tv/{id}/{season}/{episode}?color=DF2225",
     },
   },
   {
@@ -197,12 +197,30 @@ const availableEmbedServers: EmbedServer[] = [
     },
   },
   {
-    id: "Vidmario",
-    name: "Vidmario",
+    id: "RiveStream",
+    name: "RiveStream",
     isFrench: false,
     urls: {
-      movie: "https://player.vidmario.net/embed/movie/{id}?color=#DF2225",
-      tv: "https://player.vidmario.net/embed/tv/{id}/{season}/{episode}?color=#DF2225",
+      movie: "https://www.rivestream.app/embed?type=movie&id={id}",
+      tv: "https://www.rivestream.app/embed?type=tv&id={id}&season={season}&episode={episode}",
+    },
+  },
+  {
+    id: "RiveStream-Torrent",
+    name: "RiveStream-Torrent",
+    isFrench: false,
+    urls: {
+      movie: "https://www.rivestream.app/embed/torrent?type=movie&id={id}",
+      tv: "https://www.rivestream.app/embed/torrent?type=tv&id={id}&season={season}&episode={episode}",
+    },
+  },
+  {
+    id: "RiveStream-AGG",
+    name: "RiveStream-AGG",
+    isFrench: false,
+    urls: {
+      movie: "https://www.rivestream.app/embed/agg?type=movie&id={id}",
+      tv: "https://www.rivestream.app/embed/agg?type=tv&id={id}&season={season}&episode={episode}",
     },
   },
 ];
@@ -283,12 +301,12 @@ function PlayerPage() {
   const mainVideoUrlRef = useRef<string>("");
   const [mainVideoUrl, setMainVideoUrl] = useState("");
   const [selectedServerId, setSelectedServerId] = useState<string>(() => {
-    if (typeof window === "undefined") return "vidking";
+    if (typeof window === "undefined") return "vidy";
     try {
       const savedId = localStorage.getItem("sf:embedServer");
-      return availableEmbedServers.some((server) => server.id === savedId) ? savedId! : "vidking";
+      return availableEmbedServers.some((server) => server.id === savedId) ? savedId! : "vidy";
     } catch {
-      return "vidking";
+      return "vidy";
     }
   });
   const selectedServer =
