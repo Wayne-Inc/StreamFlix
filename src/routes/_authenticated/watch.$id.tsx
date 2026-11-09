@@ -205,24 +205,6 @@ const availableEmbedServers: EmbedServer[] = [
       tv: "https://www.rivestream.app/embed?type=tv&id={id}&season={season}&episode={episode}",
     },
   },
-  {
-    id: "RiveStream-Torrent",
-    name: "RiveStream-Torrent",
-    isFrench: false,
-    urls: {
-      movie: "https://www.rivestream.app/embed/torrent?type=movie&id={id}",
-      tv: "https://www.rivestream.app/embed/torrent?type=tv&id={id}&season={season}&episode={episode}",
-    },
-  },
-  {
-    id: "RiveStream-AGG",
-    name: "RiveStream-AGG",
-    isFrench: false,
-    urls: {
-      movie: "https://www.rivestream.app/embed/agg?type=movie&id={id}",
-      tv: "https://www.rivestream.app/embed/agg?type=tv&id={id}&season={season}&episode={episode}",
-    },
-  },
 ];
 
 const embedHostnames = new Set(
