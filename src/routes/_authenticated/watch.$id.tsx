@@ -52,12 +52,21 @@ interface EmbedServer {
 
 const availableEmbedServers: EmbedServer[] = [
   {
-    id: "vidking",
-    name: "VidKing",
+    id: "vidrift",
+    name: "Vidrift",
     isFrench: false,
     urls: {
-      movie: "https://vidking.ws/embed/movie/{id}?color=e50914&autoPlay=true",
-      tv: "https://vidking.ws/embed/tv/{id}/{season}/{episode}?color=e50914&autoPlay=true&nextEpisode=true",
+      movie: "https://embed.vidrift.net/embed/movie/{id}/{season}/{episode}?color=#DF2225",
+      tv: "https://embed.vidrift.net/embed/tv/{id}/{season}/{episode}?color=#DF2225",
+    },
+  },
+  {
+    id: "vidy",
+    name: "Vidy",
+    isFrench: false,
+    urls: {
+      movie: "https://vsembed.su/tv/{id}/{season}/{episode}?color=#DF2225",
+      tv: "https://vsembed.su/tv/{id}/{season}/{episode}?color=#DF2225",
     },
   },
   {
@@ -92,8 +101,8 @@ const availableEmbedServers: EmbedServer[] = [
     name: "VidEasy",
     isFrench: false,
     urls: {
-      movie: "https://player.videasy.xyz/movie/{id}?theme=#DF2225",
-      tv: "https://player.videasy.xyz/tv/{id}/{season}/{episode}?theme=#DF2225",
+      movie: "https://videasy.xyz/embed/movie/{id}?theme=#DF2225",
+      tv: "https://videasy.xyz/embed/tv/{id}/{season}/{episode}?theme=#DF2225",
     },
   },
   {
