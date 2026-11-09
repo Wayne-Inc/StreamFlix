@@ -56,7 +56,7 @@ const availableEmbedServers: EmbedServer[] = [
     name: "Vidrift",
     isFrench: false,
     urls: {
-      movie: "https://embed.vidrift.net/embed/movie/{id}/{season}/{episode}?color=#DF2225",
+      movie: "https://embed.vidrift.net/embed/movie/{id}?color=#DF2225",
       tv: "https://embed.vidrift.net/embed/tv/{id}/{season}/{episode}?color=#DF2225",
     },
   },
@@ -149,6 +149,60 @@ const availableEmbedServers: EmbedServer[] = [
     urls: {
       movie: "https://vidsrc.mov/embed/movie/{id}",
       tv: "https://vidsrc.mov/embed/tv/{id}/{season}/{episode}",
+    },
+  },
+  {
+    id: "Atlantic",
+    name: "Atlantic",
+    isFrench: false,
+    urls: {
+      movie: "https://atlantic.st/embed/movie/{id}?color=#DF2225",
+      tv: "https://atlantic.st/embed/tv/{id}/{season}/{episode}?color=#DF2225",
+    },
+  },
+  {
+    id: "Chillflix",
+    name: "Chillflix",
+    isFrench: false,
+    urls: {
+      movie: "https://www.chillflix.pw/embed/movie/{id}",
+      tv: "https://www.chillflix.pw/embed/tv/{id}/{season}/{episode}",
+    },
+  },
+  {
+    id: "Cinelite",
+    name: "Cinelite",
+    isFrench: false,
+    urls: {
+      movie: "https://embed.cinelite.xyz/movie/{id}?color=#DF2225",
+      tv: "https://embed.cinelite.xyz/tv/{id}/{season}/{episode}?color=#DF2225",
+    },
+  },
+  {
+    id: "Vidmario",
+    name: "Vidmario",
+    isFrench: false,
+    urls: {
+      movie: "https://player.vidmario.net/embed/movie/{id}?color=#DF2225",
+      tv: "https://player.vidmario.net/embed/tv/{id}/{season}/{episode}?color=#DF2225",
+    },
+  },
+  {
+    id: "Toflix",
+    name: "Toflix",
+    isFrench: false,
+    urls: {
+      movie: "https://toflix.co/embed/movie/{id}?color=DF2225",
+      tv: "https://toflix.co/embed/tv/{id}/{season}/{episode}?color=DF2225",
+    },
+  },
+  {
+    id: "Vidmario",
+    name: "Vidmario",
+    isFrench: false,
+    urls: {
+      movie: "https://player.vidmario.net/embed/movie/{id}?color=#DF2225",
+      tv: "https://player.vidmario.net/embed/tv/{id}/{season}/{episode}?color=#DF2225",
     },
   },
 ];
