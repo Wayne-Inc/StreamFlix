@@ -197,6 +197,42 @@ const availableEmbedServers: EmbedServer[] = [
     },
   },
   {
+    id: "Vidly",
+    name: "Vidly",
+    isFrench: false,
+    urls: {
+      movie: "https://vidly.pro/movie/{id}?color=DF2225",
+      tv: "https://vidly.pro/tv/{id}/{season}/{episode}?color=DF2225",
+    },
+  },
+  {
+    id: "VidBolt",
+    name: "VidBolt",
+    isFrench: false,
+    urls: {
+      movie: "https://vidbolt.xyz/movie/{id}?theme=DF2225",
+      tv: "https://vidbolt.xyz/tv/{id}/{season}/{episode}?theme=DF2225",
+    },
+  },
+  {
+    id: "Tgvid",
+    name: "Tgvid",
+    isFrench: false,
+    urls: {
+      movie: "https://tgvid.lovable.app/embed/movie/{id}?color=DF2225",
+      tv: "https://tgvid.lovable.app/embed/tv/{id}/{season}/{episode}?color=DF2225",
+    },
+  },
+  {
+    id: "Xpass",
+    name: "Xpass",
+    isFrench: false,
+    urls: {
+      movie: "https://play.xpass.top/e/movie/{id}",
+      tv: "https://play.xpass.top/e/tv/{id}/{season}/{episode}",
+    },
+  },
+  {
     id: "RiveStream",
     name: "RiveStream",
     isFrench: false,
@@ -206,8 +242,8 @@ const availableEmbedServers: EmbedServer[] = [
     },
   },
   {
-    id: "RiveStream-DOWNLOAD",
-    name: "RiveStream-DOWNLOAD",
+    id: "RiveStream-2",
+    name: "RiveStream-2",
     isFrench: false,
     urls: {
       movie: "https://www.rivestream.app/download?type=movie&id={id}",
