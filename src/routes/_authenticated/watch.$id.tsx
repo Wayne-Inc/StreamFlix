@@ -125,12 +125,12 @@ const availableEmbedServers: EmbedServer[] = [
     },
   },
   {
-    id: "vidsrcrip",
-    name: "VidSrc.rip",
+    id: "vidsrcsh",
+    name: "VidSrc.sh",
     isFrench: false,
     urls: {
-      movie: "https://vidsrc.rip/embed/movie/{id}",
-      tv: "https://vidsrc.rip/embed/tv/{id}/{season}/{episode}",
+      movie: "https://vidsrc.sh/embed/movie/{id}",
+      tv: "https://vidsrc.sh/embed/tv/{id}/{season}/{episode}",
     },
   },
   {
@@ -959,7 +959,8 @@ function PlayerPage() {
         />
       )}
 
-      {/* Top gradient overlay */}
+      {/* Top gradient overlay — never captures pointer events so clicks
+           pass through to the video/iframe underneath even when visible. */}
       <div
         className={`pointer-events-none absolute inset-x-0 top-0 z-10 bg-gradient-to-b from-black via-black/60 to-transparent pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] transition-opacity duration-300 ${
           showControls ? "opacity-100" : "opacity-0"
