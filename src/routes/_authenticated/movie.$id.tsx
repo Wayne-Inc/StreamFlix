@@ -478,14 +478,6 @@ function MoviePage() {
                   <Play className="size-4 fill-current sm:size-5" />{" "}
                   {isTv ? `Play S${playEpisode.season} E${playEpisode.episode}` : "Play"}
                 </Link>
-                <button
-                  onClick={() => {
-                    window.location.href = downloadUrl;
-                  }}
-                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md border border-white/10 bg-white/10 px-5 py-2.5 text-sm font-semibold text-foreground backdrop-blur-lg transition hover:bg-white/20 sm:px-6 sm:py-3"
-                >
-                  <Download className="size-4 sm:size-5" /> Download
-                </button>
                 {movie.trailer && (
                   <button
                     onClick={() => setTrailerOpen(true)}
@@ -506,9 +498,10 @@ function MoviePage() {
                       toast.success(`${movie.title} marked as watched`);
                     }
                   }}
-                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md border border-white/10 bg-white/10 px-4 py-2.5 text-sm font-semibold text-foreground backdrop-blur-lg transition hover:bg-white/20 sm:px-4 sm:py-3"
+                  className="grid size-11 sm:size-12 place-items-center rounded-full border border-white/10 bg-white/10 backdrop-blur-lg hover:bg-white/20"
+                  aria-label={watched ? "Mark as not watched" : "Mark as watched"}
                 >
-                  <Check className="size-4 sm:size-5" /> {watched ? "Watched" : "Unwatched"}
+                  <Check className="size-4 sm:size-5" />
                 </button>
                 <button
                   onClick={() => {
@@ -539,6 +532,15 @@ function MoviePage() {
                   aria-label="Share"
                 >
                   <Share2 className="size-4 sm:size-5" />
+                </button>
+                <button
+                  onClick={() => {
+                    window.location.href = downloadUrl;
+                  }}
+                  className="grid size-11 sm:size-12 place-items-center rounded-full border border-white/10 bg-white/10 backdrop-blur-lg hover:bg-white/20"
+                  aria-label="Download"
+                >
+                  <Download className="size-4 sm:size-5" />
                 </button>
               </div>
 
