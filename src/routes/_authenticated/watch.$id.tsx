@@ -241,15 +241,6 @@ const availableEmbedServers: EmbedServer[] = [
       tv: "https://www.rivestream.app/embed?type=tv&id={id}&season={season}&episode={episode}",
     },
   },
-  {
-    id: "RiveStream-2",
-    name: "RiveStream-2",
-    isFrench: false,
-    urls: {
-      movie: "https://www.rivestream.app/download?type=movie&id={id}",
-      tv: "https://www.rivestream.app/download?type=tv&id={id}&season={season}&episode={episode}",
-    },
-  },
 ];
 
 const embedHostnames = new Set(

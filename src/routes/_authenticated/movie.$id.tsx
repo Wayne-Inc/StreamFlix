@@ -22,6 +22,7 @@ import {
   ChevronRight,
   Sparkles,
   LoaderCircle,
+  Download,
 } from "lucide-react";
 import {
   isKidsProfile,
@@ -257,6 +258,15 @@ function MoviePage() {
     season: 1,
     episode: 1,
   });
+
+  const tmdbId = movie.id.replace(/^tv-/, "");
+  const downloadUrl = useMemo(
+    () =>
+      isTv
+        ? `https://www.rivestream.app/download?type=tv&id=${tmdbId}&season=${playEpisode.season}&episode=${playEpisode.episode}`
+        : `https://www.rivestream.app/download?type=movie&id=${tmdbId}`,
+    [isTv, tmdbId, playEpisode.season, playEpisode.episode],
+  );
   useEffect(() => {
     setInList(isInMyList(movie.id));
     setWatched(getWatchHistory().some((x) => x.id === movie.id || x.id.startsWith(`${movie.id}:`)));
@@ -468,6 +478,14 @@ function MoviePage() {
                   <Play className="size-4 fill-current sm:size-5" />{" "}
                   {isTv ? `Play S${playEpisode.season} E${playEpisode.episode}` : "Play"}
                 </Link>
+                <button
+                  onClick={() => {
+                    window.location.href = downloadUrl;
+                  }}
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md border border-white/10 bg-white/10 px-5 py-2.5 text-sm font-semibold text-foreground backdrop-blur-lg transition hover:bg-white/20 sm:px-6 sm:py-3"
+                >
+                  <Download className="size-4 sm:size-5" /> Download
+                </button>
                 {movie.trailer && (
                   <button
                     onClick={() => setTrailerOpen(true)}
