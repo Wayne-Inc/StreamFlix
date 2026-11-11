@@ -498,10 +498,9 @@ function MoviePage() {
                       toast.success(`${movie.title} marked as watched`);
                     }
                   }}
-                  className="grid size-11 sm:size-12 place-items-center rounded-full border border-white/10 bg-white/10 backdrop-blur-lg hover:bg-white/20"
-                  aria-label={watched ? "Mark as not watched" : "Mark as watched"}
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md border border-white/10 bg-white/10 px-4 py-2.5 text-sm font-semibold text-foreground backdrop-blur-lg transition hover:bg-white/20 sm:px-4 sm:py-3"
                 >
-                  <Check className="size-4 sm:size-5" />
+                  <Check className="size-4 sm:size-5" /> {watched ? "Watched" : "Unwatched"}
                 </button>
                 <button
                   onClick={() => {
@@ -865,18 +864,6 @@ function MoviePage() {
           <Row title="Top Rated Series" items={topRatedTv.slice(0, 12)} />
         </div>
       )}
-
-      <div className="space-y-2 pb-10">
-        {filteredGenreRows.map((gr) => {
-          // Use the genre name from the available genres, then the movie's own labels.
-          const genreName =
-            genres.find((g: { id: number; name: string }) => String(g.id) === gr.genreId)?.name ||
-            movie.genres[movie.genreIds.indexOf(Number(gr.genreId))] ||
-            genreLabels[gr.genreId] ||
-            "Movies";
-          return <Row key={gr.genreId} title={`${genreName} Movies`} items={gr.items} />;
-        })}
-      </div>
 
       {trailerOpen && movie.trailer && (
         <TrailerModal url={movie.trailer} onClose={() => setTrailerOpen(false)} />
