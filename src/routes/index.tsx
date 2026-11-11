@@ -131,7 +131,7 @@ function Landing() {
           sizes="100vw"
           width={1400}
           height={788}
-          alt=""
+          alt="StreamFlix hero banner showing unlimited movies and TV shows available to stream for free"
           fetchPriority="high"
           decoding="async"
           className="absolute inset-0 size-full object-cover"
