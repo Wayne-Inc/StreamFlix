@@ -168,55 +168,6 @@ vercel --prod
 
 ---
 
-## Project Structure (Key Directories)
-
-```
-src/
-├── components/
-│   ├── streamflix/      # Feature components (Navbar, MovieCard, VideoPlayer, etc.)
-│   └── ui/              # shadcn/ui primitives
-├── lib/
-│   ├── api/tmdb.ts      # TMDB wrapper (typed, cached)
-│   ├── api/ai.ts        # NVIDIA Nemotron client
-│   ├── firebase.ts      # Firebase init + App Check
-│   ├── continue-watching.ts
-│   ├── my-list.ts
-│   ├── profiles.ts
-│   └── push.ts          # FCM push notifications
-├── routes/
-│   ├── _authenticated/  # Protected routes (server auth + client guard)
-│   │   ├── browse.tsx
-│   │   ├── watch.$id.tsx
-│   │   ├── profiles.tsx
-│   │   ├── settings.tsx  # Export data, notifications, delete account
-│   │   ├── explore/      # Genre pages ($genreId.tsx)
-│   │   ├── assistant.tsx
-│   │   ├── calendar.tsx
-│   │   ├── history.tsx
-│   │   ├── mylist.tsx
-│   │   ├── search.tsx
-│   │   ├── movie.$id.tsx
-│   │   ├── person.$id.tsx
-│   │   ├── force-password.tsx
-│   │   └── route.tsx     # Client-side auth guard
-│   ├── api/             # Server-only API routes
-│   │   ├── session.ts           # Create/clear session cookie
-│   │   ├── release-notifications-cron.ts
-│   │   ├── verify-recaptcha.ts
-│   │   └── client-ip.ts
-│   ├── auth.tsx         # Sign in/up (calls /api/session)
-│   ├── index.tsx        # Landing (instant redirect if authed)
-│   ├── tos.tsx
-│   ├── privacy-policy.tsx
-│   └── offline.tsx
-├── server/              # SERVER-ONLY CODE (never bundled to client)
-│   ├── firebase-admin.ts
-│   └── server-auth.ts
-└── main.tsx             # Entry, providers, queryClient
-```
-
----
-
 ## Key Features Implementation
 
 ### Optimistic Updates (Almost Everything)
