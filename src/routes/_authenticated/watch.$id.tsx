@@ -52,6 +52,51 @@ interface EmbedServer {
 
 const availableEmbedServers: EmbedServer[] = [
   {
+    id: "nontongo",
+    name: "NontonGo",
+    isFrench: false,
+    urls: {
+      movie: "https://www.nontongo.win/embed/movie/{id}",
+      tv: "https://www.nontongo.win/embed/tv/{id}/{season}/{episode}",
+    },
+  },
+  {
+    id: "vidlink",
+    name: "VidLink (Default)",
+    isFrench: false,
+    urls: {
+      movie: "https://vidlink.pro/movie/{id}?player=default",
+      tv: "https://vidlink.pro/tv/{id}/{season}/{episode}?player=default",
+    },
+  },
+  {
+    id: "vidlinkjw",
+    name: "VidLink (JW Player)",
+    isFrench: false,
+    urls: {
+      movie: "https://vidlink.pro/movie/{id}?player=jw",
+      tv: "https://vidlink.pro/tv/{id}/{season}/{episode}?player=jw",
+    },
+  },
+  {
+    id: "vidfast",
+    name: "VidFast",
+    isFrench: false,
+    urls: {
+      movie: "https://vidfast.vc/movie/{id}?autoPlay=true",
+      tv: "https://vidfast.vc/tv/{id}/{season}/{episode}?autoPlay=true",
+    },
+  },
+  {
+    id: "vidspark",
+    name: "VidSpark",
+    isFrench: false,
+    urls: {
+      movie: "https://vidspark.to/movie/{id}",
+      tv: "https://vidspark.to/tv/{id}/{season}/{episode}",
+    },
+  },
+  {
     id: "vidrift",
     name: "Vidrift",
     isFrench: false,
