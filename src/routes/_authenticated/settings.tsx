@@ -79,6 +79,8 @@ import { formatDistanceToNow } from "date-fns";
 import { GENRE_OPTIONS, getFavoriteGenres, setFavoriteGenres } from "@/lib/favorite-genres";
 import { deleteUserData } from "@/lib/user-data";
 import { orderBy } from "firebase/firestore";
+import { useRotatingText } from "@/hooks/use-rotating-text";
+import { SIGN_OUT_MESSAGES } from "@/lib/status-messages";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Account Settings — StreamFlix" }] }),
@@ -138,6 +140,7 @@ function SettingsPage() {
   const [savingUpcomingNotifs, setSavingUpcomingNotifs] = useState(false);
   const [exportingData, setExportingData] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const signOutLabel = useRotatingText(signingOut, SIGN_OUT_MESSAGES);
 
   useEffect(() => {
     if (!user) return;
@@ -1218,7 +1221,7 @@ function SettingsPage() {
             >
               {signingOut ? (
                 <>
-                  <Loader2 className="size-4 animate-spin" /> Signing out…
+                  <Loader2 className="size-4 animate-spin" /> {signOutLabel}
                 </>
               ) : (
                 <>

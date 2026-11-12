@@ -27,6 +27,15 @@ import heroImg from "@/assets/hero-1.jpg";
 import { TOS_VERSION } from "@/routes/tos";
 import { PRIVACY_VERSION } from "@/routes/privacy-policy";
 import { setUserLegalVersions } from "@/lib/user-versions";
+import { useRotatingText } from "@/hooks/use-rotating-text";
+import {
+  GITHUB_SIGN_IN_MESSAGES,
+  GOOGLE_SIGN_IN_MESSAGES,
+  LINK_ACCOUNT_MESSAGES,
+  PASSWORD_RESET_MESSAGES,
+  SIGN_IN_MESSAGES,
+  SIGN_UP_MESSAGES,
+} from "@/lib/status-messages";
 
 const LAST_SIGN_IN_METHOD_KEY = "sf:lastSignInMethod";
 type SignInMethod = "email" | "google" | "github";
@@ -91,6 +100,21 @@ function AuthPage() {
       return null;
     }
   });
+  // Which control started the current request, so each button only animates
+  // its own copy while `busy` is shared by every sign-in path.
+  const [pendingFlow, setPendingFlow] = useState<
+    "signin" | "signup" | "reset" | "google" | "github" | null
+  >(null);
+
+  const formPending = busy && (pendingFlow === "signin" || pendingFlow === "signup");
+  const emailLabel = useRotatingText(
+    formPending,
+    pendingFlow === "signup" ? SIGN_UP_MESSAGES : SIGN_IN_MESSAGES,
+  );
+  const resetLabel = useRotatingText(busy && pendingFlow === "reset", PASSWORD_RESET_MESSAGES);
+  const googleLabel = useRotatingText(busy && pendingFlow === "google", GOOGLE_SIGN_IN_MESSAGES);
+  const githubLabel = useRotatingText(busy && pendingFlow === "github", GITHUB_SIGN_IN_MESSAGES);
+  const linkLabel = useRotatingText(linkBusy, LINK_ACCOUNT_MESSAGES);
 
   const rememberSignInMethod = (method: SignInMethod) => {
     setLastSignInMethod(method);
@@ -155,6 +179,7 @@ function AuthPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!checkRateLimit()) return;
+    setPendingFlow(mode === "signup" ? "signup" : "signin");
     setBusy(true);
     setVerifyMsg("");
     try {
@@ -279,6 +304,7 @@ function AuthPage() {
   const resendVerification = async () => {
     const user = auth.currentUser;
     if (!user) return;
+    setPendingFlow(null);
     setBusy(true);
     try {
       await sendEmailVerification(user);
@@ -292,6 +318,7 @@ function AuthPage() {
   const onForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
+    setPendingFlow("reset");
     setBusy(true);
     try {
       await sendPasswordResetEmail(auth, email.trim());
@@ -417,6 +444,7 @@ function AuthPage() {
   };
 
   const onGoogle = async () => {
+    setPendingFlow("google");
     setBusy(true);
     setPopupBlocked(false);
 
@@ -483,6 +511,7 @@ function AuthPage() {
   };
 
   const onGitHub = async () => {
+    setPendingFlow("github");
     setBusy(true);
 
     // Verify Turnstile CAPTCHA before allowing OAuth popup
@@ -604,7 +633,7 @@ function AuthPage() {
                   className="w-full rounded bg-primary py-3 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
                 >
                   {linkBusy
-                    ? "Linking…"
+                    ? linkLabel
                     : `Link and sign in with ${providerLabel(linkRequest.provider)}`}
                 </button>
                 <button
@@ -641,7 +670,7 @@ function AuthPage() {
                 disabled={busy}
                 className="w-full rounded bg-primary py-3 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
               >
-                {busy ? "Please wait…" : "Send Reset Link"}
+                {busy && pendingFlow === "reset" ? resetLabel : "Send Reset Link"}
               </button>
               <button
                 type="button"
@@ -755,8 +784,8 @@ function AuthPage() {
                 disabled={busy || (mode === "signup" && !passwordMeetsPolicy(password))}
                 className={`w-full rounded border py-3 font-semibold disabled:opacity-60 ${mode === "signin" && lastSignInMethod === "email" ? "border-primary bg-primary/15 text-primary ring-1 ring-primary/40 hover:bg-primary/20 active:bg-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50" : "border-transparent bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"}`}
               >
-                {busy
-                  ? "Please wait…"
+                {formPending
+                  ? emailLabel
                   : mode === "signin"
                     ? `Sign In${lastSignInMethod === "email" ? " · Last used" : ""}`
                     : "Create Account"}
@@ -782,16 +811,28 @@ function AuthPage() {
                 disabled={busy}
                 className={`mt-4 w-full rounded border py-3 font-semibold disabled:opacity-60 ${mode === "signin" && lastSignInMethod === "google" ? "border-primary bg-primary/15 text-primary ring-1 ring-primary/40 hover:bg-primary/20 active:bg-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50" : "border-transparent bg-foreground/10 text-foreground hover:bg-foreground/20 active:bg-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50"}`}
               >
-                Continue with Google
-                {mode === "signin" && lastSignInMethod === "google" ? " · Last used" : ""}
+                {busy && pendingFlow === "google" ? (
+                  googleLabel
+                ) : (
+                  <>
+                    Continue with Google
+                    {mode === "signin" && lastSignInMethod === "google" ? " · Last used" : ""}
+                  </>
+                )}
               </button>
               <button
                 onClick={onGitHub}
                 disabled={busy}
                 className={`mt-3 w-full rounded border py-3 font-semibold disabled:opacity-60 ${mode === "signin" && lastSignInMethod === "github" ? "border-primary bg-primary/15 text-primary ring-1 ring-primary/40 hover:bg-primary/20 active:bg-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50" : "border-transparent bg-foreground/10 text-foreground hover:bg-foreground/20 active:bg-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/50"}`}
               >
-                Continue with GitHub
-                {mode === "signin" && lastSignInMethod === "github" ? " · Last used" : ""}
+                {busy && pendingFlow === "github" ? (
+                  githubLabel
+                ) : (
+                  <>
+                    Continue with GitHub
+                    {mode === "signin" && lastSignInMethod === "github" ? " · Last used" : ""}
+                  </>
+                )}
               </button>
 
               <p className="mt-8 text-muted-foreground">
