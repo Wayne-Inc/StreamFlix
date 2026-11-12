@@ -37,6 +37,8 @@ import { clearStreamFlixLocalStorage } from "@/lib/clear-local-storage";
 import { suggestTitles, getRandomTitle, searchByPerson } from "@/lib/streamflix-data";
 import { useDataSaver } from "@/lib/data-saver";
 import { useMobileNavbar } from "@/components/streamflix/mobile-navbar-context";
+import { useRotatingText } from "@/hooks/use-rotating-text";
+import { SIGN_OUT_MESSAGES } from "@/lib/status-messages";
 
 const links = [
   { label: "Home", to: "/browse", search: { kind: "home" } },
@@ -92,6 +94,7 @@ export function Navbar() {
   const [exitKidsPin, setExitKidsPin] = useState("");
   const [exitKidsBusy, setExitKidsBusy] = useState(false);
   const [signOutBusy, setSignOutBusy] = useState(false);
+  const signOutLabel = useRotatingText(signOutBusy, SIGN_OUT_MESSAGES);
   const [isVip, setIsVip] = useState(() => {
     try { return localStorage.getItem("sf:vip") === "1"; } catch { return false; }
   });
@@ -268,9 +271,16 @@ export function Navbar() {
     } catch (err) {
       console.warn("Could not clear server session cookie", err);
     }
-    await firebaseSignOut(auth);
-    clearStreamFlixLocalStorage();
-    router.navigate({ to: "/auth", search: { email: "" }, replace: true });
+    try {
+      await firebaseSignOut(auth);
+      clearStreamFlixLocalStorage();
+      router.navigate({ to: "/auth", search: { email: "" }, replace: true });
+    } catch (err) {
+      console.error("Sign out failed", err);
+      toast.error("Could not sign out. Please try again.");
+    } finally {
+      setSignOutBusy(false);
+    }
   };
 
   const handleExitKids = async () => {
@@ -567,7 +577,7 @@ export function Navbar() {
                   >
                     {signOutBusy ? (
                       <>
-                        <LoaderCircle className="size-4 animate-spin" /> Signing out…
+                        <LoaderCircle className="size-4 animate-spin" /> {signOutLabel}
                       </>
                     ) : (
                       <>
@@ -701,7 +711,8 @@ export function Navbar() {
             <button
               type="button"
               onClick={() => {
-                setMenuOpen(false);
+                // Keep the menu open while signing out so the progress text in
+                // this button stays visible until navigation takes over.
                 void signOut();
               }}
               disabled={signOutBusy}
@@ -709,7 +720,7 @@ export function Navbar() {
             >
               {signOutBusy ? (
                 <>
-                  <LoaderCircle className="size-4 animate-spin" /> Signing out…
+                  <LoaderCircle className="size-4 animate-spin" /> {signOutLabel}
                 </>
               ) : (
                 <>
