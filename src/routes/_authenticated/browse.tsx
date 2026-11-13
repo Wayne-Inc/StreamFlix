@@ -30,6 +30,7 @@ import {
 import { getWatchHistoryFromFirestore } from "@/lib/history-firestore";
 import { isKidsProfile, filterKidsContent, filterKidsHeroSlides, UNSAFE_GENRE_IDS } from "@/lib/kids-mode";
 import { getPersonalizedRecommendations, type RecommendSeed } from "@/lib/recommendations";
+import { aniflixHref } from "@/lib/aniflix";
 
 const searchSchema = z.object({
   kind: z.enum(["home", "movies", "tv", "new"]).catch("home").default("home"),
@@ -492,6 +493,15 @@ function BrowsePage() {
           >
             Calendar
           </Link>
+          <a
+            href={aniflixHref({ kids: kidsMode })}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Anime on AniFlix"
+            className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors bg-surface text-muted-foreground hover:text-foreground hover:bg-accent"
+          >
+            Anime
+          </a>
         </nav>
       </div>
       <div className="relative z-10 mt-0 md:mt-12 space-y-6 md:space-y-12 pb-20 md:pb-0">
