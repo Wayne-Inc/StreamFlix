@@ -24,6 +24,8 @@ import {
   Tv,
   Layout,
   Calendar,
+  Clapperboard,
+  ArrowUpRight,
 } from "lucide-react";
 import { tmdbFetch, toMovie } from "@/lib/api/tmdb.server";
 import { toast } from "sonner";
@@ -39,6 +41,7 @@ import { useDataSaver } from "@/lib/data-saver";
 import { useMobileNavbar } from "@/components/streamflix/mobile-navbar-context";
 import { useRotatingText } from "@/hooks/use-rotating-text";
 import { SIGN_OUT_MESSAGES } from "@/lib/status-messages";
+import { aniflixHref } from "@/lib/aniflix";
 
 const links = [
   { label: "Home", to: "/browse", search: { kind: "home" } },
@@ -325,6 +328,7 @@ export function Navbar() {
   };
 
   const vipRing = isVip ? "ring-2 ring-yellow-400 ring-offset-2 ring-offset-background" : "";
+  const animeLink = aniflixHref({ kids: selectedProfile?.kids });
 
   const profileAvatar = selectedProfile ? (
     selectedProfile.avatarUrl ? (
@@ -380,6 +384,17 @@ export function Navbar() {
               {l.label}
             </Link>
           ))}
+          <a
+            href={animeLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Open AniFlix in a new tab"
+            className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
+          >
+            <Clapperboard className="size-3.5" />
+            Anime
+            <ArrowUpRight className="size-3 opacity-60" aria-hidden="true" />
+          </a>
         </nav>
         <div className="ml-auto flex items-center gap-3">
           <button
@@ -651,6 +666,15 @@ export function Navbar() {
         >
           <Search className="size-5" /> Search
         </Link>
+        <a
+          href={animeLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Anime on AniFlix"
+          className="flex min-w-14 flex-col items-center gap-1 py-1 text-[10px] text-muted-foreground"
+        >
+          <Clapperboard className="size-5" /> Anime
+        </a>
         <Link
           to="/assistant"
           aria-label="AI"
@@ -783,6 +807,15 @@ export function Navbar() {
             >
               <Calendar className="size-4" /> New
             </Link>
+            <a
+              href={animeLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setBrowseMenuOpen(false)}
+              className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <Clapperboard className="size-4" /> Anime
+            </a>
             <Link
               to="/explore"
               onClick={() => setBrowseMenuOpen(false)}

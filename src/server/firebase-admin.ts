@@ -75,6 +75,23 @@ export async function createSessionCookie(idToken: string, expiresIn = 60 * 60 *
   return adminAuth.createSessionCookie(idToken, { expiresIn });
 }
 
+/**
+ * Mint a short-lived Firebase custom token for cross-app sign-in (AniFlix).
+ * Returns null when the Admin SDK is not configured so callers can fall back.
+ */
+export async function createCustomToken(
+  uid: string,
+  claims?: Record<string, unknown>,
+): Promise<string | null> {
+  if (!adminAuth) return null;
+  try {
+    return await adminAuth.createCustomToken(uid, claims);
+  } catch (error) {
+    console.warn("[Firebase Admin] Custom token creation failed:", error);
+    return null;
+  }
+}
+
 export async function verifySessionCookie(sessionCookie: string): Promise<{ uid: string; email: string; claims: Record<string, unknown> } | null> {
   if (!adminAuth) return null;
   try {
