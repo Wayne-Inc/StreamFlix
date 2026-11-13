@@ -24,6 +24,7 @@ import { Route as AuthenticatedMylistRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedProfilesRouteImport } from './routes/_authenticated/profiles'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as ApiAniflixHandoffRouteImport } from './routes/api/aniflix-handoff'
 import { Route as ApiClientIpRouteImport } from './routes/api/client-ip'
 import { Route as ApiProductbridgeTokenRouteImport } from './routes/api/productbridge-token'
 import { Route as ApiReleaseNotificationsCronRouteImport } from './routes/api/release-notifications-cron'
@@ -114,6 +115,11 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiAniflixHandoffRoute = ApiAniflixHandoffRouteImport.update({
+  id: '/api/aniflix-handoff',
+  path: '/api/aniflix-handoff',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiClientIpRoute = ApiClientIpRouteImport.update({
   id: '/api/client-ip',
   path: '/api/client-ip',
@@ -203,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/profiles': typeof AuthenticatedProfilesRoute
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/api/aniflix-handoff': typeof ApiAniflixHandoffRoute
   '/api/client-ip': typeof ApiClientIpRoute
   '/api/productbridge-token': typeof ApiProductbridgeTokenRoute
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
@@ -232,6 +239,7 @@ export interface FileRoutesByTo {
   '/profiles': typeof AuthenticatedProfilesRoute
   '/search': typeof AuthenticatedSearchRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/api/aniflix-handoff': typeof ApiAniflixHandoffRoute
   '/api/client-ip': typeof ApiClientIpRoute
   '/api/productbridge-token': typeof ApiProductbridgeTokenRoute
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
@@ -264,6 +272,7 @@ export interface FileRoutesById {
   '/_authenticated/profiles': typeof AuthenticatedProfilesRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/api/aniflix-handoff': typeof ApiAniflixHandoffRoute
   '/api/client-ip': typeof ApiClientIpRoute
   '/api/productbridge-token': typeof ApiProductbridgeTokenRoute
   '/api/release-notifications-cron': typeof ApiReleaseNotificationsCronRoute
@@ -296,6 +305,7 @@ export interface FileRouteTypes {
     | '/profiles'
     | '/search'
     | '/settings'
+    | '/api/aniflix-handoff'
     | '/api/client-ip'
     | '/api/productbridge-token'
     | '/api/release-notifications-cron'
@@ -325,6 +335,7 @@ export interface FileRouteTypes {
     | '/profiles'
     | '/search'
     | '/settings'
+    | '/api/aniflix-handoff'
     | '/api/client-ip'
     | '/api/productbridge-token'
     | '/api/release-notifications-cron'
@@ -356,6 +367,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profiles'
     | '/_authenticated/search'
     | '/_authenticated/settings'
+    | '/api/aniflix-handoff'
     | '/api/client-ip'
     | '/api/productbridge-token'
     | '/api/release-notifications-cron'
@@ -378,6 +390,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   TosRoute: typeof TosRoute
+  ApiAniflixHandoffRoute: typeof ApiAniflixHandoffRoute
   ApiClientIpRoute: typeof ApiClientIpRoute
   ApiProductbridgeTokenRoute: typeof ApiProductbridgeTokenRoute
   ApiReleaseNotificationsCronRoute: typeof ApiReleaseNotificationsCronRoute
@@ -493,6 +506,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/aniflix-handoff': {
+      id: '/api/aniflix-handoff'
+      path: '/api/aniflix-handoff'
+      fullPath: '/api/aniflix-handoff'
+      preLoaderRoute: typeof ApiAniflixHandoffRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/client-ip': {
       id: '/api/client-ip'
@@ -661,6 +681,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   TosRoute: TosRoute,
+  ApiAniflixHandoffRoute: ApiAniflixHandoffRoute,
   ApiClientIpRoute: ApiClientIpRoute,
   ApiProductbridgeTokenRoute: ApiProductbridgeTokenRoute,
   ApiReleaseNotificationsCronRoute: ApiReleaseNotificationsCronRoute,
