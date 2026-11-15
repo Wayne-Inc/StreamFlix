@@ -14,13 +14,16 @@ export type RotatingTextOptions = {
  * quick operations never flash through several labels. After that the text
  * advances every `interval` and wraps around.
  *
+ * Defaults are deliberately unhurried: 2.5s on the first message, then one
+ * change every 5s, so the copy reads as a status update rather than a flicker.
+ *
  * Pass a stable array (module-level constant), not an inline literal: the timer
  * restarts whenever the array identity changes.
  */
 export function useRotatingText(
   active: boolean,
   messages: readonly string[],
-  { initialDelay = 1500, interval = 2500 }: RotatingTextOptions = {},
+  { initialDelay = 2500, interval = 5000 }: RotatingTextOptions = {},
 ): string {
   const [index, setIndex] = useState(0);
   const total = messages.length;
