@@ -92,6 +92,17 @@ function AuthPage() {
   const [linkShowPw, setLinkShowPw] = useState(false);
   const [linkBusy, setLinkBusy] = useState(false);
   const redirectTo = search.redirect || "/profiles";
+
+  // Navigate to the redirect target. Use window.location.href for absolute
+  // URLs (cross-origin) so TanStack Router doesn't mangle them into path
+  // segments. Use navigate() for relative paths to keep SPA routing.
+  function goToRedirectTarget(target: string) {
+    if (target.startsWith("http://") || target.startsWith("https://")) {
+      window.location.href = target;
+    } else {
+      navigate({ to: target });
+    }
+  }
   const [lastSignInMethod, setLastSignInMethod] = useState<SignInMethod | null>(() => {
     try {
       const saved = localStorage.getItem(LAST_SIGN_IN_METHOD_KEY);
@@ -170,7 +181,7 @@ function AuthPage() {
         // After signing in, send the user back to the page they originally
         // tried to reach (stored in ?redirect= by the auth middleware), or
         // to the profile chooser as a fallback.
-        navigate({ to: redirectTo });
+        goToRedirectTarget(redirectTo);
       }
     });
     return () => unsub();
@@ -245,7 +256,7 @@ function AuthPage() {
           console.warn("Could not set user legal versions", e);
         }
         toast.success("Signed in.");
-        navigate({ to: redirectTo });
+        goToRedirectTarget(redirectTo);
       } else {
         if (!passwordMeetsPolicy(password)) {
           toast.error(
@@ -354,7 +365,7 @@ function AuthPage() {
     });
 
     toast.success(`Accounts linked — signed in with ${providerLabel(provider)}.`);
-    navigate({ to: redirectTo });
+    goToRedirectTarget(redirectTo);
   };
 
   // The provider sign-in failed because an account already exists for that
@@ -492,7 +503,7 @@ function AuthPage() {
         console.warn("Could not set user legal versions", e);
       }
       toast.success("Signed in with Google.");
-      navigate({ to: redirectTo });
+      goToRedirectTarget(redirectTo);
     } catch (err: any) {
       // Handle account exists with different credential
       if (err?.code === "auth/account-exists-with-different-credential") {
@@ -559,7 +570,7 @@ function AuthPage() {
         console.warn("Could not set user legal versions", e);
       }
       toast.success("Signed in with GitHub.");
-      navigate({ to: redirectTo });
+      goToRedirectTarget(redirectTo);
     } catch (err: any) {
       // Handle account exists with different credential
       if (err?.code === "auth/account-exists-with-different-credential") {
