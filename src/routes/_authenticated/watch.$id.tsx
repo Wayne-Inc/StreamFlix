@@ -782,7 +782,7 @@ function PlayerPage() {
       const alreadyNoted = sessionStorage.getItem(sessionKey);
       if (!alreadyNoted) {
         sessionStorage.setItem(sessionKey, "1");
-        toast.info("Note: You may experience ads during this session", {
+        toast.info("You may see ads during playback. Consider using an ad blocker.", {
           id: `ads-note-${movie.id}`,
           duration: 8000,
         });
